@@ -11,7 +11,7 @@ __license__ = "tba"
 __author__ = "tba"
 
 # import tools
-from .eTraGo import etrago
+from eTraGo import etrago
 #from eDisGo import ...
 
 # define scenario (args)
@@ -22,7 +22,7 @@ args = {'network_clustering':False,
         'start_h': 2301,
         'end_h' : 2312,
         'scn_name': 'SH Status Quo',
-        'ormcls_prefix': 'EgoGridPfHv', #if gridversion:'version-number' then 'EgoPfHv', if gridversion:None then 'EgoGridPfHv' 
+        'ormcls_prefix': 'EgoGridPfHv', #if gridversion:'version-number' then 'EgoPfHv', if gridversion:None then 'EgoGridPfHv'
         'outfile': '/path', # state if and where you want to save pyomo's lp file
         'results': '/path', # state if and where you want to save results as csv
         'solver': 'gurobi', #glpk, cplex or gurobi
@@ -55,5 +55,3 @@ etrago(args)
 # possible aggregation of results
 
 # exports: total system costs, plots, csv export files
-
-
