@@ -10,13 +10,15 @@ __copyright__ = "tba"
 __license__ = "tba"
 __author__ = "tba"
 
-# import tools
-from eTraGo import etrago
+import sys
+sys.path.append('/home/dozeumbuw/Dokumente/ZNES/open_eGo/Coding/eTraGo/eTraGo/')
+from appl import etrago
+
 #from eDisGo import ...
 
 # define scenario (args)
 args = {'network_clustering':False,
-        'db': 'oedb', # db session
+        'db': 'oedb2', # db session
         'gridversion':None, #None for model_draft or Version number (e.g. v0.2.10) for grid schema
         'method': 'lopf', # lopf or pf
         'start_h': 2301,
@@ -31,16 +33,11 @@ args = {'network_clustering':False,
         'load_shedding':True,
         'generator_noise':False}
 
-etrago(args)
-
-
-
-
-
-
 # start calculations (eTraGo and eDisGo)
-
 # rename resulting network container to eTraGo_network
+eTraGo_network = etrago(args)
+# eDisGo_network = edisgo()
+
 
 # calculate power plant dispatch without grid utilization (either in pypsa or in renpassgis)
 
