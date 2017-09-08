@@ -13,6 +13,9 @@ setup(name='eGo',
 	  url='https://github.com/openego/eGo',
       license="GNU Affero General Public License Version 3 (AGPL-3.0)",
       packages=find_packages(),
-      install_requires=['etrago == 0.2']
-	  #dependency_links=['git+ssh://git@github.com/openego/PyPSA.git@dev#egg=PyPSA']
+      install_requires=['eTraGo == 0.2',
+      			'egoio == 0.2.0',
+                        'egopowerflow == 0.0.4'],
+	dependency_links=['git+ssh://git@github.com/openego/eTraGo.git@dev#egg=eTraGo',
+			 'git+ssh://git@github.com/openego/PyPSA.git@dev#egg=PyPSA']
      )
