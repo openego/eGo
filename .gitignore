@@ -1,0 +1,3 @@
+*.pyc
+gurobi.log
+__pycache__/
