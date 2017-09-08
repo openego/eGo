@@ -5,6 +5,18 @@ Integrated optimization of flexibility options and grid extension measures for p
 
 A speciality in this context is that transmission grids are described by the 380, 220 and 110 kV in Germany. The integration of the transmission grid (via eTraGo) and distribution grid (via eDisGo) is part of eGo.
 
+Installing Developer Version
+============================
+
+Create a virtualenvironment (where you like it) and activate it: 
+
+
+   $ virtualenv eGo --clear -p python3.5 
+   $ source venv/bin/activate
+
+   $ pip install -e git+https://github.com/openego/eGo@dev#egg=eGo
+   
+
 Copyleft
 =========================
 
