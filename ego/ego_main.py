@@ -20,8 +20,11 @@ from tools.utilities import get_scenario_setting
 # import scenario settings **args of eTraGo
 args = get_scenario_setting()
 
+args['eTraGo_args']
+
+
 # start eTraGo calculation
-eTraGo_network = etrago(args)
+eTraGo_network = etrago(args['eTraGo_args'])
 
 make_all_plots(eTraGo_network)
 
