@@ -2,3 +2,7 @@
 
 # eTraGo release 0.2
 etrago==0.2
+
+# Packages for read the docs
+sphinx_rtd_theme
+numpydoc
