@@ -16,7 +16,7 @@
     "lpfile":  false,
     "results": false,
     "export": false,
-    "solver": "gurobi",
+    "solver": "glpk",
     "branch_capacity_factor": 1,
     "storage_extendable": true,
     "load_shedding": true,
