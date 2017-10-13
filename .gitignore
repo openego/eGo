@@ -1,3 +1,4 @@
 *.pyc
 gurobi.log
 __pycache__/
+results
