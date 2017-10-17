@@ -6,6 +6,8 @@ Created on Thu Oct 12 12:39:24 2017
 @author: student
 """
 
+print ("This is my eTraGo test file! \n")
+
 #%% Package Import and Options
 import sys
 print ("Python version: " + sys.version + "\n")
@@ -13,6 +15,8 @@ print ("Python version: " + sys.version + "\n")
 import os # Operation system
 print ("WD: " + os.getcwd() + "\n")
 
+import pandas as pd
+print ("Pandas Version: " + pd.__version__ + " (0.20.3 is for eDisGo, 0.19.1 for eTraGo)")
 
 
     # eTraGo
@@ -53,4 +57,4 @@ eTraGo_network = etrago(args['eTraGo_args']) # Baut über oemof.de (und config.i
 make_all_plots(eTraGo_network) # Line loading, commitment, storage
 
 
-
+    
