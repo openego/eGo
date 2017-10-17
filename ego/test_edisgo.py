@@ -18,3 +18,6 @@ print ("WD: " + os.getcwd() + "\n")
 import pandas as pd
 print ("Pandas Version: " + pd.__version__ + " (0.20.3 is for eDisGo, 0.19.1 for eTraGo)")
 
+from edisgo.grid.network import Network
+network = Network.import_from_ding0('grids/test_grid.pkl')
+
