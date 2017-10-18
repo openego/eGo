@@ -13,8 +13,13 @@ setup(name='eGo',
 	  url='https://github.com/openego/eGo',
       license="GNU Affero General Public License Version 3 (AGPL-3.0)",
       packages=find_packages(),
-      install_requires=['egoio == v0.2.11',
+      include_package_data=True,
+      install_requires=['egoio == 0.2.11',
                         'egopowerflow == 0.0.4'],
 	dependency_links=['git+ssh://git@github.com/openego/eTraGo.git@dev#egg=eTraGo',
-			 'git+ssh://git@github.com/openego/PyPSA.git@dev#egg=PyPSA']
+	'git+ssh://git@github.com/openego/PyPSA.git@dev#egg=PyPSA'],
+	 extras_require={
+        'docs': [
+            'sphinx >= 1.4',
+'sphinx_rtd_theme']}
      )
