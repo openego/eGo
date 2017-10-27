@@ -30,7 +30,7 @@ result_id = 1
     # Session
 # The session functionality can be found in etrago.utilities.oedb_session (and then takes connection from config.ini or in eDisGo case from somewhere else...)
 user = "postgres"
-password = "postgres"
+password = ""
 host = "localhost"
 port = "5432"
 database = "oedb"
