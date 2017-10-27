@@ -11,6 +11,10 @@ from sqlalchemy.orm import sessionmaker
 import pandas as pd    
 import numpy as np
 
+import logging # ToDo: Logger should be set up more specific
+logging.getLogger().setLevel(logging.WARNING)
+
+
     # Project Packages
 from egoio.db_tables import model_draft # This gives me the specific ORM classes.
 
@@ -20,7 +24,7 @@ from edisgo.grid.network import ETraGoSpecs # ToDo: This needs to be replaced by
 #%% DB Connection
 
     # Arguments
-bus_id = 104 # This is the bus ID where the corresponding DistG. is connected
+bus_id = 24159#104 # This is the bus ID where the corresponding DistG. is connected
 result_id = 1
 
     # Session
@@ -42,6 +46,7 @@ engine = create_engine(
 Session = sessionmaker(bind=engine)
 session = Session()
 
+
 #%% Data import
 
     # Automapper
@@ -60,6 +65,11 @@ ormclass_result_meta = model_draft.__getattribute__('EgoGridPfHvResultMeta')
 ormclass_result_bus = model_draft.__getattribute__('EgoGridPfHvResultBus') # Instead of using the automapper, this is the explicit alternative (from egoei.db_tables). IThis class must be identic with the actual database table
 #ormclass_resultbus = model_draft.EgoGridPfHvResultBus # This is equivalent
 ormclass_result_bus_t = model_draft.__getattribute__('EgoGridPfHvResultBusT')
+ormclass_result_gen = model_draft.__getattribute__('EgoGridPfHvResultGenerator')
+ormclass_result_gen_t = model_draft.__getattribute__('EgoGridPfHvResultGeneratorT')
+ormclass_result_load = model_draft.__getattribute__('EgoGridPfHvResultLoad')
+ormclass_result_load_t = model_draft.__getattribute__('EgoGridPfHvResultLoadT')
+
 
 # ToDo: All the other tables need to be added here...
  
@@ -77,34 +87,70 @@ end_snapshot = session.query( # Scalar Value (last Timestep)
         ormclass_result_meta.end_snapshot
         ).filter(
         ormclass_result_meta.result_id == result_id
-        ).scalar(
+        ).scalar( # directly returns scalar value, since there is only one column on this. ToDo: Make more conventional!
                 )
  
 snap_idx = range(start_snapshot, end_snapshot + 1) # Range including all timesteps, used for indexing
 #for i in snap_idx:
 #    print (i)
 
-active_power_kW =  np.array(
-        session.query(
+        # Buses
+query = session.query(
+        ormclass_result_bus_t.p
+        ).filter(
+        ormclass_result_bus_t.bus_id == bus_id, # WHERE bus_id AND result_id
+        ormclass_result_bus_t.result_id == result_id
+        ).scalar( # Returns first element of single queried row
+                )
+active_power_kW = pd.Series( # bus active power 
+        data=(np.array(query) * 1000 ), # PyPSA result is in MW
+        index=snap_idx) # Index of series is the exact used timestep
+
+query = session.query(
         ormclass_result_bus_t.p
         ).filter(
         ormclass_result_bus_t.bus_id == bus_id, # WHERE bus_id AND result_id
         ormclass_result_bus_t.result_id == result_id
         ).scalar(
-                )) * 1000 # PyPSA result is in MW
+                )
+reactive_power_kvar = pd.Series(
+        data=(np.array(query) * 1000 ),# PyPSA result is in MW
+        index=snap_idx)
 
-active_power_kW = pd.Series(data=active_power_kW, index=snap_idx) # Index of series is the exact used timestep
+        # Generators     
+query = session.query(
+        ormclass_result_gen.generator_id # Returns only generator_id column
+        ).filter(
+        ormclass_result_gen.bus == bus_id)
+gen_ids = []
+for row in query:
+    gen_ids.append(row.generator_id)
 
-reactive_power_kvar = None # ToDo: DB table is currently empty
-
+# Why is there no source information in database? This is needed for dispatch         
+logging.warning("No source/carrier information (generator dispatch and capacity cannot be calculated)")
 dispatch = None # Seems like information of generator connection is not in DB results
 capacity = None # Needs information about generator connection. Why in SH there are several identic gens (e.G. wind) at one bus?
 
+
+        # Load
+query = session.query(
+        ormclass_result_load.load_id # Returns only generator_id column
+        ).filter(
+        ormclass_result_load.bus == bus_id)
+load_ids = []
+for row in query:
+    load_ids.append(row.load_id)
+    
+# Why is there no source information in database? This is needed for dispatch         
+logging.warning("No type information (load by sector cannot be calculated)")
+load = None 
+annual_load = None    
+
+        # Storage
 battery_capacity = None # No corresponding value in PyPSA found yet...
 battery_active_power = None # In PyPSA there is Storage Unit and Strore, which one is represented in the DB table?
 
-load = None # Not checked yet, but I assume there is a connection Info missing as well.
-annual_load = None
+
   
 
 #%% Return Specs
