@@ -19,7 +19,7 @@ logging.getLogger().setLevel(logging.WARNING)
 from egoio.db_tables import model_draft # This gives me the specific ORM classes.
 
 from edisgo.grid.network import ETraGoSpecs # ToDo: This needs to be replaced by proper eDisGo installation
-#from specs_test import ETraGoSpecs
+# from specs_test import ETraGoSpecs
 
 #%% DB Connection
 
@@ -69,6 +69,8 @@ ormclass_result_gen = model_draft.__getattribute__('EgoGridPfHvResultGenerator')
 ormclass_result_gen_t = model_draft.__getattribute__('EgoGridPfHvResultGeneratorT')
 ormclass_result_load = model_draft.__getattribute__('EgoGridPfHvResultLoad')
 ormclass_result_load_t = model_draft.__getattribute__('EgoGridPfHvResultLoadT')
+ormclass_source = model_draft.__getattribute__('EgoGridPfHvSource')
+
 
 
 # ToDo: All the other tables need to be added here...
@@ -125,26 +127,99 @@ query = session.query(
 gen_ids = []
 for row in query:
     gen_ids.append(row.generator_id)
+       
+gen_sources = []
+for id in gen_ids:   
+    query = session.query(ormclass_source.name
+              ).filter(
+                      ormclass_source.source_id==ormclass_result_gen.source
+                      ).filter(
+                              ormclass_result_gen.generator_id==id).scalar()
+    gen_sources.append(query)
+  
+            # Capacity
+capacity = pd.DataFrame(0.0, index=['Capacity'], columns=list(set(gen_sources)))
 
-# Why is there no source information in database? This is needed for dispatch         
-logging.warning("No source/carrier information (generator dispatch and capacity cannot be calculated)")
-dispatch = None # Seems like information of generator connection is not in DB results
-capacity = None # Needs information about generator connection. Why in SH there are several identic gens (e.G. wind) at one bus?
+for i, gen_id in enumerate(gen_ids):
+    
+    source = gen_sources[i]
+    gen_capacity_MW = session.query(
+            ormclass_result_gen.p_nom
+            ).filter(
+            ormclass_result_gen.generator_id == gen_id
+            ).scalar(
+                    )
 
+    capacity[source]['Capacity'] = capacity[source]['Capacity'] + gen_capacity_MW
+
+            # Dispatch (Normalized)
+dispatch = pd.DataFrame(0.0, index=snap_idx, columns=list(set(gen_sources))) # Makes dataframe with only zeros, unique columns form sources and snap_idx form snapshots)
+
+for i, gen_id in enumerate(gen_ids):
+    
+    source = gen_sources[i]
+    query = session.query(
+            ormclass_result_gen_t.p
+            ).filter(
+            ormclass_result_gen_t.generator_id == gen_id
+            ).scalar(
+                    )
+
+    gen_series_norm = pd.Series(
+            data=(np.array(query) / capacity[source]['Capacity'] ), # Every generator normalized by installed capacity.
+            index=snap_idx)
+    
+    for snap in snap_idx:
+        dispatch[source][snap] = dispatch[source][snap] + gen_series_norm[snap] # Aggregatet by source (adds up)
+    
 
         # Load
 query = session.query(
-        ormclass_result_load.load_id # Returns only generator_id column
+        ormclass_result_load.load_id 
         ).filter(
         ormclass_result_load.bus == bus_id)
 load_ids = []
 for row in query:
     load_ids.append(row.load_id)
     
-# Why is there no source information in database? This is needed for dispatch         
-logging.warning("No type information (load by sector cannot be calculated)")
-load = None 
-annual_load = None    
+load_types = ['all'] # ToDo: This is in eTraGo still not implemented
+
+            # Annual Load
+annual_load = pd.DataFrame(0.0, index=['Annual Load'], columns=list(set(load_types)))
+
+for i, load_id in enumerate(load_ids):
+    
+    load_type = load_types[i]
+    annual_load_MWh = session.query( # ToDo: Check unit
+            ormclass_result_load.e_annual
+            ).filter(
+            ormclass_result_load.load_id == load_id
+            ).scalar(
+                    ) * 1000 # eTraGo annual load apparently in GWh    
+    
+    annual_load[load_type]['Annual Load'] = annual_load[load_type]['Annual Load'] + annual_load_MWh
+
+            # Load
+load = pd.DataFrame(0.0, index=snap_idx, columns=list(set(load_types)))
+
+for i, load_id in enumerate(load_ids):
+    
+    load_type = load_types[i]
+    query = session.query(
+            ormclass_result_load_t.p
+            ).filter(
+            ormclass_result_load_t.load_id == load_id
+            ).scalar(
+                    )
+
+    load_series_norm = pd.Series(
+            data=(np.array(query) / annual_load[load_type]['Annual Load'] ), # ToDo: Check Units!!!
+            index=snap_idx)
+    
+    for snap in snap_idx:
+        load[load_type][snap] = load[load_type][snap] + load_series_norm[snap] # Aggregatet by source (adds up)
+    
+ 
 
         # Storage
 battery_capacity = None # No corresponding value in PyPSA found yet...
