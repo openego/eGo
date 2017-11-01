@@ -10,8 +10,8 @@ logging.getLogger().setLevel(logging.WARNING)
     # Project Packages
     
 from egoio.db_tables import model_draft # This gives me the specific ORM classes.
-#from edisgo.grid.network import ETraGoSpecs # ToDo: This needs to be replaced by proper eDisGo installation
-from specs_test import ETraGoSpecs
+from edisgo.grid.network import ETraGoSpecs # ToDo: This needs to be replaced by proper eDisGo installation
+#from tools.specs_test import ETraGoSpecs
 
 
 # Function Definition
@@ -36,8 +36,10 @@ def get_etragospecs(session,
     -------
     etragospecs : :class:~.`
         eDisGo ETraGoSpecs Object
+    
     """
-        
+    specs_meta_data = {} # Empty dict that gets filled with interesting metadata
+    
     # Data import
     
         # Automapper
@@ -52,7 +54,7 @@ def get_etragospecs(session,
         # Explicit Mapping (No Automapping)
         
     ormclass_result_meta = model_draft.__getattribute__('EgoGridPfHvResultMeta')
-    ormclass_result_bus = model_draft.__getattribute__('EgoGridPfHvResultBus') # Instead of using the automapper, this is the explicit alternative (from egoei.db_tables). IThis class must be identic with the actual database table
+    #ormclass_result_bus = model_draft.__getattribute__('EgoGridPfHvResultBus') # Instead of using the automapper, this is the explicit alternative (from egoei.db_tables). IThis class must be identic with the actual database table
     #ormclass_result_bus = model_draft.EgoGridPfHvResultBus # This is equivalent
     ormclass_result_bus_t = model_draft.__getattribute__('EgoGridPfHvResultBusT')
     ormclass_result_gen = model_draft.__getattribute__('EgoGridPfHvResultGenerator')
@@ -226,6 +228,8 @@ def get_etragospecs(session,
                                   ormclass_result_stor.storage_id==id).scalar()
         stor_sources.append(query)
     
+    specs_meta_data.update({'Number of extendable storages at this bus':stor_sources.count('extendable_storage')})
+    
                 # Storage Capacity
     stor_capacity = pd.DataFrame(0.0, 
                                  index=['Stor_capacity'], 
@@ -272,7 +276,8 @@ def get_etragospecs(session,
         for snap in snap_idx:
             stor_active_power[source][snap] = stor_active_power[source][snap] + stor_active_power_series_kW[snap] # Aggregatet by source (adds up) 
         
-    
+    print ("Specs Metadata: \n")
+    print(specs_meta_data)
     # Return Specs
     
     specs = ETraGoSpecs(active_power=active_power_kW,
