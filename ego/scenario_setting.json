@@ -1,10 +1,10 @@
 {
   "global": {
     "eTraGo": true,
-    "eDisGo": false
+    "eDisGo": false,
+    "db": "oedb"
   },
   "eTraGo_args": {
-    "db": "oedb",
     "gridversion": "v0.2.11",
     "network_clustering": false,
     "method": "lopf",
@@ -23,8 +23,11 @@
     "generator_noise": true,
     "minimize_loading": false,
     "parallelisation": false,
-    "k_mean_clustering": true,
+    "k_mean_clustering": false,
+    "network_clusterin": true,
     "line_grouping": false,
+    "branch_capacity_factor": 1,
+    "load_shedding": true,
     "comments": null
   },
   "eDisGo_args": {
