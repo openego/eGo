@@ -38,6 +38,7 @@ def get_etragospecs(session,
         eDisGo ETraGoSpecs Object
     
     """
+    
     specs_meta_data = {} # Empty dict that gets filled with interesting metadata
     
     # Data import
