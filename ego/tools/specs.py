@@ -24,7 +24,7 @@ def get_etragospecs(session,
 
     Parameters
     ----------
-    session : :class:`~.`
+    session : :class:`~.` #Todo: Add class etc....
         Oemof session object (Database Interface)
     bus_id : int
         ID of the corresponding HV bus
@@ -42,15 +42,6 @@ def get_etragospecs(session,
     specs_meta_data = {} # Empty dict that gets filled with interesting metadata
     
     # Data import
-    
-        # Automapper
-        
-    #_schema = 'model_draft' # If automapped, schema is needed
-    #_meta = MetaData(schema=_schema)
-    #Base = automap_base(bind=engine, metadata=_meta) # This is an Automapper that automatically maps the classes from the database (and doesn't consider the explicit orm classes e.g. from model_draft in egoio.db_tables)
-    #Base.prepare(engine, reflect=True)
-    #
-    #_ormclass_result_bus = Base.classes.ego_grid_pf_hv_result_bus
     
         # Explicit Mapping (No Automapping)
         
@@ -107,8 +98,8 @@ def get_etragospecs(session,
     #        data=(np.array(query) * 1000 ),# PyPSA result is in MW
     #        index=snap_idx)
     
-    reactive_power_kvar = pd.Series( # ToDo: Quick fix for non existent Q
-            data=0,
+    reactive_power_kvar = pd.Series( # ToDo: Quick fix for non existent Q. better none and Abfrage ob LOPF
+            data=None,
             index=snap_idx)
     
             # Generators     
@@ -228,7 +219,7 @@ def get_etragospecs(session,
                           ).filter(
                                   ormclass_result_stor.storage_id==id).scalar()
         stor_sources.append(query)
-    
+   
     specs_meta_data.update({'Number of extendable storages at this bus':stor_sources.count('extendable_storage')})
     
                 # Storage Capacity
@@ -252,10 +243,9 @@ def get_etragospecs(session,
                 ormclass_result_stor.storage_id == stor_id
                 ).scalar(
                         )
-    
+        
         stor_capacity[source]['Stor_capacity'] = stor_capacity[source]['Stor_capacity'] + p_nom_opt_MW * max_hours
-        
-        
+            
                 # Storage Active Power
     stor_active_power = pd.DataFrame(0.0, 
                                         index=snap_idx, 
@@ -277,8 +267,7 @@ def get_etragospecs(session,
         for snap in snap_idx:
             stor_active_power[source][snap] = stor_active_power[source][snap] + stor_active_power_series_kW[snap] # Aggregatet by source (adds up) 
         
-    print ("Specs Metadata: \n")
-    print(specs_meta_data)
+    
     # Return Specs
     
     specs = ETraGoSpecs(active_power=active_power_kW,
