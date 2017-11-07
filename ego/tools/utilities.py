@@ -25,11 +25,22 @@ def get_scenario_setting(json_file='scenario_setting.json'):
 
     return scn_set
 
+def get_time_steps(args):
+    """ Get time step of calculation by scenario settings.
 
-def get_etrago_scnario():
+    Parameter:
+    ----------
+    args (dict):
+        dict of 'scenario_setting.json'
 
+    Result:
+    -------
+    time_step (int):
+        Number of timesteps of the calculation.
+    """
 
+    end   = args['eTraGo'].get('end_snapshot')
+    start = args['eTraGo'].get('start_snapshot')
+    time_step = end - start
 
-
-
-    return scenario_setting
+    return time_step
