@@ -5,7 +5,7 @@
 import pandas as pd    
 import numpy as np
 import logging # ToDo: Logger should be set up more specific
-logging.getLogger().setLevel(logging.WARNING)
+logging.getLogger().setLevel(logging.INFO)
 
     # Project Packages
     
@@ -40,6 +40,9 @@ def get_etragospecs(session,
     """
     
     specs_meta_data = {} # Empty dict that gets filled with interesting metadata
+    
+    specs_meta_data.update({'TG Bus ID':bus_id})
+    specs_meta_data.update({'Result ID':result_id})
     
     # Data import
     
@@ -135,8 +138,9 @@ def get_etragospecs(session,
     
         capacity[source]['Capacity'] = capacity[source]['Capacity'] + gen_capacity_MW
     
-                # Generator Dispatch (Normalized)
+                # Generator Dispatch (Normalized) 
     dispatch = pd.DataFrame(0.0, index=snap_idx, columns=list(set(gen_sources))) # Makes dataframe with only zeros, unique columns form sources and snap_idx form snapshots)
+    curtailment = pd.DataFrame(0.0, index=snap_idx, columns=list(set(gen_sources)))
     
     for i, gen_id in enumerate(gen_ids):
         
@@ -154,7 +158,36 @@ def get_etragospecs(session,
         
         for snap in snap_idx:
             dispatch[source][snap] = dispatch[source][snap] + gen_series_norm[snap] # Aggregatet by source (adds up)
-        
+ 
+            # Generators 2 (another approach...)
+            
+    query = session.query(
+            ormclass_result_gen.generator_id, # These explicit columns are queried...
+            ormclass_result_gen.p_nom,
+            ormclass_source.name
+            ).join(
+                    ormclass_source, 
+                    ormclass_source.source_id == ormclass_result_gen.source
+                    ).filter(
+                            ormclass_result_gen.bus == bus_id) 
+      
+    gen_df = pd.DataFrame(query.all(), columns=[column['name'] for column in query.column_descriptions])  
+
+    query = session.query(
+            ormclass_result_gen_t.generator_id,
+            ormclass_result_gen_t.p,
+            ormclass_result_gen_t.p_max_pu
+            ).filter(
+            ormclass_result_gen_t.generator_id.in_(gen_df['generator_id'])
+            )     
+    
+    gen_t_df = pd.DataFrame(query.all(), 
+                            columns=[column['name'] for column in query.column_descriptions]) 
+    
+    gen_merge_df = pd.merge(gen_df, gen_t_df, on='generator_id')
+    print (gen_merge_df)
+    
+    # Hier gut überlegen, ob der Code so brauchbar ist. Hier gehe ich den Umweg über Dataframes. Das macht alles etwas übersichtilicher und kontrollierbarer. Mir gefällt das so gut. Als nächstes muss die p_pot ausgerechnet werden (nicht normiert), dann aggreagation nach source, dann erstellung der neuen Specs Dataframes (Umkehrung Spalten zu Zeilen)....
     
             # Load
     query = session.query(
@@ -202,6 +235,7 @@ def get_etragospecs(session,
         for snap in snap_idx:
             load[load_type][snap] = load[load_type][snap] + load_series_norm[snap] # Aggregatet by source (adds up)
         
+        
              # Storage    
     query = session.query(
             ormclass_result_stor.storage_id # More than one storage device is possible...
@@ -220,7 +254,8 @@ def get_etragospecs(session,
                                   ormclass_result_stor.storage_id==id).scalar()
         stor_sources.append(query)
    
-    specs_meta_data.update({'Number of extendable storages at this bus':stor_sources.count('extendable_storage')})
+    specs_meta_data.update({'Storage IDs':stor_ids})
+    specs_meta_data.update({'Storage Sources':stor_sources})
     
                 # Storage Capacity
     stor_capacity = pd.DataFrame(0.0, 
@@ -280,6 +315,7 @@ def get_etragospecs(session,
                         annual_load=annual_load
                         )    
     
+    logging.info(specs_meta_data)
     return specs
         
     
