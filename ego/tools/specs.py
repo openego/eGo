@@ -105,62 +105,63 @@ def get_etragospecs(session,
             data=None,
             index=snap_idx)
     
-            # Generators     
-    query = session.query(
-            ormclass_result_gen.generator_id # Returns only generator_id column
-            ).filter(
-            ormclass_result_gen.bus == bus_id)
-    gen_ids = []
-    for row in query:
-        gen_ids.append(row.generator_id)
-           
-    gen_sources = []
-    for id in gen_ids:   
-        query = session.query(ormclass_source.name
-                  ).filter(
-                          ormclass_source.source_id==ormclass_result_gen.source
-                          ).filter(
-                                  ormclass_result_gen.generator_id==id).scalar()
-        gen_sources.append(query)
-      
-                # Generator Capacity
-    capacity = pd.DataFrame(0.0, index=['Capacity'], columns=list(set(gen_sources)))
-    
-    for i, gen_id in enumerate(gen_ids):
-        
-        source = gen_sources[i]
-        gen_capacity_MW = session.query(
-                ormclass_result_gen.p_nom
-                ).filter(
-                ormclass_result_gen.generator_id == gen_id
-                ).scalar(
-                        )
-    
-        capacity[source]['Capacity'] = capacity[source]['Capacity'] + gen_capacity_MW
-    
-                # Generator Dispatch (Normalized) 
-    dispatch = pd.DataFrame(0.0, index=snap_idx, columns=list(set(gen_sources))) # Makes dataframe with only zeros, unique columns form sources and snap_idx form snapshots)
-    curtailment = pd.DataFrame(0.0, index=snap_idx, columns=list(set(gen_sources)))
-    
-    for i, gen_id in enumerate(gen_ids):
-        
-        source = gen_sources[i]
-        query = session.query(
-                ormclass_result_gen_t.p
-                ).filter(
-                ormclass_result_gen_t.generator_id == gen_id
-                ).scalar(
-                        )
-    
-        gen_series_norm = pd.Series(
-                data=(np.array(query) / capacity[source]['Capacity'] ), # Every generator normalized by installed capacity.
-                index=snap_idx)
-        
-        for snap in snap_idx:
-            dispatch[source][snap] = dispatch[source][snap] + gen_series_norm[snap] # Aggregatet by source (adds up)
- 
-            # Generators 2 (another approach...)
-            
+#            # Generators     
+#    query = session.query(
+#            ormclass_result_gen.generator_id # Returns only generator_id column
+#            ).filter(
+#            ormclass_result_gen.bus == bus_id)
+#    gen_ids = []
+#    for row in query:
+#        gen_ids.append(row.generator_id)
+#           
+#    gen_sources = []
+#    for id in gen_ids:   
+#        query = session.query(ormclass_source.name
+#                  ).filter(
+#                          ormclass_source.source_id==ormclass_result_gen.source
+#                          ).filter(
+#                                  ormclass_result_gen.generator_id==id).scalar()
+#        gen_sources.append(query)
+#      
+#                # Generator Capacity
+#    capacity = pd.DataFrame(0.0, index=['Capacity'], columns=list(set(gen_sources)))
+#    
+#    for i, gen_id in enumerate(gen_ids):
+#        
+#        source = gen_sources[i]
+#        gen_capacity_MW = session.query(
+#                ormclass_result_gen.p_nom
+#                ).filter(
+#                ormclass_result_gen.generator_id == gen_id
+#                ).scalar(
+#                        )
+#    
+#        capacity[source]['Capacity'] = capacity[source]['Capacity'] + gen_capacity_MW
+#    
+#                # Generator Dispatch (Normalized) 
+#    dispatch = pd.DataFrame(0.0, index=snap_idx, columns=list(set(gen_sources))) # Makes dataframe with only zeros, unique columns form sources and snap_idx form snapshots)
+#    curtailment = pd.DataFrame(0.0, index=snap_idx, columns=list(set(gen_sources)))
+#    
+#    for i, gen_id in enumerate(gen_ids):
+#        
+#        source = gen_sources[i]
+#        query = session.query(
+#                ormclass_result_gen_t.p
+#                ).filter(
+#                ormclass_result_gen_t.generator_id == gen_id
+#                ).scalar(
+#                        )
+#    
+#        gen_series_norm = pd.Series(
+#                data=(np.array(query) / capacity[source]['Capacity'] ), # Every generator normalized by installed capacity.
+#                index=snap_idx)
+#        
+#        for snap in snap_idx:
+#            dispatch[source][snap] = dispatch[source][snap] + gen_series_norm[snap] # Aggregatet by source (adds up)
+# 
+
+            # Generation     
+                # Capacity
     query = session.query(
             ormclass_result_gen.generator_id, # These explicit columns are queried...
             ormclass_result_gen.p_nom,
@@ -169,31 +170,80 @@ def get_etragospecs(session,
                     ormclass_source, 
                     ormclass_source.source_id == ormclass_result_gen.source
                     ).filter(
-                            ormclass_result_gen.bus == bus_id) 
+                            ormclass_result_gen.bus == bus_id,
+                            ormclass_result_gen.result_id == result_id) 
       
-    gen_df = pd.DataFrame(query.all(), columns=[column['name'] for column in query.column_descriptions])  
-
+    gen_df = pd.DataFrame(query.all(), 
+                          columns=[column['name'] for column in query.column_descriptions])  
+    
+    capacity = gen_df[['p_nom','name']].groupby('name').sum().T
+    
+                # Dispatch
     query = session.query(
             ormclass_result_gen_t.generator_id,
             ormclass_result_gen_t.p,
             ormclass_result_gen_t.p_max_pu
             ).filter(
-            ormclass_result_gen_t.generator_id.in_(gen_df['generator_id'])
+            ormclass_result_gen_t.generator_id.in_(gen_df['generator_id']),
+            ormclass_result_gen_t.result_id == result_id
             )     
     
     gen_t_df = pd.DataFrame(query.all(), 
                             columns=[column['name'] for column in query.column_descriptions]) 
     
-    gen_merge_df = pd.merge(gen_df, gen_t_df, on='generator_id')
-    print (gen_merge_df)
+    p_df = pd.merge(gen_df, gen_t_df, on='generator_id')[['name','p']]
     
-    # Hier gut überlegen, ob der Code so brauchbar ist. Hier gehe ich den Umweg über Dataframes. Das macht alles etwas übersichtilicher und kontrollierbarer. Mir gefällt das so gut. Als nächstes muss die p_pot ausgerechnet werden (nicht normiert), dann aggreagation nach source, dann erstellung der neuen Specs Dataframes (Umkehrung Spalten zu Zeilen)....
+    dispatch = pd.DataFrame(0.0, index=snap_idx, columns=list(set(p_df['name']))) 
     
+    for index, row in p_df.iterrows():
+        source = row['name']
+        gen_series_norm = pd.Series(
+                data=(row['p'] / capacity[source]['p_nom'] ), # Every generator normalized by installed capacity.
+                index=snap_idx)
+        
+        for snap in snap_idx:
+            dispatch[source][snap] = dispatch[source][snap] + gen_series_norm[snap] # Aggregatet by source (adds up)
+            
+                # Potential
+    p_pot_df = pd.merge(gen_df, 
+                        gen_t_df, 
+                        on='generator_id')[['name','p_nom','p_max_pu','p']].dropna(subset=['p_max_pu']) 
+    
+    p_pot_l = []
+    for index, row in p_pot_df.iterrows():        
+        val = [x * row['p_nom'] for x in row['p_max_pu']]
+        p_pot_l.append(val)
+    p_pot_df['p_pot'] = p_pot_l
+    
+#    p_pot_df.drop('p_max_pu',1,inplace=True)
+    
+    potential = pd.DataFrame(0.0, 
+                               index=snap_idx, 
+                               columns=list(set(p_pot_df['name']))) 
+    
+    for index, row in p_pot_df.iterrows():
+        source = row['name']
+        gen_series_norm = pd.Series(
+                data=(row['p_pot'] / capacity[source]['p_nom'] ), # Every generator normalized by installed capacity.
+                index=snap_idx)
+        
+        for snap in snap_idx:
+            potential[source][snap] = potential[source][snap] + gen_series_norm[snap] # Aggregated by source (adds up)
+
+                # Curtailment        
+    curtailment = pd.DataFrame(0.0, 
+                               index=snap_idx, 
+                               columns=list(set(p_pot_df['name'])))
+
+    for column in curtailment:
+        curtailment[column] = potential[column] - dispatch[column]
+
             # Load
     query = session.query(
             ormclass_result_load.load_id 
             ).filter(
-            ormclass_result_load.bus == bus_id)
+            ormclass_result_load.bus == bus_id,
+            ormclass_result_load.result_id == result_id)
     load_ids = []
     for row in query:
         load_ids.append(row.load_id)
@@ -209,7 +259,8 @@ def get_etragospecs(session,
         annual_load_MWh = session.query( # ToDo: Check unit
                 ormclass_result_load.e_annual
                 ).filter(
-                ormclass_result_load.load_id == load_id
+                ormclass_result_load.load_id == load_id,
+                ormclass_result_load.result_id == result_id
                 ).scalar(
                         ) * 1000 # eTraGo annual load apparently in GWh    
         
@@ -224,7 +275,8 @@ def get_etragospecs(session,
         query = session.query(
                 ormclass_result_load_t.p
                 ).filter(
-                ormclass_result_load_t.load_id == load_id
+                ormclass_result_load_t.load_id == load_id,
+                ormclass_result_load_t.result_id == result_id
                 ).scalar(
                         )
     
@@ -240,7 +292,8 @@ def get_etragospecs(session,
     query = session.query(
             ormclass_result_stor.storage_id # More than one storage device is possible...
             ).filter(
-            ormclass_result_stor.bus == bus_id)
+            ormclass_result_stor.bus == bus_id,
+            ormclass_result_stor.result_id == result_id)
     stor_ids = []
     for row in query:
         stor_ids.append(row.storage_id)
@@ -251,7 +304,8 @@ def get_etragospecs(session,
                   ).filter(
                           ormclass_source.source_id==ormclass_result_stor.source
                           ).filter(
-                                  ormclass_result_stor.storage_id==id).scalar()
+                                  ormclass_result_stor.storage_id==id,
+                                  ormclass_result_stor.result_id == result_id).scalar()
         stor_sources.append(query)
    
     specs_meta_data.update({'Storage IDs':stor_ids})
@@ -268,14 +322,16 @@ def get_etragospecs(session,
         p_nom_opt_MW = session.query(
                 ormclass_result_stor.p_nom_opt
                 ).filter(
-                ormclass_result_stor.storage_id == stor_id
+                ormclass_result_stor.storage_id == stor_id,
+                ormclass_result_stor.result_id == result_id
                 ).scalar(
                         )
     
         max_hours = session.query(
                 ormclass_result_stor.max_hours
                 ).filter(
-                ormclass_result_stor.storage_id == stor_id
+                ormclass_result_stor.storage_id == stor_id,
+                ormclass_result_stor.result_id == result_id
                 ).scalar(
                         )
         
@@ -292,7 +348,8 @@ def get_etragospecs(session,
         query = session.query(
                 ormclass_result_stor_t.p
                 ).filter(
-                ormclass_result_stor_t.storage_id == stor_id
+                ormclass_result_stor_t.storage_id == stor_id,
+                ormclass_result_stor_t.result_id == result_id
                 ).scalar(
                         )
         stor_active_power_series_kW = pd.Series( # bus active power 
@@ -311,6 +368,7 @@ def get_etragospecs(session,
                         battery_active_power=stor_active_power['extendable_storage'], # ToDo: Check if extendable_storage is battery!
                         dispatch=dispatch,
                         capacity=capacity,
+                        curtailment=curtailment,
                         load=load,
                         annual_load=annual_load
                         )    
