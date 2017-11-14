@@ -105,61 +105,8 @@ def get_etragospecs(session,
             data=None,
             index=snap_idx)
     
-#            # Generators     
-#    query = session.query(
-#            ormclass_result_gen.generator_id # Returns only generator_id column
-#            ).filter(
-#            ormclass_result_gen.bus == bus_id)
-#    gen_ids = []
-#    for row in query:
-#        gen_ids.append(row.generator_id)
-#           
-#    gen_sources = []
-#    for id in gen_ids:   
-#        query = session.query(ormclass_source.name
-#                  ).filter(
-#                          ormclass_source.source_id==ormclass_result_gen.source
-#                          ).filter(
-#                                  ormclass_result_gen.generator_id==id).scalar()
-#        gen_sources.append(query)
-#      
-#                # Generator Capacity
-#    capacity = pd.DataFrame(0.0, index=['Capacity'], columns=list(set(gen_sources)))
-#    
-#    for i, gen_id in enumerate(gen_ids):
-#        
-#        source = gen_sources[i]
-#        gen_capacity_MW = session.query(
-#                ormclass_result_gen.p_nom
-#                ).filter(
-#                ormclass_result_gen.generator_id == gen_id
-#                ).scalar(
-#                        )
-#    
-#        capacity[source]['Capacity'] = capacity[source]['Capacity'] + gen_capacity_MW
-#    
-#                # Generator Dispatch (Normalized) 
-#    dispatch = pd.DataFrame(0.0, index=snap_idx, columns=list(set(gen_sources))) # Makes dataframe with only zeros, unique columns form sources and snap_idx form snapshots)
-#    curtailment = pd.DataFrame(0.0, index=snap_idx, columns=list(set(gen_sources)))
-#    
-#    for i, gen_id in enumerate(gen_ids):
-#        
-#        source = gen_sources[i]
-#        query = session.query(
-#                ormclass_result_gen_t.p
-#                ).filter(
-#                ormclass_result_gen_t.generator_id == gen_id
-#                ).scalar(
-#                        )
-#    
-#        gen_series_norm = pd.Series(
-#                data=(np.array(query) / capacity[source]['Capacity'] ), # Every generator normalized by installed capacity.
-#                index=snap_idx)
-#        
-#        for snap in snap_idx:
-#            dispatch[source][snap] = dispatch[source][snap] + gen_series_norm[snap] # Aggregatet by source (adds up)
-# 
-
+ # ToDo: I like the dataframe-approach much more. The could should be adapted...  
+ 
             # Generation     
                 # Capacity
     query = session.query(
@@ -214,8 +161,6 @@ def get_etragospecs(session,
         val = [x * row['p_nom'] for x in row['p_max_pu']]
         p_pot_l.append(val)
     p_pot_df['p_pot'] = p_pot_l
-    
-#    p_pot_df.drop('p_max_pu',1,inplace=True)
     
     potential = pd.DataFrame(0.0, 
                                index=snap_idx, 
