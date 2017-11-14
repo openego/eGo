@@ -85,25 +85,29 @@ def get_etragospecs(session,
             ormclass_result_bus_t.bus_id == bus_id, # WHERE bus_id AND result_id
             ormclass_result_bus_t.result_id == result_id
             ).scalar( # Returns first element of single queried row
-                    )
-    active_power_kW = pd.Series( # bus active power 
+                    )  
+    try:
+        active_power_kW = pd.Series( # bus active power 
             data=(np.array(query) * 1000 ), # PyPSA result is in MW
             index=snap_idx) # Index of series is the exact used timestep
-    
-    #query = session.query(
-    #        ormclass_result_bus_t.q
-    #        ).filter(
-    #        ormclass_result_bus_t.bus_id == bus_id, # WHERE bus_id AND result_id
-    #        ormclass_result_bus_t.result_id == result_id
-    #        ).scalar(
-    #                )
-    #reactive_power_kvar = pd.Series(
-    #        data=(np.array(query) * 1000 ),# PyPSA result is in MW
-    #        index=snap_idx)
-    
-    reactive_power_kvar = pd.Series( # ToDo: Quick fix for non existent Q. better none and Abfrage ob LOPF
-            data=None,
-            index=snap_idx)
+    except:
+        logging.warning('No active power series')
+        active_power_kW = None
+        
+    query = session.query(
+            ormclass_result_bus_t.q
+            ).filter(
+            ormclass_result_bus_t.bus_id == bus_id, # WHERE bus_id AND result_id
+            ormclass_result_bus_t.result_id == result_id
+            ).scalar(
+                    )
+    try:
+        reactive_power_kvar = pd.Series( 
+            data=(np.array(query) * 1000 ), # PyPSA result is in MW
+            index=snap_idx) 
+    except:
+        logging.warning('No reactive power series')
+        reactive_power_kvar = None
     
  # ToDo: I like the dataframe-approach much more. The could should be adapted...  
  
@@ -196,42 +200,49 @@ def get_etragospecs(session,
     load_types = ['all'] # ToDo: This is in eTraGo still not implemented
     
                 # Annual Load
-    annual_load = pd.DataFrame(0.0, index=['Annual Load'], columns=list(set(load_types)))
-    
-    for i, load_id in enumerate(load_ids):
+    try:
+        annual_load = pd.DataFrame(0.0, index=['Annual Load'], columns=list(set(load_types)))
         
-        load_type = load_types[i]
-        annual_load_MWh = session.query( # ToDo: Check unit
-                ormclass_result_load.e_annual
-                ).filter(
-                ormclass_result_load.load_id == load_id,
-                ormclass_result_load.result_id == result_id
-                ).scalar(
-                        ) * 1000 # eTraGo annual load apparently in GWh    
+        for i, load_id in enumerate(load_ids):
+            
+            load_type = load_types[i]
+            annual_load_MWh = session.query( # ToDo: Check unit
+                    ormclass_result_load.e_annual
+                    ).filter(
+                    ormclass_result_load.load_id == load_id,
+                    ormclass_result_load.result_id == result_id
+                    ).scalar(
+                            ) * 1000 # eTraGo annual load apparently in GWh    
+            
+            annual_load[load_type]['Annual Load'] = annual_load[load_type]['Annual Load'] + annual_load_MWh
+    except:
+        logging.warning('No annual laod')
+        annual_load = None
         
-        annual_load[load_type]['Annual Load'] = annual_load[load_type]['Annual Load'] + annual_load_MWh
-    
                 # Load series
-    load = pd.DataFrame(0.0, index=snap_idx, columns=list(set(load_types)))
-    
-    for i, load_id in enumerate(load_ids):
+    try:
+        load = pd.DataFrame(0.0, index=snap_idx, columns=list(set(load_types)))
         
-        load_type = load_types[i]
-        query = session.query(
-                ormclass_result_load_t.p
-                ).filter(
-                ormclass_result_load_t.load_id == load_id,
-                ormclass_result_load_t.result_id == result_id
-                ).scalar(
-                        )
-    
-        load_series_norm = pd.Series(
-                data=(np.array(query) / annual_load[load_type]['Annual Load'] ), # ToDo: Check Units!!!
-                index=snap_idx)
+        for i, load_id in enumerate(load_ids):
+            
+            load_type = load_types[i]
+            query = session.query(
+                    ormclass_result_load_t.p
+                    ).filter(
+                    ormclass_result_load_t.load_id == load_id,
+                    ormclass_result_load_t.result_id == result_id
+                    ).scalar(
+                            )
         
-        for snap in snap_idx:
-            load[load_type][snap] = load[load_type][snap] + load_series_norm[snap] # Aggregatet by source (adds up)
-        
+            load_series_norm = pd.Series(
+                    data=(np.array(query) / annual_load[load_type]['Annual Load'] ), # ToDo: Check Units!!!
+                    index=snap_idx)
+            
+            for snap in snap_idx:
+                load[load_type][snap] = load[load_type][snap] + load_series_norm[snap] # Aggregatet by source (adds up)
+    except:
+        logging.warning('No load series')
+        load = None
         
              # Storage    
     query = session.query(
@@ -257,53 +268,61 @@ def get_etragospecs(session,
     specs_meta_data.update({'Storage Sources':stor_sources})
     
                 # Storage Capacity
-    stor_capacity = pd.DataFrame(0.0, 
-                                 index=['Stor_capacity'], 
-                                 columns=list(set(stor_sources)))
-    
-    for i, stor_id in enumerate(stor_ids):
+    try:
+        stor_capacity = pd.DataFrame(0.0, 
+                                     index=['Stor_capacity'], 
+                                     columns=list(set(stor_sources)))
         
-        source = stor_sources[i]
-        p_nom_opt_MW = session.query(
-                ormclass_result_stor.p_nom_opt
-                ).filter(
-                ormclass_result_stor.storage_id == stor_id,
-                ormclass_result_stor.result_id == result_id
-                ).scalar(
-                        )
-    
-        max_hours = session.query(
-                ormclass_result_stor.max_hours
-                ).filter(
-                ormclass_result_stor.storage_id == stor_id,
-                ormclass_result_stor.result_id == result_id
-                ).scalar(
-                        )
+        for i, stor_id in enumerate(stor_ids):
+            
+            source = stor_sources[i]
+            p_nom_opt_MW = session.query(
+                    ormclass_result_stor.p_nom_opt
+                    ).filter(
+                    ormclass_result_stor.storage_id == stor_id,
+                    ormclass_result_stor.result_id == result_id
+                    ).scalar(
+                            )
         
-        stor_capacity[source]['Stor_capacity'] = stor_capacity[source]['Stor_capacity'] + p_nom_opt_MW * max_hours
+            max_hours = session.query(
+                    ormclass_result_stor.max_hours
+                    ).filter(
+                    ormclass_result_stor.storage_id == stor_id,
+                    ormclass_result_stor.result_id == result_id
+                    ).scalar(
+                            )
+            
+            stor_capacity[source]['Stor_capacity'] = stor_capacity[source]['Stor_capacity'] + p_nom_opt_MW * max_hours
+    
+    except:
+        logging.warning('No storage capacity')
+        stor_capacity = None
             
                 # Storage Active Power
-    stor_active_power = pd.DataFrame(0.0, 
-                                        index=snap_idx, 
-                                        columns=list(set(stor_sources)))
-    
-    for i, stor_id in enumerate(stor_ids):
+    try:
+        stor_active_power = pd.DataFrame(0.0, 
+                                            index=snap_idx, 
+                                            columns=list(set(stor_sources)))
         
-        source = stor_sources[i]
-        query = session.query(
-                ormclass_result_stor_t.p
-                ).filter(
-                ormclass_result_stor_t.storage_id == stor_id,
-                ormclass_result_stor_t.result_id == result_id
-                ).scalar(
-                        )
-        stor_active_power_series_kW = pd.Series( # bus active power 
-            data=(np.array(query) * 1000 ), # PyPSA result is in MW
-            index=snap_idx)
-    
-        for snap in snap_idx:
-            stor_active_power[source][snap] = stor_active_power[source][snap] + stor_active_power_series_kW[snap] # Aggregatet by source (adds up) 
+        for i, stor_id in enumerate(stor_ids):
+            
+            source = stor_sources[i]
+            query = session.query(
+                    ormclass_result_stor_t.p
+                    ).filter(
+                    ormclass_result_stor_t.storage_id == stor_id,
+                    ormclass_result_stor_t.result_id == result_id
+                    ).scalar(
+                            )
+            stor_active_power_series_kW = pd.Series( # bus active power 
+                data=(np.array(query) * 1000 ), # PyPSA result is in MW
+                index=snap_idx)
         
+            for snap in snap_idx:
+                stor_active_power[source][snap] = stor_active_power[source][snap] + stor_active_power_series_kW[snap] # Aggregatet by source (adds up) 
+    except:
+        logging.warning('No storage')
+        stor_active_power = None        
     
     # Return Specs
     
