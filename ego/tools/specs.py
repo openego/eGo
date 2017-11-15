@@ -64,22 +64,14 @@ def get_etragospecs_from_db(session,
         return None
     
 ## Snapshot Range 
-    start_snapshot = session.query( 
-            ormclass_result_meta.start_snapshot
+    
+    snap_idx = session.query( 
+            ormclass_result_meta.snapshots
             ).filter(
             ormclass_result_meta.result_id == result_id
             ).scalar(
-                    ) 
-     
-    end_snapshot = session.query( 
-            ormclass_result_meta.end_snapshot
-            ).filter(
-            ormclass_result_meta.result_id == result_id
-            ).scalar( 
                     )
-    
-    snap_idx = range(start_snapshot, end_snapshot + 1) 
-    
+      
 ## Bus Power
     query = session.query(
             ormclass_result_bus_t.p
