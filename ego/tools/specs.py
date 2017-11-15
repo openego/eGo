@@ -11,9 +11,9 @@ logging.getLogger().setLevel(logging.INFO)
 from egoio.db_tables import model_draft # This gives me the specific ORM classes.
 from edisgo.grid.network import ETraGoSpecs 
 
-def get_etragospecs(session, 
-                    bus_id, 
-                    result_id=1):
+def get_etragospecs_from_db(session, 
+                            bus_id, 
+                            result_id=1):
     """
     Reads eTraGo Results from Database and returns an Object of the Interface class ETraGoSpecs
 
@@ -42,7 +42,7 @@ def get_etragospecs(session,
 
 # Mapping       
     ormclass_result_meta = model_draft.__getattribute__('EgoGridPfHvResultMeta')
-    #ormclass_result_bus = model_draft.__getattribute__('EgoGridPfHvResultBus') # Instead of using the automapper, this is the explicit alternative (from egoei.db_tables). IThis class must be identic with the actual database table
+    ormclass_result_bus = model_draft.__getattribute__('EgoGridPfHvResultBus') # Instead of using the automapper, this is the explicit alternative (from egoei.db_tables). 
     #ormclass_result_bus = model_draft.EgoGridPfHvResultBus # This is equivalent
     ormclass_result_bus_t = model_draft.__getattribute__('EgoGridPfHvResultBusT')
     ormclass_result_gen = model_draft.__getattribute__('EgoGridPfHvResultGenerator')
@@ -54,6 +54,15 @@ def get_etragospecs(session,
     ormclass_source = model_draft.__getattribute__('EgoGridPfHvSource')
     
 # Query all Data   
+## Check
+
+    if session.query(ormclass_result_bus).filter(
+            ormclass_result_bus.bus_id == bus_id,
+            ormclass_result_bus.result_id == result_id
+            ).count() == 0:
+        logging.warning('Bus not found')
+        return None
+    
 ## Snapshot Range 
     start_snapshot = session.query( 
             ormclass_result_meta.start_snapshot
@@ -105,7 +114,7 @@ def get_etragospecs(session,
 ## Gen Capacity
     try:
         query = session.query(
-                ormclass_result_gen.generator_id,.
+                ormclass_result_gen.generator_id,
                 ormclass_result_gen.p_nom,
                 ormclass_source.name
                 ).join(
@@ -141,14 +150,14 @@ def get_etragospecs(session,
         
         dispatch = pd.DataFrame(0.0, index=snap_idx, columns=list(set(p_df['name']))) 
         
-    for index, row in p_df.iterrows():
-        source = row['name']
-        gen_series_norm = pd.Series(
-                data=(row['p'] / capacity[source]['p_nom'] ), # Every generator normalized by installed capacity.
-                index=snap_idx)
-        
-        for snap in snap_idx:
-            dispatch[source][snap] = dispatch[source][snap] + gen_series_norm[snap] # Aggregatet by source (adds up)
+        for index, row in p_df.iterrows():
+            source = row['name']
+            gen_series_norm = pd.Series(
+                    data=(row['p'] / capacity[source]['p_nom'] ), # Every generator normalized by installed capacity.
+                    index=snap_idx)
+            
+            for snap in snap_idx:
+                dispatch[source][snap] = dispatch[source][snap] + gen_series_norm[snap] # Aggregatet by source (adds up)
     except:
         logging.warning('No dispatch calculated')
         dispatch = None   
