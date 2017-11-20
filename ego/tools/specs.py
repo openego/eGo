@@ -4,7 +4,9 @@
 import pandas as pd    
 import numpy as np
 import logging # ToDo: Logger should be set up more specific
-logging.getLogger().setLevel(logging.INFO)
+#logging.getLogger().setLevel(logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 ## Project Packages
     
@@ -60,7 +62,7 @@ def get_etragospecs_from_db(session,
             ormclass_result_bus.bus_id == bus_id,
             ormclass_result_bus.result_id == result_id
             ).count() == 0:
-        logging.warning('Bus not found')
+        logger.warning('Bus not found')
         return None
     
 ## Snapshot Range 
@@ -73,6 +75,7 @@ def get_etragospecs_from_db(session,
                     )
       
 ## Bus Power
+    logger.info("Bus active and reactive Power")
     query = session.query(
             ormclass_result_bus_t.p
             ).filter(
@@ -85,7 +88,7 @@ def get_etragospecs_from_db(session,
             data=(np.array(query) * 1000 ), # PyPSA result is in MW
             index=snap_idx) 
     except:
-        logging.warning('No active power series')
+        logger.warning('No active power series')
         active_power_kW = None
         
     query = session.query(
@@ -100,10 +103,11 @@ def get_etragospecs_from_db(session,
             data=(np.array(query) * 1000 ), # PyPSA result is in MW
             index=snap_idx) 
     except:
-        logging.warning('No reactive power series')
+        logger.warning('No reactive power series')
         reactive_power_kvar = None
      
 ## Gen Capacity
+    logger.info("Gen Capacity")
     try:
         query = session.query(
                 ormclass_result_gen.generator_id,
@@ -115,16 +119,17 @@ def get_etragospecs_from_db(session,
                         ).filter(
                                 ormclass_result_gen.bus == bus_id,
                                 ormclass_result_gen.result_id == result_id) 
-          
+        logger.debug("Dataframe from gens query")  
         gen_df = pd.DataFrame(query.all(), 
                               columns=[column['name'] for column in query.column_descriptions])   # ToDo: I like the dataframe-approach much more. The could should be adapted...  
         
         capacity = gen_df[['p_nom','name']].groupby('name').sum().T
     except:
-        logging.warning('No capactity calculated')
+        logger.warning('No capactity calculated')
         capacity = None
         
 ## Gen Dispatch
+    logger.info("Gen Dispatch")    
     try: 
         query = session.query(
                 ormclass_result_gen_t.generator_id,
@@ -151,7 +156,7 @@ def get_etragospecs_from_db(session,
             for snap in snap_idx:
                 dispatch[source][snap] = dispatch[source][snap] + gen_series_norm[snap] # Aggregatet by source (adds up)
     except:
-        logging.warning('No dispatch calculated')
+        logger.warning('No dispatch calculated')
         dispatch = None   
         
 ## Curtailment
@@ -186,7 +191,7 @@ def get_etragospecs_from_db(session,
         for column in curtailment:
             curtailment[column] = potential[column] - dispatch[column]
     except:
-        logging.warning('No curtailment calculated')
+        logger.warning('No curtailment calculated')
         curtailment = None
 
 ## Load
@@ -199,11 +204,12 @@ def get_etragospecs_from_db(session,
     for row in query:
         load_ids.append(row.load_id)
         
-    load_types = ['all'] # ToDo: This is in eTraGo still not implemented
+    load_types = ['retail'] # ToDo: This is in eTraGo still not implemented. All are retail now
+    all_types = ['retail', 'agricultural', 'residential', 'industrial']
     
 ## Annual Load
     try:
-        annual_load = pd.DataFrame(0.0, index=['Annual Load'], columns=list(set(load_types)))
+        annual_load = pd.DataFrame(0.0, index=['Annual Load'], columns=list(set(all_types)))
         
         for i, load_id in enumerate(load_ids):
             
@@ -218,12 +224,12 @@ def get_etragospecs_from_db(session,
             
             annual_load[load_type]['Annual Load'] = annual_load[load_type]['Annual Load'] + annual_load_MWh
     except:
-        logging.warning('No annual laod')
+        logger.warning('No annual laod')
         annual_load = None
         
 ## Load series
     try:
-        load = pd.DataFrame(0.0, index=snap_idx, columns=list(set(load_types)))
+        load = pd.DataFrame(0.0, index=snap_idx, columns=list(set(all_types)))
         
         for i, load_id in enumerate(load_ids):
             
@@ -243,7 +249,7 @@ def get_etragospecs_from_db(session,
             for snap in snap_idx:
                 load[load_type][snap] = load[load_type][snap] + load_series_norm[snap] # Aggregatet by source (adds up)
     except:
-        logging.warning('No load series')
+        logger.warning('No load series')
         load = None
         
 ## Storage    
@@ -297,7 +303,7 @@ def get_etragospecs_from_db(session,
             stor_capacity[source]['Stor_capacity'] = stor_capacity[source]['Stor_capacity'] + p_nom_opt_MW * max_hours
         battery_capacity = stor_capacity['extendable_storage']['Stor_capacity']
     except:
-        logging.warning('No storage capacity detected')
+        logger.warning('No storage capacity detected')
         battery_capacity = None
             
 ## Storage Active Power
@@ -325,7 +331,7 @@ def get_etragospecs_from_db(session,
             
         battery_active_power = stor_active_power['extendable_storage']
     except:
-        logging.warning('No storage timeseries detected')
+        logger.warning('No storage timeseries detected')
         battery_active_power = None        
     
 # Return Specs
@@ -341,7 +347,7 @@ def get_etragospecs_from_db(session,
                         annual_load=annual_load
                         )    
     
-    logging.info(specs_meta_data)
+    logger.debug(specs_meta_data)
     return specs
         
     
