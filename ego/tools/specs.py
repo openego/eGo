@@ -4,8 +4,7 @@
 import pandas as pd    
 import numpy as np
 import logging # ToDo: Logger should be set up more specific
-#logging.getLogger().setLevel(logging.INFO)
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.info)
 logger = logging.getLogger(__name__)
 
 ## Project Packages
@@ -75,7 +74,6 @@ def get_etragospecs_from_db(session,
                     )
       
 ## Bus Power
-    logger.info("Bus active and reactive Power")
     query = session.query(
             ormclass_result_bus_t.p
             ).filter(
@@ -107,7 +105,6 @@ def get_etragospecs_from_db(session,
         reactive_power_kvar = None
      
 ## Gen Capacity
-    logger.info("Gen Capacity")
     try:
         query = session.query(
                 ormclass_result_gen.generator_id,
@@ -121,15 +118,14 @@ def get_etragospecs_from_db(session,
                                 ormclass_result_gen.result_id == result_id) 
         logger.debug("Dataframe from gens query")  
         gen_df = pd.DataFrame(query.all(), 
-                              columns=[column['name'] for column in query.column_descriptions])   # ToDo: I like the dataframe-approach much more. The could should be adapted...  
+                              columns=[column['name'] for column in query.column_descriptions]) 
         
         capacity = gen_df[['p_nom','name']].groupby('name').sum().T
     except:
         logger.warning('No capactity calculated')
         capacity = None
         
-## Gen Dispatch
-    logger.info("Gen Dispatch")    
+## Gen Dispatch    
     try: 
         query = session.query(
                 ormclass_result_gen_t.generator_id,
@@ -204,7 +200,8 @@ def get_etragospecs_from_db(session,
     for row in query:
         load_ids.append(row.load_id)
         
-    load_types = ['retail'] # ToDo: This is in eTraGo still not implemented. All are retail now
+    load_types = ['retail'] # ToDo: Should be retrieved directly from Database
+    logger.warning('Load types are all aggregated to %s', load_types)
     all_types = ['retail', 'agricultural', 'residential', 'industrial']
     
 ## Annual Load
@@ -214,13 +211,13 @@ def get_etragospecs_from_db(session,
         for i, load_id in enumerate(load_ids):
             
             load_type = load_types[i]
-            annual_load_MWh = session.query( # ToDo: Check unit
+            annual_load_MWh = session.query(
                     ormclass_result_load.e_annual
                     ).filter(
                     ormclass_result_load.load_id == load_id,
                     ormclass_result_load.result_id == result_id
                     ).scalar(
-                            ) * 1000 # eTraGo annual load apparently in GWh    
+                            ) * 1000 # Annual load in GWh (As PyPSA)    
             
             annual_load[load_type]['Annual Load'] = annual_load[load_type]['Annual Load'] + annual_load_MWh
     except:
@@ -234,8 +231,8 @@ def get_etragospecs_from_db(session,
         for i, load_id in enumerate(load_ids):
             
             load_type = load_types[i]
-            query = session.query(
-                    ormclass_result_load_t.p
+            load_MW = session.query(
+                    ormclass_result_load_t.p   
                     ).filter(
                     ormclass_result_load_t.load_id == load_id,
                     ormclass_result_load_t.result_id == result_id
@@ -243,11 +240,11 @@ def get_etragospecs_from_db(session,
                             )
         
             load_series_norm = pd.Series(
-                    data=(np.array(query) / annual_load[load_type]['Annual Load'] ), # ToDo: Check Units!!!
+                    data=(np.array(load_MW) / annual_load[load_type]['Annual Load'] ), # annual_laod in MW
                     index=snap_idx)
             
             for snap in snap_idx:
-                load[load_type][snap] = load[load_type][snap] + load_series_norm[snap] # Aggregatet by source (adds up)
+                load[load_type][snap] = load[load_type][snap] + load_series_norm[snap] 
     except:
         logger.warning('No load series')
         load = None
@@ -261,8 +258,8 @@ def get_etragospecs_from_db(session,
     stor_ids = []
     for row in query:
         stor_ids.append(row.storage_id)
-        
-    stor_sources = []
+       
+    stor_sources = [] 
     for id in stor_ids:   
         query = session.query(ormclass_source.name
                   ).filter(
@@ -273,37 +270,45 @@ def get_etragospecs_from_db(session,
         stor_sources.append(query)
    
     specs_meta_data.update({'Storage IDs':stor_ids})
-    specs_meta_data.update({'Storage Sources':stor_sources})
+    specs_meta_data.update({'Storage Sources':stor_sources}) #Should all be extendable if short term
     
 ## Storage Capacity
     try:
         stor_capacity = pd.DataFrame(0.0, 
-                                     index=['Stor_capacity'], 
-                                     columns=list(set(stor_sources)))
+                                     index=['extendable_storage'], 
+                                     columns=['short_term', 'long_term'])
         
         for i, stor_id in enumerate(stor_ids):
             
             source = stor_sources[i]
-            p_nom_opt_MW = session.query(
-                    ormclass_result_stor.p_nom_opt
-                    ).filter(
-                    ormclass_result_stor.storage_id == stor_id,
-                    ormclass_result_stor.result_id == result_id
-                    ).scalar(
-                            )
-        
-            max_hours = session.query(
-                    ormclass_result_stor.max_hours
-                    ).filter(
-                    ormclass_result_stor.storage_id == stor_id,
-                    ormclass_result_stor.result_id == result_id
-                    ).scalar(
-                            )
+            if source == 'extendable_storage':
+                p_nom_opt_MW = session.query(
+                        ormclass_result_stor.p_nom_opt
+                        ).filter(
+                        ormclass_result_stor.storage_id == stor_id,
+                        ormclass_result_stor.result_id == result_id
+                        ).scalar(
+                                )
             
-            stor_capacity[source]['Stor_capacity'] = stor_capacity[source]['Stor_capacity'] + p_nom_opt_MW * max_hours
-        battery_capacity = stor_capacity['extendable_storage']['Stor_capacity']
+                max_hours = session.query(
+                        ormclass_result_stor.max_hours
+                        ).filter(
+                        ormclass_result_stor.storage_id == stor_id,
+                        ormclass_result_stor.result_id == result_id
+                        ).scalar(
+                                )
+                
+                if max_hours <= 20:
+                    stor_type = 'short_term'
+                else:
+                    stor_type = 'long_term'
+    
+                    
+                stor_capacity[stor_type][source] = stor_capacity[stor_type][source] + p_nom_opt_MW * max_hours
+        logger.warning('Only short term extendable storage is considered battery storage') #ToDo: Check if this can be improved       
+        battery_capacity = stor_capacity['short_term']['extendable_storage']
     except:
-        logger.warning('No storage capacity detected')
+        logger.warning('No storage capacity calculated')
         battery_capacity = None
             
 ## Storage Active Power
@@ -322,7 +327,7 @@ def get_etragospecs_from_db(session,
                     ormclass_result_stor_t.result_id == result_id
                     ).scalar(
                             )
-            stor_active_power_series_kW = pd.Series( # bus active power 
+            stor_active_power_series_kW = pd.Series( 
                 data=(np.array(query) * 1000 ), # PyPSA result is in MW
                 index=snap_idx)
         
@@ -339,7 +344,7 @@ def get_etragospecs_from_db(session,
     specs = ETraGoSpecs(active_power=active_power_kW,
                         reactive_power=reactive_power_kvar,
                         battery_capacity=battery_capacity,
-                        battery_active_power=battery_active_power, # ToDo: Check if extendable_storage is battery!
+                        battery_active_power=battery_active_power,
                         dispatch=dispatch,
                         capacity=capacity,
                         curtailment=curtailment,
@@ -347,7 +352,7 @@ def get_etragospecs_from_db(session,
                         annual_load=annual_load
                         )    
     
-    logger.debug(specs_meta_data)
+    logger.info(specs_meta_data)
     return specs
         
     
