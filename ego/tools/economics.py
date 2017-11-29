@@ -1,6 +1,10 @@
 """
 Module to collect useful functions for economic calculation of eGo
 
+Todo:
+ 1) Investment costs of eTrago and eDisGo
+ 2) 
+
 """
 
 # calculate annuity per time step or periode
@@ -49,6 +53,6 @@ def total_economic_costs(eTraGo_network):
 
 
     """
-    
+
 
     return

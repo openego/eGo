@@ -20,47 +20,93 @@ __copyright__ = "Flensburg University of Applied Sciences, Europa-Universität F
 __license__ = "GNU Affero General Public License Version 3 (AGPL-3.0)"
 __author__ = "wolfbunke"
 
-
 from etrago.appl import etrago
 from tools.plots import (make_all_plots,plot_line_loading, plot_stacked_gen,
                                      add_coordinates, curtailment, gen_dist,
                                      storage_distribution)
 from tools.utilities import get_scenario_setting, get_time_steps
 #from eDisGo import ...
+# import country selection
+from tools.utilities import bus_by_country
+import pandas as pd
+from tools.io import geolocation_buses
 
 # import scenario settings **args of eTraGo
-args = get_scenario_setting()
+args = get_scenario_setting(json_file='scenario_setting.json')
 
 # start eTraGo calculation
-eTraGo_network = etrago(args['eTraGo'])
+eTraGo = etrago(args['eTraGo'])
+
+# add country code to bus and geometry (shapely)
+# eTraGo.buses = eTraGo.buses.drop(['country_code','geometry'], axis=1)
+##eTraGo.lines.info()
+
+
+network =eTraGo
+test = geolocation_buses(network = eTraGo, section='oedb')
+
+test.buses
+
+plot_line_loading(eTraGo)
 
 
 
-def hv_generator_results(eTraGo_network):
+eTraGo.foreign_trade
 
-    eTraGo_network.generators.groupby('carrier')['p_nom'].sum() # in MW
+def hv_generator_results(eTraGo):
+    """
+    collect and sum up all importent results of
+    generations and save it to an Excel file for a quick
+    results overview
 
-    eTraGo_network.generators.groupby('carrier')['p_nom_opt'].sum() # in MW
+    """
+    #eTraGo.results
+    #eTraGo.components
 
-    eTraGo_network.generators.groupby('carrier')['marginal_cost'].sum() # in in [EUR]
+    # results per carrier
+    results = pd.DataFrame()
+    results['p_nom'] = eTraGo.generators.groupby('carrier')['p_nom'].sum() # in MW
+    results['p_nom_opt'] =  eTraGo.generators.groupby('carrier')['p_nom_opt'].sum() # in MW
+    results['marginal_cost'] =  eTraGo.generators.groupby('carrier')['marginal_cost'].sum() # in in [EUR]
 
-    calc_time = get_time_steps(args)
+    # toal system caracteristic
+    results.total = pd.DataFrame()
+    results.total['p_nom'] = [eTraGo.generators.p_nom_opt.sum()] # in [MWh]
+    results.total['calc_time'] = get_time_steps(args)
 
-    p_nom_o_sum = eTraGo_network.generators.p_nom_opt.sum()  # in [MWh]
-    p_nom_sum = eTraGo_network.generators.p_nom.sum()  # in [MWh]
-    m_cost_sum = eTraGo_network.generators.marginal_cost.sum() # in [EUR]
-
-    return
-
-
-
-
-eTraGo_network.generators.p_nom_opt.sum()
+    results.total
+    p_nom_o_sum = eTraGo.generators.p_nom_opt.sum()  # in [MWh]
+    p_nom_sum = eTraGo.generators.p_nom.sum()  # in [MWh]
+    m_cost_sum = eTraGo.generators.marginal_cost.sum() # in [EUR]
 
 
-eTraGo_network
+    # Write the results as xlsx file
+    # ToDo add time of calculation to file name
+    # add xlsxwriter to setup
+    writer = pd.ExcelWriter('open_ego_results.xlsx', engine='xlsxwriter')
 
-make_all_plots(eTraGo_network)
+    # write results of installed Capacity by fuels
+    results.total.to_excel(writer, index=False, sheet_name='Total Calculation')
+
+    # write orgininal data in second sheet
+    results.to_excel(writer, index=True, sheet_name='Results by carriers')
+    #add plots
+
+    # Close the Pandas Excel writer and output the Excel file.
+    writer.save()
+
+
+# write results to excel
+hv_generator_results(eTraGo)
+
+"""
+
+eTraGo.generators.p_nom_opt.sum()
+
+
+eTraGo
+
+make_all_plots(eTraGo)
 
 
 # cost per €/MWh
@@ -71,30 +117,30 @@ p_nom_o_sum - p_nom_sum
 
 
 
-eTraGo_network.generators.head()
-
+eTraGo.generators.head()
+"""
 
 # plots
 # make a line loading plot
-plot_line_loading(eTraGo_network)
+plot_line_loading(eTraGo)
 
 # plot stacked sum of nominal power for each generator type and timestep
-plot_stacked_gen(network, resolution="MW")
+plot_stacked_gen(eTraGo, resolution="MW")
 
 # plot to show extendable storages
-storage_distribution(network)
+storage_distribution(eTraGo)
 
 
 
 
 # start calculations (eTraGo and eDisGo)
-# rename resulting network container to eTraGo_network
-#eTraGo_network = etrago(args2)
+# rename resulting network container to eTraGo
+#eTraGo = etrago(args2)
 # eDisGo_network = edisgo()
 
 
 # test call plot function
-make_all_plots(eTraGo_network)
+make_all_plots(eTraGo)
 
 
 
