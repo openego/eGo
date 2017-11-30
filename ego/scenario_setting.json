@@ -19,7 +19,7 @@
     "generator_noise": false,
     "reproduce_noise": false,
     "minimize_loading": false,
-    "k_mean_clustering": 100,
+    "k_mean_clustering": false,
     "network_clustering": false,
     "parallelisation": false,
     "line_grouping": false,
