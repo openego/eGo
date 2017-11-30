@@ -20,9 +20,11 @@ setup(name='eGo',
                         'sqlalchemy >= 1.0.15, <= 1.1.4',
                         'oemof.db >=0.0.4, <=0.0.4',
                         'geoalchemy2 >= 0.3.0, <=0.4.0',
+                        'pyproj == 1.9.5.1',
+                        'geopandas==0.3.0',
+                        'Rtree==0.8.3',
 'matplotlib >= 1.5.3, <=1.5.3'],
-	dependency_links=['git+ssh://git@github.com/openego/eTraGo.git@dev#egg=eTraGo',
-	'git+ssh://git@github.com/openego/PyPSA.git@dev#egg=PyPSA'],
+	dependency_links=['git+ssh://git@github.com/openego/PyPSA.git@dev#egg=PyPSA'],
 	 extras_require={
         'docs': [
             'sphinx >= 1.4',
