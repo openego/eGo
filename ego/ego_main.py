@@ -31,6 +31,7 @@ from tools.utilities import bus_by_country
 import pandas as pd
 from tools.io import geolocation_buses
 
+"""
 # import scenario settings **args of eTraGo
 args = get_scenario_setting(json_file='scenario_setting.json')
 
@@ -44,14 +45,14 @@ eTraGo = etrago(args['eTraGo'])
 
 network =eTraGo
 test = geolocation_buses(network = eTraGo, section='oedb')
+"""
+#test.buses
 
-test.buses
-
-plot_line_loading(eTraGo)
+#plot_line_loading(eTraGo)
 
 
 
-eTraGo.foreign_trade
+#eTraGo.foreign_trade
 
 def hv_generator_results(eTraGo):
     """
@@ -97,7 +98,7 @@ def hv_generator_results(eTraGo):
 
 
 # write results to excel
-hv_generator_results(eTraGo)
+#hv_generator_results(eTraGo)
 
 """
 
@@ -120,40 +121,60 @@ p_nom_o_sum - p_nom_sum
 eTraGo.generators.head()
 """
 
-# plots
-# make a line loading plot
-plot_line_loading(eTraGo)
 
-# plot stacked sum of nominal power for each generator type and timestep
-plot_stacked_gen(eTraGo, resolution="MW")
-
-# plot to show extendable storages
-storage_distribution(eTraGo)
+if __name__ == '__main__':
+    # import scenario settings **args of eTraGo
+    args = get_scenario_setting(json_file='scenario_setting.json')
 
 
 
+    # start eTraGo calculation
+    eTraGo = etrago(args['eTraGo'])
 
-# start calculations (eTraGo and eDisGo)
-# rename resulting network container to eTraGo
-#eTraGo = etrago(args2)
-# eDisGo_network = edisgo()
-
-
-# test call plot function
-make_all_plots(eTraGo)
+    # add country code to bus and geometry (shapely)
+    # eTraGo.buses = eTraGo.buses.drop(['country_code','geometry'], axis=1)
+    ##eTraGo.lines.info()
 
 
+    network =eTraGo
+    test = geolocation_buses(network = eTraGo, section='oedb')
 
-# calculate power plant dispatch without grid utilization (either in pypsa or in renpassgis)
 
-# result queries...call functions from utilities
 
-## total system costs of transmission grid vs. total system costs of all distribution grids results in overall total
-## details on total system costs:
-## existing plants: usage, costs for each technology
-## newly installed plants (storages, grid measures) with size, location, usage, costs
-## grid losses: amount and costs
+    # plots
+    # make a line loading plot
+    plot_line_loading(eTraGo)
 
-# possible aggregation of results
+    # plot stacked sum of nominal power for each generator type and timestep
+    plot_stacked_gen(eTraGo, resolution="MW")
 
-# exports: total system costs, plots, csv export files
+    # plot to show extendable storages
+    storage_distribution(eTraGo)
+
+
+
+
+    # start calculations (eTraGo and eDisGo)
+    # rename resulting network container to eTraGo
+    #eTraGo = etrago(args2)
+    # eDisGo_network = edisgo()
+
+
+    # test call plot function
+    make_all_plots(eTraGo)
+
+
+
+    # calculate power plant dispatch without grid utilization (either in pypsa or in renpassgis)
+
+    # result queries...call functions from utilities
+
+    ## total system costs of transmission grid vs. total system costs of all distribution grids results in overall total
+    ## details on total system costs:
+    ## existing plants: usage, costs for each technology
+    ## newly installed plants (storages, grid measures) with size, location, usage, costs
+    ## grid losses: amount and costs
+
+    # possible aggregation of results
+
+    # exports: total system costs, plots, csv export files
