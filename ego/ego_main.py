@@ -31,6 +31,7 @@ from tools.utilities import bus_by_country
 import pandas as pd
 from tools.io import geolocation_buses
 
+
 """
 # import scenario settings **args of eTraGo
 args = get_scenario_setting(json_file='scenario_setting.json')
@@ -42,8 +43,6 @@ eTraGo = etrago(args['eTraGo'])
 # eTraGo.buses = eTraGo.buses.drop(['country_code','geometry'], axis=1)
 ##eTraGo.lines.info()
 
-
-network =eTraGo
 test = geolocation_buses(network = eTraGo, section='oedb')
 """
 #test.buses
@@ -51,74 +50,14 @@ test = geolocation_buses(network = eTraGo, section='oedb')
 #plot_line_loading(eTraGo)
 
 
-
-#eTraGo.foreign_trade
-
-def hv_generator_results(eTraGo):
-    """
-    collect and sum up all importent results of
-    generations and save it to an Excel file for a quick
-    results overview
-
-    """
-    #eTraGo.results
-    #eTraGo.components
-
-    # results per carrier
-    results = pd.DataFrame()
-    results['p_nom'] = eTraGo.generators.groupby('carrier')['p_nom'].sum() # in MW
-    results['p_nom_opt'] =  eTraGo.generators.groupby('carrier')['p_nom_opt'].sum() # in MW
-    results['marginal_cost'] =  eTraGo.generators.groupby('carrier')['marginal_cost'].sum() # in in [EUR]
-
-    # toal system caracteristic
-    results.total = pd.DataFrame()
-    results.total['p_nom'] = [eTraGo.generators.p_nom_opt.sum()] # in [MWh]
-    results.total['calc_time'] = get_time_steps(args)
-
-    results.total
-    p_nom_o_sum = eTraGo.generators.p_nom_opt.sum()  # in [MWh]
-    p_nom_sum = eTraGo.generators.p_nom.sum()  # in [MWh]
-    m_cost_sum = eTraGo.generators.marginal_cost.sum() # in [EUR]
-
-
-    # Write the results as xlsx file
-    # ToDo add time of calculation to file name
-    # add xlsxwriter to setup
-    writer = pd.ExcelWriter('open_ego_results.xlsx', engine='xlsxwriter')
-
-    # write results of installed Capacity by fuels
-    results.total.to_excel(writer, index=False, sheet_name='Total Calculation')
-
-    # write orgininal data in second sheet
-    results.to_excel(writer, index=True, sheet_name='Results by carriers')
-    #add plots
-
-    # Close the Pandas Excel writer and output the Excel file.
-    writer.save()
+make_all_plots(eTraGo)
 
 
 # write results to excel
 #hv_generator_results(eTraGo)
-
 """
 
-eTraGo.generators.p_nom_opt.sum()
 
-
-eTraGo
-
-make_all_plots(eTraGo)
-
-
-# cost per €/MWh
-price = m_cost_sum/p_nom__o_sum
-print(price)
-
-p_nom_o_sum - p_nom_sum
-
-
-
-eTraGo.generators.head()
 """
 
 

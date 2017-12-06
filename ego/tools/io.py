@@ -83,5 +83,32 @@ def geolocation_buses(network, section='oedb'):
     # add busC to eTraGo.buses
     network.buses['country_code'] = busC['country']
 
+    # close session
+    session.close()
 
     return network
+
+
+
+def results_to_excel(results):
+    """
+
+    """
+
+
+    # Write the results as xlsx file
+    # ToDo add time of calculation to file name
+    # add xlsxwriter to setup
+    writer = pd.ExcelWriter('open_ego_results.xlsx', engine='xlsxwriter')
+
+    # write results of installed Capacity by fuels
+    results.total.to_excel(writer, index=False, sheet_name='Total Calculation')
+
+    # write orgininal data in second sheet
+    results.to_excel(writer, index=True, sheet_name='Results by carriers')
+    #add plots
+
+    # Close the Pandas Excel writer and output the Excel file.
+    writer.save()
+
+    # buses
