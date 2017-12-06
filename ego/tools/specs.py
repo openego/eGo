@@ -4,7 +4,7 @@
 import pandas as pd    
 import numpy as np
 import logging # ToDo: Logger should be set up more specific
-logging.basicConfig(level=logging.info)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 ## Project Packages
@@ -98,7 +98,7 @@ def get_etragospecs_from_db(session,
                     )
     try:
         reactive_power_kvar = pd.Series( 
-            data=(np.array(query) * 1000 ), # PyPSA result is in MW
+            data=(np.array(query) * 1000 ), # PyPSA result is in Mvar
             index=snap_idx) 
     except:
         logger.warning('No reactive power series')
@@ -199,7 +199,8 @@ def get_etragospecs_from_db(session,
     load_ids = []
     for row in query:
         load_ids.append(row.load_id)
-        
+       
+    specs_meta_data.update({'Load IDs':load_ids})
     load_types = ['retail'] # ToDo: Should be retrieved directly from Database
     logger.warning('Load types are all aggregated to %s', load_types)
     all_types = ['retail', 'agricultural', 'residential', 'industrial']
@@ -353,6 +354,7 @@ def get_etragospecs_from_db(session,
                         )    
     
     logger.info(specs_meta_data)
+    print(specs_meta_data)
     return specs
         
     
