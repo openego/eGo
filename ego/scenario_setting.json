@@ -1,0 +1,42 @@
+{
+  "global": {
+    "eTraGo": true,
+    "eDisGo": false
+
+  },
+  "eTraGo": {
+    "db": "oedb",
+    "gridversion": "v0.2.11",
+
+    "method": "lopf",
+    "pf_post_lopf": false,
+    "start_snapshot": 2323,
+    "end_snapshot" : 2324,
+    "scn_name": "SH Status Quo",
+    "solver": "gurobi",
+
+    "lpfile":  false,
+    "results": false,
+    "export": false,
+
+    "storage_extendable": true,
+    "generator_noise": true,
+    "reproduce_noise": false,
+
+    "minimize_loading": false,
+
+    "k_mean_clustering": 13,
+    "network_clustering": false,
+
+    "parallelisation": false,
+    "line_grouping": false,
+    "branch_capacity_factor": 1,
+    "load_shedding": true,
+    "comments": null
+  },
+  "eDisGo": {
+     "xxx": "xxx",
+     "XY": false,
+     "comments": null
+  }
+}
