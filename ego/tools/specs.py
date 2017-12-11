@@ -116,7 +116,7 @@ def get_etragospecs_from_db(session,
                         ).filter(
                                 ormclass_result_gen.bus == bus_id,
                                 ormclass_result_gen.result_id == result_id) 
-        logger.debug("Dataframe from gens query")  
+          
         gen_df = pd.DataFrame(query.all(), 
                               columns=[column['name'] for column in query.column_descriptions]) 
         

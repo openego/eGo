@@ -19,42 +19,21 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-etrago = False
+etrago = True
 direct_specs = False
-specs = True
-edisgo = True
+specs = False
+edisgo = False
 
-local = False
 
 #%% Database Connection
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
     
-if not local:
-    from oemof import db
-    conn = db.connection(section='oedb')
+from oemof import db
+conn = db.connection(section='oedb')
 
-    Session = sessionmaker(bind=conn)
-    session = Session()
-
-else:
- 
-    user = "postgres"
-    password = "postgres"
-    host = "localhost"
-    port = "5432"
-    database = "oedb"
-    
-    engine = create_engine(
-                'postgresql://' + '%s:%s@%s:%s/%s' % (user,
-                                                      password,
-                                                      host,
-                                                      port,
-                                                      database))
-    
-    
-    Session = sessionmaker(bind=engine)
-    session = Session()
+Session = sessionmaker(bind=conn)
+session = Session()
 
 
 #%% eTraGo
@@ -72,15 +51,6 @@ if etrago:
         # Import scenario settings **kwargs of eTraGo
     args = get_scenario_setting() # Gets scenario settings form json file.
     
-    print ("eTraGo Input Parameters: \n")
-    
-    for x in args:
-        print (x)   
-        for y in args[x]:
-            print (y,':',args[x][y]) # Mehrdimensionales Dictionary
-    
-    print("Reproduce Noise: " + str(args['eTraGo_args']['reproduce_noise'])) # simply test for accessing dictionary entries... 
-     
     # session = oedb_session(args['eTraGo_args']['db']) # Same session class as used by eTraGo itself later, but diferent object
     # eDisGo uses the same session class.
     # Connection Parameters come from the Oemof config file
@@ -88,9 +58,6 @@ if etrago:
     
         # Start eTraGo calculation
     eTraGo_network = etrago(args['eTraGo_args']) # Baut über oemof.de (und config.ini eine Verbindung zur Datenbank auf)
-    
-    eTraGo_network.buses_t.p['28313']
-    
     
         # Plot everything to console
     make_all_plots(eTraGo_network) # Line loading, commitment, storage
