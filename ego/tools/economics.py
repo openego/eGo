@@ -61,9 +61,13 @@ def total_economic_costs(eTraGo):
 
     # results per carrier
     results = pd.DataFrame()
+    results.etrago = pd.DataFrame()
     results.etrago['p_nom'] = eTraGo.generators.groupby('carrier')['p_nom'].sum() # in MW
     results.etrago['p_nom_opt'] =  eTraGo.generators.groupby('carrier')['p_nom_opt'].sum() # in MW
     results.etrago['marginal_cost'] =  eTraGo.generators.groupby('carrier')['marginal_cost'].sum() # in in [EUR]
+
+
+
 
 
 
@@ -84,7 +88,6 @@ def total_economic_costs(eTraGo):
     results.total = pd.DataFrame()
     results.total['p_nom'] = [eTraGo.generators.p_nom_opt.sum()] # in [MWh]
     results.total['calc_time'] = get_time_steps(args)
-
 
     # linies
     eTraGo.lines.length.sum()
