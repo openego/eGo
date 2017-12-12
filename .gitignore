@@ -2,3 +2,5 @@
 gurobi.log
 __pycache__/
 results
+*.egg-info
+
