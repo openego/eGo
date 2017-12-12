@@ -39,7 +39,7 @@ session = Session()
 #%% eTraGo
 if etrago:
         
-    from tools.plots import make_all_plots
+    from eGo.tools.plots import make_all_plots
 
     from tools.utilities import get_scenario_setting
         # eTraGo

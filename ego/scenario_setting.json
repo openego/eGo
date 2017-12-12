@@ -10,10 +10,10 @@
 
     "method": "lopf",
     "pf_post_lopf": false,
-    "start_snapshot": 2323,
-    "end_snapshot" : 2324,
-    "scn_name": "SH Status Quo",
-    "solver": "gurobi",
+    "start_snapshot": 3492,
+    "end_snapshot" : 3493,
+    "scn_name": "Status Quo",
+    "solver": "glpk",
 
     "lpfile":  false,
     "results": false,
@@ -25,14 +25,14 @@
 
     "minimize_loading": false,
 
-    "k_mean_clustering": 13,
+    "k_mean_clustering": false,
     "network_clustering": false,
 
     "parallelisation": false,
-    "line_grouping": false,
-    "branch_capacity_factor": 1,
+    "line_grouping": true,
+    "branch_capacity_factor": 0.7,
     "load_shedding": true,
-    "comments": null
+    "comments": "Malte: hour of lowest residual load v0.2.11"
   },
   "eDisGo": {
      "xxx": "xxx",
@@ -40,3 +40,4 @@
      "comments": null
   }
 }
+
