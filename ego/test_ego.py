@@ -19,9 +19,9 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-etrago = True
+etrago = False
 direct_specs = False
-specs = False
+specs = True
 edisgo = False
 
 
@@ -68,6 +68,8 @@ if direct_specs:
     import pandas as pd
     bus_id = 27334    
     
+
+
     specs_meta_data = {}
     specs_meta_data.update({'TG Bus ID':bus_id})
     
@@ -115,7 +117,7 @@ if direct_specs:
 if specs:
     logging.info('Retrieving Specs')
 #    subst_id = 1802 
-    bus_id = 27334
+    bus_id = 23971
     result_id = 9# Six is Germany for 2 Snaps with minimal residual load
     
     from tools.specs import get_etragospecs_from_db
@@ -123,6 +125,12 @@ if specs:
 
     #ormclass_substation = model_draft.__getattribute__('EgoGridHvmvSubstation') # Even here, ther version should be checked
 
+#    bus_id = 23971 # Two solars with identic w_id
+## 23695 gas dispatch
+#
+## 26930
+#result_id = 9
+    
 #    subst_id = session.query(
 #            ormclass_substation.subst_id
 #            ).filter(
@@ -139,9 +147,7 @@ if specs:
 #                    )       
  
     specs = get_etragospecs_from_db(session, bus_id, result_id)
-    specs.load
-    specs.dispatch # Warum Null? Und other dazu....
-    specs._active_power
+    specs.battery_capacity
     
     
 #%% eDisGo   
