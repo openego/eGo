@@ -3,4 +3,4 @@ gurobi.log
 __pycache__/
 results
 *.egg-info
-
+ego/scenario_setting.json

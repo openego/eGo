@@ -11,9 +11,9 @@
     "method": "lopf",
     "pf_post_lopf": false,
     "start_snapshot": 3492,
-    "end_snapshot" : 3493,
-    "scn_name": "Status Quo",
-    "solver": "glpk",
+    "end_snapshot" : 3497,
+    "scn_name": "SH NEP 2035",
+    "solver": "gurobi",
 
     "lpfile":  false,
     "results": false,

@@ -16,7 +16,8 @@ from edisgo.grid.network import ETraGoSpecs
 
 def get_etragospecs_from_db(session, 
                             bus_id, 
-                            result_id=1):
+                            result_id,
+                            scn_name):
     """
     Reads eTraGo Results from Database and returns an Object of the Interface class ETraGoSpecs
 
@@ -152,10 +153,11 @@ def get_etragospecs_from_db(session,
                         ).join(
                                 ormclass_result_gen_single,
                                 ormclass_result_gen_single.aggr_id == ormclass_result_gen.generator_id
-                                ).filter(
+                                ).filter( #Todo: Hier muss noch die Version gequeried weden!!!
                                 ormclass_result_gen.bus == bus_id,
                                 ormclass_result_gen.result_id == result_id,
-                                ormclass_source.name.in_(weather_dpdnt))
+                                ormclass_source.name.in_(weather_dpdnt),
+                                ormclass_result_gen_single.scn_name == scn_name)
       
         ren_df = pd.DataFrame(query.all(), 
                               columns=[column['name'] for 
@@ -342,16 +344,18 @@ def get_etragospecs_from_db(session,
      
     # Return Specs
     
-    specs = ETraGoSpecs(battery_capacity=battery_capacity,
-                        battery_active_power=battery_active_power,
+    specs = ETraGoSpecs(_battery_capacity=battery_capacity,
+                        _battery_active_power=battery_active_power,
                         
-                        conv_dispatch=conv_dsptch_norm,
+                        _conv_dispatch=conv_dsptch_norm,
                         
-                        renewables=aggr_gens,
-                        ren_dispatch=dispatch,
-                        ren_curtailment=curtailment)    
+                        _renewables=aggr_gens,
+                        _ren_dispatch=dispatch,
+                        _ren_curtailment=curtailment)    
     
     logger.info(specs_meta_data)
+    print(ren_df)
+    print(aggr_gens, dispatch, curtailment)
     return specs
     
     

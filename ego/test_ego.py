@@ -26,7 +26,6 @@ edisgo = False
 
 
 #%% Database Connection
-from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
     
 from oemof import db
@@ -39,7 +38,7 @@ session = Session()
 #%% eTraGo
 if etrago:
         
-    from eGo.tools.plots import make_all_plots
+    from tools.plots import make_all_plots
 
     from tools.utilities import get_scenario_setting
         # eTraGo
@@ -57,7 +56,7 @@ if etrago:
          
     
         # Start eTraGo calculation
-    eTraGo_network = etrago(args['eTraGo_args']) # Baut über oemof.de (und config.ini eine Verbindung zur Datenbank auf)
+    eTraGo_network = etrago(args['eTraGo']) # Baut über oemof.de (und config.ini eine Verbindung zur Datenbank auf)
     
         # Plot everything to console
     make_all_plots(eTraGo_network) # Line loading, commitment, storage
@@ -118,9 +117,10 @@ if specs:
     logging.info('Retrieving Specs')
 #    subst_id = 1802 
     bus_id = 23971
-    result_id = 9# Six is Germany for 2 Snaps with minimal residual load
+    result_id = 9
+    scn_name = 'NEP 2035'# Six is Germany for 2 Snaps with minimal residual load
     
-    from tools.specs import get_etragospecs_from_db
+    from ego.tools.specs import get_etragospecs_from_db
     from egoio.db_tables import model_draft
 
     #ormclass_substation = model_draft.__getattribute__('EgoGridHvmvSubstation') # Even here, ther version should be checked
@@ -146,8 +146,8 @@ if specs:
 #            ).scalar(
 #                    )       
  
-    specs = get_etragospecs_from_db(session, bus_id, result_id)
-    specs.battery_capacity
+    specs = get_etragospecs_from_db(session, bus_id, result_id, scn_name)
+    
     
     
 #%% eDisGo   
