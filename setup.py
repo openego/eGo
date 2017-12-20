@@ -23,7 +23,9 @@ setup(name='eGo',
                         'pyproj == 1.9.5.1',
                         'geopandas==0.3.0',
                         'Rtree==0.8.3',
-'matplotlib >= 1.5.3, <=1.5.3'],
+                        'plotly==2.2.3',
+                        'folium==0.5.0+98.g106d829',
+                        'matplotlib >= 1.5.3, <=1.5.3'],
 	dependency_links=['git+ssh://git@github.com/openego/PyPSA.git@dev#egg=PyPSA'],
 	 extras_require={
         'docs': [
