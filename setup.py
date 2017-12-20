@@ -15,11 +15,20 @@ setup(name='eGo',
       packages=find_packages(),
       include_package_data=True,
       install_requires=['egoio == 0.2.11',
-                        'egopowerflow == 0.0.4'],
-	dependency_links=['git+ssh://git@github.com/openego/eTraGo.git@dev#egg=eTraGo',
-	'git+ssh://git@github.com/openego/PyPSA.git@dev#egg=PyPSA'],
+                        'egopowerflow == 0.0.4',
+                        'pandas ==0.20.1',
+                        'sqlalchemy >= 1.0.15, <= 1.1.4',
+                        'oemof.db ==0.0.4',
+                        'geoalchemy2 >= 0.3.0, <=0.4.0',
+                        'pyproj == 1.9.5.1',
+                        'geopandas==0.3.0',
+                        'Rtree==0.8.3',
+                        'plotly==2.2.3',
+                        'folium==0.5.0+98.g106d829',
+                        'matplotlib >= 1.5.3, <=1.5.3'],
+	dependency_links=['git+ssh://git@github.com/openego/PyPSA.git@dev#egg=PyPSA'],
 	 extras_require={
         'docs': [
             'sphinx >= 1.4',
-'sphinx_rtd_theme']}
+            'sphinx_rtd_theme']}
      )
