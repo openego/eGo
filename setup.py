@@ -27,7 +27,7 @@ setup(name='eGo',
                         'matplotlib >= 1.5.3, <=1.5.3'],
 	dependency_links=['git+ssh://git@github.com/openego/PyPSA.git@dev#egg=PyPSA',
 			 'git+ssh://git@github.com:python-visualization/folium.git@master#egg=folium',
-			 'git+ssh://git@github.com:openego/eTraGo.git@dev#egg=etrago'],
+			 'git+ssh://git@github.com:openego/eTraGo.git@dev#egg=eTraGo'],
 	 extras_require={
         'docs': [
             'sphinx >= 1.4',
