@@ -70,7 +70,7 @@ if __name__ == '__main__':
     igeoplot(eTraGo, session)
 
     #network =eTraGo
-    #test = geolocation_buses(network = eTraGo, section='oedb')
+    #test = geolocation_buses(network = eTraGo, session)
 
     #igeoplot(network =eTraGo)
 
