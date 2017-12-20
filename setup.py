@@ -24,7 +24,7 @@ setup(name='eGo',
                         'Rtree==0.8.3',
                         'plotly==2.2.3',
                         'folium==0.5.0',
-			'eTraGo==0.5'
+			'eTraGo==0.5',
                         'matplotlib >= 1.5.3, <=1.5.3'],
 	dependency_links=['git+ssh://git@github.com/openego/PyPSA.git@dev#egg=PyPSA',
 			 'git+ssh://git@github.com:python-visualization/folium.git@master#egg=folium',
