@@ -16,14 +16,13 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.automap import automap_base
 from geoalchemy2 import Geometry, shape # Geometry type used by SQLA
 from geoalchemy2 import *
-from etrago.tools.utilities import oedb_session
 from egoio.db_tables.model_draft import RenpassGisParameterRegion
 import geopandas as gpd
 import pandas as pd
+from egoio.tools import db
 
 
-
-def geolocation_buses(network, section='oedb'):
+def geolocation_buses(network, session):
     """
     Use Geometries of buses x/y (lon/lat) and Polygons
     of Countries from RenpassGisParameterRegion
@@ -37,9 +36,7 @@ def geolocation_buses(network, section='oedb'):
     """
     # Start db connetion
     # get renpassG!S scenario data
-    # make session
-    session = oedb_session(section=section)
-    session.bind
+
 
     meta = MetaData()
     meta.bind = session.bind
