@@ -26,11 +26,13 @@ setup(name='eGo',
                         'eTraGo >=0.5',
                         'folium >=0.5.0',
                         'matplotlib >= 1.5.3, <=1.5.3'],
-	dependency_links=['git+https://git.github.com/openego/PyPSA.git@dev#egg=PyPSA',
-			 'git+https://git.github.com:python-visualization/folium.git@master#egg=folium-0.5.0+98.g106d829',
-			 'git+https://git.github.com:openego/eTraGo.git@dev#egg=eTraGo-0.5'],
+	dependency_links=['git+https://git@github.com/openego/PyPSA.git@dev#egg=PyPSA',
+			 'git+https://git@github.com:python-visualization/folium.git@master#egg=folium',
+			 'git+https://git@github.com:openego/eTraGo.git@dev#egg=eTraGo'],
 	 extras_require={
         'docs': [
             'sphinx >= 1.4',
             'sphinx_rtd_theme']}
      )
+     
+
