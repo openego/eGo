@@ -62,10 +62,12 @@ if __name__ == '__main__':
     # add country code to bus and geometry (shapely)
     # eTraGo.buses = eTraGo.buses.drop(['country_code','geometry'], axis=1)
     ##eTraGo.lines.info()
-    conn = db.connection(section=args['eTraGo']['db'])
-    Session = sessionmaker(bind=conn)
-    session = Session()
-
+    try:
+        conn = db.connection(section=args['eTraGo']['db'])
+        Session = sessionmaker(bind=conn)
+        session = Session()
+    except OperationalError:
+        logger.error('Failed connection to Database',  exc_info=True)
 
     igeoplot(eTraGo, session)
 
