@@ -14,6 +14,7 @@ def get_scenario_setting(json_file='scenario_setting.json'):
         Name of scenario setting json file
     """
     path = os.getcwd()
+
     with open(path +'/'+json_file) as f:
       scn_set = json.load(f)
 
