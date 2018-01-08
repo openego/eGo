@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 etrago = False
 direct_specs = False
 specs = True
-edisgo = False
+edisgo = True
 
 
 #%% Database Connection

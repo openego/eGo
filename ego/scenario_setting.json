@@ -10,7 +10,7 @@
     "pf_post_lopf": false,
     "start_snapshot": 2323,
     "end_snapshot" : 2324,
-    "scn_name": "SH Status Quo",
+    "scn_name": "SH NEP 2035",
     "solver": "gurobi",
     "lpfile":  false,
     "results": false,

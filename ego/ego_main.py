@@ -27,8 +27,6 @@ logger = logging.getLogger(__name__)
 
 
 
-
-
 """
 # import scenario settings **args of eTraGo
 args = get_scenario_setting(json_file='scenario_setting.json')
