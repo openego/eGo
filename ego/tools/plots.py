@@ -14,7 +14,8 @@ import numpy as np
 import pandas as pd
 from etrago.tools.plot import (plot_line_loading, plot_stacked_gen,
                                      add_coordinates, curtailment, gen_dist,
-				                     storage_distribution)
+				                     storage_distribution,
+									 plot_voltage,plot_residual_load)
 import folium
 from folium import plugins
 import branca.colormap as cm
@@ -38,6 +39,15 @@ def make_all_plots(network):
 
 	# plot to show extendable storages
 	storage_distribution(network)
+
+	plot_residual_load(network)
+
+	plot_voltage(network)
+
+	curtailment(network)
+
+	gen_dist(network)
+
 
 	return
 
