@@ -87,4 +87,3 @@ network.reinforce()
 
 # Determine cost for each line/transformer that was reinforced
 costs = network.results.grid_expansion_costs
-costs
