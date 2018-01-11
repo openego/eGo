@@ -2,7 +2,6 @@
 This is the application file for the tool eGo. The application eGo calculates the distribution and transmission grids
 of eTraGo and eDisGo.
 
-
 Warrning: This Repository is underconstruction and work in progress (wip)
 
 """
@@ -14,7 +13,7 @@ from etrago.appl import etrago
 from tools.plots import (make_all_plots,plot_line_loading, plot_stacked_gen,
                                      add_coordinates, curtailment, gen_dist,
                                      storage_distribution, igeoplot)
-from tools.utilities import get_scenario_setting, get_time_steps, bus_by_country
+from tools.utilities import get_scenario_setting, get_time_steps
 #from eDisGo import ...
 # use spects
 # import country selection
@@ -22,7 +21,8 @@ import pandas as pd
 from tools.io import geolocation_buses
 from egoio.tools import db
 from sqlalchemy.orm import sessionmaker
-import logging
+import logging # ToDo: Logger should be set up more specific
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
@@ -38,6 +38,7 @@ eTraGo = etrago(args['eTraGo'])
 # eTraGo.buses = eTraGo.buses.drop(['country_code','geometry'], axis=1)
 ##eTraGo.lines.info()
 
+
 test = geolocation_buses(network = eTraGo, section='oedb')
 """
 #test.buses
@@ -52,6 +53,16 @@ test = geolocation_buses(network = eTraGo, section='oedb')
 if __name__ == '__main__':
     # import scenario settings **args of eTraGo
     args = get_scenario_setting(json_file='scenario_setting.json')
+    
+    try:
+        conn = db.connection(section=args['eTraGo']['db'])
+        Session = sessionmaker(bind=conn)
+        session = Session()
+    except OperationalError:
+        logger.error('Failed connection to Database',  exc_info=True)
+
+
+
 
 
     # start eTraGo calculation
@@ -60,12 +71,7 @@ if __name__ == '__main__':
     # add country code to bus and geometry (shapely)
     # eTraGo.buses = eTraGo.buses.drop(['country_code','geometry'], axis=1)
     ##eTraGo.lines.info()
-    try:
-        conn = db.connection(section=args['eTraGo']['db'])
-        Session = sessionmaker(bind=conn)
-        session = Session()
-    except OperationalError:
-        logger.error('Failed connection to Database',  exc_info=True)
+
 
     igeoplot(eTraGo, session)
 
@@ -75,6 +81,7 @@ if __name__ == '__main__':
     #igeoplot(network =eTraGo)
 
     # plots
+    make_all_plots(eTraGo)
     # make a line loading plot
     plot_line_loading(eTraGo)
 
