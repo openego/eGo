@@ -18,8 +18,9 @@ import logging # ToDo: Logger should be set up more specific
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+import matplotlib.pyplot as plt
 
-etrago = False
+etrago = True
 direct_specs = False
 specs = True
 edisgo = True
@@ -57,10 +58,10 @@ if etrago:
 
 
         # Start eTraGo calculation
-    eTraGo_network = etrago(args['eTraGo']) # Baut über oemof.de (und config.ini eine Verbindung zur Datenbank auf)
+    eTraGo = etrago(args['eTraGo']) # Baut über oemof.de (und config.ini eine Verbindung zur Datenbank auf)
 
         # Plot everything to console
-    make_all_plots(eTraGo_network) # Line loading, commitment, storage
+    make_all_plots(eTraGo) # Line loading, commitment, storage
 
 
 # Specs directily from etrago
@@ -184,6 +185,8 @@ if edisgo:
 
 
     nx.draw(network.mv_grid.graph)
+    plt.draw()
+    plt.show()
 
 
 
@@ -194,4 +197,9 @@ if edisgo:
     # A status quo grid (without new renewable gens) should not need reinforcement
 #    network.reinforce()
 
+    # Do grid reinforcement
+    network.reinforce()
+
 #    network.results = Results()
+    costs = network.results.grid_expansion_costs
+    print(costs)

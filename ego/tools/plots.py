@@ -38,15 +38,15 @@ def make_all_plots(network):
 	plot_stacked_gen(network, resolution="MW")
 
 	# plot to show extendable storages
-	storage_distribution(network)
+	# storage_distribution(network)
 
-	plot_residual_load(network)
+	# plot_residual_load(network)
 
-	plot_voltage(network)
+	# plot_voltage(network)
 
-	curtailment(network)
+	# curtailment(network)
 
-	gen_dist(network)
+	# gen_dist(network)
 
 
 	return
@@ -249,6 +249,7 @@ def prepareGD(session, subst_id= None, version=None ):
 		Regions = [(subst_id,shape.to_shape(geom)) for subst_id, geom in
 				query.filter(EgoDpMvGriddistrict.version == version ,
 				EgoDpMvGriddistrict.subst_id.in_(subst_id)).all()]
+	# toDo add values of sub_id etc. to popup
 	else:
 		query = session.query(EgoGridMvGriddistrict.subst_id, EgoGridMvGriddistrict.geom)
 		Regions = [(subst_id,shape.to_shape(geom)) for subst_id, geom in
