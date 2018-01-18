@@ -1,0 +1,18 @@
+carriers,Status Quo,NEP 2035,EGo 100,source
+gas,1384,1384,1384, https://www.diw.de/documents/publikationen/73/diw_01.c.424566.de/diw_datadoc_2013-068.pdf page 75
+lignite,2862,2862,2862,
+waste,1800,1800,1800,
+oil,400,400,400,
+uranium,6000,6000,6000,
+biomass,2424,2424,2424,
+eeg_gas,2424,2424,2424,
+coal,1300,1300,1300,
+run_of_river,3000,3000,3000,
+reservoir,2000,2000,2000,
+pumped_storage,2000,2000,2000,
+solar,950,950,950,
+wind_onshore,1269,1269,1269,
+geothermal,3982,3982,3982,
+other_non_renewable,3000,3000,3000,
+extendable_storage,100000,100000,100000,
+wind_offshore,2868,2868,2868,
