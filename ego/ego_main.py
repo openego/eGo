@@ -53,7 +53,7 @@ test = geolocation_buses(network = eTraGo, section='oedb')
 if __name__ == '__main__':
     # import scenario settings **args of eTraGo
     args = get_scenario_setting(json_file='scenario_setting.json')
-    
+
     try:
         conn = db.connection(section=args['eTraGo']['db'])
         Session = sessionmaker(bind=conn)
@@ -73,7 +73,7 @@ if __name__ == '__main__':
     ##eTraGo.lines.info()
 
 
-    igeoplot(eTraGo, session)
+    igeoplot(eTraGo, session) # kmean cluster is not working with plot
 
     #network =eTraGo
     #test = geolocation_buses(network = eTraGo, session)

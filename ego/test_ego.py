@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 import matplotlib.pyplot as plt
 
 etrago = True
-direct_specs = False
+direct_specs = True
 specs = True
 edisgo = True
 
@@ -58,10 +58,10 @@ if etrago:
 
 
         # Start eTraGo calculation
-    eTraGo = etrago(args['eTraGo']) # Baut über oemof.de (und config.ini eine Verbindung zur Datenbank auf)
+    eTraGo_network = etrago(args['eTraGo']) # Baut über oemof.de (und config.ini eine Verbindung zur Datenbank auf)
 
         # Plot everything to console
-    make_all_plots(eTraGo) # Line loading, commitment, storage
+    make_all_plots(eTraGo_network) # Line loading, commitment, storage
 
 
 # Specs directily from etrago
