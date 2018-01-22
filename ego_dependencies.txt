@@ -2,8 +2,6 @@
 
 # cloned Packages of eGo:
 -e git+https://github.com/openego/eTraGo.git@20735112541ce350f117e7acbef4bdaa8c574ba9#egg=eTraGo
--e git+https://github.com/openego/eGo.git@ecce58912f5b0b41151bb27c49540a6d2e29e596#egg=eGo
--e git+https://github.com/openego/eDisGo.git@0ae2db6904d19842819208f4c333310fb2f8a3d0#egg=eDisGo
 -e git+git@github.com:python-visualization/folium.git@5739244acb9868d001032df288500a047b232857#egg=folium
 -e git+https://github.com/openego/PyPSA.git@641f1e569966cfdd4cbd1c6810ade69d90a54286#egg=pypsa
 
