@@ -1,7 +1,9 @@
 {
   "global": {
     "eTraGo": true,
-    "eDisGo": false
+    "eDisGo": true,
+    "scn_name": "SH NEP 2035",
+    "db": "oedb"
   },
   "eTraGo": {
     "db": "oedb",
@@ -10,7 +12,7 @@
     "pf_post_lopf": false,
     "start_snapshot": 1,
     "end_snapshot" : 2,
-    "scn_name": "NEP 2035",
+    "scn_name": "SH NEP 2035",
     "solver": "gurobi",
     "lpfile":  false,
     "results": false,
@@ -28,8 +30,8 @@
     "comments": null
   },
   "eDisGo": {
-     "xxx": "xxx",
-     "XY": false,
+     "direct_specs": false,
+     "specs": true,
      "comments": null
   }
 }
