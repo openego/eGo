@@ -5,7 +5,7 @@
   },
   "eTraGo": {
     "db": "oedb",
-    "gridversion": "v0.3.0",
+    "gridversion": "v0.2.11",
     "method": "lopf",
     "pf_post_lopf": false,
     "start_snapshot": 1,

@@ -1,6 +1,15 @@
-Release v0.1.0 (XY XX, 2017)
-++++++++++++++++++++++++++++++
+Release v0.1.0 (XY XX, 2018)
+++++++++++++++++++++++++++++
 
-As this is the first release of eGo
+As this is the first release of eGo. The tool eGo use the Python3 Packages eTraGo 
+(Optimization of flexibility options for transmission grids based on PyPSA) 
+and eDisGo (Optimization of flexibility options and grid expansion for 
+distribution grids based on PyPSA) for an electrical power calculation from extra high
+voltage to selected low voltage level.
+
+
+
+Added features
+--------------
 
 

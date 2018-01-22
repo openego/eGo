@@ -9,13 +9,16 @@ __author__ = "wolfbunke"
 
 #from etrago.tools.io import
 #from egoio.db_tables.model_draft import NetworkScenario, results_to_oedb
-import pyproj as proj
-from shapely.geometry import Polygon, Point, MultiPolygon
-from sqlalchemy import MetaData, create_engine, func
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.ext.automap import automap_base
-from geoalchemy2 import Geometry, shape # Geometry type used by SQLA
-from geoalchemy2 import *
+import os
+if not 'READTHEDOCS' in os.environ:
+    import pyproj as proj
+    from shapely.geometry import Polygon, Point, MultiPolygon
+    from sqlalchemy import MetaData, create_engine, func
+    from sqlalchemy.orm import sessionmaker
+    from sqlalchemy.ext.automap import automap_base
+    from geoalchemy2 import Geometry, shape # Geometry type used by SQLA
+    from geoalchemy2 import *
+
 from egoio.db_tables.model_draft import RenpassGisParameterRegion
 import geopandas as gpd
 import pandas as pd

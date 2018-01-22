@@ -10,24 +10,26 @@ __copyright__ = "tba"
 __license__ = "tba"
 __author__ = "tba"
 
+
+
 import numpy as np
 import pandas as pd
-from etrago.tools.plot import (plot_line_loading, plot_stacked_gen,
+import os
+if not 'READTHEDOCS' in os.environ:
+    from etrago.tools.plot import (plot_line_loading, plot_stacked_gen,
                                      add_coordinates, curtailment, gen_dist,
 				                     storage_distribution,
 									 plot_voltage,plot_residual_load)
-import folium
-from folium import plugins
-import branca.colormap as cm
+    import pyproj as proj
+    from shapely.geometry import Polygon, Point, MultiPolygon
+    from geoalchemy2 import *
+    import geopandas as gpd
+    import folium
+    from folium import plugins
+    import branca.colormap as cm
+    
 import webbrowser
-
-import pyproj as proj
-from shapely.geometry import Polygon, Point, MultiPolygon
-from geoalchemy2 import *
-import geopandas as gpd
-
 import logging
-import os
 logger = logging.getLogger(__name__)
 
 def make_all_plots(network):

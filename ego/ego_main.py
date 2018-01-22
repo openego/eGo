@@ -9,19 +9,28 @@ __copyright__ = "Flensburg University of Applied Sciences, Europa-Universität F
 __license__ = "GNU Affero General Public License Version 3 (AGPL-3.0)"
 __author__ = "wolfbunke"
 
-from etrago.appl import etrago
-from tools.plots import (make_all_plots,plot_line_loading, plot_stacked_gen,
-                                     add_coordinates, curtailment, gen_dist,
-                                     storage_distribution, igeoplot)
-from tools.utilities import get_scenario_setting, get_time_steps
-#from eDisGo import ...
-# use spects
-# import country selection
+
+
 import pandas as pd
-from tools.io import geolocation_buses
+import os
 from egoio.tools import db
 from sqlalchemy.orm import sessionmaker
+
+if not 'READTHEDOCS' in os.environ:
+    from etrago.appl import etrago
+    from tools.plots import (make_all_plots,plot_line_loading, plot_stacked_gen,
+                                     add_coordinates, curtailment, gen_dist,
+                                     storage_distribution, igeoplot)
+    from tools.utilities import get_scenario_setting, get_time_steps
+    from tools.io import geolocation_buses
+    
 import logging # ToDo: Logger should be set up more specific
+
+    
+#from eDisGo import ...
+# use spects
+
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 

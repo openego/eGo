@@ -21,7 +21,8 @@ Welcome to eGo's documentation!
    getting_started
    usage_details
    about
-
+   developer
+   
    whatsnew
    
    
