@@ -14,7 +14,7 @@ __author__ = "wolfbunke"
 import pandas as pd
 import os
 from egoio.tools import db
-from sqlalchemy.orm import sessionmaker
+
 
 if not 'READTHEDOCS' in os.environ:
     from etrago.appl import etrago
@@ -23,6 +23,7 @@ if not 'READTHEDOCS' in os.environ:
                                      storage_distribution, igeoplot)
     from tools.utilities import get_scenario_setting, get_time_steps
     from tools.io import geolocation_buses
+    from sqlalchemy.orm import sessionmaker
 
 import logging # ToDo: Logger should be set up more specific
 logging.basicConfig(level=logging.INFO)
