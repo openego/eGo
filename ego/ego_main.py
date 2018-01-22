@@ -181,9 +181,6 @@ if __name__ == '__main__':
                               # ToDo: add eDisGo results
 
 
-
-
-
     # calculate power plant dispatch without grid utilization (either in pypsa or in renpassgis)
 
     # result queries...call functions from utilities
