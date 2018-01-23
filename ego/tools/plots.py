@@ -27,8 +27,10 @@ if not 'READTHEDOCS' in os.environ:
     import folium
     from folium import plugins
     import branca.colormap as cm
-    
-import webbrowser
+    import webbrowser
+	from egoio.db_tables.model_draft import EgoGridMvGriddistrict
+	from egoio.db_tables.grid import EgoDpMvGriddistrict
+
 import logging
 logger = logging.getLogger(__name__)
 
@@ -242,8 +244,7 @@ def igeoplot(network, session, tiles=None, geoloc=None):
 
 def prepareGD(session, subst_id= None, version=None ):
 
-	from egoio.db_tables.model_draft import EgoGridMvGriddistrict
-	from egoio.db_tables.grid import EgoDpMvGriddistrict
+
 
 	if version == 'v0.2.11':
 		query = session.query(EgoDpMvGriddistrict.subst_id, EgoDpMvGriddistrict.geom)

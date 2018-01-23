@@ -1,7 +1,7 @@
-import json
 import os
 import pandas as pd
-
+if not 'READTHEDOCS' in os.environ:
+    import json
 # import scenario settings **args
 
 def get_scenario_setting(json_file='scenario_setting.json'):

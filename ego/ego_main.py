@@ -13,7 +13,6 @@ __author__ = "wolfbunke"
 
 import pandas as pd
 import os
-from egoio.tools import db
 
 
 if not 'READTHEDOCS' in os.environ:
@@ -24,6 +23,7 @@ if not 'READTHEDOCS' in os.environ:
     from tools.utilities import get_scenario_setting, get_time_steps
     from tools.io import geolocation_buses
     from sqlalchemy.orm import sessionmaker
+    from egoio.tools import db
 
 import logging # ToDo: Logger should be set up more specific
 logging.basicConfig(level=logging.INFO)

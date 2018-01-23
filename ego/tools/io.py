@@ -19,10 +19,9 @@ if not 'READTHEDOCS' in os.environ:
     from geoalchemy2 import Geometry, shape # Geometry type used by SQLA
     from geoalchemy2 import *
     import geopandas as gpd
-
-from egoio.db_tables.model_draft import RenpassGisParameterRegion
-import pandas as pd
-from egoio.tools import db
+    from egoio.db_tables.model_draft import RenpassGisParameterRegion
+    import pandas as pd
+    from egoio.tools import db
 
 
 def geolocation_buses(network, session):

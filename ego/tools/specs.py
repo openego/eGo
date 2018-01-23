@@ -1,16 +1,18 @@
 # Import
 ## General Packages
-
+import os
 import pandas as pd
-from sqlalchemy import distinct
+if not 'READTHEDOCS' in os.environ:
+    from sqlalchemy import distinct
+    from egoio.db_tables import model_draft # This gives me the specific ORM classes.
+    from edisgo.grid.network import ETraGoSpecs
+
+
+
 import logging # ToDo: Logger should be set up more specific
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-## Project Packages
-
-from egoio.db_tables import model_draft # This gives me the specific ORM classes.
-from edisgo.grid.network import ETraGoSpecs
 
 # Function
 
@@ -351,7 +353,7 @@ def get_etragospecs_from_db(session,
 
                         renewables=aggr_gens,
                         ren_dispatch=dispatch,
-                        ren_curtailment=curtailment)    
+                        ren_curtailment=curtailment)
 
     logger.info(specs_meta_data)
     print(ren_df)
