@@ -18,9 +18,9 @@ if not 'READTHEDOCS' in os.environ:
     from sqlalchemy.ext.automap import automap_base
     from geoalchemy2 import Geometry, shape # Geometry type used by SQLA
     from geoalchemy2 import *
+    import geopandas as gpd
 
 from egoio.db_tables.model_draft import RenpassGisParameterRegion
-import geopandas as gpd
 import pandas as pd
 from egoio.tools import db
 
