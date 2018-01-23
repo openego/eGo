@@ -1,3 +1,7 @@
+.. image:: https://readthedocs.org/projects/openego/badge/?version=latest
+    :target: http://openego.readthedocs.io/en/latest/?badge=latest
+    :alt: Documentation Status
+
 .. image:: https://openegoproject.files.wordpress.com/2017/02/open_ego_logo_breit.png?w=400
 
 eGo
