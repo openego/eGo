@@ -10,8 +10,6 @@ __copyright__ = "tba"
 __license__ = "tba"
 __author__ = "tba"
 
-
-
 import numpy as np
 import pandas as pd
 import os
@@ -28,8 +26,8 @@ if not 'READTHEDOCS' in os.environ:
     from folium import plugins
     import branca.colormap as cm
     import webbrowser
-	from egoio.db_tables.model_draft import EgoGridMvGriddistrict
-	from egoio.db_tables.grid import EgoDpMvGriddistrict
+    from egoio.db_tables.model_draft import EgoGridMvGriddistrict
+    from egoio.db_tables.grid import EgoDpMvGriddistrict
 
 import logging
 logger = logging.getLogger(__name__)
@@ -65,7 +63,7 @@ def make_all_plots(network):
 #igeoplot(network)
 
 
-def igeoplot(network, session, tiles=None, geoloc=None):
+def igeoplot(network, session, tiles=None, geoloc=None, args=None):
 	"""
 	Plot function in order to display eGo results on leaflet OSM map.
 	This function will open the results in your main Webbrowser
@@ -116,6 +114,11 @@ def igeoplot(network, session, tiles=None, geoloc=None):
 	# Legend name
 	bus_group = folium.FeatureGroup(name='Buses')
 	# add buses
+
+	# get scenario name from args
+	scn_name = args['eTraGo']['scn_name']
+	version = args['eTraGo']['gridversion']
+
 	for name, row in network.buses.iterrows():
 		popup = """ <b> Bus:</b> {} <br>
 					carrier: {} <br>
@@ -128,11 +131,12 @@ def igeoplot(network, session, tiles=None, geoloc=None):
 					sub_network:{} <br>
 					Scenario: {} <br>
 					version: {}  <br>
-				""".format(row.name, row['scn_name'],row['carrier'],
+				""".format(row.name, scn_name,row['carrier'],
 				           row['control'],row['type'],row['v_nom'],row['v_mag_pu_set'],
 						   row['v_mag_pu_min'],row['v_mag_pu_max'],row['sub_network']
-						   ,row['scn_name'],row['version']) # add Popup values use HTML for formating
+						   ,version) # add Popup values use HTML for formating
 		folium.Marker([row["y"], row["x"]], popup=popup ).add_to(bus_group)
+
 
 	# Prepare lines
 	line_group = folium.FeatureGroup(name='Lines')
@@ -167,21 +171,19 @@ def igeoplot(network, session, tiles=None, geoloc=None):
 
 		return '#'+ red + green + blue
 
-
+	#toDo add more parameter
 	for line in network.lines.index:
 		popup = """ <b>Line:</b> {} <br>
 					version: {} <br>
 					v_nom: {} <br>
 					s_nom: {} <br>
-					cables: {} <br>
 					capital_cost: {} <br>
-					frequency: {} <br>
 					g: {} <br>
 					g_pu: {} <br>
 					terrain_factor: {} <br>
-				""".format(line, text.version[line], text.v_nom[line],
-				           text.s_nom[line], text.cables[line], text.capital_cost[line],
-						   text.frequency[line],text.g[line],text.g_pu[line],
+				""".format(line, version, text.v_nom[line],
+				           text.s_nom[line], text.capital_cost[line],
+						   text.g[line],text.g_pu[line],
 						   text.terrain_factor[line]
 						   )
 		# ToDo make it more generic
@@ -205,14 +207,16 @@ def igeoplot(network, session, tiles=None, geoloc=None):
 
 		l_color =colormaper()
 
-		folium.PolyLine(([y0[line], x0[line]], [y1[line], x1[line]]), popup=popup, color=convert_to_hex(l_color)).add_to(line_group)
+		folium.PolyLine(([y0[line], x0[line]], [y1[line], x1[line]]),
+						 popup=popup, color=convert_to_hex(l_color)).\
+						 add_to(line_group)
 
 	# add grod districs
 	grid_group = folium.FeatureGroup(name='Grid district')
 	subst_id = list(network.buses.index)
-	version = 'v0.2.10' #'v0.2.11' #network.buses.version[1]
 	district = prepareGD(session, subst_id , version)
-	folium.GeoJson(district).add_to(grid_group)
+	# todo does not work with k-mean Cluster
+	#folium.GeoJson(district).add_to(grid_group)
 
 	# add layers and others
 	colormap.caption = 'Colormap of Lines s_nom'
@@ -243,8 +247,6 @@ def igeoplot(network, session, tiles=None, geoloc=None):
 
 
 def prepareGD(session, subst_id= None, version=None ):
-
-
 
 	if version == 'v0.2.11':
 		query = session.query(EgoDpMvGriddistrict.subst_id, EgoDpMvGriddistrict.geom)
