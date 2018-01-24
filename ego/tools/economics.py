@@ -9,6 +9,7 @@ Todo:
 import io
 import pandas as pd
 import os
+from tools.results import storage_charges
 
 # calculate annuity per time step or periode
 def annuity_per_period(capex, n, wacc, t):
@@ -123,6 +124,19 @@ def total_economic_costs(eTraGo, filename='investment_costs.csv', args=args):
 
     results.etrago= results.etrago.assign(investment_costs=result_invest['carrier_costs'])
     del result_invest
+
+
+
+    # storages
+    #
+    results.storages = storage_charges(network=eTraGo, plot=False)
+
+
+    stores = eTraGo.storage_units
+    test= eTraGo.storage_units.p_nom_opt[stores.index].groupby(eTraGo.storage_units.bus).sum().reindex(eTraGo.buses.index,fill_value=0.)
+    # get get storages capital_cost in €/MWh
+    eTraGo.storage_units_t.state_of_charge[eTraGo.storage_units[eTraGo.storage_units.p_nom_opt>0].index]
+
 
 
 
