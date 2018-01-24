@@ -44,8 +44,6 @@ test = geolocation_buses(network = eTraGo, section='oedb')
 """
 
 
-
-
 if __name__ == '__main__':
     # import scenario settings **args of eTraGo
     args = get_scenario_setting(json_file='scenario_setting.json')
@@ -151,7 +149,7 @@ if __name__ == '__main__':
         scenario = Scenario(etrago_specs=specs,
                     power_flow=(),
                     mv_grid_id=mv_grid_id,
-                    scenario_name='NEP 2035')
+                    scenario_name= args['global']['scn_name'])
 
         network = Network.import_from_ding0(file_path,
                                     id=mv_grid_id,
@@ -178,8 +176,7 @@ if __name__ == '__main__':
 
     # make interactive plot with folium
     logging.info('Starting interactive plot')
-    igeoplot(eTraGo, session) # ToDo: kmean cluster is not working with plot
-                              # ToDo: add eDisGo results
+    igeoplot(network=eTraGo, session=session, args=args)    # ToDo: add eDisGo results
 
 
     # calculate power plant dispatch without grid utilization (either in pypsa or in renpassgis)
