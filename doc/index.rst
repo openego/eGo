@@ -19,7 +19,6 @@ Welcome to eGo-Tool documentation!
    welcome
    getting_started
    usage_details
-   about
    developer
 
    whatsnew
