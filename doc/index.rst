@@ -11,10 +11,6 @@ Welcome to eGo-Tool documentation!
    :align: right
    :scale: 100%
 
-Also take a look into the Documentation of `eTraGo <http://eTraGo.readthedocs.io/>`_ and `eDisGo<http://edisgo.readthedocs.io/>`_ which are part of eGO.
-
-
-
 
 .. toctree::
    :maxdepth: 7
@@ -28,8 +24,10 @@ Also take a look into the Documentation of `eTraGo <http://eTraGo.readthedocs.io
 
    whatsnew
 
-
    api
+
+Also take a look into the Documentation of `eTraGo <http://eTraGo.readthedocs.io/>`_ and `eDisGo <http://edisgo.readthedocs.io/>`_ which are part of eGo.
+
 
 
 
