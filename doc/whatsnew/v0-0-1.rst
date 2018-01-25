@@ -1,5 +1,5 @@
 Release v0.0.1 (February 01, 2018)
-++++++++++++++++++++++++++++
+++++++++++++++++++++++++++++++++++
 
 As this is the first release of eGo. The tool eGo use the Python3 Packages eTraGo
 (Optimization of flexibility options for transmission grids based on PyPSA)
@@ -11,5 +11,6 @@ voltage to selected low voltage level.
 
 Added features
 --------------
+
 * Connect eTraGo and eDisGo
 * 
