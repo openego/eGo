@@ -21,8 +21,10 @@ def get_scenario_setting(json_file='scenario_setting.json'):
 
     if scn_set['global'].get('eTraGo') == True:
         print('Use eTraGo settings')
-        if scn_set['eTraGo'].get('gridversion') == "v0.3.0":
-            scn_set['eTraGo']['gridversion'] == None
+        sh_scen = ["SH Status Quo", "SH NEP 2035", "SH eGo 100"]
+        if scn_set['eTraGo'].get('scn_name') in sh_scen and scn_set['eTraGo'].\
+                                                 get('gridversion') == "v0.3.0":
+            scn_set['eTraGo']['gridversion'] = None
 
     if scn_set['global'].get('eDisGo') == True:
         print('Use eDisGo settings')

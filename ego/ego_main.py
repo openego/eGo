@@ -119,7 +119,7 @@ if __name__ == '__main__':
         # ToDo iteration of grids
         # ToDo move part as function to utilities or specs
         bus_id = 23971
-        result_id = 9
+        result_id = args['global']['result_id']
         scn_name = args['global']['scn_name'] # Six is Germany for 2 Snaps with minimal residual load
 
         from ego.tools.specs import get_etragospecs_from_db
