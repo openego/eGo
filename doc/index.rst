@@ -3,13 +3,16 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to eGo's documentation!
+Welcome to eGo-Tool documentation!
 ==================================
 
 
 .. image:: https://openegoproject.files.wordpress.com/2017/02/open_ego_logo_breit.png?w=400
    :align: right
    :scale: 100%
+
+Also take a look into the Documentation of `eTraGo <http://eTraGo.readthedocs.io/>`_ and `eDisGo<http://edisgo.readthedocs.io/>`_ which are part of eGO.
+
 
 
 
@@ -22,10 +25,10 @@ Welcome to eGo's documentation!
    usage_details
    about
    developer
-   
+
    whatsnew
-   
-   
+
+
    api
 
 
@@ -36,4 +39,3 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-

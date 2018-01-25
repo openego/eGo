@@ -9,4 +9,4 @@ See what's new as per release!
     :backlinks: top
 
 
-.. include::  whatsnew/v0-1-0.rst
+.. include::  whatsnew/v0-0-1.rst
