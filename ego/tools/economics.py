@@ -9,7 +9,7 @@ Todo:
 import io
 import pandas as pd
 import os
-from tools.results import storage_charges
+from tools.results import total_storage_charges
 
 # calculate annuity per time step or periode
 def annuity_per_period(capex, n, wacc, t):
@@ -56,7 +56,6 @@ def total_economic_costs(eTraGo, filename='investment_costs.csv', args=args):
     generations and save it to an Excel file for a quick
     results overview
 
-
     """
     #eTraGo.results
     #eTraGo.components
@@ -87,16 +86,13 @@ def total_economic_costs(eTraGo, filename='investment_costs.csv', args=args):
     # use country code
     p_by_carrier =  pd.concat([eTraGo.generators_t.p
                        [eTraGo.generators[eTraGo.generators.control!='Slack'].index], #
-                       eTraGo.generators_t.p[eTraGo.generators[network.
+                       eTraGo.generators_t.p[eTraGo.generators[eTraGo.
                        generators.control=='Slack'].index].iloc[:,0].
                        apply(lambda x: x if x > 0 else 0)], axis=1).\
                        groupby(eTraGo.generators.carrier, axis=1).sum() # in MWh
 
     results.etrago['p'] = p_by_carrier.sum()
 
-
-    eTraGo.generators
-    results.etrago
 
     # get investment costs per carrier
     # work around later db table ->  check capital_cost as cost input?!?
@@ -126,10 +122,9 @@ def total_economic_costs(eTraGo, filename='investment_costs.csv', args=args):
     del result_invest
 
 
-
     # storages
     #
-    results.storages = storage_charges(network=eTraGo, plot=False)
+    results.storages = total_storage_charges(network=eTraGo, plot=False)
 
 
     stores = eTraGo.storage_units
@@ -185,6 +180,10 @@ def total_economic_costs(eTraGo, filename='investment_costs.csv', args=args):
 
 
     return
+
+total_economic_costs(eTraGo,args=args)
+
+
 
 
 #eTraGo.carriers.name

@@ -308,37 +308,6 @@ def get_etragospecs_from_db(session,
                 stor_series_kW = [x * 1000 for x in stor_series] # in kW
                 battery_active_power = battery_active_power + stor_series_kW
 
-    ### More general normalization...
-    #    state_of_charge = pd.DataFrame(0.0,
-    #                               index=snap_idx,
-    #                               columns=list(set(stor_df['storage_id'])))
-    #
-    #    stor_dispatch = pd.DataFrame(0.0,
-    #                               index=snap_idx,
-    #                               columns=list(set(stor_df['storage_id'])))
-    #
-    #    for index, row in stor_t_df.iterrows():
-    #        stor_id = row['storage_id']
-    #        p_nom_opt = float(stor_df[stor_df['storage_id'] == stor_id]['p_nom_opt'])
-    #        if p_nom_opt == 0.0:
-    #            stor_series_norm = pd.Series(0.0, index = snap_idx)
-    #        else:
-    #            stor_series_norm = pd.Series(
-    #                data=[x/p_nom_opt for x in row['p']], # Every generator normalized by total installed capacity.
-    #                index=snap_idx)
-    #
-    #        stor_dispatch[stor_id] = stor_series_norm
-    #
-    #        stor_cap = float(stor_df[stor_df['storage_id'] == stor_id]['capacity_MWh'])
-    #        if stor_cap == 0.0:
-    #            soc_series_norm = pd.Series(0.0, index = snap_idx)
-    #        else:
-    #            soc_series_norm = pd.Series(
-    #                data=[x/stor_cap for x in row['state_of_charge']], # Every generator normalized by total installed capacity.
-    #                index=snap_idx)
-    #
-    #        state_of_charge[stor_id] = soc_series_norm
-
     except:
         logger.exception("Storage could not be queried for \
                          Specs with Metadata: \n %s" %specs_meta_data)

@@ -7,13 +7,11 @@ Warrning: This Repository is underconstruction and work in progress (wip)
 """
 __copyright__ = "Flensburg University of Applied Sciences, Europa-Universität Flensburg, Centre for Sustainable Energy Systems"
 __license__ = "GNU Affero General Public License Version 3 (AGPL-3.0)"
-__author__ = "wolfbunke"
-
+__author__ = "wolfbunke, maltesc"
 
 
 import pandas as pd
 import os
-
 
 if not 'READTHEDOCS' in os.environ:
     from etrago.appl import etrago
@@ -21,9 +19,11 @@ if not 'READTHEDOCS' in os.environ:
                                      add_coordinates, curtailment, gen_dist,
                                      storage_distribution, igeoplot)
     from tools.utilities import get_scenario_setting, get_time_steps
-    from tools.io import geolocation_buses
+    from tools.io import geolocation_buses, etrago_from_oedb
+    from tools.results import total_storage_charges
     from sqlalchemy.orm import sessionmaker
     from egoio.tools import db
+    from etrago.tools.io import results_to_oedb
 
 import logging # ToDo: Logger should be set up more specific
 logging.basicConfig(level=logging.INFO)
@@ -43,7 +43,6 @@ test = geolocation_buses(network = eTraGo, section='oedb')
 #hv_generator_results(eTraGo)
 """
 
-
 if __name__ == '__main__':
     # import scenario settings **args of eTraGo
     args = get_scenario_setting(json_file='scenario_setting.json')
@@ -60,7 +59,10 @@ if __name__ == '__main__':
         # start eTraGo calculation
         eTraGo = etrago(args['eTraGo'])
 
-        #network =eTraGo
+        #ToDo save result to db
+        # Does not work wait for eTraGo release 0.5.1
+        #results_to_oedb(session, eTraGo, args['eTraGo'], grid='hv')
+
         #test = geolocation_buses(network = eTraGo, session)
 
         # other plots based on matplotlib
@@ -73,6 +75,14 @@ if __name__ == '__main__':
 
         # plot to show extendable storages
         storage_distribution(eTraGo)
+
+        # plot storage total charges and discharge
+        total_storage_charges(eTraGo, plot=True)
+
+    # get eTraGo results form db
+    if args['global']['result_id']:
+        eTraGo = etrago_from_oedb(session, args, result_id = args['global']['result_id'])
+        
 
     # use eTraGo results from ego calculations if true
     if args['eDisGo']['direct_specs']:
