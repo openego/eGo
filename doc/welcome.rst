@@ -28,4 +28,6 @@ project is currently the single data source for eDisGo providing synthetic
 grid data for whole Germany.
 
 
-eTraGo <http://eTraGo.readthedocs.io/>`_ and `eDisGo<http://edisgo.readthedocs.io/>`_ which are part of eGO.
+Learn more about `eTraGo <http://eTraGo.readthedocs.io/>`_, `eDisGo<http://edisgo.readthedocs.io/>`_
+and the `OpenEnergy Platform <http://oep.iks.cs.ovgu.de/>`_ which are part of the
+open_eGo project.

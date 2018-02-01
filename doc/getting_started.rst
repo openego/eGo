@@ -1,24 +1,51 @@
-Setup 
-=========================
+Getting started
+###############
+
+.. warning::
+
+      Note, Ding0 relies on data provided by the OEDB. Currently, only members
+      of the openego project team have access to this database. Public access
+      (SQL queries wrapped by HTML) to the OEDB will be provided soon
 
 
-Run:
+Installation
+============
+
+.. note::
+      Installation is only tested on (Ubuntu like) linux OS.
+
+1. Create a virtualenvironment (where you like it) and activate it:
+
+    ``$virtualenv --clear -p python3.5  ego_dev`` and ``$ cd ego_dev/``
+    followed by ``$ source bin/activate``
+
+
+2. Clone eGo from github.com by running following command in your terminal:
 
     ```
     git clone https://github.com/openego/eGo
     ```
 
-Create a virtualenvironment (where you like it) and activate it: 
+With your activated environment `cd` to the cloned directory and run
+``pip install -e eGo ``. This will install all needed packages into your environment.
 
-   ```
-   virtualenv -p python3 ego_venv
-   source venv/bin/activate 
-   ```
+.. warning::
 
-With your activated environment `cd` to the cloned directory and run: 
+      Note, that the first release for deveolper is partly dependent on
+      forks and developent versions with could not automaticly be installed.
+      Check your installed packages using ``pip3 freeze`` with the
+      `ego_dependencies.txt <https://github.com/openego/eGo/blob/dev/ego_dependencies.txt>`_
 
-    ```
-    pip install -e eGo
-    ```
+3. Temporary solution:
 
-This will install all needed packages into your environment. Now you should be ready to go. 
+   After your installation install the eGo PyPSA fork on `dev <https://github.com/openego/PyPSA/tree/dev>`_
+   `` pip3 install -e git+https://github.com/openego/PyPSA.git@dev#egg=PyPSA``
+   and Folium for an web based ploting with
+   ``pip3 pip install -e git+https://git.github.com:python-visualization/folium.git@master#egg=Folium-0.5.0+98.g106d829 ``
+
+Using eGo:
+==========
+
+1. check and prepare your eGo setting in ``ego/scenario_setting.json``
+2. Start your calculation with in the directory of ``eGo/ego`` with
+  ``python3 ego_main.py``
