@@ -25,9 +25,6 @@ if not 'READTHEDOCS' in os.environ:
     from egoio.tools import db
 
 
-
-
-
 def geolocation_buses(network, session):
     """
     Use Geometries of buses x/y (lon/lat) and Polygons
@@ -42,7 +39,6 @@ def geolocation_buses(network, session):
     """
     # Start db connetion
     # get renpassG!S scenario data
-
 
     meta = MetaData()
     meta.bind = session.bind
@@ -92,7 +88,6 @@ def geolocation_buses(network, session):
     return network
 
 
-
 def results_to_excel(results):
     """
 
@@ -113,11 +108,8 @@ def results_to_excel(results):
     writer.save()
     # buses
 
-# # # ------------------------------------------------
 
-
-
-def etrago_from_oedb(session, args, result_id):
+def etrago_from_oedb(session, args):
     """
     Function to load eTraGo results for the Database.
 
@@ -125,6 +117,8 @@ def etrago_from_oedb(session, args, result_id):
         add Mapping for grid schema
         make it more generic -> class?
     """
+    result_id = args['global']['result_id']
+
     # modules from model_draft
     from egoio.db_tables.model_draft import EgoGridPfHvSource as Source,\
                                             EgoGridPfHvTempResolution as TempResolution
@@ -355,5 +349,3 @@ def etrago_from_oedb(session, args, result_id):
     print('Done')
     logger.info('Imported eTraGo results of id = %s ', result_id)
     return network
-
-eTraGo = etrago_from_oedb(session, args, result_id = args['global']['result_id'])

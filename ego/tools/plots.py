@@ -54,13 +54,6 @@ def make_all_plots(network):
 	return
 
 
-#session = oedb_session(section='oedb')
-#session.bind
-
-#network = eTraGo
-
-
-#igeoplot(network)
 
 
 def igeoplot(network, session, tiles=None, geoloc=None, args=None):

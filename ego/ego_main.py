@@ -34,7 +34,6 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-
 if __name__ == '__main__':
     # import scenario settings **args of eTraGo
     args = get_scenario_setting(json_file='scenario_setting.json')
@@ -75,11 +74,12 @@ if __name__ == '__main__':
 
     # get eTraGo results form db
     if args['global']['result_id']:
-        eTraGo = etrago_from_oedb(session, args, result_id = args['global']['result_id'])
+        eTraGo = etrago_from_oedb(session,args)
 
 
     # use eTraGo results from ego calculations if true
     # ToDo make function edisgo_direct_specs()
+
     if args['eDisGo']['direct_specs']:
         # ToDo: add this to utilities.py
         bus_id = 27334
@@ -91,6 +91,7 @@ if __name__ == '__main__':
         #snap_idx = eTraGo_network.snapshots
 
         ## Bus Power
+
         try:
             active_power_kW = eTraGo_network.buses_t.p[str(bus_id)] * 1000 # PyPSA result is in MW
         except:
@@ -182,9 +183,8 @@ if __name__ == '__main__':
 
 
     # make interactive plot with folium
-    logging.info('Starting interactive plot')
+    #logging.info('Starting interactive plot')
     #igeoplot(network=eTraGo, session=session, args=args)    # ToDo: add eDisGo results
-
 
     # calculate power plant dispatch without grid utilization (either in pypsa or in renpassgis)
 
