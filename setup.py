@@ -15,7 +15,7 @@ setup(name='eGo',
       packages=find_packages(),
       include_package_data=True,
       install_requires=['egoio == 0.3.0',
-                        'eDisGo == 0.0.1',                         
+                        'eDisGo == 0.0.1',
                         'pandas ==0.20.3',
                         'sqlalchemy >= 1.0.15, <= 1.2.0',
                         'geoalchemy2 >= 0.3.0, <=0.4.0',
@@ -23,15 +23,13 @@ setup(name='eGo',
                         'geopandas==0.3.0',
                         'Rtree==0.8.3',
                         'plotly==2.2.3',
-                        'folium >=0.5.0',
+                        'eTraGo==0.5.1'
                         'matplotlib >= 1.5.3, <=1.5.3'],
 	dependency_links=['git+https://git@github.com/openego/PyPSA.git@dev#egg=PyPSA',
-			 'git+https://git@github.com:python-visualization/folium.git@5739244acb9868d001032df288500a047b232857',
-			 'git+https://git@github.com:openego/eTraGo.git@46a9ccb3f2e0b3daee8bcb8f808f527772c32822'],
+			 'git+https://git@github.com:python-visualization/folium.git@5739244acb9868d001032df288500a047b232857'
+			 ],
 	 extras_require={
         'docs': [
             'sphinx >= 1.4',
             'sphinx_rtd_theme']}
      )
-     
-
