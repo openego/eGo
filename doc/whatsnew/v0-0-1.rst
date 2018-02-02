@@ -1,4 +1,4 @@
-Release v0.0.1 (February 01, 2018)
+Release v0.0.1 (February 02, 2018)
 ++++++++++++++++++++++++++++++++++
 
 As this is the first release of eGo. The tool eGo use the Python3 Packages eTraGo
@@ -12,5 +12,6 @@ voltage to selected low voltage level.
 Added features
 --------------
 
-* Connect eTraGo and eDisGo
-* 
+* Interface between eTraGo and eDisGo
+* Plots with folium
+* first Result structure 

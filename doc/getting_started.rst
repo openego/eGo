@@ -3,7 +3,7 @@ Getting started
 
 .. warning::
 
-      Note, Ding0 relies on data provided by the OEDB. Currently, only members
+      Note, eGo, eTraGo and eDisGo relies on data provided by the OEDB. Currently, only members
       of the openego project team have access to this database. Public access
       (SQL queries wrapped by HTML) to the OEDB will be provided soon
 
@@ -32,16 +32,16 @@ With your activated environment `cd` to the cloned directory and run
 .. warning::
 
       Note, that the first release for deveolper is partly dependent on
-      forks and developent versions with could not automaticly be installed.
+      forks and developent versions which could not automaticly be installed.
       Check your installed packages using ``pip3 freeze`` with the
       `ego_dependencies.txt <https://github.com/openego/eGo/blob/dev/ego_dependencies.txt>`_
 
 3. Temporary solution:
 
    After your installation install the eGo PyPSA fork on `dev <https://github.com/openego/PyPSA/tree/dev>`_
-   `` pip3 install -e git+https://github.com/openego/PyPSA.git@dev#egg=PyPSA``
+     ``pip3 install -e git+https://github.com/openego/PyPSA.git@dev#egg=PyPSA``
    and Folium for an web based ploting with
-   ``pip3 pip install -e git+https://git.github.com:python-visualization/folium.git@master#egg=Folium-0.5.0+98.g106d829 ``
+   ``pip3 pip install -e git+https://git.github.com:python-visualization/folium.git@master#egg=Folium-0.5.0+98.g106d829``
 
 Using eGo:
 ==========

@@ -23,7 +23,7 @@ Welcome to eGo documentation!
 
 
 
-Also take a look into the Documentation of `eTraGo <http://eTraGo.readthedocs.io/>`_ and `eDisGo <http://edisgo.readthedocs.io/>`_ which are part of eGo.
+Take also a look into the Documentation of `eTraGo <http://eTraGo.readthedocs.io/>`_ and `eDisGo <http://edisgo.readthedocs.io/>`_ which are part of eGo.
 
 
 
