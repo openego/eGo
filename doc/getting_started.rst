@@ -27,7 +27,7 @@ Installation
     ```
 
 With your activated environment `cd` to the cloned directory and run
-``pip install -e eGo ``. This will install all needed packages into your environment.
+``pip3 install -e eGo`` . This will install all needed packages into your environment.
 
 .. warning::
 
@@ -39,9 +39,9 @@ With your activated environment `cd` to the cloned directory and run
 3. Temporary solution:
 
    After your installation install the eGo PyPSA fork on `dev <https://github.com/openego/PyPSA/tree/dev>`_
-     ``pip3 install -e git+https://github.com/openego/PyPSA.git@dev#egg=PyPSA``
+   ``pip3 install -e git+https://github.com/openego/PyPSA.git@dev#egg=PyPSA``
    and Folium for an web based ploting with
-   ``pip3 pip install -e git+https://git.github.com:python-visualization/folium.git@master#egg=Folium-0.5.0+98.g106d829``
+   ``pip3 -e git+git@github.com:python-visualization/folium.git@5739244acb9868d001032df288500a047b232857#egg=folium``
 
 Using eGo:
 ==========
