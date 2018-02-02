@@ -12,7 +12,7 @@ Submodules
 ----------
 
 ego\.ego_main module
------------------------
+--------------------
 
 .. automodule:: ego.ego_main
     :members:

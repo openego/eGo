@@ -4,4 +4,4 @@
    :maxdepth: 7
    :titlesonly:
 
-   eGo API <api/modules>
+   API <api/modules>
