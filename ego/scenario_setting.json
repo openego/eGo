@@ -4,7 +4,8 @@
     "eDisGo": true,
     "scn_name": "Status Quo",
     "db": "oedb",
-    "result_id": 9
+    "result_id": 9,
+    "gridversion": "v0.3.0"
   },
   "eTraGo": {
     "db": "oedb",
@@ -22,7 +23,7 @@
     "generator_noise": false,
     "reproduce_noise": false,
     "minimize_loading": false,
-    "k_mean_clustering": 25,
+    "k_mean_clustering": false,
     "network_clustering": false,
     "parallelisation": false,
     "skip_snapshots": false,
