@@ -1,14 +1,17 @@
 """
-This is the application file for the tool eGo. The application eGo calculates the distribution and transmission grids
-of eTraGo and eDisGo.
+This is the application file for the tool eGo. The application eGo calculates
+the distribution and transmission grids of eTraGo and eDisGo.
 
-Warrning: This Repository is underconstruction and work in progress (wip)
+.. warning::
+    Note, that this Repository is under construction and relies on data provided
+    by the OEDB. Currently, only members of the openego project team have access
+    to this database.
 
 """
-__copyright__ = "Flensburg University of Applied Sciences, Europa-Universität Flensburg, Centre for Sustainable Energy Systems"
+__copyright__ = "Flensburg University of Applied Sciences, Europa-Universität"\
+                            "Flensburg, Centre for Sustainable Energy Systems"
 __license__ = "GNU Affero General Public License Version 3 (AGPL-3.0)"
 __author__ = "wolfbunke, maltesc"
-
 
 import pandas as pd
 import os
@@ -25,23 +28,12 @@ if not 'READTHEDOCS' in os.environ:
     from egoio.tools import db
     from etrago.tools.io import results_to_oedb
 
-import logging # ToDo: Logger should be set up more specific
+# ToDo: Logger should be set up more specific
+import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-"""
 
-# add country code to bus and geometry (shapely)
-# eTraGo.buses = eTraGo.buses.drop(['country_code','geometry'], axis=1)
-##eTraGo.lines.info()
-test = geolocation_buses(network = eTraGo, section='oedb')
-#test.buses
-
-#plot_line_loading(eTraGo)
-
-# write results to excel
-#hv_generator_results(eTraGo)
-"""
 
 if __name__ == '__main__':
     # import scenario settings **args of eTraGo
@@ -63,6 +55,8 @@ if __name__ == '__main__':
         # Does not work wait for eTraGo release 0.5.1
         #results_to_oedb(session, eTraGo, args['eTraGo'], grid='hv')
 
+        # add country code to bus and geometry (shapely)
+        # eTraGo.buses = eTraGo.buses.drop(['country_code','geometry'], axis=1)
         #test = geolocation_buses(network = eTraGo, session)
 
         # other plots based on matplotlib
@@ -82,9 +76,10 @@ if __name__ == '__main__':
     # get eTraGo results form db
     if args['global']['result_id']:
         eTraGo = etrago_from_oedb(session, args, result_id = args['global']['result_id'])
-        
+
 
     # use eTraGo results from ego calculations if true
+    # ToDo make function edisgo_direct_specs()
     if args['eDisGo']['direct_specs']:
         # ToDo: add this to utilities.py
         bus_id = 27334
@@ -122,6 +117,8 @@ if __name__ == '__main__':
         for key, value in gens.items():
             print (key)
 
+    # ToDo make loop for all bus ids
+    #      make function which links bus_id (subst_id)
     if args['eDisGo']['specs']:
 
         logging.info('Retrieving Specs')
@@ -186,7 +183,7 @@ if __name__ == '__main__':
 
     # make interactive plot with folium
     logging.info('Starting interactive plot')
-    igeoplot(network=eTraGo, session=session, args=args)    # ToDo: add eDisGo results
+    #igeoplot(network=eTraGo, session=session, args=args)    # ToDo: add eDisGo results
 
 
     # calculate power plant dispatch without grid utilization (either in pypsa or in renpassgis)

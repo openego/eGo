@@ -7,7 +7,7 @@ __license__ = "GNU Affero General Public License Version 3 (AGPL-3.0)"
 __url__ = "https://github.com/openego/data_processing/blob/master/LICENSE"
 __author__ = "wolfbunke"
 
-
+import sys
 import os
 if not 'READTHEDOCS' in os.environ:
     import pyproj as proj
@@ -117,7 +117,7 @@ def results_to_excel(results):
 
 
 
-def etrago_from_oedb(session, args, result_id = 9):
+def etrago_from_oedb(session, args, result_id):
     """
     Function to load eTraGo results for the Database.
 
@@ -167,10 +167,6 @@ def etrago_from_oedb(session, args, result_id = 9):
             if str(ormclass)[:-2].endswith('T'):
                 df = pd.Dataframe()
 
-            # ToDO:
-            #if 'source' in df:
-            #    df.source = df.source.map(self.id_to_source())
-
             return df
 
 
@@ -178,14 +174,14 @@ def etrago_from_oedb(session, args, result_id = 9):
             """
             Function to get Time Series as pandas DataFrames by the result_id
 
-            # TODO: index of bus_t and soon is wrong!
+            # TODO: check index of bus_t and soon is wrong!
 
             """
             # TODO: pls make more robust
             id_column = re.findall(r'[A-Z][^A-Z]*', name)[0] + '_' + 'id'
             id_column = id_column.lower()
-            print(id_column)
-            print(name)
+            #print(id_column)
+            #print(name)
             query = session.query(
                 getattr(ormclass, id_column),
                 getattr(ormclass, column).
@@ -202,7 +198,7 @@ def etrago_from_oedb(session, args, result_id = 9):
 
             # change of format to fit pypsa
             df = df[column].apply(pd.Series).transpose()
-            print(df.head())
+            #print(df.head())
             try:
                 assert not df.empty
                 df.index = timeindex
@@ -232,11 +228,14 @@ def etrago_from_oedb(session, args, result_id = 9):
     orm_meta =  getattr(_pkg, _prefix + 'Meta')
 
     # check result_id
-    result_id_in = session.query(orm_meta.result_id==result_id)
+
+    result_id_in = session.query(orm_meta.result_id).filter(orm_meta.\
+                                                result_id==result_id).all()
     if result_id_in:
         logger.info('Choosen result_id %s found in DB',result_id)
     else:
         logger.info('Error: result_id not found in DB')
+
 
     # get meta data as args
     meta = session.query(orm_meta.result_id,orm_meta.scn_name,orm_meta.calc_date,
@@ -300,7 +299,7 @@ def etrago_from_oedb(session, args, result_id = 9):
                            'soc_initial': 'state_of_charge_initial'}}
 
     # get data into dataframes
-
+    logger.info('Start building eTraGo results network')
     for comp, comp_t_dict in config.items():
 
         orm_dict = map_ormclass(comp)
@@ -350,12 +349,11 @@ def etrago_from_oedb(session, args, result_id = 9):
                     except (ValueError, AttributeError):
                         print("Series %s of component %s could not be "
                                     "imported" % (col, pypsa_comp_name))
-
-    logger.info('Imported: eTraGo results of id = %s ', result_id)
-
-    # ToDo:
-    # populate carrier attribute in PyPSA network
-    #network.import_components_from_dataframe(self.fetch_by_relname(carr_ormclass), 'Carrier')
+        print(comp)
 
 
+    print('Done')
+    logger.info('Imported eTraGo results of id = %s ', result_id)
     return network
+
+eTraGo = etrago_from_oedb(session, args, result_id = args['global']['result_id'])
