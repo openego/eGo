@@ -23,13 +23,17 @@ setup(name='eGo',
                         'geopandas==0.3.0',
                         'Rtree==0.8.3',
                         'plotly==2.2.3',
-                        'eTraGo==0.5.1'
+                        'eTraGo==0.5.1',
                         'matplotlib >= 1.5.3, <=1.5.3'],
 	dependency_links=['git+https://git@github.com/openego/PyPSA.git@dev#egg=PyPSA',
 			 'git+https://git@github.com:python-visualization/folium.git@5739244acb9868d001032df288500a047b232857'
 			 ],
-	 extras_require={
+	extras_require={
         'docs': [
             'sphinx >= 1.4',
-            'sphinx_rtd_theme']}
+            'sphinx_rtd_theme']},
+    package_data={
+        'ego': [
+            os.path.join('*.json')]
+     }
      )
