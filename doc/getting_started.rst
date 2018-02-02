@@ -41,7 +41,11 @@ With your activated environment `cd` to the cloned directory and run
    After your installation install the eGo PyPSA fork on `dev <https://github.com/openego/PyPSA/tree/dev>`_
    ``pip3 install -e git+https://github.com/openego/PyPSA.git@dev#egg=PyPSA``
    and Folium for an web based ploting with
-   ``pip3 -e git+git@github.com:python-visualization/folium.git@5739244acb9868d001032df288500a047b232857#egg=folium``
+   ``pip3 install -e git+git@github.com:python-visualization/folium.git@5739244acb9868d001032df288500a047b232857#egg=folium``
+   
+   Check if the `config.json <https://github.com/openego/eTraGo/blob/dev/etrago/tools/config.json>`_ 
+   file from eTraGo is installed in your libary ``/lib/python3.5/site-packages/etrago/tools`` .
+   If not copy and paste this file into this folder. 
 
 Using eGo:
 ==========

@@ -4,6 +4,7 @@ __author__ = "wolf_bunke"
 
 
 from setuptools import find_packages, setup
+import os
 
 setup(name='eGo',
       author='wolfbunke, maltesc',
@@ -34,6 +35,7 @@ setup(name='eGo',
             'sphinx_rtd_theme']},
     package_data={
         'ego': [
-            os.path.join('*.json')]
+            os.path.join('*.json'),
+             os.path.join('tools','*.json'),]
      }
      )
