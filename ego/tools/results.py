@@ -16,13 +16,17 @@ def total_storage_charges(network, plot=False):
 	"""
 	Sum up the pysical storage values of the total scenario
 
-	Parameters:
-	-----------
-	network: pypsa.network
+	Parameters
+	----------
+	network (pypsa.network):
 		PyPSA Network object modified by eTraGo
 
-	Results:
-	--------
+	plot (bool):
+		Use plot function
+
+
+	Results
+	-------
 
 	charge:
 		Quantity of charged Energy in MWh over scenario time steps

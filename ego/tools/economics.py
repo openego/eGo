@@ -30,9 +30,6 @@ def annuity_per_period(capex, n, wacc, t):
     i : float
     	interest rate
 	...
-
-
-
     """
 
     return capex * (wacc * (1 + wacc) ** n) / ((1 + wacc) ** n - 1)  # ToDo change formular to hourly annuity costs
@@ -42,11 +39,11 @@ def total_economic_costs(eTraGo, filename='investment_costs.csv', args=args):
     """
     Parameters
     ----------
-    eTraGo: pandas.Dataframe
-    	PyPSA pandas.Dataframe of eTraGo
+    eTraGo (pypsa.Network):
+    	PyPSA pandas.Network of eTraGo
 
-    ToDo:
-    -----
+    ToDo
+    ----
     get all cost parameter
     calculate the total costs per time step (lukasol)
     Make a comparable output like costs/ hour
@@ -177,19 +174,4 @@ def total_economic_costs(eTraGo, filename='investment_costs.csv', args=args):
 
     #add value check NAN etc.
 
-
-
     return
-
-total_economic_costs(eTraGo,args=args)
-
-
-
-
-#eTraGo.carriers.name
-#eTraGo.buses
-#eTraGo.components
-
-
-
-#eTraGo.foreign_trade

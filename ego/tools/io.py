@@ -90,6 +90,7 @@ def geolocation_buses(network, session):
 
 def results_to_excel(results):
     """
+    Wirte results to excel
 
     """
     # Write the results as xlsx file
@@ -111,9 +112,18 @@ def results_to_excel(results):
 
 def etrago_from_oedb(session, args):
     """
-    Function to load eTraGo results for the Database.
+    Function with import eTraGo results for the Database.
+
+    Parameter:
+    ----------
+    session (obj):
+        sqlalchemy session to the OEDB
+
+    args (dict):
+        args from eGo scenario_setting.json
 
     ToDo:
+    -----
         add Mapping for grid schema
         make it more generic -> class?
     """
@@ -174,8 +184,7 @@ def etrago_from_oedb(session, args):
             # TODO: pls make more robust
             id_column = re.findall(r'[A-Z][^A-Z]*', name)[0] + '_' + 'id'
             id_column = id_column.lower()
-            #print(id_column)
-            #print(name)
+
             query = session.query(
                 getattr(ormclass, id_column),
                 getattr(ormclass, column).
@@ -192,7 +201,7 @@ def etrago_from_oedb(session, args):
 
             # change of format to fit pypsa
             df = df[column].apply(pd.Series).transpose()
-            #print(df.head())
+
             try:
                 assert not df.empty
                 df.index = timeindex
@@ -343,7 +352,6 @@ def etrago_from_oedb(session, args):
                     except (ValueError, AttributeError):
                         print("Series %s of component %s could not be "
                                     "imported" % (col, pypsa_comp_name))
-        print(comp)
 
 
     print('Done')

@@ -1,3 +1,8 @@
+"""
+Utility functions of eGo
+"""
+
+
 import os
 import pandas as pd
 if not 'READTHEDOCS' in os.environ:
