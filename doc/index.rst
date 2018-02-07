@@ -1,16 +1,13 @@
-.. eGo documentation master file, created by
-   sphinx-quickstart on Fri Sep 29 10:55:47 2017.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+Welcome to eGo documentation!
+=============================
 
-Welcome to eGo's documentation!
-==================================
+
+
 
 
 .. image:: https://openegoproject.files.wordpress.com/2017/02/open_ego_logo_breit.png?w=400
    :align: right
    :scale: 100%
-
 
 
 .. toctree::
@@ -20,12 +17,19 @@ Welcome to eGo's documentation!
    welcome
    getting_started
    usage_details
-   about
-
+   developer
    whatsnew
-   
-   
    api
+
+
+
+Take also a look into the Documentation of `eTraGo <http://eTraGo.readthedocs.io/>`_ and `eDisGo <http://edisgo.readthedocs.io/>`_ which are part of eGo.
+
+
+
+.. note:: Note, this software is under construction and not ready for a normal use.
+
+.. warning:: Note, currently the data source of eGo relies on - the Open Energy Database - has no public accessible API, yet. Thus, currently you won't be able to run eGo without modifications.
 
 
 
@@ -35,4 +39,3 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-
