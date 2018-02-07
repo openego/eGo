@@ -4,7 +4,7 @@
     "eDisGo": false,
     "db": "oedb",
     "result_id": 9,
-    "recover":false,
+    "recover":true,
     "gridversion": "v0.3.0"
   },
   "eTraGo": {
@@ -14,7 +14,7 @@
     "pf_post_lopf": false,
     "start_snapshot": 1,
     "end_snapshot" : 2,
-    "scn_name": "SH Status Quo",
+    "scn_name": "NEP 2035",
     "solver": "gurobi",
     "lpfile":  false,
     "results": false,
@@ -34,7 +34,7 @@
   },
   "eDisGo": {
      "direct_specs": false,
-     "specs": true,
+     "specs": false,
      "comments": null
   }
 }

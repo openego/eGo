@@ -86,41 +86,17 @@ if __name__ == '__main__':
 
     if args['eDisGo']['direct_specs']:
         # ToDo: add this to utilities.py
-        bus_id = 27334
-        specs_meta_data = {}
-        specs_meta_data.update({'TG Bus ID':bus_id})
+        
+        logging.info('Retrieving Specs')
+        
+        bus_id = 23971
+        result_id = args['global']['result_id']
+        
+        from ego.tools.specs import get_etragospecs_direct, get_mvgrid_from_bus_id
+        from egoio.db_tables import model_draft
+        specs = get_etragospecs_direct(session, bus_id, result_id, eTraGo, args)        
+        
 
-        # Retrieve all Data
-        ### Snapshot Range
-        #snap_idx = eTraGo_network.snapshots
-
-        ## Bus Power
-
-        try:
-            active_power_kW = eTraGo_network.buses_t.p[str(bus_id)] * 1000 # PyPSA result is in MW
-        except:
-            logger.warning('No active power series')
-            active_power_kW = None
-
-        try:
-            reactive_power_kvar = eTraGo_network.buses_t.q[str(bus_id)] * 1000 # PyPSA result is in Mvar
-        except:
-            logger.warning('No reactive power series')
-            reactive_power_kvar = None
-
-
-        ## Gens
-        all_gens = eTraGo_network.generators.bus
-        bus_gens = all_gens.index[all_gens == str(bus_id)]
-        p_nom = eTraGo_network.generators.p_nom[bus_gens]
-        gen_type = eTraGo_network.generators.carrier[bus_gens]
-
-        gen_df = pd.DataFrame({'p_nom': p_nom,'gen_type':gen_type})
-        capacity = gen_df[['p_nom','gen_type']].groupby('gen_type').sum().T
-
-        gens = eTraGo_network.generators
-        for key, value in gens.items():
-            print (key)
 
     # ToDo make loop for all bus ids
     #      make function which links bus_id (subst_id)
