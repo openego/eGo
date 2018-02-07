@@ -1,10 +1,10 @@
 {
   "global": {
-    "eTraGo": true,
-    "eDisGo": true,
-    "scn_name": "Status Quo",
+    "eTraGo": false,
+    "eDisGo": false,
     "db": "oedb",
     "result_id": 9,
+    "recover":false,
     "gridversion": "v0.3.0"
   },
   "eTraGo": {

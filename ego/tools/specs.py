@@ -8,18 +8,34 @@ if not 'READTHEDOCS' in os.environ:
     from edisgo.grid.network import ETraGoSpecs
 
 
-
+import datetime
 import logging # ToDo: Logger should be set up more specific
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Alquemy Hack
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import ARRAY, BigInteger, Boolean, CheckConstraint, Column, Date, DateTime, Float, ForeignKey, ForeignKeyConstraint, Index, Integer, JSON, Numeric, SmallInteger, String, Table, Text, UniqueConstraint, text
 
-# Function
+Base = declarative_base()
+metadata = Base.metadata
+
+class EgoSupplyAggrWeather(Base):
+    __tablename__ = 'ego_supply_aggr_weather'
+    __table_args__ = {'schema': 'model_draft'}
+
+    idx = Column(Integer, primary_key=True)
+    w_id = Column(BigInteger)
+    aggr_id = Column(BigInteger)
+    scn_name = Column(String)
+    bus = Column(BigInteger)
+    
+
+# Functions
 
 def get_etragospecs_from_db(session,
                             bus_id,
-                            result_id,
-                            scn_name):
+                            result_id):
     """
     Reads eTraGo Results from Database and returns an Object of the Interface class ETraGoSpecs
 
@@ -39,7 +55,7 @@ def get_etragospecs_from_db(session,
         eDisGo ETraGoSpecs Object
 
     """
-
+    t0 = datetime.datetime.now()
     specs_meta_data = {}
 
     specs_meta_data.update({'TG Bus ID':bus_id})
@@ -59,8 +75,9 @@ def get_etragospecs_from_db(session,
     ormclass_result_stor = model_draft.__getattribute__('EgoGridPfHvResultStorage')
     ormclass_result_stor_t = model_draft.__getattribute__('EgoGridPfHvResultStorageT')
     ormclass_source = model_draft.__getattribute__('EgoGridPfHvSource')
-
-
+    #ormclass_aggr_w = model_draft.__getattribute__('EgoSupplyAggrWeather')
+    ormclass_aggr_w = EgoSupplyAggrWeather # ToDo: Noch in model_draft einführen.
+    
     # Meta Queries
     ## Check
 
@@ -142,29 +159,36 @@ def get_etragospecs_from_db(session,
 
     ## Renewables
     ### Capacities
+         
+        
         query = session.query(
-                distinct(
-                ormclass_result_gen.generator_id).label('generator_id'), # This ID is an aggregate ID (single generators aggregated)
+                ormclass_result_gen.generator_id,
                 ormclass_result_gen.p_nom,
                 ormclass_result_gen.p_nom_opt,
                 ormclass_source.name,
-                ormclass_result_gen_single.w_id
+                ormclass_aggr_w.w_id
                 ).join(
                         ormclass_source,
                         ormclass_source.source_id == ormclass_result_gen.source
-                        ).join(
-                                ormclass_result_gen_single,
-                                ormclass_result_gen_single.aggr_id == ormclass_result_gen.generator_id
-                                ).filter( #Todo: Hier muss noch die Version gequeried weden!!!
+                                ).join(
+                                        ormclass_aggr_w,
+                                        ormclass_aggr_w.aggr_id == ormclass_result_gen.generator_id
+                                        
+                                ).filter(
                                 ormclass_result_gen.bus == bus_id,
                                 ormclass_result_gen.result_id == result_id,
                                 ormclass_source.name.in_(weather_dpdnt),
-                                ormclass_result_gen_single.scn_name == scn_name)
-
+                                ormclass_aggr_w.scn_name == scn_name)
+        
         ren_df = pd.DataFrame(query.all(),
                               columns=[column['name'] for
                                        column in
                                        query.column_descriptions])
+    # ToDo: apparently gens come form different scn Names here!!! Check single table!!!!!
+    # At least this is the case with result_id 9!!!!
+
+        print("Check w_id")
+        print(ren_df)
 
         aggr_gens = ren_df.groupby([
                 'name',
@@ -327,4 +351,39 @@ def get_etragospecs_from_db(session,
     logger.info(specs_meta_data)
     print(ren_df)
     print(aggr_gens, dispatch, curtailment)
+    t1 = datetime.datetime.now()
+    calc_time = t1 - t0
+    print("Calc time: ", calc_time)
     return specs
+
+
+def get_mvgrid_from_bus_id(session,
+                            bus_id):    
+    # Mapping
+    ormclass_hvmv_subst = model_draft.__getattribute__('EgoGridHvmvSubstation')
+    subst_id = session.query(
+            ormclass_hvmv_subst.subst_id
+            ).filter(
+            ormclass_hvmv_subst.otg_id == bus_id
+            ).scalar(
+                    )
+    #ToDo Check if subst_id is really the mv grid ID
+    # Anyway, this should be adapted by Dingo
+    return subst_id
+ 
+    
+#def get_w_id_from_aggr(session,
+#                       aggr_id,
+#                       scn_name):  
+#    
+#    #ormclass_aggr_w = model_draft.__getattribute__('EgoSupplyAggrWeather')
+#    ormclass_aggr_w = EgoSupplyAggrWeather # ToDo: Noch in model_draft einführen.
+#    w_id = session.query(
+#            ormclass_aggr_w.w_id
+#            ).filter(
+#            ormclass_aggr_w.aggr_id == aggr_id,
+#            ormclass_aggr_w.scn_name == scn_name
+#            ).scalar(
+#                    )
+#    return w_id
+     

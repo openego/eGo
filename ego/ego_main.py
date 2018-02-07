@@ -21,6 +21,7 @@ if not 'READTHEDOCS' in os.environ:
     from tools.plots import (make_all_plots,plot_line_loading, plot_stacked_gen,
                                      add_coordinates, curtailment, gen_dist,
                                      storage_distribution, igeoplot)
+    # For importing geopandas you need to install spatialindex on your system http://github.com/libspatialindex/libspatialindex/wiki/1.-Getting-Started
     from tools.utilities import get_scenario_setting, get_time_steps
     from tools.io import geolocation_buses, etrago_from_oedb
     from tools.results import total_storage_charges
@@ -37,6 +38,7 @@ logger = logging.getLogger(__name__)
 if __name__ == '__main__':
     # import scenario settings **args of eTraGo
     args = get_scenario_setting(json_file='scenario_setting.json')
+    print (args)
 
     try:
         conn = db.connection(section=args['global']['db'])
@@ -73,12 +75,14 @@ if __name__ == '__main__':
         total_storage_charges(eTraGo, plot=True)
 
     # get eTraGo results form db
-    if args['global']['result_id']:
+    if args['global']['recover']:
         eTraGo = etrago_from_oedb(session,args)
 
 
     # use eTraGo results from ego calculations if true
     # ToDo make function edisgo_direct_specs()
+
+
 
     if args['eDisGo']['direct_specs']:
         # ToDo: add this to utilities.py
@@ -121,6 +125,7 @@ if __name__ == '__main__':
     # ToDo make loop for all bus ids
     #      make function which links bus_id (subst_id)
     if args['eDisGo']['specs']:
+        
 
         logging.info('Retrieving Specs')
         # ToDo make it more generic
@@ -128,11 +133,12 @@ if __name__ == '__main__':
         # ToDo move part as function to utilities or specs
         bus_id = 23971
         result_id = args['global']['result_id']
-        scn_name = args['global']['scn_name'] # Six is Germany for 2 Snaps with minimal residual load
-
-        from ego.tools.specs import get_etragospecs_from_db
+        
+        from ego.tools.specs import get_etragospecs_from_db, get_mvgrid_from_bus_id
         from egoio.db_tables import model_draft
-        specs = get_etragospecs_from_db(session, bus_id, result_id, scn_name)
+        specs = get_etragospecs_from_db(session, bus_id, result_id)
+        
+        mv_grid = get_mvgrid_from_bus_id(session, bus_id) # This function can be used to call the correct MV grid
 
     if args['global']['eDisGo']:
         logging.info('Starting eDisGo')
