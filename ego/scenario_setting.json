@@ -1,10 +1,10 @@
 {
   "global": {
-    "eTraGo": true,
+    "eTraGo": false,
     "eDisGo": false,
     "db": "oedb",
-    "result_id": 9,
-    "recover": false,
+    "result_id": 359,
+    "recover": true,
     "gridversion": null
   },
   "eTraGo": {
@@ -13,12 +13,12 @@
     "method": "lopf",
     "pf_post_lopf": false,
     "start_snapshot": 1,
-    "end_snapshot" : 96,
+    "end_snapshot" : 168,
     "scn_name": "SH Status Quo",
     "solver": "gurobi",
     "lpfile":  false,
     "results": false,
-    "export": false,
+    "export": true,
     "storage_extendable": false,
     "generator_noise": true,
     "reproduce_noise": false,
@@ -28,13 +28,13 @@
     "parallelisation": false,
     "skip_snapshots": false,
     "line_grouping": false,
-    "branch_capacity_factor": 1,
+    "branch_capacity_factor": 0.1,
     "load_shedding": false,
     "comments": null
   },
   "eDisGo": {
      "direct_specs": false,
      "specs": false,
-     "comments": "Malte Basis cf 1, SH SQ"
+     "comments": "Malte Test cf 0.1, SH SQ"
   }
 }

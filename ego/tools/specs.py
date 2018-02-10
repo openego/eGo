@@ -83,7 +83,8 @@ def get_etragospecs_from_db(session,
             ormclass_result_meta.result_id == result_id
             ).scalar(
                     )
-
+    if scn_name == 'SH Status Quo':
+        scn_name = 'Status Quo' 
 
     specs_meta_data.update({'scn_name':scn_name})
 
@@ -171,8 +172,6 @@ def get_etragospecs_from_db(session,
                               columns=[column['name'] for
                                        column in
                                        query.column_descriptions])
-    # ToDo: apparently gens come form different scn Names here!!! Check single table!!!!!
-    # At least this is the case with result_id 9!!!!
 
         aggr_gens = ren_df.groupby([
                 'name',
@@ -339,14 +338,14 @@ def get_etragospecs_from_db(session,
     t5 = time.perf_counter()
     performance.update({'Overall time':t5-t0})
     
-    print("\n Conventional Dispatch (Normalized): \n",
-      conv_dsptch_norm, 
-      "\n\n Renewable Generators: \n",
-      aggr_gens,
-      "\n\n Renewable Dispatch: \n",
-      dispatch,
-      "\n\n Renewable Curtailment: \n",
-      curtailment, "\n\n")
+#    print("\n Conventional Dispatch (Normalized): \n",
+#      conv_dsptch_norm, 
+#      "\n\n Renewable Generators: \n",
+#      aggr_gens,
+#      "\n\n Renewable Dispatch: \n",
+#      dispatch,
+#      "\n\n Renewable Curtailment: \n",
+#      curtailment, "\n\n")
     
     for keys,values in performance.items():
         print(keys, ": ", values)
@@ -400,6 +399,9 @@ def get_etragospecs_direct(session,
     else:
         scn_name = args['eTraGo']['scn_name']
     specs_meta_data.update({'scn_name':scn_name})
+    
+    if scn_name == 'SH Status Quo':
+        scn_name = 'Status Quo' 
     
     # Generators
     t0 = time.perf_counter()
@@ -467,8 +469,7 @@ def get_etragospecs_direct(session,
     
       
     ren_df = ren_df.assign(w_id=pd.Series(w_ids, index=ren_df.index))
-     
-    ren_df.dropna(inplace=True) ##This should be unnecessary
+    ren_df.dropna(inplace=True) ##This should be unnecessary (and I think it isnt)
     
     aggr_gens = ren_df.groupby([
             'name',
@@ -581,17 +582,17 @@ def get_etragospecs_direct(session,
         
     #print(performance)
 
-    print("\n Conventional Dispatch (Normalized): \n",
-          conv_dsptch_norm, 
-          "\n\n Renewable Generators: \n",
-          aggr_gens,
-          "\n\n Renewable Dispatch: \n",
-          dispatch,
-          "\n\n Renewable Curtailment: \n",
-          curtailment, "\n\n")
-    
-    for keys,values in performance.items():
-        print(keys, ": ", values)
+#    print("\n Conventional Dispatch (Normalized): \n",
+#          conv_dsptch_norm, 
+#          "\n\n Renewable Generators: \n",
+#          aggr_gens,
+#          "\n\n Renewable Dispatch: \n",
+#          dispatch,
+#          "\n\n Renewable Curtailment: \n",
+#          curtailment, "\n\n")
+#    
+#    for keys,values in performance.items():
+#        print(keys, ": ", values)
  
     return specs
 

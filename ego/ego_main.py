@@ -89,7 +89,7 @@ if __name__ == '__main__':
         
         logging.info('Retrieving Specs')
         
-        bus_id = 23971
+        bus_id = 27574 #23971
     
         from ego.tools.specs import get_etragospecs_direct, get_mvgrid_from_bus_id
         from egoio.db_tables import model_draft
@@ -106,7 +106,7 @@ if __name__ == '__main__':
         # ToDo make it more generic
         # ToDo iteration of grids
         # ToDo move part as function to utilities or specs
-        bus_id = 23971
+        bus_id = 27574 #23971
         result_id = args['global']['result_id']
         
         from ego.tools.specs import get_etragospecs_from_db, get_mvgrid_from_bus_id
