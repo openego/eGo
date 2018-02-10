@@ -90,11 +90,10 @@ if __name__ == '__main__':
         logging.info('Retrieving Specs')
         
         bus_id = 23971
-        result_id = args['global']['result_id']
-        
+    
         from ego.tools.specs import get_etragospecs_direct, get_mvgrid_from_bus_id
         from egoio.db_tables import model_draft
-        specs = get_etragospecs_direct(session, bus_id, result_id, eTraGo, args)        
+        specs = get_etragospecs_direct(session, bus_id, eTraGo, args)        
         
 
 

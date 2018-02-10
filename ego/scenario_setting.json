@@ -1,26 +1,26 @@
 {
   "global": {
-    "eTraGo": false,
+    "eTraGo": true,
     "eDisGo": false,
     "db": "oedb",
     "result_id": 9,
-    "recover":true,
-    "gridversion": "v0.3.0"
+    "recover": false,
+    "gridversion": null
   },
   "eTraGo": {
     "db": "oedb",
-    "gridversion": "v0.3.0",
+    "gridversion": null,
     "method": "lopf",
     "pf_post_lopf": false,
     "start_snapshot": 1,
-    "end_snapshot" : 2,
-    "scn_name": "NEP 2035",
+    "end_snapshot" : 96,
+    "scn_name": "SH Status Quo",
     "solver": "gurobi",
     "lpfile":  false,
     "results": false,
     "export": false,
-    "storage_extendable": true,
-    "generator_noise": false,
+    "storage_extendable": false,
+    "generator_noise": true,
     "reproduce_noise": false,
     "minimize_loading": false,
     "k_mean_clustering": false,
@@ -35,6 +35,6 @@
   "eDisGo": {
      "direct_specs": false,
      "specs": false,
-     "comments": null
+     "comments": "Malte Basis cf 1, SH SQ"
   }
 }
