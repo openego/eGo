@@ -86,21 +86,21 @@ if __name__ == '__main__':
 
     if args['eDisGo']['direct_specs']:
         # ToDo: add this to utilities.py
-        
+
         logging.info('Retrieving Specs')
-        
+
         bus_id = 27574 #23971
-    
+
         from ego.tools.specs import get_etragospecs_direct, get_mvgrid_from_bus_id
         from egoio.db_tables import model_draft
-        specs = get_etragospecs_direct(session, bus_id, eTraGo, args)        
-        
+        specs = get_etragospecs_direct(session, bus_id, eTraGo, args)
+
 
 
     # ToDo make loop for all bus ids
     #      make function which links bus_id (subst_id)
     if args['eDisGo']['specs']:
-        
+
 
         logging.info('Retrieving Specs')
         # ToDo make it more generic
@@ -108,11 +108,11 @@ if __name__ == '__main__':
         # ToDo move part as function to utilities or specs
         bus_id = 27574 #23971
         result_id = args['global']['result_id']
-        
+
         from ego.tools.specs import get_etragospecs_from_db, get_mvgrid_from_bus_id
         from egoio.db_tables import model_draft
         specs = get_etragospecs_from_db(session, bus_id, result_id)
-        
+
         mv_grid = get_mvgrid_from_bus_id(session, bus_id) # This function can be used to call the correct MV grid
 
     if args['global']['eDisGo']:
