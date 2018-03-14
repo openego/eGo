@@ -1,10 +1,10 @@
 {
   "global": {
-    "eTraGo": true,
+    "eTraGo": false,
     "eDisGo": false,
     "db": "oedb",
     "result_id": 359,
-    "recover": false,
+    "recover": true,
     "gridversion": null
   },
   "eTraGo": {
@@ -33,7 +33,7 @@
     "comments": null
   },
   "eDisGo": {
-     "direct_specs": false,
+     "direct_specs": true,
      "specs": false,
      "comments": "Malte Test cf 0.1, SH SQ"
   }
