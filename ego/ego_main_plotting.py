@@ -47,7 +47,7 @@ eTraGo = etrago(args['eTraGo'])
 r = eGoResults(eTraGo=eTraGo, eDisGo=None)
 ego = r.create_total_results()
 
-ego
+ego.investment
 ego.etrago
 ego.storages
 

@@ -52,7 +52,7 @@ if __name__ == '__main__':
         # start eTraGo calculation
         eTraGo = etrago(args['eTraGo'])
 
-        
+
         # add country code to bus and geometry (shapely)
         # eTraGo.buses = eTraGo.buses.drop(['country_code','geometry'], axis=1)
         #test = geolocation_buses(network = eTraGo, session)
@@ -160,6 +160,7 @@ if __name__ == '__main__':
         costs = network.results.grid_expansion_costs
         print(costs)
 
+    
 
     # make interactive plot with folium
     #logging.info('Starting interactive plot')

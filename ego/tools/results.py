@@ -15,7 +15,9 @@ import os
 
 class eGoResults:
     """
-    eGo results
+    eGo results class which contains eTraGo and eDisGo
+	in order to calculate the total system cost of storage and grid
+	expantion.
     """
 
     def __init__(self, eTraGo, eDisGo, *args, **kwargs):
@@ -39,11 +41,16 @@ class eGoResults:
     def create_results(self):
         """
         Create eGo results DataFrame
+
+		ToDo: Results structure
+		ego.total . ... ego total results
+		ego.edisgo . ... network, grids, storages
+		ego.etrago . ... buses, lines, etc.
+
         """
 
         results = pd.DataFrame() # as total results
-        results = self.investment_costs()
-
+		#results = total_results()
         self.results = results
 
         return results
@@ -51,24 +58,30 @@ class eGoResults:
 
     def create_total_results(self):
         """
-        Create eTraGo results
+		Create eTraGo results
 
-        results
-        -------
-        results.etrago :obj:
-        """
+		results
+		-------
+		results.etrago :obj:
+		"""
 
-        #first level
-        results = self.create_results()
+	    #first level
+        results = self.create_results() # empty for total costs
 
-
-        #second level
-        results.storages = self.etrago_storages()
+		# second level
+		# result.total
+		# result.etrago
         results.etrago = self.create_etrago_results()
-        # lines
+		# result.edisgo
 
-        # buses/transfomers
-        # edisgo
+		#third level
+        results.total.investment = self.investment_costs()
+        results.etrago.storages = self.etrago_storages()
+
+		# lines
+
+		# buses/transfomers
+		# edisgo
 
         self.results = results
 
@@ -249,7 +262,8 @@ class eGoResults:
 	 	grid losses: amount and costs
 		use calc_line_losses(network): from etrago pf_post_lopf
         """
-        etg = eTraGo
+        etg = self.eTraGo
+        #etg = eTraGo
         # groupby v_nom
         power_price = etg.generators_t.p[etg.generators[etg.generators.\
                                     control!='Slack'].index]* etg.generators.\
@@ -281,7 +295,7 @@ class eGoResults:
 
 
 
-eTraGo.lines_t
+		#eTraGo.lines_t
 
 
 def total_storage_charges(network):

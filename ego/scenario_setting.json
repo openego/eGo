@@ -1,20 +1,20 @@
 {
   "global": {
-    "eTraGo": false,
+    "eTraGo": true,
     "eDisGo": false,
     "db": "oedb",
     "result_id": 359,
-    "recover": true,
+    "recover": false,
     "gridversion": null
   },
   "eTraGo": {
     "db": "oedb",
     "gridversion": null,
     "method": "lopf",
-    "pf_post_lopf": false,
-    "start_snapshot": 2030,
-    "end_snapshot" : 2040,
-    "scn_name": "NEP 2035",
+    "pf_post_lopf": true,
+    "start_snapshot": 4000,
+    "end_snapshot" : 4001,
+    "scn_name": "SH NEP 2035",
     "solver": "gurobi",
     "lpfile":  false,
     "results": false,
@@ -33,7 +33,7 @@
     "comments": null
   },
   "eDisGo": {
-     "direct_specs": true,
+     "direct_specs": false,
      "specs": false,
      "comments": "Malte Test cf 0.1, SH SQ"
   }
