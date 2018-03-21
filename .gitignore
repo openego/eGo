@@ -6,3 +6,4 @@ results
 ego/scenario_setting.json
 .spyproject/
 ego/noise_values.csv
+.idea/

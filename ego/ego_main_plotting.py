@@ -47,9 +47,9 @@ eTraGo = etrago(args['eTraGo'])
 r = eGoResults(eTraGo=eTraGo, eDisGo=None)
 ego = r.create_total_results()
 
-ego.investment
-ego.etrago
-ego.storages
+#ego.investment
+#ego.etrago
+#ego.storages
 
 
 ###############################################################
@@ -68,7 +68,7 @@ make_all_plots(eTraGo)
 #ego.storages
 
 
-eTraGo.pf
+#eTraGo.pf
 
 
 #igeoplot(eTraGo, session, tiles=None, geoloc=None, args=None)
