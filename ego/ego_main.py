@@ -160,7 +160,7 @@ if __name__ == '__main__':
         costs = network.results.grid_expansion_costs
         print(costs)
 
-    
+
 
     # make interactive plot with folium
     #logging.info('Starting interactive plot')
@@ -179,3 +179,6 @@ if __name__ == '__main__':
     # possible aggregation of results
 
     # exports: total system costs, plots, csv export files
+
+if __name__ == '__main__':
+    pass
