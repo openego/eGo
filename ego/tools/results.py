@@ -14,34 +14,33 @@ __copyright__ = "Flensburg University of Applied Sciences, Europa-Universität"\
 __license__ = "GNU Affero General Public License Version 3 (AGPL-3.0)"
 __author__ = "wolfbunke"
 
-
 import io
-import pandas as pd
-import numpy as np
 import os
 import logging
 logger = logging.getLogger('ego')
 
 if not 'READTHEDOCS' in os.environ:
+    import pandas as pd
+    import numpy as np
     from etrago.tools.plot import (plot_line_loading, plot_stacked_gen,
                                      curtailment, gen_dist,
 				                     storage_distribution,
 									 plot_voltage,plot_residual_load)
 
 class egoBasic():
-    """
-    eGo basics class.
+"""
+eGo basics class.
 
-    Parameters
-    ----------
+Parameters
+----------
 
-    eTraGo : Network
-        Network container of eTraGo based on PyPSA
-    eDisGo : Network
-        Network container of eDisGo based on PyPSA
-    args : dict
-        Dict of the scenario_setting.json
-    """
+eTraGo : Network
+    Network container of eTraGo based on PyPSA
+eDisGo : Network
+    Network container of eDisGo based on PyPSA
+args : dict
+    Dict of the scenario_setting.json
+"""
 
     def __init__(self, eTraGo, *args, **kwargs):
 
@@ -60,21 +59,21 @@ class egoBasic():
 
 
 class eTraGoResults(egoBasic):
-    """eTraGo Results
+"""eTraGo Results
 
-    This module contains all results of eTraGo for eGo.
+This module contains all results of eTraGo for eGo.
 
 
-    Example:
-    --------
-    The module can be used by ``etg = eTraGoResults(eTraGo=network)``
+Example
+--------
+The module can be used by etg = eTraGoResults(eTraGo=network)
 
-    See Also
-    --------
-    `The eTraGo documentation on Extensions
-    <http://etrago.readthedocs.io/en/latest/api/etrago.html>`_
+See Also
+--------
+`The eTraGo documentation on Extensions
+<http://etrago.readthedocs.io/en/latest/api/etrago.html>`_
 
-    """
+"""
 
     def __init__(self,eTraGo, *args, **kwargs):
         super().__init__(eTraGo, *args, **kwargs)
@@ -108,15 +107,15 @@ class eTraGoResults(egoBasic):
 
 
 class eDisGoResults(egoBasic):
-    """ eDisGo Results
+""" eDisGo Results
 
-    This module contains all results of eDisGo for eGo.
+This module contains all results of eDisGo for eGo.
 
-    ToDo:
-        add eDisGo
-        add iteration for multiple ding0 grids
+ToDo:
+    add eDisGo
+    add iteration for multiple ding0 grids
 
-    """
+"""
     def __init__(self,eDisGo):
         super().__init__(eDisGo)
         self.edisgo = pd.DataFrame()
@@ -125,18 +124,20 @@ class eDisGoResults(egoBasic):
 
 
 class eGo(eTraGoResults):
-    """Main eGo module which including all results and main functionalities.
+"""Main eGo module which including all results and main functionalities.
 
 
-    Parameters
-    ----------
-    eTraGo : Network
-    eDisGo : Network
+Parameters
+----------
+eTraGo : Network
+    
+eDisGo : Network
+    
 
 
-    ToDo:
+ToDo:
     add eDisGo
-    """
+"""
     def __init__(self,eTraGo, scn_name):
         super().__init__(eTraGo, scn_name)
         #super().__init__(eDisGo)
@@ -466,3 +467,7 @@ def create_etrago_results(network,scn_name):
     etrago = etrago.assign(investment_costs=result_invest['carrier_costs'])
 
     return etrago
+
+
+if __name__ == '__main__':
+    pass

@@ -12,7 +12,6 @@ __author__ = "tba"
 
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 import os
 if not 'READTHEDOCS' in os.environ:
     from etrago.tools.plot import (plot_line_loading, plot_stacked_gen,
@@ -30,6 +29,7 @@ if not 'READTHEDOCS' in os.environ:
     from egoio.db_tables.model_draft import EgoGridMvGriddistrict
     from egoio.db_tables.grid import EgoDpMvGriddistrict
     from tools.results import eGo
+    import matplotlib.pyplot as plt
 
 import logging
 logger = logging.getLogger('ego')
@@ -314,10 +314,10 @@ def total_power_costs_plot(eTraGo):
 
 
 	"""
-	import matplotlib.pyplot as plt
+	#import matplotlib.pyplot as plt
 	plt.rcdefaults()
-	import numpy as np
-	import matplotlib.pyplot as plt
+	#import numpy as np
+	#import matplotlib.pyplot as plt
 
 
 	fig, ax = plt.subplots()
