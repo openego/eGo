@@ -14,15 +14,14 @@ __copyright__ = "Flensburg University of Applied Sciences, Europa-Universität"\
 __license__ = "GNU Affero General Public License Version 3 (AGPL-3.0)"
 __author__ = "wolfbunke"
 
-
 import io
-import pandas as pd
-import numpy as np
 import os
 import logging
 logger = logging.getLogger('ego')
 
 if not 'READTHEDOCS' in os.environ:
+    import pandas as pd
+    import numpy as np
     from etrago.tools.plot import (plot_line_loading, plot_stacked_gen,
                                      curtailment, gen_dist,
 				                     storage_distribution,
@@ -466,3 +465,7 @@ def create_etrago_results(network,scn_name):
     etrago = etrago.assign(investment_costs=result_invest['carrier_costs'])
 
     return etrago
+
+
+if __name__ == '__main__':
+    pass

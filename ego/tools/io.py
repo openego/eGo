@@ -357,3 +357,7 @@ def etrago_from_oedb(session, args):
     print('Done')
     logger.info('Imported eTraGo results of id = %s ', result_id)
     return network
+
+
+if __name__ == '__main__':
+    pass
