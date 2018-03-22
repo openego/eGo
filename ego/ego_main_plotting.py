@@ -11,7 +11,7 @@ if not 'READTHEDOCS' in os.environ:
     # For importing geopandas you need to install spatialindex on your system http://github.com/libspatialindex/libspatialindex/wiki/1.-Getting-Started
     from tools.utilities import get_scenario_setting, get_time_steps
     from tools.io import geolocation_buses, etrago_from_oedb
-    from tools.results import total_storage_charges, eGoResults
+    from tools.results import total_storage_charges
     from sqlalchemy.orm import sessionmaker
     from egoio.tools import db
     from etrago.tools.io import results_to_oedb
@@ -44,12 +44,15 @@ except OperationalError:
 eTraGo = etrago(args['eTraGo'])
 
 
-r = eGoResults(eTraGo=eTraGo, eDisGo=None)
-ego = r.create_total_results()
+from ego_resultClass_test import eGo
 
-#ego.investment
-#ego.etrago
-#ego.storages
+
+
+s = eGo(eTraGo=eTraGo, scn_name='Status Quo')
+s.etrago.storage_costs
+
+s.eTraGo.buses
+
 
 
 ###############################################################
@@ -58,6 +61,8 @@ ego = r.create_total_results()
 plotting_invest(ego)
 plot_storage_use(ego.storages)
 total_power_costs_plot(eTraGo)
+
+#issubclass(MyClass, eGo)
 
 
 
