@@ -29,7 +29,7 @@ if not 'READTHEDOCS' in os.environ:
     from egoio.db_tables.model_draft import EgoGridMvGriddistrict
     from egoio.db_tables.grid import EgoDpMvGriddistrict
     from tools.results import eGo
-	import matplotlib.pyplot as plt
+    import matplotlib.pyplot as plt
 
 import logging
 logger = logging.getLogger('ego')
