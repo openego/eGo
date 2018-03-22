@@ -64,9 +64,9 @@ class eTraGoResults(egoBasic):
     This module contains all results of eTraGo for eGo.
 
 
-    Example:
+    Example
     --------
-    The module can be used by ``etg = eTraGoResults(eTraGo=network)``
+    The module can be used by etg = eTraGoResults(eTraGo=network)
 
     See Also
     --------
