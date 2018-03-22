@@ -29,10 +29,10 @@ if not 'READTHEDOCS' in os.environ:
     import webbrowser
     from egoio.db_tables.model_draft import EgoGridMvGriddistrict
     from egoio.db_tables.grid import EgoDpMvGriddistrict
-    from tools.results import eGoResults
+    from tools.results import eGo
 
 import logging
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('ego')
 
 
 # plot colore of Carriers
@@ -323,7 +323,7 @@ def total_power_costs_plot(eTraGo):
 	fig, ax = plt.subplots()
 
 	# plot power_price
-	a = eGoResults(eTraGo=eTraGo, eDisGo=None)
+	a = eGo(eTraGo=eTraGo)
 	prc = a.create_total_results()
 
 	prc = prc.etrago['power_price']
@@ -346,7 +346,7 @@ def total_power_costs_plot(eTraGo):
 
 def plot_etrago_production(ego):
 	"""
-	input eGoResults
+	input eGO
 	Bar plot all etrago costs
 	"""
 
@@ -373,7 +373,7 @@ def plot_etrago_production(ego):
 
 def plotting_invest(result):
     """
-    Dataframe input of eGoResults
+    Dataframe input of eGo
     """
     fig, ax = plt.subplots()
 
