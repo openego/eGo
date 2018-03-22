@@ -24,7 +24,7 @@ if not 'READTHEDOCS' in os.environ:
     # For importing geopandas you need to install spatialindex on your system http://github.com/libspatialindex/libspatialindex/wiki/1.-Getting-Started
     from tools.utilities import get_scenario_setting, get_time_steps
     from tools.io import geolocation_buses, etrago_from_oedb
-    from tools.results import total_storage_charges
+    from tools.results import eGo
     from sqlalchemy.orm import sessionmaker
     from egoio.tools import db
     from etrago.tools.io import results_to_oedb
@@ -52,24 +52,15 @@ if __name__ == '__main__':
         # start eTraGo calculation
         eTraGo = etrago(args['eTraGo'])
 
+        eGo = eGo(eTraGo=eTraGo, scn_name='Status Quo')
 
         # add country code to bus and geometry (shapely)
         # eTraGo.buses = eTraGo.buses.drop(['country_code','geometry'], axis=1)
         #test = geolocation_buses(network = eTraGo, session)
 
-        # other plots based on matplotlib
-        make_all_plots(eTraGo)
         # make a line loading plot
-        plot_line_loading(eTraGo)
+        eGo.eTraGo.plot_line_loading(eTraGo)
 
-        # plot stacked sum of nominal power for each generator type and timestep
-        plot_stacked_gen(eTraGo, resolution="MW")
-
-        # plot to show extendable storages
-        storage_distribution(eTraGo)
-
-        # plot storage total charges and discharge
-        total_storage_charges(eTraGo, plot=True)
 
     # get eTraGo results form db
     if args['global']['recover']:
