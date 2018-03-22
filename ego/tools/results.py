@@ -4,7 +4,7 @@ Module of eGo results with functions for writing, creating and results of eGo
 
 ToDo:
     add eDisGo
-	write results to database
+    write results to database
     integrate plot and other functions ad methods to the class eGo
 
 
@@ -21,6 +21,12 @@ import numpy as np
 import os
 import logging
 logger = logging.getLogger('ego')
+
+if not 'READTHEDOCS' in os.environ:
+    from etrago.tools.plot import (plot_line_loading, plot_stacked_gen,
+                                     curtailment, gen_dist,
+				                     storage_distribution,
+									 plot_voltage,plot_residual_load)
 
 class egoBasic():
     """
@@ -79,7 +85,25 @@ class eTraGoResults(egoBasic):
         self.etrago.storage_costs = etrago_storages(eTraGo)
         self.etrago.operating_costs = etrago_operating_costs(eTraGo)
 
+        #methods imported from eTraGo
+        eTraGo.plot_line_loading = plot_line_loading
+
+        eTraGo.plot_stacked_gen = plot_stacked_gen
+
+        eTraGo.curtailment = curtailment
+
+        eTraGo.gen_dist = gen_dist
+
+        eTraGo.storage_distribution = storage_distribution
+
+        eTraGo.plot_voltage = plot_voltage
+
+        eTraGo.plot_residual_load = plot_residual_load
+
     #self.etrago.gernator = create_etrago_results(eTraGo, scn_name)
+
+
+
 
 
 
@@ -118,6 +142,9 @@ class eGo(eTraGoResults):
         #super().__init__(eDisGo)
         self.total = pd.DataFrame()
         # add total results here
+
+
+
 
     def write_results_to_db():
         pass
@@ -228,7 +255,7 @@ def etrago_operating_costs(network):
     -------
     losses:
  	grid losses: amount and costs
-	use calc_line_losses(network): from etrago pf_post_lopf
+    use calc_line_losses(network): from etrago pf_post_lopf
 
     TodDo:
         change naming and function structure
