@@ -4,3 +4,8 @@ __pycache__/
 results
 *.egg-info
 ego/scenario_setting.json
+.spyproject/
+ego/noise_values.csv
+.idea/
+noise_values.csv
+

@@ -1,0 +1,16 @@
+Release v0.1.0 (March 26, 2018)
++++++++++++++++++++++++++++++++
+
+As this is the second release of eGo. This Release is still under construction and not ready for a normal use.
+
+
+
+
+Added features
+--------------
+
+* Update of Interface between eTraGo and eDisGo (specs)
+* New structure of eGo module 
+* Restructuring of functions 
+* Add import function of eTraGo results form oedb
+
