@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-"""Module of eGo results with functions for writing, creating and results of eGo
+"""
+Module of eGo results with functions for writing, creating and results of eGo
 
 
 ToDo:
