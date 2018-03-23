@@ -147,10 +147,10 @@ class eGo(eTraGoResults):
         self.total = pd.DataFrame()
         # add total results here
 
-
-
-
     def write_results_to_db():
+        """
+        write function to write eGo results to oedb
+        """
         pass
 
     pass
@@ -249,23 +249,23 @@ def etrago_operating_costs(network):
     Parameters
     ----------
     network : Network of eTraGo
-        ....
+        Network of eTraGo
 
     Returns
     -------
     power_price :  :class:`~.pd.DataFrame`
 
-
     Example
     -------
 
-    losses:
- 	grid losses: amount and costs
-    use calc_line_losses(network): from etrago pf_post_lopf
+    - losses :
+ 	  - grid losses : amount and costs
+      - use calc_line_losses(network) : from etrago pf_post_lopf
 
-    TodDo:
-        change naming and function structure
-        seperate operation costs in other functions ?
+    TodDo
+    -----
+    - change naming and function structure
+    - seperate operation costs in other functions ?
 
     """
     etg = network
@@ -305,14 +305,16 @@ def etrago_grid_investment(network):
 
     Parameters
     ----------
+
     network : Network
         eTraGo
 
     Returns
     -------
 
-    ToDo:
-        add new release of etrago 0.7
+    ToDo
+    ----
+    - add new release of etrago 0.7
     """
 
     pass
@@ -321,11 +323,9 @@ def etrago_grid_investment(network):
 def edisgo_grid_investment(network):
     """Function to get all costs of grid investment of eDisGo.
 
-    ToDO:
-        add iteration and container of all costs of edisgo network
-        ....
-
-
+    ToDo
+    ----
+    - add iteration and container of all costs of edisgo network
     """
     pass
 

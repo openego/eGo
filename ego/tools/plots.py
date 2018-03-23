@@ -1,10 +1,10 @@
 """
 Module to collect useful functions for plotting results of eGo
 
-ToDo:
-	histogram
-	etc.
-	Implement plotly
+ToDo
+- histogram
+- etc.
+- Implement plotly
 """
 __copyright__ = "tba"
 __license__ = "tba"
@@ -103,7 +103,7 @@ def igeoplot(network, session, tiles=None, geoloc=None, args=None):
 	----------
 	network : PyPSA
 		PyPSA network container
-	tiles str: str
+	tiles : str
 		Folium background map style 'None' as OSM or 'Nasa'
 	geoloc : list
 		Define center of map as (lon,lat)
@@ -112,8 +112,8 @@ def igeoplot(network, session, tiles=None, geoloc=None, args=None):
     -------
 	HTML Plot page
 
-	ToDos
-	-----
+	ToDo
+	----
 	- implement eDisGo Polygons
 	- fix version problems of data
 	- use  grid.ego_dp_hvmv_substation subst_id and otg_id
@@ -341,7 +341,7 @@ def total_power_costs_plot(eTraGo):
 
 def plot_etrago_production(ego):
 	"""
-	input eGO
+	input eGo
 	Bar plot all etrago costs
 	"""
 

@@ -51,5 +51,4 @@ Using eGo:
 ==========
 
 1. check and prepare your eGo setting in ``ego/scenario_setting.json``
-2. Start your calculation with in the directory of ``eGo/ego`` with
-  ``python3 ego_main.py``
+2. Start your calculation with in the directory of ``eGo/ego`` with ``python3 ego_main.py``

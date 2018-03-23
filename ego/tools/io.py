@@ -1,5 +1,5 @@
 """
-Input &  output functions of eGo
+Input & output functions of eGo
 
 """
 __copyright__ = "ZNES"
@@ -31,7 +31,15 @@ def geolocation_buses(network, session):
     of Countries from RenpassGisParameterRegion
     in order to locate the buses
 
-    ToDo:
+    Parameters
+    ----------
+    network : Network
+        eTraGo Network
+    session : sqlalchemy
+        session to oedb
+
+    ToDo
+    ----
      - check eTrago stack generation plots and other in order of adaptation
 
     """
@@ -112,7 +120,7 @@ def etrago_from_oedb(session, args):
     """
     Function with import eTraGo results for the Database.
 
-    Parameter:
+    Parameters
     ----------
     session (obj):
         sqlalchemy session to the OEDB
@@ -120,8 +128,8 @@ def etrago_from_oedb(session, args):
     args (dict):
         args from eGo scenario_setting.json
 
-    ToDo:
-    -----
+    ToDo
+    ----
         add Mapping for grid schema
         make it more generic -> class?
     """
@@ -176,7 +184,9 @@ def etrago_from_oedb(session, args):
             """
             Function to get Time Series as pandas DataFrames by the result_id
 
-            # TODO: check index of bus_t and soon is wrong!
+            ToDo
+            ----
+            - check index of bus_t and soon is wrong!
 
             """
             # TODO: pls make more robust
