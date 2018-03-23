@@ -104,11 +104,11 @@ def igeoplot(network, session, tiles=None, geoloc=None, args=None):
 	network : PyPSA
 		PyPSA network container
 	tiles : str
-		Folium background map style 'None' as OSM or 'Nasa'
+		Folium background map style `None` as OSM or `Nasa`
 	geoloc : list
 		Define center of map as (lon,lat)
 
-	Results
+	Returns
     -------
 	HTML Plot page
 

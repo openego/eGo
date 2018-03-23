@@ -72,11 +72,12 @@ class eTraGoResults(egoBasic):
 
     See also
     --------
-    The eTraGo documentation on Extensions [1]_.
+    The `eTraGo`_ documentation.
 
     References
     ----------
-    .. [1] `eTraGo <http://etrago.readthedocs.io/en/latest/api/etrago.html>`_, \
+    .. _eTraGo:
+        `eTraGo <http://etrago.readthedocs.io/en/latest/api/etrago.html>`_, \
         eTraGo Documentation.
     """
 
@@ -177,7 +178,7 @@ def total_storage_charges(network):
     results : pandas.DataFrame
         Return ...
 
-    Note:
+    Notes
     -----
     charge :
          Quantity of charged Energy in MWh over scenario time steps
@@ -258,12 +259,12 @@ def etrago_operating_costs(network):
     Examples
     --------
 
-    - losses :
+    - losses
  	  - grid losses : amount and costs
       - use calc_line_losses(network) : from etrago pf_post_lopf
 
-    TodDo
-    -----
+    ToDo
+    ----
     - change naming and function structure
     - seperate operation costs in other functions ?
 
@@ -323,8 +324,8 @@ def etrago_grid_investment(network):
 def edisgo_grid_investment(network):
     """Function to get all costs of grid investment of eDisGo.
 
-    Note
-    ----
+    Notes
+    -----
     - ToDo add iteration and container of all costs of edisgo network
     """
     pass
