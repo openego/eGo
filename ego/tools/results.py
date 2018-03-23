@@ -66,12 +66,11 @@ class eTraGoResults(egoBasic):
 
     Example
     --------
-    The module can be used by etg = eTraGoResults(eTraGo=network)
+    The module can be used by ``etg = eTraGoResults()``
 
     See Also
     --------
-    `The eTraGo documentation on Extensions
-    <http://etrago.readthedocs.io/en/latest/api/etrago.html>`_
+    `The eTraGo documentation on Extensions <http://etrago.readthedocs.io/en/latest/api/etrago.html>`_
 
     """
 
