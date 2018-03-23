@@ -28,7 +28,7 @@ eDisGo units
 ------------
 
 .. csv-table:: List of variables and units
-   :file: https://raw.githubusercontent.com/openego/eDisGo/dev/doc/units_table.csv
+   :url: https://raw.githubusercontent.com/openego/eDisGo/dev/doc/units_table.csv
    :delim: ;
    :header-rows: 1
    :widths: 5, 1, 1, 5

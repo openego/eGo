@@ -2,7 +2,8 @@
 """
 Module of eGo results with functions for writing, creating and results of eGo
 
-ToDo:
+ToDo
+----
  - add eDisGo
  - write results to database
  - integrate plot and other functions ad methods to the class eGo
@@ -64,8 +65,9 @@ class eTraGoResults(egoBasic):
     This module contains all results of eTraGo for eGo.
 
 
-    Example
+    Examples
     --------
+
     The module can be used by ``etg = eTraGoResults()``
 
     See also
@@ -114,9 +116,10 @@ class eDisGoResults(egoBasic):
 
     This module contains all results of eDisGo for eGo.
 
-    ToDo:
-        add eDisGo
-        add iteration for multiple ding0 grids
+    ToDo
+    ----
+    - add eDisGo
+    - add iteration for multiple ding0 grids
 
     """
     def __init__(self,eDisGo):
@@ -138,8 +141,9 @@ class eGo(eTraGoResults):
 
 
 
-    ToDo:
-        add eDisGo
+    ToDo
+    ----
+    - add eDisGo
     """
     def __init__(self,eTraGo, scn_name):
         super().__init__(eTraGo, scn_name)
@@ -147,11 +151,7 @@ class eGo(eTraGoResults):
         self.total = pd.DataFrame()
         # add total results here
 
-    def write_results_to_db():
-        """
-        write function to write eGo results to oedb
-        """
-        pass
+    # write_results_to_db():
 
     pass
 
@@ -230,8 +230,8 @@ def etrago_storages(network):
     network : eTraGo Network
         eTraGo Network Class based on PyPSA
 
-    Returns:
-    --------
+    Returns
+    -------
     storages : pandas.DataFrame
         DataFrame with cumulated results of storages
 
@@ -255,8 +255,8 @@ def etrago_operating_costs(network):
     -------
     power_price :  :class:`~.pd.DataFrame`
 
-    Example
-    -------
+    Examples
+    --------
 
     - losses :
  	  - grid losses : amount and costs
@@ -323,9 +323,9 @@ def etrago_grid_investment(network):
 def edisgo_grid_investment(network):
     """Function to get all costs of grid investment of eDisGo.
 
-    ToDo
+    Note
     ----
-    - add iteration and container of all costs of edisgo network
+    - ToDo add iteration and container of all costs of edisgo network
     """
     pass
 
@@ -333,9 +333,11 @@ def get_generator_investment(network, scn_name):
     """ Get investment costs per carrier/gernator.
 
     work around later db table ->  check capital_cost as cost input?!?
-    ToDo:
-        change values in csv
-        add values to database
+
+    ToDo
+    ----
+    - change values in csv
+    - add values to database
 
     """
     etg = network
@@ -378,7 +380,9 @@ def investment_costs(network):
     Line extentation
     Storage costs?
 
-    ToDo: add edisgo
+    ToDo
+    ----
+    - add edisgo
 
     """
     etg = network
@@ -431,9 +435,9 @@ def create_etrago_results(network,scn_name):
     """
     Create eTraGo results
 
-    results
+    Returns
     -------
-    results.etrago :obj:
+    etrago :  :obj:pd.DataFrame
 
     """
 

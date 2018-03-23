@@ -298,8 +298,8 @@ def total_power_costs_plot(eTraGo):
 	"""
 	plot power price of eTraGo
 
-	Parameter
-	---------
+	Parameters
+	----------
 	eTraGo :class:`etrago.io.NetworkScenario`
 
 	Returns
