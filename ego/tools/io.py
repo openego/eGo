@@ -32,9 +32,7 @@ def geolocation_buses(network, session):
     in order to locate the buses
 
     ToDo:
-    1) check eTrago stack generation plots and
-       other in order of adaptation
-
+     - check eTrago stack generation plots and other in order of adaptation
 
     """
     # Start db connetion

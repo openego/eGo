@@ -101,30 +101,25 @@ def igeoplot(network, session, tiles=None, geoloc=None, args=None):
 
 	Parameters
 	----------
-
-	network (PyPSA):
+	network : PyPSA
 		PyPSA network container
-	tiles (str):
-		Folium background map style 'None' as OSM
-		or 'Nasa'
-	geoloc (list):
+	tiles str: str
+		Folium background map style 'None' as OSM or 'Nasa'
+	geoloc : list
 		Define center of map as (lon,lat)
 
-	Results:
-    --------
-		HTML Plot page
+	Results
+    -------
+	HTML Plot page
 
-	ToDos:
-	------
-	implement eDisGo Polygons
-		fix version problems of data
-		use  grid.ego_dp_hvmv_substation subst_id and otg_id
-
-	use cluster or boxes to limit data volumn
-
-	Legend
-	Map
-    http://nbviewer.jupyter.org/gist/BibMartin/f153aa957ddc5fadc64929abdee9ff2e
+	ToDos
+	-----
+	- implement eDisGo Polygons
+	- fix version problems of data
+	- use  grid.ego_dp_hvmv_substation subst_id and otg_id
+	- use cluster or boxes to limit data volumn
+	- add Legend
+	- Map see: http://nbviewer.jupyter.org/gist/BibMartin/f153aa957ddc5fadc64929abdee9ff2e
 	"""
 
 	if geoloc is None:

@@ -2,7 +2,6 @@
 """
 Module of eGo results with functions for writing, creating and results of eGo
 
-
 ToDo:
  - add eDisGo
  - write results to database
@@ -229,12 +228,12 @@ def etrago_storages(network):
     ----------
 
     network : eTraGo Network
-        ...
+        eTraGo Network Class based on PyPSA
 
     Returns:
     --------
     storages : pandas.DataFrame
-        ....
+        DataFrame with cumulated results of storages
 
     """
     # Charge / discharge (MWh) and installed capacity MW
@@ -247,17 +246,19 @@ def etrago_storages(network):
 def etrago_operating_costs(network):
     """ Function to get all operating costs of eTraGo.
 
-    Parameter
-    ---------
+    Parameters
+    ----------
     network : Network of eTraGo
         ....
 
     Returns
     -------
+    power_price :  :class:`~.pd.DataFrame`
 
 
     Example
     -------
+
     losses:
  	grid losses: amount and costs
     use calc_line_losses(network): from etrago pf_post_lopf
