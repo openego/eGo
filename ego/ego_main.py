@@ -170,6 +170,3 @@ if __name__ == '__main__':
     # possible aggregation of results
 
     # exports: total system costs, plots, csv export files
-
-if __name__ == '__main__':
-    pass
