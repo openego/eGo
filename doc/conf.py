@@ -1,4 +1,4 @@
-"""This file is part of 
+"""This file is part of
 
 It is developed in the project open_eGo: https://openegoproject.wordpress.com
 
@@ -104,7 +104,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'eGo'
-copyright = u'2015-2017, open_eGo-Team'
+copyright = u'2015-2018, open_eGo-Team'
 author = u'open_eGo-Team'
 
 
@@ -113,7 +113,7 @@ author = u'open_eGo-Team'
 # built documents.
 #
 # The short X.Y version.
-version = '0.0.1'
+version = '0.1.0'
 # The full version, including alpha/beta/rc tags.
 release = '0.0.1dev'
 
@@ -175,11 +175,11 @@ if 'READTHEDOCS' in os.environ:
 
     MOCK_MODULES = ['ding0', 'ding0.results', 'shapely']
     sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
-    
-    MOCK_MODULES = ['libgeos', 'geos', 'libgeos_c', 'geos_c','libgeos_c.so.1', 
+
+    MOCK_MODULES = ['libgeos', 'geos', 'libgeos_c', 'geos_c','libgeos_c.so.1',
                 'libgeos_c.so', 'shapely', 'geoalchemy2', 'geoalchemy2.shape ']
 
-       
+
 
 # -- Options for HTML output ----------------------------------------------
 
