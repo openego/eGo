@@ -32,7 +32,8 @@ setup(name='eGo',
 	extras_require={
         'docs': [
             'sphinx >= 1.4',
-            'sphinx_rtd_theme']},
+            'sphinx_rtd_theme',
+            'sphinxcontrib-httpdomain']},
     package_data={
         'ego': [
             os.path.join('*.json'),
