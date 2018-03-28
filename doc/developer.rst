@@ -55,3 +55,8 @@ Change of units from Mega to kilo:
 Test import from oedb
 
 .. http:get::  oep.iks.cs.ovgu.de/api/v0/schema/model_draft/tables/ego_power_class/
+
+second test 
+
+.. http:ego_power_class:: Titel
+   :request: oep.iks.cs.ovgu.de/api/v0/schema/model_draft/tables/ego_power_class/

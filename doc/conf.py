@@ -85,7 +85,8 @@ extlinks = {'pandas':('http://pandas.pydata.org/pandas-docs/stable/api.html#%s',
 }
 
 
-
+# add RestFull API
+httpexample_scheme = 'https'
 
 
 # Add any paths that contain templates here, relative to this directory.

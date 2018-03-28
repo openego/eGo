@@ -34,6 +34,20 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+## Logging
+logging.basicConfig(format='%(asctime)s %(message)s',level=logging.INFO)
+
+logger = logging.getLogger(__name__)
+ego_logger = logging.getLogger('ego')
+
+fh = logging.FileHandler('ego.log', mode='w')
+fh.setLevel(logging.INFO)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+fh.setFormatter(formatter)
+
+logger.addHandler(fh)
+ego_logger.addHandler(fh)
+
 
 if __name__ == '__main__':
     # import scenario settings **args of eTraGo
