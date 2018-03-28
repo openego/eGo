@@ -23,7 +23,7 @@ Create a virtualenvironment (where you like it) and activate it:
    $ virtualenv eGo --clear -p python3.5
    $ source venv/bin/activate
 
-   $ pip install -e git+https://github.com/openego/eGo@dev#egg=eGo --process-dependency-links --allow-all-external
+   $ pip3 install -e git+https://github.com/openego/eGo@dev#egg=eGo --process-dependency-links --allow-all-external
 
 
 Copyleft
