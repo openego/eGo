@@ -1,40 +1,40 @@
 {
   "global": {
-    "eTraGo": true,
-    "eDisGo": false,
+    "eTraGo": false,
+    "eDisGo": true,
     "db": "oedb",
     "result_id": 359,
-    "recover": false,
+    "recover": true,
     "gridversion": null
   },
   "eTraGo": {
     "db": "oedb",
     "gridversion": null,
     "method": "lopf",
-    "pf_post_lopf": true,
-    "start_snapshot": 4000,
-    "end_snapshot" : 4001,
-    "scn_name": "SH NEP 2035",
+    "pf_post_lopf": false,
+    "start_snapshot": 1,
+    "end_snapshot" : 168,
+    "scn_name": "SH Status Quo",
     "solver": "gurobi",
     "lpfile":  false,
     "results": false,
     "export": false,
-    "storage_extendable": true,
+    "storage_extendable": false,
     "generator_noise": true,
     "reproduce_noise": false,
     "minimize_loading": false,
-    "k_mean_clustering": 15,
+    "k_mean_clustering": false,
     "network_clustering": false,
     "parallelisation": false,
     "skip_snapshots": false,
     "line_grouping": false,
-    "branch_capacity_factor": 0.1,
+    "branch_capacity_factor": 1,
     "load_shedding": false,
     "comments": null
   },
   "eDisGo": {
      "direct_specs": false,
-     "specs": false,
-     "comments": "Malte Test cf 0.1, SH SQ"
+     "specs": true,
+     "comments": "make a comment, SH SQ"
   }
 }

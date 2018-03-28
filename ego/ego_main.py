@@ -66,8 +66,6 @@ if __name__ == '__main__':
     if args['global']['recover']:
         eTraGo = etrago_from_oedb(session,args)
 
-
-
     # use eTraGo results from ego calculations if true
     # ToDo make function edisgo_direct_specs()
 
@@ -115,7 +113,7 @@ if __name__ == '__main__':
 
         # ToDo get ding0 grids over db
         # ToDo implemente iteration
-        file_path = '/home/dozeumbuw/ego_dev/src/ding0_grids__1802.pkl'
+        file_path = '~../ding0_grids__1802.pkl'
 
         #mv_grid = open(file_path)
 

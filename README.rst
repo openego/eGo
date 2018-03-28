@@ -16,14 +16,14 @@ A speciality in this context is that transmission grids are described by the 380
 Installing Developer Version
 ============================
 
-Create a virtualenvironment (where you like it) and activate it: 
+Create a virtualenvironment (where you like it) and activate it:
 
 .. code-block::
 
    $ virtualenv eGo --clear -p python3.5
    $ source venv/bin/activate
 
-   $ pip install -e git+https://github.com/openego/eGo@dev#egg=eGo
+   $ pip install -e git+https://github.com/openego/eGo@dev#egg=eGo --process-dependency-links --allow-all-external
 
 
 Copyleft
