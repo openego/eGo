@@ -57,8 +57,12 @@ extensions = [
     'sphinx.ext.napoleon', #enable Napoleon Sphinx v>1.3
 #    'sphinx_paramlinks',#to have links to the types of the parameters of the functions
      'numpydoc',
-     'sphinx.ext.extlinks' # enables external links with a key
+     'sphinxcontrib.httpdomain',   # for restfull API
+     'sphinxcontrib.autohttp.flask',
+     'sphinx.ext.extlinks' # enables external links with a key  
 ]
+
+
 
 # Napoleon settings
 napoleon_google_docstring = True
