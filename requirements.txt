@@ -6,3 +6,4 @@ pandas >=0.20.3, <=0.20.3
 pypsa  >= 0.11.0, <= 0.11.0
 numpy == 1.12.1
 numpydoc == 0.7.0
+sphinxcontrib-httpdomain
