@@ -50,3 +50,8 @@ Change of units from Mega to kilo:
    :file: storage_units.csv
    :delim: ,
    :header-rows: 1
+   
+   
+Test import from oedb
+
+.. http:get::  oep.iks.cs.ovgu.de/api/v0/schema/model_draft/tables/ego_power_class/
