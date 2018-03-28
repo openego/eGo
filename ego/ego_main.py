@@ -103,6 +103,7 @@ if __name__ == '__main__':
         mv_grid = get_mvgrid_from_bus_id(session, bus_id) # This function can be used to call the correct MV grid
 
     if args['global']['eDisGo']:
+
         logging.info('Starting eDisGo')
 
         # ToDo move part as function to utilities or specs
@@ -113,7 +114,7 @@ if __name__ == '__main__':
 
         # ToDo get ding0 grids over db
         # ToDo implemente iteration
-        file_path = '~../ding0_grids__1802.pkl'
+        file_path = 'data/ding0_grids/ding0_grids__1802.pkl'
 
         #mv_grid = open(file_path)
 
@@ -125,7 +126,7 @@ if __name__ == '__main__':
         scenario = Scenario(etrago_specs=specs,
                     power_flow=(),
                     mv_grid_id=mv_grid_id,
-                    scenario_name= args['global']['scn_name'])
+                    scenario_name= args['eTraGo']['scn_name'])
 
         network = Network.import_from_ding0(file_path,
                                     id=mv_grid_id,

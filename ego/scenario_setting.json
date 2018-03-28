@@ -1,10 +1,10 @@
 {
   "global": {
-    "eTraGo": false,
+    "eTraGo": true,
     "eDisGo": true,
     "db": "oedb",
     "result_id": 359,
-    "recover": true,
+    "recover": false,
     "gridversion": null
   },
   "eTraGo": {
@@ -13,8 +13,8 @@
     "method": "lopf",
     "pf_post_lopf": false,
     "start_snapshot": 1,
-    "end_snapshot" : 168,
-    "scn_name": "SH Status Quo",
+    "end_snapshot" : 5,
+    "scn_name": "SH NEP 2035",
     "solver": "gurobi",
     "lpfile":  false,
     "results": false,
