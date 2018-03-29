@@ -73,3 +73,65 @@ power_class
 {% for entrie in power_class %}
 * `{{ entrie.d_rotor }} <{{ entrie.wea }}>`_
 {% endfor %}
+
+
+test
+----
+
+<table>
+{% for item in power_class %}
+<TR>
+   <TD class="c4"><SPAN>{{item.d_rotor}}</SPAN></TD>
+   <TD class="c5"><SPAN>{{item.wea}}</SPAN></TD>
+</TR>
+{% endfor %}
+</table>
+
+test 1
+------
+
+.. raw:: html
+      <table>
+      {% for item in power_class %}
+      <TR>
+         <TD class="c4"><SPAN>{{item.d_rotor}}</SPAN></TD>
+         <TD class="c5"><SPAN>{{item.wea}}</SPAN></TD>
+      </TR>
+      {% endfor %}
+      </table>
+
+test 2
+------
+
+.. only:: html
+
+
+    .. raw:: html
+
+
+        <iframe src='
+        ../_downloads/chart1.html
+        ' scrolling='no' seamless
+        class='rChart polycharts '
+        id=iframe-
+        chart33f943078d49
+        ></iframe>
+        <style>iframe.rChart{ width: 100%; height: 400px;}</style>
+
+test 3
+------
+
+.. only:: html
+
+
+    .. raw:: html
+
+
+            <table>
+            {% for item in power_class %}
+            <TR>
+               <TD class="c4"><SPAN>{{item.d_rotor}}</SPAN></TD>
+               <TD class="c5"><SPAN>{{item.wea}}</SPAN></TD>
+            </TR>
+            {% endfor %}
+            </table>
