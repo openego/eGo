@@ -68,9 +68,7 @@ eGo is using a json file which inclueds all arguments for  calculation.
 
 .. only:: html
 
-
     .. raw:: html
-
 
             <table>
             {% for item in scn_set %}
@@ -79,13 +77,10 @@ eGo is using a json file which inclueds all arguments for  calculation.
                <TD class="c2"><SPAN>{{item.eTraGo.load_shedding}}</SPAN></TD>
                <TD class="c3"><SPAN>{{item.eTraGo.generator_noise}}</SPAN></TD>
             </TR>
-            <TR>
-               <TD class="c1"><SPAN>{{item.eDisGo}}</SPAN></TD>
-               <TD class="c2"><SPAN>{{item.eDisGo.comments}}</SPAN></TD>
-               <TD class="c3"><SPAN>{{item.eDisGo.specs}}</SPAN></TD>
-            </TR>
-
-
-
             {% endfor %}
             </table>
+
+
+{% for item in scn_set %}
+* {{item.eTraGo}}
+{% endfor %}
