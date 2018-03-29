@@ -72,6 +72,4 @@ power_class
 
 {% for entrie in power_class %}
 * `{{ entrie.d_rotor }} <{{ entrie.wea }}>`_
-
-{% endif %}
 {% endfor %}
