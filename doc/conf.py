@@ -89,7 +89,6 @@ extlinks = {'pandas':('http://pandas.pydata.org/pandas-docs/stable/api.html#%s',
 }
 
 # test oedb implementation
-
 def rstjinja(app, docname, source):
     """
     Render our pages as a jinja template for fancy templating goodness.
@@ -105,16 +104,26 @@ def rstjinja(app, docname, source):
 
 def setup(app):
     app.connect("source-read", rstjinja)
-    
+
 import requests
+im
 oep_url= 'http://oep.iks.cs.ovgu.de/'
 
-# get data
+# get data from oedb test
 power_class = requests.get(oep_url+'/api/v0/schema/model_draft/tables/ego_power_class/rows/', ).json()
+
+import json
+path = os.getcwd()
+json_file ='ego/scenario_setting.json'
+
+with open(path +'/'+json_file) as f:
+    scn_set = json.load(f)
+
 
 
 html_context = {
-    'power_class': power_class
+    'power_class': power_class,
+    'scn_setting': scn_set
 }
 
 
