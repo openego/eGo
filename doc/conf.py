@@ -37,6 +37,10 @@ from unittest.mock import MagicMock
 #sys.path.insert(0, os.path.abspath('.'))
 sys.path.insert(0, os.path.abspath('../'))
 
+
+sys.path
+
+
 # -- General configuration ------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
@@ -114,7 +118,7 @@ power_class = requests.get(oep_url+'/api/v0/schema/model_draft/tables/ego_power_
 
 import json
 path = os.getcwd()
-json_file ='ego/scenario_setting.json'
+json_file ='../ego/scenario_setting.json'
 
 with open(path +'/'+json_file) as f:
     scn_set = json.load(f)
