@@ -82,5 +82,5 @@ eGo is using a json file which inclueds all arguments for  calculation.
 
 
 {% for item in scn_set %}
-* {{item.eTraGo}}
+* {{item}}
 {% endfor %}
