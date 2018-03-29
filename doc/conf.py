@@ -59,7 +59,7 @@ extensions = [
      'numpydoc',
      'sphinxcontrib.httpdomain',   # for restfull API
      'sphinxcontrib.autohttp.flask',
-     'sphinx.ext.extlinks' # enables external links with a key  
+     'sphinx.ext.extlinks' # enables external links with a key
 ]
 
 
@@ -87,6 +87,22 @@ extlinks = {'pandas':('http://pandas.pydata.org/pandas-docs/stable/api.html#%s',
             'shapely':('http://toblerity.org/shapely/manual.html#%s',
                       'Shapely object')
 }
+
+# test oedb implementation
+import requests
+oep_url= 'http://oep.iks.cs.ovgu.de/'
+
+# get data
+power_class = requests.get(oep_url+'/api/v0/schema/model_draft/tables/ego_power_class/rows/', ).json()
+
+
+html_context = {
+    'power_class': power_class
+}
+
+
+
+
 
 
 # add RestFull API

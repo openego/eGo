@@ -50,13 +50,28 @@ Change of units from Mega to kilo:
    :file: storage_units.csv
    :delim: ,
    :header-rows: 1
-   
-   
+
+
+
+Test section
+============
+
 Test import from oedb
 
 .. http:get::  oep.iks.cs.ovgu.de/api/v0/schema/model_draft/tables/ego_power_class/
 
-second test 
+second test
 
-.. http:ego_power_class:: Titel
+.. http:get::  oep.iks.cs.ovgu.de/api/v0/schema/model_draft/tables/ego_power_class/
    :request: oep.iks.cs.ovgu.de/api/v0/schema/model_draft/tables/ego_power_class/
+
+
+
+power_class
+===========
+
+{% for entrie in power_class %}
+* `{{ entrie.d_rotor }} <{{ entrie.wea }}>`_
+
+{% endif %}
+{% endfor %}
