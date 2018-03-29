@@ -1,11 +1,12 @@
+# -*- coding: utf-8 -*-
 """
 Module of eGo results with functions for writing, creating and results of eGo
 
-
-ToDo:
-    add eDisGo
-    write results to database
-    integrate plot and other functions ad methods to the class eGo
+ToDo
+----
+ - add eDisGo
+ - write results to database
+ - integrate plot and other functions ad methods to the class eGo
 
 
 """
@@ -24,23 +25,23 @@ if not 'READTHEDOCS' in os.environ:
     import numpy as np
     from etrago.tools.plot import (plot_line_loading, plot_stacked_gen,
                                      curtailment, gen_dist,
-				                     storage_distribution,
-									 plot_voltage,plot_residual_load)
+                         storage_distribution,
+     plot_voltage,plot_residual_load)
 
 class egoBasic():
-"""
-eGo basics class.
+    """eGo basics class.
 
-Parameters
-----------
+    Parameters
+    ----------
 
-eTraGo : Network
-    Network container of eTraGo based on PyPSA
-eDisGo : Network
-    Network container of eDisGo based on PyPSA
-args : dict
-    Dict of the scenario_setting.json
-"""
+    eTraGo : Network
+        Network container of eTraGo based on PyPSA
+    eDisGo : Network
+        Network container of eDisGo based on PyPSA
+    args : dict
+        Dict of the scenario_setting.json
+
+    """
 
     def __init__(self, eTraGo, *args, **kwargs):
 
@@ -59,21 +60,26 @@ args : dict
 
 
 class eTraGoResults(egoBasic):
-"""eTraGo Results
+    """eTraGo Results
 
-This module contains all results of eTraGo for eGo.
+    This module contains all results of eTraGo for eGo.
 
 
-Example
---------
-The module can be used by etg = eTraGoResults(eTraGo=network)
+    Examples
+    --------
 
-See Also
---------
-`The eTraGo documentation on Extensions
-<http://etrago.readthedocs.io/en/latest/api/etrago.html>`_
+    The module can be used by ``etg = eTraGoResults()``
 
-"""
+    See also
+    --------
+    The `eTraGo`_ documentation.
+
+    References
+    ----------
+    .. _eTraGo:
+        `eTraGo <http://etrago.readthedocs.io/en/latest/api/etrago.html>`_, \
+        eTraGo Documentation.
+    """
 
     def __init__(self,eTraGo, *args, **kwargs):
         super().__init__(eTraGo, *args, **kwargs)
@@ -107,15 +113,16 @@ See Also
 
 
 class eDisGoResults(egoBasic):
-""" eDisGo Results
+    """ eDisGo Results
 
-This module contains all results of eDisGo for eGo.
+    This module contains all results of eDisGo for eGo.
 
-ToDo:
-    add eDisGo
-    add iteration for multiple ding0 grids
+    ToDo
+    ----
+    - add eDisGo
+    - add iteration for multiple ding0 grids
 
-"""
+    """
     def __init__(self,eDisGo):
         super().__init__(eDisGo)
         self.edisgo = pd.DataFrame()
@@ -124,31 +131,28 @@ ToDo:
 
 
 class eGo(eTraGoResults):
-"""Main eGo module which including all results and main functionalities.
+    """Main eGo module which including all results and main functionalities.
 
 
-Parameters
-----------
-eTraGo : Network
-    
-eDisGo : Network
-    
+    Parameters
+    ----------
+    eTraGo : Network
+
+    eDisGo : Network
 
 
-ToDo:
-    add eDisGo
-"""
+
+    ToDo
+    ----
+    - add eDisGo
+    """
     def __init__(self,eTraGo, scn_name):
         super().__init__(eTraGo, scn_name)
         #super().__init__(eDisGo)
         self.total = pd.DataFrame()
         # add total results here
 
-
-
-
-    def write_results_to_db():
-        pass
+    # write_results_to_db():
 
     pass
 
@@ -174,7 +178,7 @@ def total_storage_charges(network):
     results : pandas.DataFrame
         Return ...
 
-    Note:
+    Notes
     -----
     charge :
          Quantity of charged Energy in MWh over scenario time steps
@@ -225,12 +229,12 @@ def etrago_storages(network):
     ----------
 
     network : eTraGo Network
-        ...
+        eTraGo Network Class based on PyPSA
 
-    Returns:
-    --------
+    Returns
+    -------
     storages : pandas.DataFrame
-        ....
+        DataFrame with cumulated results of storages
 
     """
     # Charge / discharge (MWh) and installed capacity MW
@@ -243,24 +247,26 @@ def etrago_storages(network):
 def etrago_operating_costs(network):
     """ Function to get all operating costs of eTraGo.
 
-    Parameter
-    ---------
+    Parameters
+    ----------
     network : Network of eTraGo
-        ....
+        Network of eTraGo
 
     Returns
     -------
+    power_price :  :class:`~.pd.DataFrame`
 
+    Examples
+    --------
 
-    Example
-    -------
-    losses:
- 	grid losses: amount and costs
-    use calc_line_losses(network): from etrago pf_post_lopf
+    - losses
+ 	  - grid losses : amount and costs
+      - use calc_line_losses(network)  from etrago pf_post_lopf
 
-    TodDo:
-        change naming and function structure
-        seperate operation costs in other functions ?
+    ToDo
+    ----
+    - change naming and function structure
+    - seperate operation costs in other functions ?
 
     """
     etg = network
@@ -300,14 +306,16 @@ def etrago_grid_investment(network):
 
     Parameters
     ----------
+
     network : Network
         eTraGo
 
     Returns
     -------
 
-    ToDo:
-        add new release of etrago 0.7
+    ToDo
+    ----
+    - add new release of etrago 0.7
     """
 
     pass
@@ -316,11 +324,9 @@ def etrago_grid_investment(network):
 def edisgo_grid_investment(network):
     """Function to get all costs of grid investment of eDisGo.
 
-    ToDO:
-        add iteration and container of all costs of edisgo network
-        ....
-
-
+    Notes
+    -----
+    - ToDo add iteration and container of all costs of edisgo network
     """
     pass
 
@@ -328,9 +334,11 @@ def get_generator_investment(network, scn_name):
     """ Get investment costs per carrier/gernator.
 
     work around later db table ->  check capital_cost as cost input?!?
-    ToDo:
-        change values in csv
-        add values to database
+
+    ToDo
+    ----
+    - change values in csv
+    - add values to database
 
     """
     etg = network
@@ -373,7 +381,9 @@ def investment_costs(network):
     Line extentation
     Storage costs?
 
-    ToDo: add edisgo
+    ToDo
+    ----
+    - add edisgo
 
     """
     etg = network
@@ -426,9 +436,9 @@ def create_etrago_results(network,scn_name):
     """
     Create eTraGo results
 
-    results
+    Returns
     -------
-    results.etrago :obj:
+    etrago :  :obj:pd.DataFrame
 
     """
 

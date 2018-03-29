@@ -2,6 +2,7 @@
 
 .. toctree::
    :maxdepth: 7
+   :glob:
    :titlesonly:
 
    API <api/modules>

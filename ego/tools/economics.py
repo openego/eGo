@@ -22,8 +22,8 @@ def annuity_per_period(capex, n, wacc, t):
     wacc : float
         Weighted average cost of capital
 
-    ToDo:
-    -----
+    ToDo
+    ----
     t : int
         Timesteps in hours
     i : float

@@ -11,7 +11,7 @@ import json
 def get_scenario_setting(json_file='scenario_setting.json'):
     """ Get and open json file with scenaio settings of eGo
 
-    Parameter:
+    Parameters
     ----------
 
     json_file (str):
@@ -19,7 +19,7 @@ def get_scenario_setting(json_file='scenario_setting.json'):
         Name of scenario setting json file
     """
     path = os.getcwd()
-    # add try ego/ 
+    # add try ego/
     print(path)
     with open(path +'/'+json_file) as f:
       scn_set = json.load(f)
@@ -39,12 +39,12 @@ def get_scenario_setting(json_file='scenario_setting.json'):
 def get_time_steps(args):
     """ Get time step of calculation by scenario settings.
 
-    Parameter:
+    Parameters
     ----------
     args (dict):
         dict of 'scenario_setting.json'
 
-    Result:
+    Returns
     -------
     time_step (int):
         Number of timesteps of the calculation.

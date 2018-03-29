@@ -10,13 +10,13 @@ setup(name='eGo',
       author='wolfbunke, maltesc',
       author_email='',
       description='A python package for distribution and transmission grid analysis and optimization based eDisGo and eTraGo',
-      version='0.0.1',
+      version='0.1.0',
 	  url='https://github.com/openego/eGo',
       license="GNU Affero General Public License Version 3 (AGPL-3.0)",
       packages=find_packages(),
       include_package_data=True,
       install_requires=['egoio == 0.3.0',
-                        'eDisGo == 0.0.1',
+                        'eDisGo == 0.0.2',
                         'pandas ==0.20.3',
                         'sqlalchemy >= 1.0.15, <= 1.2.0',
                         'geoalchemy2 >= 0.3.0, <=0.4.0',
@@ -32,10 +32,12 @@ setup(name='eGo',
 	extras_require={
         'docs': [
             'sphinx >= 1.4',
-            'sphinx_rtd_theme']},
+            'sphinx_rtd_theme',
+            'sphinxcontrib-httpdomain']},
     package_data={
         'ego': [
             os.path.join('*.json'),
-             os.path.join('tools','*.json'),]
+            os.path.join('tools','*.json'),
+            os.path.join('data','*.csv') ]
      }
      )
