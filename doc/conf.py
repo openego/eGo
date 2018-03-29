@@ -1,4 +1,4 @@
-"""This file is part of 
+"""This file is part of
 
 It is developed in the project open_eGo: https://openegoproject.wordpress.com
 
@@ -37,6 +37,10 @@ from unittest.mock import MagicMock
 #sys.path.insert(0, os.path.abspath('.'))
 sys.path.insert(0, os.path.abspath('../'))
 
+
+sys.path
+
+
 # -- General configuration ------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
@@ -52,13 +56,17 @@ extensions = [
     'sphinx.ext.coverage',
     'sphinx.ext.imgmath' ,
     'sphinx.ext.viewcode',
-#    'sphinx.ext.autosummary',
+    'sphinx.ext.autosummary',
 #    'sphinxcontrib.napoleon',#enable Napoleon interpreter of docstrings Sphinx v<=1.2
     'sphinx.ext.napoleon', #enable Napoleon Sphinx v>1.3
 #    'sphinx_paramlinks',#to have links to the types of the parameters of the functions
      'numpydoc',
+     'sphinxcontrib.httpdomain',   # for restfull API
+     'sphinxcontrib.autohttp.flask',
      'sphinx.ext.extlinks' # enables external links with a key
 ]
+
+
 
 # Napoleon settings
 napoleon_google_docstring = True
@@ -84,8 +92,51 @@ extlinks = {'pandas':('http://pandas.pydata.org/pandas-docs/stable/api.html#%s',
                       'Shapely object')
 }
 
+# test oedb implementation
+def rstjinja(app, docname, source):
+    """
+    Render our pages as a jinja template for fancy templating goodness.
+    """
+    # Make sure we're outputting HTML
+    if app.builder.format != 'html':
+        return
+    src = source[0]
+    rendered = app.builder.templates.render_string(
+        src, app.config.html_context
+    )
+    source[0] = rendered
+
+def setup(app):
+    app.connect("source-read", rstjinja)
+
+import requests
+
+oep_url= 'http://oep.iks.cs.ovgu.de/'
+
+# get data from oedb test
+power_class = requests.get(oep_url+'/api/v0/schema/model_draft/tables/ego_power_class/rows/', ).json()
+
+import json
+path = os.getcwd()
+json_file ='../ego/scenario_setting.json'
+
+with open(path +'/'+json_file) as f:
+    scn_set = json.load(f)
 
 
+
+html_context = {
+    'power_class': power_class,
+    'scn_setting': scn_set
+}
+
+
+
+
+
+
+# add RestFull API
+httpexample_scheme = 'https'
 
 
 # Add any paths that contain templates here, relative to this directory.
@@ -104,7 +155,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'eGo'
-copyright = u'2015-2017, open_eGo-Team'
+copyright = u'2015-2018, open_eGo-Team'
 author = u'open_eGo-Team'
 
 
@@ -113,7 +164,7 @@ author = u'open_eGo-Team'
 # built documents.
 #
 # The short X.Y version.
-version = '0.0.1'
+version = '0.1.0'
 # The full version, including alpha/beta/rc tags.
 release = '0.0.1dev'
 
@@ -175,11 +226,11 @@ if 'READTHEDOCS' in os.environ:
 
     MOCK_MODULES = ['ding0', 'ding0.results', 'shapely']
     sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
-    
-    MOCK_MODULES = ['libgeos', 'geos', 'libgeos_c', 'geos_c','libgeos_c.so.1', 
+
+    MOCK_MODULES = ['libgeos', 'geos', 'libgeos_c', 'geos_c','libgeos_c.so.1',
                 'libgeos_c.so', 'shapely', 'geoalchemy2', 'geoalchemy2.shape ']
 
-       
+
 
 # -- Options for HTML output ----------------------------------------------
 

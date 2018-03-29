@@ -1,10 +1,10 @@
 """
 Module to collect useful functions for plotting results of eGo
 
-ToDo:
-	histogram
-	etc.
-	Implement plotly
+ToDo
+- histogram
+- etc.
+- Implement plotly
 """
 __copyright__ = "tba"
 __license__ = "tba"
@@ -28,9 +28,48 @@ if not 'READTHEDOCS' in os.environ:
     import webbrowser
     from egoio.db_tables.model_draft import EgoGridMvGriddistrict
     from egoio.db_tables.grid import EgoDpMvGriddistrict
+    from tools.results import eGo
+    import matplotlib.pyplot as plt
 
 import logging
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('ego')
+
+
+# plot colore of Carriers
+def carriers_colore():
+	"""
+	Return matplotlib colores per pypsa carrier of eTraGo
+
+	Returns
+    -------
+	:obj:`dict` : List of carriers and matplotlib colores
+
+	"""
+
+	colors = {'biomass':'green',
+          'coal':'k',
+          'gas':'orange',
+          'eeg_gas':'olive',
+          'geothermal':'purple',
+          'lignite':'brown',
+          'oil':'darkgrey',
+          'other_non_renewable':'pink',
+          'reservoir':'navy',
+          'run_of_river':'aqua',
+          'pumped_storage':'steelblue',
+          'solar':'yellow',
+          'uranium':'lime',
+          'waste':'sienna',
+          'wind':'skyblue',
+          'slack':'pink',
+          'load shedding': 'red',
+          'nan':'m',
+          'imports':'salmon',
+		  '':'m'}
+
+	return colors
+
+
 
 def make_all_plots(network):
 	# make a line loading plot
@@ -40,16 +79,15 @@ def make_all_plots(network):
 	plot_stacked_gen(network, resolution="MW")
 
 	# plot to show extendable storages
-	# storage_distribution(network)
+	storage_distribution(network)
 
-	# plot_residual_load(network)
+	#plot_residual_load(network)
 
-	# plot_voltage(network)
+	plot_voltage(network)
 
-	# curtailment(network)
+	#curtailment(network)
 
-	# gen_dist(network)
-
+	gen_dist(network)
 
 	return
 
@@ -64,29 +102,26 @@ def igeoplot(network, session, tiles=None, geoloc=None, args=None):
 	Parameters
 	----------
 
-	network (PyPSA):
+	network : PyPSA
 		PyPSA network container
-	tiles (str):
-		Folium background map style 'None' as OSM
-		or 'Nasa'
-	geoloc (list):
-		Define center of map as (lon,lat)
+	tiles : str
+		Folium background map style `None` as OSM or `Nasa`
+	geoloc : list of str
+        Define center of map as (lon,lat)
 
-	Results:
-    --------
-		HTML Plot page
+	Returns
+    -------
 
-	ToDos:
-	------
-	implement eDisGo Polygons
-		fix version problems of data
-		use  grid.ego_dp_hvmv_substation subst_id and otg_id
+	HTML Plot page
 
-	use cluster or boxes to limit data volumn
-
-	Legend
-	Map
-    http://nbviewer.jupyter.org/gist/BibMartin/f153aa957ddc5fadc64929abdee9ff2e
+	ToDo
+	----
+	- implement eDisGo Polygons
+	- fix version problems of data
+	- use  grid.ego_dp_hvmv_substation subst_id and otg_id
+	- use cluster or boxes to limit data volumn
+	- add Legend
+	- Map see: http://nbviewer.jupyter.org/gist/BibMartin/f153aa957ddc5fadc64929abdee9ff2e
 	"""
 
 	if geoloc is None:
@@ -259,3 +294,109 @@ def prepareGD(session, subst_id= None, version=None ):
 	region = gpd.GeoDataFrame(Regions, columns=['subst_id','geometry'],crs=crs)
 
 	return region
+
+
+def total_power_costs_plot(eTraGo):
+	"""
+	plot power price of eTraGo
+
+	Parameters
+	----------
+	eTraGo :class:`etrago.io.NetworkScenario`
+
+	Returns
+	-------
+	plot :obj:`matplotlib.pyplot.show`
+		<https://matplotlib.org/api/pyplot_api.html#matplotlib.pyplot.show`_
+
+
+	"""
+	#import matplotlib.pyplot as plt
+	plt.rcdefaults()
+	#import numpy as np
+	#import matplotlib.pyplot as plt
+
+
+	fig, ax = plt.subplots()
+
+	# plot power_price
+	a = eGo(eTraGo=eTraGo)
+	prc = a.create_total_results()
+
+	prc = prc.etrago['power_price']
+	bar_width = 0.35
+	opacity = 0.4
+
+	ind = np.arange(len(prc.index))    # the x locations for the groups
+	width = 0.35       # the width of the bars: can also be len(x) sequence
+
+	ax.barh(ind, prc, align='center', color='green')
+	ax.set_yticks(ind)
+	ax.set_yticklabels(prc.index)
+	ax.invert_yaxis()
+
+	ax.set_xlabel('Costs')
+	ax.set_title('Power Costs per Carrier')
+
+	return plt.show()
+
+
+def plot_etrago_production(ego):
+	"""
+	input eGo
+	Bar plot all etrago costs
+	"""
+
+	#fig = plt.figure(figsize=(18,10), dpi=1600)
+	#plt.pie(ego.etrago['p'],autopct='%.1f')
+	#plt.title('Procentage of power production')
+
+
+	#max(ego.etrago['investment_costs'])/(1000*1000*1000) # T€/kW->M€/KW ->GW/MW
+
+	# Chare of investment costs get volume
+	#ego.etrago['investment_costs'].sum()/(1000*1000*1000)
+
+
+	ego.etrago['p'].plot(kind="pie",
+						 subplots=True,
+					     figsize=(10,10),
+						 autopct='%.1f')
+
+
+	plt.show()
+
+
+
+def plotting_invest(result):
+    """
+    Dataframe input of eGo
+    """
+    fig, ax = plt.subplots()
+
+    ax.set_ylabel('Costs in €')
+    ax.set_title('Investment Cost')
+    ax.set_xlabel('Investments')
+
+    result.plot(kind='bar', ax=ax)
+
+
+    return
+
+
+def plot_storage_use(storages):
+	"""
+	Intput ego.storages
+	"""
+
+	ax = storages[['charge','discharge']].plot(kind='bar',
+											  title ="Storage usage",
+											  stacked=True,
+											  #table=True,
+											  figsize=(15, 10),
+											  legend=True,
+											  fontsize=12)
+	ax.set_xlabel("Kind of Storage", fontsize=12)
+	ax.set_ylabel("Charge and Discharge in MWh", fontsize=12)
+	plt.show()
+	return

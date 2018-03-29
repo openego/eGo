@@ -2,25 +2,25 @@
   "global": {
     "eTraGo": true,
     "eDisGo": true,
-    "scn_name": "Status Quo",
     "db": "oedb",
-    "result_id": 9,
-    "gridversion": "v0.3.0"
+    "result_id": 359,
+    "recover": false,
+    "gridversion": null
   },
   "eTraGo": {
     "db": "oedb",
-    "gridversion": "v0.3.0",
+    "gridversion": null,
     "method": "lopf",
     "pf_post_lopf": false,
     "start_snapshot": 1,
-    "end_snapshot" : 2,
-    "scn_name": "SH Status Quo",
+    "end_snapshot" : 5,
+    "scn_name": "SH NEP 2035",
     "solver": "gurobi",
     "lpfile":  false,
     "results": false,
     "export": false,
-    "storage_extendable": true,
-    "generator_noise": false,
+    "storage_extendable": false,
+    "generator_noise": true,
     "reproduce_noise": false,
     "minimize_loading": false,
     "k_mean_clustering": false,
@@ -35,6 +35,6 @@
   "eDisGo": {
      "direct_specs": false,
      "specs": true,
-     "comments": null
+     "comments": "make a comment, SH SQ"
   }
 }

@@ -21,9 +21,10 @@ if not 'READTHEDOCS' in os.environ:
     from tools.plots import (make_all_plots,plot_line_loading, plot_stacked_gen,
                                      add_coordinates, curtailment, gen_dist,
                                      storage_distribution, igeoplot)
+    # For importing geopandas you need to install spatialindex on your system http://github.com/libspatialindex/libspatialindex/wiki/1.-Getting-Started
     from tools.utilities import get_scenario_setting, get_time_steps
     from tools.io import geolocation_buses, etrago_from_oedb
-    from tools.results import total_storage_charges
+    from tools.results import eGo
     from sqlalchemy.orm import sessionmaker
     from egoio.tools import db
     from etrago.tools.io import results_to_oedb
@@ -33,10 +34,25 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+## Logging
+logging.basicConfig(format='%(asctime)s %(message)s',level=logging.INFO)
+
+logger = logging.getLogger(__name__)
+ego_logger = logging.getLogger('ego')
+
+fh = logging.FileHandler('ego.log', mode='w')
+fh.setLevel(logging.INFO)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+fh.setFormatter(formatter)
+
+logger.addHandler(fh)
+ego_logger.addHandler(fh)
+
 
 if __name__ == '__main__':
     # import scenario settings **args of eTraGo
     args = get_scenario_setting(json_file='scenario_setting.json')
+    print (args)
 
     try:
         conn = db.connection(section=args['global']['db'])
@@ -50,91 +66,58 @@ if __name__ == '__main__':
         # start eTraGo calculation
         eTraGo = etrago(args['eTraGo'])
 
-        #ToDo save result to db
-        # Does not work wait for eTraGo release 0.5.1
-        #results_to_oedb(session, eTraGo, args['eTraGo'], grid='hv')
+        eGo = eGo(eTraGo=eTraGo, scn_name='Status Quo')
 
         # add country code to bus and geometry (shapely)
         # eTraGo.buses = eTraGo.buses.drop(['country_code','geometry'], axis=1)
         #test = geolocation_buses(network = eTraGo, session)
 
-        # other plots based on matplotlib
-        make_all_plots(eTraGo)
         # make a line loading plot
-        plot_line_loading(eTraGo)
+        eGo.eTraGo.plot_line_loading(eTraGo)
 
-        # plot stacked sum of nominal power for each generator type and timestep
-        plot_stacked_gen(eTraGo, resolution="MW")
-
-        # plot to show extendable storages
-        storage_distribution(eTraGo)
-
-        # plot storage total charges and discharge
-        total_storage_charges(eTraGo, plot=True)
 
     # get eTraGo results form db
-    if args['global']['result_id']:
+    if args['global']['recover']:
         eTraGo = etrago_from_oedb(session,args)
-
 
     # use eTraGo results from ego calculations if true
     # ToDo make function edisgo_direct_specs()
 
+
+
     if args['eDisGo']['direct_specs']:
         # ToDo: add this to utilities.py
-        bus_id = 27334
-        specs_meta_data = {}
-        specs_meta_data.update({'TG Bus ID':bus_id})
 
-        # Retrieve all Data
-        ### Snapshot Range
-        #snap_idx = eTraGo_network.snapshots
+        logging.info('Retrieving Specs')
 
-        ## Bus Power
+        bus_id = 27574 #23971
 
-        try:
-            active_power_kW = eTraGo_network.buses_t.p[str(bus_id)] * 1000 # PyPSA result is in MW
-        except:
-            logger.warning('No active power series')
-            active_power_kW = None
-
-        try:
-            reactive_power_kvar = eTraGo_network.buses_t.q[str(bus_id)] * 1000 # PyPSA result is in Mvar
-        except:
-            logger.warning('No reactive power series')
-            reactive_power_kvar = None
+        from ego.tools.specs import get_etragospecs_direct, get_mvgrid_from_bus_id
+        from egoio.db_tables import model_draft
+        specs = get_etragospecs_direct(session, bus_id, eTraGo, args)
 
 
-        ## Gens
-        all_gens = eTraGo_network.generators.bus
-        bus_gens = all_gens.index[all_gens == str(bus_id)]
-        p_nom = eTraGo_network.generators.p_nom[bus_gens]
-        gen_type = eTraGo_network.generators.carrier[bus_gens]
-
-        gen_df = pd.DataFrame({'p_nom': p_nom,'gen_type':gen_type})
-        capacity = gen_df[['p_nom','gen_type']].groupby('gen_type').sum().T
-
-        gens = eTraGo_network.generators
-        for key, value in gens.items():
-            print (key)
 
     # ToDo make loop for all bus ids
     #      make function which links bus_id (subst_id)
     if args['eDisGo']['specs']:
 
+
         logging.info('Retrieving Specs')
         # ToDo make it more generic
         # ToDo iteration of grids
         # ToDo move part as function to utilities or specs
-        bus_id = 23971
+        bus_id = 27574 #23971
         result_id = args['global']['result_id']
-        scn_name = args['global']['scn_name'] # Six is Germany for 2 Snaps with minimal residual load
 
-        from ego.tools.specs import get_etragospecs_from_db
+        from ego.tools.specs import get_etragospecs_from_db, get_mvgrid_from_bus_id
         from egoio.db_tables import model_draft
-        specs = get_etragospecs_from_db(session, bus_id, result_id, scn_name)
+        specs = get_etragospecs_from_db(session, bus_id, result_id)
+
+        mv_grid = get_mvgrid_from_bus_id(session, bus_id) # This function can be used to call the correct MV grid
 
     if args['global']['eDisGo']:
+
         logging.info('Starting eDisGo')
 
         # ToDo move part as function to utilities or specs
@@ -145,7 +128,7 @@ if __name__ == '__main__':
 
         # ToDo get ding0 grids over db
         # ToDo implemente iteration
-        file_path = '/home/dozeumbuw/ego_dev/src/ding0_grids__1802.pkl'
+        file_path = 'data/ding0_grids/ding0_grids__1802.pkl'
 
         #mv_grid = open(file_path)
 
@@ -157,7 +140,7 @@ if __name__ == '__main__':
         scenario = Scenario(etrago_specs=specs,
                     power_flow=(),
                     mv_grid_id=mv_grid_id,
-                    scenario_name= args['global']['scn_name'])
+                    scenario_name= args['eTraGo']['scn_name'])
 
         network = Network.import_from_ding0(file_path,
                                     id=mv_grid_id,
@@ -180,6 +163,7 @@ if __name__ == '__main__':
         #    network.results = Results()
         costs = network.results.grid_expansion_costs
         print(costs)
+
 
 
     # make interactive plot with folium
