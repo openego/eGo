@@ -47,7 +47,7 @@ With your activated environment `cd` to the cloned directory and run
    file from eTraGo is installed in your libary ``/lib/python3.5/site-packages/etrago/tools`` .
    If not copy and paste this file into this folder.
 
-   If Database connection or table erros appears use: ``pip3 install -e git+git@github.com:openego/ego.io.git@3b76dfddea14d67eb4421b6223bf981d8851e4e6#egg=ego.io ``
+   If Database connection or table erros appears use: ``pip3 install -e git+git@github.com:openego/ego.io.git@3b76dfddea14d67eb4421b6223bf981d8851e4e6#egg=ego.io``
 
 
 Using eGo:
