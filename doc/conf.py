@@ -37,10 +37,6 @@ from unittest.mock import MagicMock
 #sys.path.insert(0, os.path.abspath('.'))
 sys.path.insert(0, os.path.abspath('../'))
 
-
-sys.path
-
-
 # -- General configuration ------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
@@ -129,10 +125,6 @@ html_context = {
     'power_class': power_class,
     'scn_setting': scn_set
 }
-
-
-
-
 
 
 # add RestFull API
