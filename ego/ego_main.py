@@ -51,8 +51,10 @@ ego_logger.addHandler(fh)
 
 if __name__ == '__main__':
     # import scenario settings **args of eTraGo
+    logging.info('Start calculation')
     args = get_scenario_setting(json_file='scenario_setting.json')
-    print (args)
+    logger.info("calculation settings are used \
+                     with Metadata: \n %s" %args)
 
     try:
         conn = db.connection(section=args['global']['db'])
