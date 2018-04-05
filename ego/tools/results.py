@@ -153,7 +153,7 @@ class eGo(eTraGoResults):
         # add total results here
 
     # write_results_to_db():
-
+    logging.info('Initialisation of eGo Results')
     pass
 
 

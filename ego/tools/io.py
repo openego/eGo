@@ -24,6 +24,10 @@ if not 'READTHEDOCS' in os.environ:
     import pandas as pd
     from egoio.tools import db
 
+import logging
+logger = logging.getLogger('ego')
+
+
 
 def geolocation_buses(network, session):
     """
