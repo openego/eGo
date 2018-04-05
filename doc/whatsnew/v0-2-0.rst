@@ -1,0 +1,17 @@
+Release v0.2.0 (April 18, 2018)
++++++++++++++++++++++++++++++++
+
+The third release of eGo ...
+and is still under construction and not ready for a normal use.
+
+
+
+
+Added features
+--------------
+
+*
+
+Notes
+-----
+*
