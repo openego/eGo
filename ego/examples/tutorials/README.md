@@ -4,12 +4,12 @@ eGo Tutorials
 
 
 
-## Installation 
+## Installation
 
 
 ### eDisGo
 
-### eTraGo 
+### eTraGo
 
 The python tool eTraGo can be used in several forms like from a terminal as an execution program, by integrated development environments (IDE) like [Spyder](https://anaconda.org/anaconda/spyder),  [Jupyter notebooks](http://jupyter.org/install) or many more.
 
@@ -18,8 +18,31 @@ A description how you to install and work with eTraGo can be found [here](http:/
 
 ### Notebook installation
 
-Having Python 3 installed?  As eGo is designed as a Python package it is mandatory to have Python 3 installed. For this Tutorial we recommend to use an [virtual environment](https://virtualenv.pypa.io/en/stable/installation/). 
-See this [tutorial](https://docs.python.org/3/tutorial/venv.html). 
+#### with Anaconda
+
+Download and install your Python 3.x version of Anaconda [here](https://www.anaconda.com/download/). The full Documentation can be found [on this page.](https://docs.anaconda.com/anaconda/install/)
+
+We use Anaconda with an own environment in order to reduze problems with Packages and different versions on our system.
+
+
+```desktop
+
+$ conda create --no-default-packages -n openModZuerich_env python 3.6
+$ source activate openModZuerich_env
+
+```
+
+/home/.../anaconda3/envs/openModZuerich_env
+
+
+
+Learn more about [Anacona environments](https://conda.io/docs/user-guide/tasks/manage-environments.html).
+
+
+#### without Anaconda
+
+Having Python 3 installed?  As eGo is designed as a Python package it is mandatory to have Python 3 installed. For this Tutorial we recommend to use an [virtual environment](https://virtualenv.pypa.io/en/stable/installation/).
+See this [tutorial](https://docs.python.org/3/tutorial/venv.html).
 
 If you already have a Python 3 environment you can follow this steps in your terminal:
 
@@ -55,6 +78,4 @@ The installation is only tested on Ubuntu 16.4. and Windows 10 with [Anaconda](h
 
 ## Import eTraGo packages
 
-We are importing the [main function](https://github.com/openego/eTraGo/blob/dev/etrago/appl.py) of eTraGo and its database and plotting functions. 
-
-
+We are importing the [main function](https://github.com/openego/eTraGo/blob/dev/etrago/appl.py) of eTraGo and its database and plotting functions.
