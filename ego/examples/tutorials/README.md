@@ -30,6 +30,11 @@ We use Anaconda with an own environment in order to reduze problems with Package
 $ conda create --no-default-packages -n openModZuerich_env python 3.6
 $ source activate openModZuerich_env
 
+
+...
+$ conda  env create --file requirements.yml
+$ source activate openMod_Zuerich2018
+
 ```
 
 /home/.../anaconda3/envs/openModZuerich_env
