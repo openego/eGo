@@ -1,0 +1,23 @@
+name: openMod_Zuerich2018
+
+channels:
+  - conda-forge
+  - anaconda
+
+dependencies:
+  - python=3.5
+  - notebook  # jupyter notebook
+  - numpy=1.14.3
+  - pandas=0.20.3
+  - pyyaml=3.12
+  - requests
+  - sqlalchemy
+  - Rtree=0.8.3
+  - scikit-learn
+  - scipy
+  - pip:
+    - ding0=0.1.4
+    - eDisGo=0.0.2
+    - "--editable=git+https://github.com/openego/eGo@dev#egg=eGo --process-dependency-links"
+    - "--editable=git+git@github.com:openego/oedialect.git@dev#egg=oedialect"
+    - "--editable=git+git@github.com:openego/ego.io.git@dev#egg=egoio"
