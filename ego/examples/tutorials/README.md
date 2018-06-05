@@ -76,12 +76,12 @@ $ deactivate openMod_Zuerich2018
 
 ```desktop
 [oedb]
-username =
+dialect  = oedialect
+username = <username>
 database = oedb
-host     = oe2.iws.cs.ovgu.de
-port     = 8080
-password =
-```
+host     = openenergy-platform.org
+port     =
+password = <token>```
 
 
 
@@ -95,8 +95,5 @@ $ jupyter notebook
 See for more information [how to run your jupyter notebook](https://jupyter.readthedocs.io/en/latest/running.html#running).
 
 
-
-<h4 style="color:Tomato;">Warning:</h4>
-For using this Notebook you need an oedb access or a database dump of the input data. <br>
 <h4 style="color:black;">Note:</h4>
 The installation is only tested on Ubuntu 16.4. and Windows 10 with [Anaconda](https://www.anaconda.com/download/)
