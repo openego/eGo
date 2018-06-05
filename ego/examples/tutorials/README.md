@@ -80,7 +80,8 @@ username = <username>
 database = oedb
 host     = openenergy-platform.org
 port     =
-password = <token>```
+password = <token>
+```
 
 
 ### Start you Notebook
