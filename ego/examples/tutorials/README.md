@@ -40,7 +40,7 @@ We use Anaconda with an own environment in order to reduze problems with Package
 3. Create environment
 4. Activate your environment
 5. Install you notebook requirements
-6. Make few settings for your notebook (?)
+6. Make few settings for your notebook
 7. Start your notebook and check if the notebook is running
 
 
@@ -48,8 +48,8 @@ We use Anaconda with an own environment in order to reduze problems with Package
 ##### Get eGo Repository and install it with an environment
 ```desktop
 
-$ git clone git@github.com:openego/eGo.git
-$ cd ../eGo/ego/examples/tutorials/
+$ git clone -b features/tutorial https://git@github.com/openego/eGo.git
+$ cd eGo/ego/examples/tutorials/
 $ conda  env create --file requirements.yml
 ```
 
@@ -58,20 +58,18 @@ $ conda  env create --file requirements.yml
 
 $ source activate openMod_Zuerich2018
 $ jupyter notebook
-$ deactivate openMod_Zuerich2018
-
+$ source deactivate
 ```
 
 ##### fixes and work arounds:
 
-* setup kernel for your environment:
-* ipython kernel install --user --name=openMod_Zuerich
-
+* Error in function plot_stacked_gen() due to data name changes. Fix error in  ../eGo/ego/examples/tutorials/src/etrago/etrago/tools/plot.py and  add: 'wind_offshore':'skyblue', 'wind_onshore':'skyblue', instead of 'wind';  restart kernel
+plot_stacked_gen(network, resolution="MW")
 
 
 ##### API and ego.io settings
 
-* '.egoio', 'config.ini'
+Your API settings will be saved in the folder .egoio in the file config.ini.
 
 
 ```desktop
@@ -84,8 +82,6 @@ port     =
 password = <token>```
 
 
-
-
 ### Start you Notebook
 
 ```desktop
@@ -96,4 +92,4 @@ See for more information [how to run your jupyter notebook](https://jupyter.read
 
 
 <h4 style="color:black;">Note:</h4>
-The installation is only tested on Ubuntu 16.4. and Windows 10 with [Anaconda](https://www.anaconda.com/download/)
+The installation is only tested on Ubuntu 16.4. and Windows 10 with  [Anaconda](https://www.anaconda.com/download/)
