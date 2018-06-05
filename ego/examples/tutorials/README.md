@@ -35,6 +35,7 @@ We use Anaconda with an own environment in order to reduze problems with Package
 
 ##### Quick start - steps to do:
 
+0. Sign-in on [openenergy-platform.org](http://openenergy-platform.org/login/)
 1. Install Anacanda
 2. Get eGo Repository from github
 3. Create environment
