@@ -79,7 +79,7 @@ dialect  = oedialect
 username = <username>
 database = oedb
 host     = openenergy-platform.org
-port     =
+port     = 80
 password = <token>
 ```
 
