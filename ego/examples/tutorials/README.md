@@ -92,4 +92,5 @@ See for more information [how to run your jupyter notebook](https://jupyter.read
 
 
 <h4 style="color:black;">Note:</h4>
+
 The installation is only tested on Ubuntu 16.4. and Windows 10 with  [Anaconda](https://www.anaconda.com/download/)

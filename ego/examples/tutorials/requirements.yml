@@ -18,10 +18,11 @@ dependencies:
   - ipywidgets
   - pip:
     - ding0==0.1.4
-    - eDisGo==0.0.2
-    - "--editable=git+git@github.com:openego/eGo@dev#egg=eGo --process-dependency-links"
+    - "--editable=git+git@github.com:openego/eGo.git@dev#egg=eGo --process-dependency-links"
     - "--editable=git+git@github.com:openego/oedialect.git@master#egg=oedialect"
     - "--editable=git+git@github.com:openego/ego.io.git@features/dialect#egg=egoio"
     - "--editable=git+git@github.com:openego/PyPSA.git@dev#egg=pypsa"
     - "--editable=git+git@github.com:openego/eTraGo.git@0.5.1#egg=etrago" #  eTraGo==0.5.1
     - "--editable=git+git@github.com:openego/tsam.git@master#egg=tsam"
+    - "--editable=git+git@github.com:openego/eDisGo.git@dev#egg=edisgo"
+    
