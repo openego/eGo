@@ -21,7 +21,8 @@ if not 'READTHEDOCS' in os.environ:
     from tools.plots import (make_all_plots,plot_line_loading, plot_stacked_gen,
                                      add_coordinates, curtailment, gen_dist,
                                      storage_distribution, igeoplot)
-    # For importing geopandas you need to install spatialindex on your system http://github.com/libspatialindex/libspatialindex/wiki/1.-Getting-Started
+    # For importing geopandas you need to install spatialindex on your system
+    # http://github.com/libspatialindex/libspatialindex/wiki/1.-Getting-Started
     from tools.utilities import get_scenario_setting, get_time_steps
     from tools.io import geolocation_buses, etrago_from_oedb
     from tools.results import eGo
