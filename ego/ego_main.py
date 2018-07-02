@@ -55,7 +55,7 @@ if __name__ == '__main__':
         # start eTraGo calculation
         eTraGo = etrago(args['eTraGo'])
         logger.info('Import eTraGo to eGo')
-        eGo = eGo(eTraGo=eTraGo, scn_name='Status Quo')
+        eGo = eGo(eTraGo=eTraGo, scn_name=args['eTraGo']['scn_name'])
 
         # add country code to bus and geometry (shapely)
         # eTraGo.buses = eTraGo.buses.drop(['country_code','geometry'], axis=1)
