@@ -9,8 +9,12 @@ Todo:
 import io
 import pandas as pd
 import os
+import logging
+logger = logging.getLogger('ego')
 
 # calculate annuity per time step or periode
+
+
 def annuity_per_period(capex, n, wacc, t):
     """
     Parameters
@@ -27,8 +31,9 @@ def annuity_per_period(capex, n, wacc, t):
     t : int
         Timesteps in hours
     i : float
-    	interest rate
-	...
+        interest rate
+        ...
     """
 
-    return capex * (wacc * (1 + wacc) ** n) / ((1 + wacc) ** n - 1)  # ToDo change formular to hourly annuity costs
+    # ToDo change formular to hourly annuity costs
+    return capex * (wacc * (1 + wacc) ** n) / ((1 + wacc) ** n - 1)
