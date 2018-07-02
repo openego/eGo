@@ -16,12 +16,13 @@ __author__ = "wolf_bunke,maltesc"
 
 import pandas as pd
 import os
+import logging
 
 if not 'READTHEDOCS' in os.environ:
     from etrago.appl import etrago
-    from tools.plots import (make_all_plots, plot_line_loading, plot_stacked_gen,
-                             add_coordinates, curtailment, gen_dist,
-                             storage_distribution, igeoplot)
+    from tools.plots import (make_all_plots, plot_line_loading,
+                             plot_stacked_gen, add_coordinates, curtailment,
+                             gen_dist, storage_distribution, igeoplot)
     # For importing geopandas you need to install spatialindex on your system
     # http://github.com/libspatialindex/libspatialindex/wiki/1.-Getting-Started
     from tools.utilities import get_scenario_setting, get_time_steps
@@ -30,31 +31,14 @@ if not 'READTHEDOCS' in os.environ:
     from sqlalchemy.orm import sessionmaker
     from egoio.tools import db
     from etrago.tools.io import results_to_oedb
+    from tools.utilities import define_logging
 
-# ToDo: Logger should be set up more specific
-import logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
-# Logging
-logging.basicConfig(format='%(asctime)s %(message)s', level=logging.INFO)
-
-logger = logging.getLogger(__name__)
-ego_logger = logging.getLogger('ego')
-
-fh = logging.FileHandler('ego.log', mode='w')
-fh.setLevel(logging.INFO)
-formatter = logging.Formatter('%(asctime)s - %(name)s - \
-                              %(levelname)s - %(message)s')
-fh.setFormatter(formatter)
-
-logger.addHandler(fh)
-ego_logger.addHandler(fh)
-
+logger = define_logging(log_name='ego.log')
 
 if __name__ == '__main__':
+
     # import scenario settings **args of eTraGo
-    logging.info('Start calculation')
+    logger.info('Start calculation')
     args = get_scenario_setting(json_file='scenario_setting.json')
     logger.info("calculation settings are used \
                      with Metadata: \n %s" % args)
@@ -70,7 +54,7 @@ if __name__ == '__main__':
     if args['global']['eTraGo']:
         # start eTraGo calculation
         eTraGo = etrago(args['eTraGo'])
-
+        logger.info('Import eTraGo to eGo')
         eGo = eGo(eTraGo=eTraGo, scn_name='Status Quo')
 
         # add country code to bus and geometry (shapely)
@@ -90,7 +74,7 @@ if __name__ == '__main__':
     if args['eDisGo']['direct_specs']:
         # ToDo: add this to utilities.py
 
-        logging.info('Retrieving Specs')
+        logger.info('Retrieving Specs')
 
         bus_id = 25402  # 23971
 
@@ -102,7 +86,7 @@ if __name__ == '__main__':
     #      make function which links bus_id (subst_id)
     if args['eDisGo']['specs']:
 
-        logging.info('Retrieving Specs')
+        logger.info('Retrieving Specs')
         # ToDo make it more generic
         # ToDo iteration of grids
         # ToDo move part as function to utilities or specs
@@ -118,7 +102,7 @@ if __name__ == '__main__':
 
     if args['global']['eDisGo']:
 
-        logging.info('Starting eDisGo')
+        logger.info('Starting eDisGo')
 
         # ToDo move part as function to utilities or specs
         from datetime import datetime
@@ -166,7 +150,7 @@ if __name__ == '__main__':
         print(costs)
 
     # make interactive plot with folium
-    #logging.info('Starting interactive plot')
+    #logger.info('Starting interactive plot')
     # igeoplot(network=eTraGo, session=session, args=args)    # ToDo: add eDisGo results
 
     # calculate power plant dispatch without grid utilization (either in pypsa or in renpassgis)
