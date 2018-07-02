@@ -10,7 +10,11 @@ and is still under construction and not ready for a normal use.
 Added features
 --------------
 
-*
+* Clean and restructured eGo classes and functions 
+* add eTraGo features zo eGo
+* add eDisGo ...
+* updated to eTraGo 0.6, eDisGo 0.2 and ego.io v0.4.2 version
+* implemented pep8 style
 
 Notes
 -----
