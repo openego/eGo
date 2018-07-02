@@ -1,22 +1,22 @@
 {
   "global": {
     "eTraGo": true,
-    "eDisGo": true,
+    "eDisGo": false,
     "db": "oedb",
-    "result_id": 359,
+    "result_id": null,
     "recover": false,
-    "gridversion": null
+    "gridversion": "v0.4.2"
   },
   "eTraGo": {
     "db": "oedb",
-    "gridversion": "v0.3.2",
+    "gridversion": "v0.4.2",
     "method": "lopf",
     "pf_post_lopf": false,
     "start_snapshot": 1,
     "end_snapshot" : 5,
     "solver": "gurobi",
-    "solver_options": "{}",
-    "scn_name": "SH NEP 2035",
+    "solver_options":{},
+    "scn_name": "NEP 2035",
     "scn_extension": null,
     "scn_decommissioning": null,
     "add_Belgium_Norway": false,
@@ -24,7 +24,7 @@
     "results": false,
     "export": false,
     "extendable": "['storages']",
-    "generator_noise": true,
+    "generator_noise": false,
     "reproduce_noise": false,
     "minimize_loading": false,
     "network_clustering_kmeans": 20,
