@@ -26,10 +26,11 @@ setup(name='eGo',
                         'geoalchemy2 >= 0.3.0, <=0.4.0',
                         'pyproj == 1.9.5.1',
                         'geopandas==0.3.0',
+                        'folium ==folium-master',
+                        'matplotlib >= 1.5.3, <=1.5.3',
                         'Rtree==0.8.3',
-                        'plotly==2.2.3',
-                        'folium ==folium-master'
-                        'matplotlib >= 1.5.3, <=1.5.3'],
+                        'plotly==2.2.3'
+                        ],
       dependency_links=[('git+https://git@github.com/openego/PyPSA.git'
                          '@dev#egg=pypsa-0.11.0fork'),
                         ('git+https://git@github.com:python-visualization/'
