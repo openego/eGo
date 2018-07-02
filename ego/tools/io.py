@@ -17,7 +17,6 @@ if not 'READTHEDOCS' in os.environ:
     from sqlalchemy import MetaData, create_engine, func
     from sqlalchemy.orm import sessionmaker
     from sqlalchemy.ext.automap import automap_base
-    from geoalchemy2 import Geometry, shape  # Geometry type used by SQLA
     from geoalchemy2 import *
     import geopandas as gpd
     from egoio.db_tables.model_draft import RenpassGisParameterRegion
@@ -29,6 +28,12 @@ if not 'READTHEDOCS' in os.environ:
     from etrago.tools.plot import (plot_line_loading, plot_stacked_gen,
                                    curtailment, gen_dist, storage_distribution,
                                    plot_voltage, plot_residual_load)
+    from tools.results import (total_storage_charges, etrago_storages,
+                               etrago_operating_costs, etrago_grid_investment,
+                               edisgo_grid_investment, get_generator_investment,
+                               investment_costs, create_etrago_results
+                               )
+
 
 import logging
 logger = logging.getLogger('ego')
