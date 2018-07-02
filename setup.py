@@ -28,11 +28,12 @@ setup(name='eGo',
                         'geopandas==0.3.0',
                         'Rtree==0.8.3',
                         'plotly==2.2.3',
+                        'folium ==folium-master'
                         'matplotlib >= 1.5.3, <=1.5.3'],
       dependency_links=[('git+https://git@github.com/openego/PyPSA.git'
                          '@dev#egg=pypsa-0.11.0fork'),
                         ('git+https://git@github.com:python-visualization/'
-                         'folium.git@dev#egg=folium')
+                         'folium.git@dev#egg=folium-master')
                         ],
       extras_require={
           'docs': [
