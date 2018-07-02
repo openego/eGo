@@ -12,7 +12,7 @@ setup(name='eGo',
       author_email='',
       description=("A python package for distribution and transmission"
                    "grid analysis and optimization based eDisGo and eTraGo"),
-      version='0.2.0',
+      version='0.2',
       url='https://github.com/openego/eGo',
       license="GNU Affero General Public License Version 3 (AGPL-3.0)",
       packages=find_packages(),
