@@ -26,7 +26,7 @@ if not 'READTHEDOCS' in os.environ:
     # http://github.com/libspatialindex/libspatialindex/wiki/1.-Getting-Started
     from tools.utilities import get_scenario_setting, get_time_steps
     from tools.io import geolocation_buses, etrago_from_oedb
-    from tools.results import eGo
+    from tools.io import eGo
     from sqlalchemy.orm import sessionmaker
     from egoio.tools import db
     from etrago.tools.io import results_to_oedb
