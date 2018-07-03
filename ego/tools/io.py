@@ -11,6 +11,9 @@ __author__ = "wolf_bunke,maltesc"
 
 import sys
 import os
+import logging
+logger = logging.getLogger('ego')
+
 if not 'READTHEDOCS' in os.environ:
     import pyproj as proj
     from shapely.geometry import Polygon, Point, MultiPolygon
@@ -27,16 +30,13 @@ if not 'READTHEDOCS' in os.environ:
     from egoio.tools import db
     from etrago.tools.plot import (plot_line_loading, plot_stacked_gen,
                                    curtailment, gen_dist, storage_distribution,
-                                   plot_voltage, plot_residual_load)
-    from tools.results import (total_storage_charges, etrago_storages,
-                               etrago_operating_costs, etrago_grid_investment,
-                               edisgo_grid_investment, get_generator_investment,
-                               investment_costs, create_etrago_results
-                               )
-
-
-import logging
-logger = logging.getLogger('ego')
+                                   plot_voltage, plot_residual_load
+                                   )
+    from tools.results import (create_etrago_results)
+    from tools.storages import (total_storage_charges, etrago_storages)
+    from tools.economics import (etrago_operating_costs, etrago_grid_investment,
+                                 edisgo_grid_investment, investment_costs,
+                                 get_generator_investment)
 
 
 class egoBasic():
