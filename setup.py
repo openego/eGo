@@ -5,7 +5,7 @@ __copyright__ = ("Flensburg University of Applied Sciences, "
                  "Europa-Universität Flensburg, "
                  "Centre for Sustainable Energy Systems")
 __license__ = "GNU Affero General Public License Version 3 (AGPL-3.0)"
-__author__ = "wolf_bunke"
+__author__ = "wolf_bunke, maltesc"
 
 
 with open("README.rst", "r") as fh:
@@ -45,9 +45,12 @@ setup(name='eGo',
               'sphinx_rtd_theme',
               'sphinxcontrib-httpdomain']},
       package_data={
+          # If any package contains *.txt or *.rst files, include them:
+          '': ['*.json', '*.csv'],
+          # Include any *.xy files found in the 'ego' package, too:
           'ego': [
-              os.path.join('*.json'),
+              '*.json',
               os.path.join('tools', '*.json'),
-              os.path.join('data', '*.csv')]
+              os.path.join('data', '*.csv'), ]
       }
       )
