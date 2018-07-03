@@ -44,6 +44,14 @@ ego\.tools\.specs
     :members:
     :undoc-members:
     :show-inheritance:
+    
+ego\.tools\.storages
+-----------------
+
+.. automodule:: ego.tools.storages
+    :members:
+    :undoc-members:
+    :show-inheritance:
 
 ego\.tools\.utilities module
 ----------------------------
