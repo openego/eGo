@@ -1,8 +1,8 @@
 # Packages of eGo including dependencies of eDisGo, etraGo and ding0
 
 # cloned Packages of eGo:
--e git+git@github.com:python-visualization/folium.git@5739244acb9868d001032df288500a047b232857#egg=folium
--e git+https://github.com/openego/PyPSA.git@641f1e569966cfdd4cbd1c6810ade69d90a54286#egg=pypsa
+-e git+git@github.com:python-visualization/folium.git@master#egg=folium
+-e git+https://github.com/openego/PyPSA.git@dev#egg=pypsa
 
 # Used Packages and dependencies
 appdirs==1.4.3
@@ -20,7 +20,7 @@ demandlib==0.1.1
 descartes==1.1.0
 ding0==0.1.4
 eDisGo==0.0.1
--e git+https://github.com/openego/eGo@43e840b79c00aba2d0eab9b6e632fe438ebb30a2#egg=eGo
+-e git+https://github.com/openego/eGo@dev#egg=eGo
 egoio==0.3.0
 ephem==3.7.6.0
 eTraGo==0.5.1

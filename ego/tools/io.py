@@ -1,28 +1,169 @@
 """
-Input & output functions of eGo
+This file contains the eGo main class as well as input & output functions
+of eGo in order to build the eGo application container.
 
 """
-__copyright__ = "ZNES"
+
+__copyright__ = ("Europa-Universität Flensburg, "
+                 "Centre for Sustainable Energy Systems")
 __license__ = "GNU Affero General Public License Version 3 (AGPL-3.0)"
-__url__ = "https://github.com/openego/data_processing/blob/master/LICENSE"
-__author__ = "wolfbunke"
+__author__ = "wolf_bunke,maltesc"
 
 import sys
 import os
+import logging
+logger = logging.getLogger('ego')
+
 if not 'READTHEDOCS' in os.environ:
     import pyproj as proj
     from shapely.geometry import Polygon, Point, MultiPolygon
     from sqlalchemy import MetaData, create_engine, func
     from sqlalchemy.orm import sessionmaker
     from sqlalchemy.ext.automap import automap_base
-    from geoalchemy2 import Geometry, shape # Geometry type used by SQLA
     from geoalchemy2 import *
     import geopandas as gpd
     from egoio.db_tables.model_draft import RenpassGisParameterRegion
     from egoio.db_tables import model_draft, grid
     from sqlalchemy import and_, func
     import pandas as pd
+    import numpy as np
     from egoio.tools import db
+    from etrago.tools.plot import (plot_line_loading, plot_stacked_gen,
+                                   curtailment, gen_dist, storage_distribution,
+                                   plot_voltage, plot_residual_load
+                                   )
+    from tools.results import (create_etrago_results)
+    from tools.storages import (total_storage_charges, etrago_storages)
+    from tools.economics import (etrago_operating_costs, etrago_grid_investment,
+                                 edisgo_grid_investment, investment_costs,
+                                 get_generator_investment)
+
+
+class egoBasic():
+    """eGo basics class.
+
+    Parameters
+    ----------
+
+    eTraGo : Network
+        Network container of eTraGo based on PyPSA
+    eDisGo : Network
+        Network container of eDisGo based on PyPSA
+    args : dict
+        Dict of the scenario_setting.json
+
+    """
+
+    def __init__(self, eTraGo, *args, **kwargs):
+
+        self.eTraGo = eTraGo
+        self.eDisGo = None
+        self.scn_name = kwargs.get('scn_name', 'Status Quo')
+
+    def __repr__(self):
+
+        r = ('eGoResults is created.')
+        if not self.eTraGo:
+            r += "\nThe results does not incluede eTraGo results"
+        if not self.eDisGo:
+            r += "\nThe results does not incluede eDisGo results"
+        return r
+
+
+class eTraGoResults(egoBasic):
+    """eTraGo Results
+
+    This module contains all results of eTraGo for eGo.
+
+
+    Examples
+    --------
+
+    The module can be used by ``etg = eTraGoResults()``
+
+    See also
+    --------
+    The `eTraGo`_ documentation.
+
+    References
+    ----------
+    .. _eTraGo:
+        `eTraGo <http://etrago.readthedocs.io/en/latest/api/etrago.html>`_, \
+        eTraGo Documentation.
+    """
+
+    def __init__(self, eTraGo, *args, **kwargs):
+        super().__init__(eTraGo, *args, **kwargs)
+        self.scn_name = kwargs.get('scn_name', 'Status Quo')
+        self.etrago = pd.DataFrame()
+        self.etrago.gernator = None
+        self.etrago.storage_charges = total_storage_charges(eTraGo)
+        self.etrago.storage_costs = etrago_storages(eTraGo)
+        self.etrago.operating_costs = etrago_operating_costs(eTraGo)
+
+        # methods imported from eTraGo
+        eTraGo.plot_line_loading = plot_line_loading
+
+        eTraGo.plot_stacked_gen = plot_stacked_gen
+
+        eTraGo.curtailment = curtailment
+
+        eTraGo.gen_dist = gen_dist
+
+        eTraGo.storage_distribution = storage_distribution
+
+        eTraGo.plot_voltage = plot_voltage
+
+        eTraGo.plot_residual_load = plot_residual_load
+
+    #self.etrago.gernator = create_etrago_results(eTraGo, scn_name)
+
+
+class eDisGoResults(egoBasic):
+    """ eDisGo Results
+
+    This module contains all results of eDisGo for eGo.
+
+    ToDo
+    ----
+    - add eDisGo
+    - add iteration for multiple ding0 grids
+
+    """
+
+    def __init__(self, eDisGo):
+        super().__init__(eDisGo)
+        self.edisgo = pd.DataFrame()
+
+    pass
+
+
+class eGo(eTraGoResults):
+    """Main eGo module which including all results and main functionalities.
+
+
+    Parameters
+    ----------
+    eTraGo : Network
+
+    eDisGo : Network
+
+
+
+    ToDo
+    ----
+    - add eDisGo
+    """
+
+    def __init__(self, eTraGo, scn_name):
+        super().__init__(eTraGo, scn_name)
+        # super().__init__(eDisGo)
+        self.total = pd.DataFrame()
+        # add total results here
+
+    # write_results_to_db():
+    logging.info('Initialisation of eGo Results')
+    pass
 
 
 def geolocation_buses(network, session):
@@ -60,31 +201,33 @@ def geolocation_buses(network, session):
         Base.classes.renpass_gis_parameter_region
 
     # Define regions
-    region_id = ['DE','DK', 'FR', 'BE', 'LU', \
+    region_id = ['DE', 'DK', 'FR', 'BE', 'LU',
                  'NO', 'PL', 'CH', 'CZ', 'SE', 'NL']
 
     query = session.query(RenpassGISRegion.gid, RenpassGISRegion.u_region_id,
-                       RenpassGISRegion.stat_level, RenpassGISRegion.geom,
-                       RenpassGISRegion.geom_point)
+                          RenpassGISRegion.stat_level, RenpassGISRegion.geom,
+                          RenpassGISRegion.geom_point)
 
     # get regions by query and filter
-    Regions =  [(gid, u_region_id, stat_level, shape.to_shape(geom),\
-                shape.to_shape(geom_point)) for gid, u_region_id, stat_level,\
-                 geom, geom_point in query.filter(RenpassGISRegion.u_region_id.\
-                 in_(region_id)).all()]
+    Regions = [(gid, u_region_id, stat_level, shape.to_shape(geom),
+                shape.to_shape(geom_point)) for gid, u_region_id, stat_level,
+               geom, geom_point in query.filter(RenpassGISRegion.u_region_id.
+                                                in_(region_id)).all()]
 
     crs = {'init': 'epsg:4326'}
     # transform lon lat to shapely Points and create GeoDataFrame
-    points = [Point(xy) for xy in zip( network.buses.x,  network.buses.y)]
+    points = [Point(xy) for xy in zip(network.buses.x,  network.buses.y)]
     bus = gpd.GeoDataFrame(network.buses, crs=crs, geometry=points)
     # Transform Countries Polygons as Regions
-    region = pd.DataFrame(Regions, columns=['id','country','stat_level','Polygon','Point'])
+    region = pd.DataFrame(
+        Regions, columns=['id', 'country', 'stat_level', 'Polygon', 'Point'])
     re = gpd.GeoDataFrame(region, crs=crs, geometry=region['Polygon'])
     # join regions and buses by geometry which intersects
     busC = gpd.sjoin(bus, re, how='inner', op='intersects')
-    #busC
+    # busC
     # Drop non used columns
-    busC = busC.drop(['index_right', 'Point', 'id', 'Polygon', 'stat_level','geometry'], axis=1)
+    busC = busC.drop(['index_right', 'Point', 'id', 'Polygon',
+                      'stat_level', 'geometry'], axis=1)
     # add busC to eTraGo.buses
     network.buses['country_code'] = busC['country']
 
@@ -109,7 +252,7 @@ def results_to_excel(results):
 
     # write orgininal data in second sheet
     results.to_excel(writer, index=True, sheet_name='Results by carriers')
-    #add plots
+    # add plots
 
     # Close the Pandas Excel writer and output the Excel file.
     writer.save()
@@ -137,7 +280,7 @@ def etrago_from_oedb(session, args):
 
     # modules from model_draft
     from egoio.db_tables.model_draft import EgoGridPfHvSource as Source,\
-                                            EgoGridPfHvTempResolution as TempResolution
+        EgoGridPfHvTempResolution as TempResolution
     from etrago.tools.io import loadcfg
     from importlib import import_module
     import pypsa
@@ -159,71 +302,70 @@ def etrago_from_oedb(session, args):
 
         return _mapped
 
+    def dataframe_results(name, session, result_id, ormclass):
+        """
+        Function to get pandas DataFrames by the result_id
+        """
 
-    def dataframe_results( name, session, result_id, ormclass):
-            """
-            Function to get pandas DataFrames by the result_id
-            """
+        query = session.query(ormclass).filter(ormclass.result_id == result_id)
 
-            query = session.query(ormclass).filter(ormclass.result_id == result_id)
+        if name == 'Transformer':
+            name = 'Trafo'
 
-            if name == 'Transformer':
-                name = 'Trafo'
+        df = pd.read_sql(query.statement,
+                         session.bind,
+                         index_col=name.lower() + '_id')
 
-            df = pd.read_sql(query.statement,
-                             session.bind,
-                             index_col=name.lower() + '_id')
+        if str(ormclass)[:-2].endswith('T'):
+            df = pd.Dataframe()
 
-            if str(ormclass)[:-2].endswith('T'):
-                df = pd.Dataframe()
-
-            return df
-
+        return df
 
     def series_results(name, column, session, meta_args, result_id, ormclass):
-            """
-            Function to get Time Series as pandas DataFrames by the result_id
+        """
+        Function to get Time Series as pandas DataFrames by the result_id
 
-            ToDo
-            ----
-            - check index of bus_t and soon is wrong!
+        ToDo
+        ----
+        - check index of bus_t and soon is wrong!
 
-            """
-            # TODO: pls make more robust
-            id_column = re.findall(r'[A-Z][^A-Z]*', name)[0] + '_' + 'id'
-            id_column = id_column.lower()
+        """
+        # TODO: pls make more robust
+        id_column = re.findall(r'[A-Z][^A-Z]*', name)[0] + '_' + 'id'
+        id_column = id_column.lower()
 
-            query = session.query(
-                getattr(ormclass, id_column),
-                getattr(ormclass, column).
-                label(column)).filter(and_(
-                    ormclass.result_id == result_id
-                    ))
+        query = session.query(
+            getattr(ormclass, id_column),
+            getattr(ormclass, column).
+            label(column)).filter(and_(
+                ormclass.result_id == result_id
+            ))
 
-            df = pd.io.sql.read_sql(query.statement,
-                                    session.bind,
-                                    columns=[column],
-                                    index_col=id_column)
+        df = pd.io.sql.read_sql(query.statement,
+                                session.bind,
+                                columns=[column],
+                                index_col=id_column)
 
-            df.index = df.index.astype(str)
+        df.index = df.index.astype(str)
 
-            # change of format to fit pypsa
-            df = df[column].apply(pd.Series).transpose()
+        # change of format to fit pypsa
+        df = df[column].apply(pd.Series).transpose()
 
-            try:
-                assert not df.empty
-                df.index = timeindex
-            except AssertionError:
-                print("No data for %s in column %s." % (name, column))
+        try:
+            assert not df.empty
+            df.index = timeindex
+        except AssertionError:
+            print("No data for %s in column %s." % (name, column))
 
-            return df
+        return df
 
     # create config for results
     path = os.getcwd()
-    config = loadcfg(path+'/tools/config.json')['results'] # add meta_args with args of results
+    # add meta_args with args of results
+    config = loadcfg(path+'/tools/config.json')['results']
 
     # map and Database settings of etrago_from_oedb()
-    _prefix= 'EgoGridPfHvResult'
+    _prefix = 'EgoGridPfHvResult'
     schema = 'model_draft'
     packagename = 'egoio.db_tables'
     _pkg = import_module(packagename + '.' + schema)
@@ -231,30 +373,28 @@ def etrago_from_oedb(session, args):
     carr_ormclass = 'Source'
     _mapped = {}
 
-
-
     # get metadata
     version = args['global']['gridversion']
 
-    orm_meta =  getattr(_pkg, _prefix + 'Meta')
+    orm_meta = getattr(_pkg, _prefix + 'Meta')
 
     # check result_id
 
-    result_id_in = session.query(orm_meta.result_id).filter(orm_meta.\
-                                                result_id==result_id).all()
+    result_id_in = session.query(orm_meta.result_id).filter(orm_meta.
+                                                            result_id == result_id).all()
     if result_id_in:
-        logger.info('Choosen result_id %s found in DB',result_id)
+        logger.info('Choosen result_id %s found in DB', result_id)
     else:
         logger.info('Error: result_id not found in DB')
 
-
     # get meta data as args
-    meta = session.query(orm_meta.result_id,orm_meta.scn_name,orm_meta.calc_date,
-                         orm_meta.user_name ,orm_meta.method, orm_meta.start_snapshot,
+    meta = session.query(orm_meta.result_id, orm_meta.scn_name, orm_meta.calc_date,
+                         orm_meta.user_name, orm_meta.method, orm_meta.start_snapshot,
                          orm_meta.end_snapshot, orm_meta.solver, orm_meta.settings
-                         ).filter(orm_meta.result_id== result_id)
+                         ).filter(orm_meta.result_id == result_id)
 
-    meta_df = pd.read_sql(meta.statement, meta.session.bind, index_col='result_id')
+    meta_df = pd.read_sql(
+        meta.statement, meta.session.bind, index_col='result_id')
 
     meta_args = dict(meta_df.settings[result_id])
     meta_args['scn_name'] = meta_df.scn_name[result_id]
@@ -264,19 +404,19 @@ def etrago_from_oedb(session, args):
     meta_args['solver'] = meta_df.solver[result_id]
 
     # get TempResolution
-    temp =  TempResolution
+    temp = TempResolution
 
-    tr = session.query(temp.temp_id,temp.timesteps,
-                      temp.resolution, temp.start_time).one()
+    tr = session.query(temp.temp_id, temp.timesteps,
+                       temp.resolution, temp.start_time).one()
 
     timeindex = pd.DatetimeIndex(start=tr.start_time,
                                  periods=tr.timesteps,
                                  freq=tr.resolution)
 
-    timeindex = timeindex[meta_args['start_snapshot'] - 1: meta_args['end_snapshot'] ]
+    timeindex = timeindex[meta_args['start_snapshot'] -
+                          1: meta_args['end_snapshot']]
 
     meta_args['temp_id'] = tr.temp_id
-
 
     # create df for PyPSA network
 
@@ -287,27 +427,27 @@ def etrago_from_oedb(session, args):
 
     if pypsa.__version__ == '0.11.0':
         old_to_new_name = {'Generator':
-                                   {'p_min_pu_fixed': 'p_min_pu',
-                                    'p_max_pu_fixed': 'p_max_pu',
-                                    'source': 'carrier',
-                                    'dispatch': 'former_dispatch'},
-                                   'Bus':
-                                   {'current_type': 'carrier'},
-                                   'Transformer':
-                                   {'trafo_id': 'transformer_id'},
-                                   'Storage':
-                                   {'p_min_pu_fixed': 'p_min_pu',
-                                    'p_max_pu_fixed': 'p_max_pu',
-                                    'soc_cyclic': 'cyclic_state_of_charge',
-                                    'soc_initial': 'state_of_charge_initial',
-                                    'source': 'carrier'}}
+                           {'p_min_pu_fixed': 'p_min_pu',
+                            'p_max_pu_fixed': 'p_max_pu',
+                            'source': 'carrier',
+                            'dispatch': 'former_dispatch'},
+                           'Bus':
+                           {'current_type': 'carrier'},
+                           'Transformer':
+                           {'trafo_id': 'transformer_id'},
+                           'Storage':
+                           {'p_min_pu_fixed': 'p_min_pu',
+                            'p_max_pu_fixed': 'p_max_pu',
+                            'soc_cyclic': 'cyclic_state_of_charge',
+                            'soc_initial': 'state_of_charge_initial',
+                            'source': 'carrier'}}
 
         timevarying_override = True
 
     else:
         old_to_new_name = {'Storage':
-                          {'soc_cyclic': 'cyclic_state_of_charge',
-                           'soc_initial': 'state_of_charge_initial'}}
+                           {'soc_cyclic': 'cyclic_state_of_charge',
+                            'soc_initial': 'state_of_charge_initial'}}
 
     # get data into dataframes
     logger.info('Start building eTraGo results network')
@@ -334,14 +474,15 @@ def etrago_from_oedb(session, args):
                 name = name[:-1]
                 pypsa_comp_name = name
 
-                if  name == 'Storage':
+                if name == 'Storage':
                     pypsa_comp_name = 'StorageUnit'
-                if  name == 'Transformer':
+                if name == 'Transformer':
                     name = 'Trafo'
 
                 for col in columns:
 
-                    df_series = series_results(name, col, session, meta_args, result_id, ormclass)
+                    df_series = series_results(
+                        name, col, session, meta_args, result_id, ormclass)
 
                     # TODO: VMagPuSet?
                     if timevarying_override and comp == 'Generator':
@@ -359,8 +500,7 @@ def etrago_from_oedb(session, args):
 
                     except (ValueError, AttributeError):
                         print("Series %s of component %s could not be "
-                                    "imported" % (col, pypsa_comp_name))
-
+                              "imported" % (col, pypsa_comp_name))
 
     print('Done')
     logger.info('Imported eTraGo results of id = %s ', result_id)
