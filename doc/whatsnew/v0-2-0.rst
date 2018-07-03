@@ -1,7 +1,7 @@
-Release v0.2.0 (April 18, 2018)
-+++++++++++++++++++++++++++++++
+Release v0.2.0 (July 6, 2018)
++++++++++++++++++++++++++++++
 
-The third release of eGo ...
+The second release of eGo ...
 and is still under construction and not ready for a normal use.
 
 
@@ -20,6 +20,8 @@ Added features
 * Using the Restfull-API for the OpenEnergy Database connection, buy using 
   ego.io v0.4.2. A registration is needed and can be done on 
   `openenergy-platform.org/login <http://openenergy-platform.org/login/>`_
+* introduce new file storages.py
+* remove functionalities from main to the eGo class
 * ...
 
 Notes
