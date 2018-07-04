@@ -19,15 +19,8 @@ import os
 import logging
 
 if not 'READTHEDOCS' in os.environ:
-    from etrago.appl import etrago
-    # For importing geopandas you need to install spatialindex on your system
-    # http://github.com/libspatialindex/libspatialindex/wiki/1.-Getting-Started
-    from tools.utilities import get_scenario_setting, get_time_steps
-    from tools.io import geolocation_buses, etrago_from_oedb
     from tools.io import eGo
-    from sqlalchemy.orm import sessionmaker
-    from egoio.tools import db
-    from etrago.tools.io import results_to_oedb
+    #from etrago.tools.io import results_to_oedb
     from tools.utilities import define_logging
 
 logger = define_logging(log_name='ego.log')
@@ -36,34 +29,20 @@ if __name__ == '__main__':
 
     # import scenario settings **args of eTraGo
     logger.info('Start calculation')
-    args = get_scenario_setting(json_file='scenario_setting.json')
-    logger.info("calculation settings are used \
-                     with Metadata: \n %s" % args)
 
-    try:
-        conn = db.connection(section=args['global']['db'])
-        Session = sessionmaker(bind=conn)
-        session = Session()
-    except OperationalError:
-        logger.error('Failed connection to Database',  exc_info=True)
+    ego = eGo(jsonpath='scenario_setting.json')
 
-    # start calculations of eTraGo if true
-    if args['global']['eTraGo']:
-        # start eTraGo calculation
-        eTraGo = etrago(args['eTraGo'])
-        logger.info('Import eTraGo to eGo')
-        eGo = eGo(eTraGo=eTraGo, scn_name=args['eTraGo']['scn_name'])
+    ego.etrago.storage_charges
+    ego.etrago_network.buses
+    ego
 
-        # add country code to bus and geometry (shapely)
-        # eTraGo.buses = eTraGo.buses.drop(['country_code','geometry'], axis=1)
-        # test = geolocation_buses(network = eTraGo, session)
-
-        # make a line loading plot
-        eGo.eTraGo.plot_line_loading(eTraGo)
-        eGo.etrago.storage_charges
+    # add country code to bus and geometry (shapely)
+    # eTraGo.buses = eTraGo.buses.drop(['country_code','geometry'], axis=1)
+    # test = geolocation_buses(network = eTraGo, session)
 
     # get eTraGo results form db
     if args['global']['recover']:
+     # TODO add it to class
         eTraGo = etrago_from_oedb(session, args)
 
     # use eTraGo results from ego calculations if true
