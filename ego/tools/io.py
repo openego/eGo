@@ -17,6 +17,10 @@ import pandas as pd
 import numpy as np
 
 
+from etrago.tools.plot import (plot_line_loading, plot_stacked_gen,
+                               curtailment, gen_dist, storage_distribution,
+                               plot_voltage, plot_residual_load)
+
 if not 'READTHEDOCS' in os.environ:
     import pyproj as proj
     import geopandas as gpd
@@ -26,11 +30,8 @@ if not 'READTHEDOCS' in os.environ:
     from sqlalchemy.orm import sessionmaker
     from sqlalchemy.ext.automap import automap_base
     from geoalchemy2 import *
+
     from egoio.tools import db
-    from etrago.tools.plot import (plot_line_loading, plot_stacked_gen,
-                                   curtailment, gen_dist, storage_distribution,
-                                   plot_voltage, plot_residual_load
-                                   )
     from tools.results import (create_etrago_results)
     from tools.storages import (total_storage_charges, etrago_storages)
     from tools.economics import (etrago_operating_costs, etrago_grid_investment,
