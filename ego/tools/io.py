@@ -163,12 +163,12 @@ class eTraGoResults(egoBasic):
         """
         return plot_stacked_gen(network=self.etrago_network, **kwargs)
 
-    def etrago_curtailment(self, **kwargs):
-        """
-        Integrate function from eTraGo.
-        For more information see:
-        """
-        return curtailment(network=self.etrago_network, **kwargs)
+    # def etrago_curtailment(self, **kwargs):
+    #    """
+    #    Integrate function from eTraGo.
+    #    For more information see:
+    #    """
+    #    return curtailment(network=self.etrago_network, **kwargs)
 
     def etrago_gen_dist(self, **kwargs):
         """
