@@ -34,8 +34,7 @@ if __name__ == '__main__':
 
     ego = eGo(jsonpath='scenario_setting.json')
 
-    print(ego.etrago.storage_charges)
-    ego.etrago_network.plot()
+
 """
 
     # add country code to bus and geometry (shapely)
