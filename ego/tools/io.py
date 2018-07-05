@@ -144,7 +144,7 @@ class eTraGoResults(egoBasic):
         self.etrago.generator = create_etrago_results(self.etrago_network,
                                                       self.scn_name)
         # add functions direct
-        #self.etrago_network.etg_line_loading = etg_line_loading
+        #self.etrago_network.etrago_line_loading = etrago_line_loading
 
         pass
 
@@ -214,8 +214,7 @@ class eDisGoResults(egoBasic):
     """
 
     def __init__(self, jsonpath, *args, **kwargs):
-        super(eDisGoResults, self).__init__(self, jsonpath,
-                                            *args, **kwargs)
+        super(eDisGoResults, self).__init__(self, jsonpath, *args, **kwargs)
 
         self.edisgo = pd.DataFrame()
 
