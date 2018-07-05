@@ -64,7 +64,7 @@ class egoBasic(object):
     """
 
     def __init__(self,
-                 jsonpath, * args, **kwargs):  # eTraGo=None
+                 jsonpath, *args, **kwargs):
 
         self.jsonpath = 'scenario_setting.json'
         self.json_file = get_scenario_setting(self.jsonpath)
@@ -90,7 +90,7 @@ class egoBasic(object):
 
         if self.json_file['global']['eDisGo'] is True:
             logger.info('Create eDisGo network')
-            self.edisgo_network = None  # add eDisGo initialisation here
+            self.edisgo_networks = None
 
         pass
 
