@@ -21,7 +21,7 @@ from ego.tools.utilities import define_logging
 logger = define_logging(log_name='ego.log')
 
 from ego.tools.io import eGo
-
+import etrago.etrago as etrago
 # if not 'READTHEDOCS' in os.environ:
 #    from tools.io import eGo
 #from etrago.tools.io import results_to_oedb
