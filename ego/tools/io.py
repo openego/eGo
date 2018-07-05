@@ -17,11 +17,6 @@ import pandas as pd
 import numpy as np
 
 
-from etrago.tools.plot import (plot_line_loading, plot_stacked_gen,
-                               curtailment, gen_dist, storage_distribution,
-                               plot_voltage, plot_residual_load)
-from etrago.appl import etrago
-
 if not 'READTHEDOCS' in os.environ:
     import pyproj as proj
     import geopandas as gpd
@@ -42,6 +37,10 @@ if not 'READTHEDOCS' in os.environ:
     from etrago.appl import etrago
     from egoio.db_tables.model_draft import RenpassGisParameterRegion
     from egoio.db_tables import model_draft, grid
+    from etrago.tools.plot import (plot_line_loading, plot_stacked_gen,
+                                   curtailment, gen_dist, storage_distribution,
+                                   plot_voltage, plot_residual_load)
+    from etrago.appl import etrago
 
 
 class egoBasic(object):
