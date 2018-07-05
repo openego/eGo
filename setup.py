@@ -8,31 +8,33 @@ __license__ = "GNU Affero General Public License Version 3 (AGPL-3.0)"
 __author__ = "wolf_bunke, maltesc"
 
 
-with open("README.rst", "r") as fh:
-    long_description = fh.read()
+def read(fname):
+    return open(os.path.join(os.path.dirname(__file__), fname)).read()
+
 
 setup(name='eGo',
+      version='0.2',
       author='wolfbunke, maltesc',
       author_email='',
       description=("A python package for distribution and transmission"
                    "grid analysis and optimization based eDisGo and eTraGo"),
-      long_description=long_description,
+      long_description=read('README.rst'),
       long_description_content_type="text/x-rst",
-      version='0.2',
       url='https://github.com/openego/eGo',
       license="GNU Affero General Public License Version 3 (AGPL-3.0)",
       packages=find_packages(),
+      package_dir={'ego': 'ego'},
       include_package_data=True,
-      install_requires=['egoio == 0.4.1',
-                        'eDisGo == 0.0.2',
-                        'eTraGo ==  0.6',
-                        'pandas ==0.20.3',
+      install_requires=['egoio==0.4.1',
+                        'eDisGo==0.0.2',
+                        'eTraGo==0.6',
+                        'pandas==0.20.3',
                         'pypsa==0.11.0fork',
-                        'sqlalchemy >= 1.0.15, <= 1.2.0',
-                        'geoalchemy2 >= 0.3.0, <=0.4.0',
-                        'pyproj == 1.9.5.1',
+                        'sqlalchemy>= 1.0.15, <=1.2.0',
+                        'geoalchemy2>= 0.3.0, <=0.4.0',
+                        'pyproj==1.9.5.1',
                         'geopandas==0.3.0',
-                        'matplotlib >= 1.5.3, <=1.5.3',
+                        'matplotlib>= 1.5.3, <=1.5.3',
                         'Rtree==0.8.3',
                         'plotly==2.2.3'
                         ],
@@ -45,12 +47,7 @@ setup(name='eGo',
               'sphinx_rtd_theme',
               'sphinxcontrib-httpdomain']},
       package_data={
-          # If any package contains *.txt or *.rst files, include them:
-          '': ['*.json', '*.csv'],
-          # Include any *.xy files found in the 'ego' package, too:
-          'ego': [
-              '*.json',
-              os.path.join('tools', '*.json'),
-              os.path.join('data', '*.csv'), ]
-      }
+          'ego': [os.path.join('tools/', '*.csv')],
+          'ego.data': ['/*.csv']
+      },
       )

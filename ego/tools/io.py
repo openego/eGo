@@ -16,17 +16,14 @@ logger = logging.getLogger('ego')
 
 if not 'READTHEDOCS' in os.environ:
     import pyproj as proj
+    import geopandas as gpd
+    import pandas as pd
+    import numpy as np
     from shapely.geometry import Polygon, Point, MultiPolygon
-    from sqlalchemy import MetaData, create_engine, func
+    from sqlalchemy import MetaData, create_engine,  and_, func
     from sqlalchemy.orm import sessionmaker
     from sqlalchemy.ext.automap import automap_base
     from geoalchemy2 import *
-    import geopandas as gpd
-    from egoio.db_tables.model_draft import RenpassGisParameterRegion
-    from egoio.db_tables import model_draft, grid
-    from sqlalchemy import and_, func
-    import pandas as pd
-    import numpy as np
     from egoio.tools import db
     from etrago.tools.plot import (plot_line_loading, plot_stacked_gen,
                                    curtailment, gen_dist, storage_distribution,
@@ -37,37 +34,76 @@ if not 'READTHEDOCS' in os.environ:
     from tools.economics import (etrago_operating_costs, etrago_grid_investment,
                                  edisgo_grid_investment, investment_costs,
                                  get_generator_investment)
+    from tools.utilities import get_scenario_setting, get_time_steps
+    from etrago.appl import etrago
+    from egoio.db_tables.model_draft import RenpassGisParameterRegion
+    from egoio.db_tables import model_draft, grid
 
 
-class egoBasic():
-    """eGo basics class.
+class egoBasic(object):
+    """The eGo basic class creates based on your scenario_setting.json file
+    the ...
+
 
     Parameters
     ----------
+    jsonpath : json
+        Path to _scenario_setting.json_ file.
 
-    eTraGo : Network
+    Results
+    -------
+    eTraGo : pandas.DataFrame of PyPSA
         Network container of eTraGo based on PyPSA
-    eDisGo : Network
+    eDisGo : pandas.DataFrame of PyPSA
         Network container of eDisGo based on PyPSA
-    args : dict
+    json_file : dict
         Dict of the scenario_setting.json
+    session : sqlalchemy
+        Database session for the oedb connection.
 
     """
 
-    def __init__(self, eTraGo, *args, **kwargs):
+    def __init__(self,
+                 jsonpath, * args, **kwargs):  # eTraGo=None
 
-        self.eTraGo = eTraGo
-        self.eDisGo = None
-        self.scn_name = kwargs.get('scn_name', 'Status Quo')
+        self.jsonpath = 'scenario_setting.json'
+        self.json_file = get_scenario_setting(self.jsonpath)
+
+        # self.etrago_network = None
+        self.edisgo_network = None
+
+        # Database connection from json_file
+        try:
+            conn = db.connection(section=self.json_file['global']['db'])
+            Session = sessionmaker(bind=conn)
+            self.session = Session()
+            logger.info('Connected to Database')
+        except:
+            logger.error('Failed connection to Database',  exc_info=True)
+
+        # get scn_name
+        self.scn_name = self.json_file['eTraGo']['scn_name']
+
+        if self.json_file['global']['eTraGo'] is True:
+            logger.info('Create eTraGo network')
+            self.etrago_network = etrago(self.json_file['eTraGo'])
+
+        if self.json_file['global']['eDisGo'] is True:
+            logger.info('Create eDisGo network')
+            self.edisgo_network = None  # add eDisGo initialisation here
+
+        pass
 
     def __repr__(self):
 
         r = ('eGoResults is created.')
-        if not self.eTraGo:
+        if not self.etrago_network:
             r += "\nThe results does not incluede eTraGo results"
-        if not self.eDisGo:
+        if not self.edisgo_network:
             r += "\nThe results does not incluede eDisGo results"
         return r
+
+    pass
 
 
 class eTraGoResults(egoBasic):
@@ -92,31 +128,77 @@ class eTraGoResults(egoBasic):
         eTraGo Documentation.
     """
 
-    def __init__(self, eTraGo, *args, **kwargs):
-        super().__init__(eTraGo, *args, **kwargs)
-        self.scn_name = kwargs.get('scn_name', 'Status Quo')
+    def __init__(self, jsonpath, *args, **kwargs):
+        """
+        """
+        super(eTraGoResults, self).__init__(self, jsonpath,
+                                            *args, **kwargs)
+
+        # add selected results to Results container
         self.etrago = pd.DataFrame()
-        self.etrago.gernator = None
-        self.etrago.storage_charges = total_storage_charges(eTraGo)
-        self.etrago.storage_costs = etrago_storages(eTraGo)
-        self.etrago.operating_costs = etrago_operating_costs(eTraGo)
+        self.etrago.generator = pd.DataFrame()
+        self.etrago.storage_charges = total_storage_charges(self.etrago_network)
+        self.etrago.storage_costs = etrago_storages(self.etrago_network)
+        self.etrago.operating_costs = etrago_operating_costs(
+            self.etrago_network)
+        self.etrago.generator = create_etrago_results(self.etrago_network,
+                                                      self.scn_name)
+        # add functions direct
+        #self.etrago_network.etg_line_loading = etg_line_loading
 
-        # methods imported from eTraGo
-        eTraGo.plot_line_loading = plot_line_loading
+        pass
 
-        eTraGo.plot_stacked_gen = plot_stacked_gen
+    # include eTraGo functions and methods
+    def etrago_line_loading(self, **kwargs):
+        """
+        Integrate and use function from eTraGo.
+        For more information see:
+        """
+        return plot_line_loading(network=self.etrago_network, **kwargs)
 
-        eTraGo.curtailment = curtailment
+    def etrago_stacked_gen(self, **kwargs):
+        """
+        Integrate function from eTraGo.
+        For more information see:
+        """
+        return plot_stacked_gen(network=self.etrago_network, **kwargs)
 
-        eTraGo.gen_dist = gen_dist
+    def etrago_curtailment(self, **kwargs):
+        """
+        Integrate function from eTraGo.
+        For more information see:
+        """
+        return curtailment(network=self.etrago_network, **kwargs)
 
-        eTraGo.storage_distribution = storage_distribution
+    def etrago_gen_dist(self, **kwargs):
+        """
+        Integrate function from eTraGo.
+        For more information see:
+        """
+        return gen_dist(network=self.etrago_network, **kwargs)
 
-        eTraGo.plot_voltage = plot_voltage
+    def etrago_storage_distribution(self, **kwargs):
+        """
+        Integrate function from eTraGo.
+        For more information see:
+        """
+        return storage_distribution(network=self.etrago_network, **kwargs)
 
-        eTraGo.plot_residual_load = plot_residual_load
+    def etrago_voltage(self, **kwargs):
+        """
+        Integrate function from eTraGo.
+        For more information see:
+        """
+        return plot_voltage(network=self.etrago_network, **kwargs)
 
-    #self.etrago.gernator = create_etrago_results(eTraGo, scn_name)
+    def etrago_residual_load(self, **kwargs):
+        """
+        Integrate function from eTraGo.
+        For more information see:
+        """
+        return plot_residual_load(network=self.etrago_network, **kwargs)
+
+    # add other methods from eTraGo here
 
 
 class eDisGoResults(egoBasic):
@@ -131,14 +213,16 @@ class eDisGoResults(egoBasic):
 
     """
 
-    def __init__(self, eDisGo):
-        super().__init__(eDisGo)
+    def __init__(self, jsonpath, *args, **kwargs):
+        super(eDisGoResults, self).__init__(self, jsonpath,
+                                            *args, **kwargs)
+
         self.edisgo = pd.DataFrame()
 
-    pass
+        pass
 
 
-class eGo(eTraGoResults):
+class eGo(eTraGoResults, eDisGoResults):
     """Main eGo module which including all results and main functionalities.
 
 
@@ -148,22 +232,24 @@ class eGo(eTraGoResults):
 
     eDisGo : Network
 
-
-
     ToDo
     ----
     - add eDisGo
     """
 
-    def __init__(self, eTraGo, scn_name):
-        super().__init__(eTraGo, scn_name)
+    def __init__(self, jsonpath, *args, **kwargs):
+        super(eGo, self).__init__(self, jsonpath,
+                                  *args, **kwargs)
+
         # super().__init__(eDisGo)
         self.total = pd.DataFrame()
         # add total results here
 
+        # add all ego function
+        pass
+
     # write_results_to_db():
     logging.info('Initialisation of eGo Results')
-    pass
 
 
 def geolocation_buses(network, session):
@@ -197,8 +283,7 @@ def geolocation_buses(network, session):
     # map to classes
     Base = automap_base(metadata=meta)
     Base.prepare()
-    RenpassGISRegion = \
-        Base.classes.renpass_gis_parameter_region
+    RenpassGISRegion = Base.classes.renpass_gis_parameter_region
 
     # Define regions
     region_id = ['DE', 'DK', 'FR', 'BE', 'LU',

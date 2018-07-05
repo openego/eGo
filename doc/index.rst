@@ -1,3 +1,4 @@
+=============================
 Welcome to eGo documentation!
 =============================
 
@@ -12,7 +13,6 @@ Welcome to eGo documentation!
 
 .. toctree::
    :maxdepth: 7
-   :titlesonly:
 
    welcome
    getting_started
