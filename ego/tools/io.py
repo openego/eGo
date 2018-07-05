@@ -20,6 +20,7 @@ import numpy as np
 from etrago.tools.plot import (plot_line_loading, plot_stacked_gen,
                                curtailment, gen_dist, storage_distribution,
                                plot_voltage, plot_residual_load)
+from etrago.appl import etrago
 
 if not 'READTHEDOCS' in os.environ:
     import pyproj as proj
