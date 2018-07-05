@@ -17,10 +17,10 @@ __author__ = "wolf_bunke,maltesc"
 import pandas as pd
 import os
 
-from tools.utilities import define_logging
+from ego.tools.utilities import define_logging
 logger = define_logging(log_name='ego.log')
 
-from tools.io import eGo
+from ego.tools.io import eGo
 
 # if not 'READTHEDOCS' in os.environ:
 #    from tools.io import eGo
