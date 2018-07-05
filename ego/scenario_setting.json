@@ -8,8 +8,6 @@
     "gridversion": "v0.4.2"
   },
   "eTraGo": {
-    "db": "oedb",
-    "gridversion": "v0.4.2",
     "method": "lopf",
     "pf_post_lopf": false,
     "start_snapshot": 1,
