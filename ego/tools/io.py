@@ -13,22 +13,21 @@ import sys
 import os
 import logging
 logger = logging.getLogger('ego')
+import pandas as pd
+import numpy as np
+
 
 if not 'READTHEDOCS' in os.environ:
     import pyproj as proj
     import geopandas as gpd
-    import pandas as pd
-    import numpy as np
+
     from shapely.geometry import Polygon, Point, MultiPolygon
     from sqlalchemy import MetaData, create_engine,  and_, func
     from sqlalchemy.orm import sessionmaker
     from sqlalchemy.ext.automap import automap_base
     from geoalchemy2 import *
+
     from egoio.tools import db
-    from etrago.tools.plot import (plot_line_loading, plot_stacked_gen,
-                                   curtailment, gen_dist, storage_distribution,
-                                   plot_voltage, plot_residual_load
-                                   )
     from tools.results import (create_etrago_results)
     from tools.storages import (total_storage_charges, etrago_storages)
     from tools.economics import (etrago_operating_costs, etrago_grid_investment,
@@ -38,26 +37,32 @@ if not 'READTHEDOCS' in os.environ:
     from etrago.appl import etrago
     from egoio.db_tables.model_draft import RenpassGisParameterRegion
     from egoio.db_tables import model_draft, grid
+    from etrago.tools.plot import (plot_line_loading, plot_stacked_gen,
+                                   curtailment, gen_dist, storage_distribution,
+                                   plot_voltage, plot_residual_load)
+    from etrago.appl import etrago
 
 
 class egoBasic(object):
-    """The eGo basic class creates based on your scenario_setting.json file
-    the ...
+    """The eGo basic class select and creates based on your
+    `scenario_setting.json` file  your definde eTraGo and
+    eDisGo results container.
 
 
     Parameters
     ----------
-    jsonpath : json
+    jsonpath : :obj:`json`
         Path to _scenario_setting.json_ file.
+
 
     Results
     -------
-    eTraGo : pandas.DataFrame of PyPSA
+    eTraGo : :pandas:`pandas.Dataframe<dataframe>` of PyPSA
         Network container of eTraGo based on PyPSA
-    eDisGo : pandas.DataFrame of PyPSA
+    eDisGo : :pandas:`pandas.Dataframe<dataframe>` of PyPSA
         Network container of eDisGo based on PyPSA
     json_file : dict
-        Dict of the scenario_setting.json
+        Dict of the scenario_setting.json file
     session : sqlalchemy
         Database session for the oedb connection.
 
@@ -65,6 +70,7 @@ class egoBasic(object):
 
     def __init__(self,
                  jsonpath, *args, **kwargs):
+
 
         self.jsonpath = 'scenario_setting.json'
         self.json_file = get_scenario_setting(self.jsonpath)
@@ -144,59 +150,60 @@ class eTraGoResults(egoBasic):
         self.etrago.generator = create_etrago_results(self.etrago_network,
                                                       self.scn_name)
         # add functions direct
-        #self.etrago_network.etrago_line_loading = etrago_line_loading
+        # self.etrago_network.etrago_line_loading = etrago_line_loading
 
         pass
 
-    # include eTraGo functions and methods
-    def etrago_line_loading(self, **kwargs):
-        """
-        Integrate and use function from eTraGo.
-        For more information see:
-        """
-        return plot_line_loading(network=self.etrago_network, **kwargs)
+    if not 'READTHEDOCS' in os.environ:
+        # include eTraGo functions and methods
+        def etrago_line_loading(self, **kwargs):
+            """
+            Integrate and use function from eTraGo.
+            For more information see:
+            """
+            return plot_line_loading(network=self.etrago_network, **kwargs)
 
-    def etrago_stacked_gen(self, **kwargs):
-        """
-        Integrate function from eTraGo.
-        For more information see:
-        """
-        return plot_stacked_gen(network=self.etrago_network, **kwargs)
+        def etrago_stacked_gen(self, **kwargs):
+            """
+            Integrate function from eTraGo.
+            For more information see:
+            """
+            return plot_stacked_gen(network=self.etrago_network, **kwargs)
 
-    def etrago_curtailment(self, **kwargs):
-        """
-        Integrate function from eTraGo.
-        For more information see:
-        """
-        return curtailment(network=self.etrago_network, **kwargs)
+        def etrago_curtailment(self, **kwargs):
+            """
+            Integrate function from eTraGo.
+            For more information see:
+            """
+            return curtailment(network=self.etrago_network, **kwargs)
 
-    def etrago_gen_dist(self, **kwargs):
-        """
-        Integrate function from eTraGo.
-        For more information see:
-        """
-        return gen_dist(network=self.etrago_network, **kwargs)
+        def etrago_gen_dist(self, **kwargs):
+            """
+            Integrate function from eTraGo.
+            For more information see:
+            """
+            return gen_dist(network=self.etrago_network, **kwargs)
 
-    def etrago_storage_distribution(self, **kwargs):
-        """
-        Integrate function from eTraGo.
-        For more information see:
-        """
-        return storage_distribution(network=self.etrago_network, **kwargs)
+        def etrago_storage_distribution(self, **kwargs):
+            """
+            Integrate function from eTraGo.
+            For more information see:
+            """
+            return storage_distribution(network=self.etrago_network, **kwargs)
 
-    def etrago_voltage(self, **kwargs):
-        """
-        Integrate function from eTraGo.
-        For more information see:
-        """
-        return plot_voltage(network=self.etrago_network, **kwargs)
+        def etrago_voltage(self, **kwargs):
+            """
+            Integrate function from eTraGo.
+            For more information see:
+            """
+            return plot_voltage(network=self.etrago_network, **kwargs)
 
-    def etrago_residual_load(self, **kwargs):
-        """
-        Integrate function from eTraGo.
-        For more information see:
-        """
-        return plot_residual_load(network=self.etrago_network, **kwargs)
+        def etrago_residual_load(self, **kwargs):
+            """
+            Integrate function from eTraGo.
+            For more information see:
+            """
+            return plot_residual_load(network=self.etrago_network, **kwargs)
 
     # add other methods from eTraGo here
 

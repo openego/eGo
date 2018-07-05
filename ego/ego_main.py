@@ -16,14 +16,16 @@ __author__ = "wolf_bunke,maltesc"
 
 import pandas as pd
 import os
-import logging
 
-if not 'READTHEDOCS' in os.environ:
-    from tools.io import eGo
-    #from etrago.tools.io import results_to_oedb
-    from tools.utilities import define_logging
-
+from ego.tools.utilities import define_logging
 logger = define_logging(log_name='ego.log')
+
+from ego.tools.io import eGo
+
+# if not 'READTHEDOCS' in os.environ:
+#    from tools.io import eGo
+#from etrago.tools.io import results_to_oedb
+
 
 if __name__ == '__main__':
 
@@ -31,9 +33,9 @@ if __name__ == '__main__':
     logger.info('Start calculation')
 
     ego = eGo(jsonpath='scenario_setting.json')
+    ego.etrago_line_loading()
 
-#    print(ego.etrago.storage_charges)
-#    ego.etrago_network.plot()
+
 """
 
     # add country code to bus and geometry (shapely)
