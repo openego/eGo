@@ -21,8 +21,8 @@ import logging
 if not 'READTHEDOCS' in os.environ:
     from tools.io import eGo
     #from etrago.tools.io import results_to_oedb
-    from tools.utilities import define_logging
 
+from tools.utilities import define_logging
 logger = define_logging(log_name='ego.log')
 
 if __name__ == '__main__':
