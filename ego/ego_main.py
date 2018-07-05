@@ -16,14 +16,16 @@ __author__ = "wolf_bunke,maltesc"
 
 import pandas as pd
 import os
-import logging
-
-if not 'READTHEDOCS' in os.environ:
-    from tools.io import eGo
-    #from etrago.tools.io import results_to_oedb
 
 from tools.utilities import define_logging
 logger = define_logging(log_name='ego.log')
+
+from tools.io import eGo
+
+# if not 'READTHEDOCS' in os.environ:
+#    from tools.io import eGo
+#from etrago.tools.io import results_to_oedb
+
 
 if __name__ == '__main__':
 
