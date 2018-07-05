@@ -24,20 +24,21 @@ if not 'READTHEDOCS' in os.environ:
     from sqlalchemy.orm import sessionmaker
     from sqlalchemy.ext.automap import automap_base
     from geoalchemy2 import *
-    from egoio.tools import db
-    from etrago.tools.plot import (plot_line_loading, plot_stacked_gen,
-                                   curtailment, gen_dist, storage_distribution,
-                                   plot_voltage, plot_residual_load
-                                   )
-    from tools.results import (create_etrago_results)
-    from tools.storages import (total_storage_charges, etrago_storages)
-    from tools.economics import (etrago_operating_costs, etrago_grid_investment,
-                                 edisgo_grid_investment, investment_costs,
-                                 get_generator_investment)
-    from tools.utilities import get_scenario_setting, get_time_steps
-    from etrago.appl import etrago
-    from egoio.db_tables.model_draft import RenpassGisParameterRegion
-    from egoio.db_tables import model_draft, grid
+
+from egoio.tools import db
+from etrago.tools.plot import (plot_line_loading, plot_stacked_gen,
+                               curtailment, gen_dist, storage_distribution,
+                               plot_voltage, plot_residual_load
+                               )
+from tools.results import (create_etrago_results)
+from tools.storages import (total_storage_charges, etrago_storages)
+from tools.economics import (etrago_operating_costs, etrago_grid_investment,
+                             edisgo_grid_investment, investment_costs,
+                             get_generator_investment)
+from tools.utilities import get_scenario_setting, get_time_steps
+from etrago.appl import etrago
+from egoio.db_tables.model_draft import RenpassGisParameterRegion
+from egoio.db_tables import model_draft, grid
 
 
 class egoBasic(object):
