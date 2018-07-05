@@ -48,10 +48,12 @@ class egoBasic(object):
     `scenario_setting.json` file  your definde eTraGo and
     eDisGo results container.
 
+
     Parameters
     ----------
     jsonpath : :obj:`json`
         Path to _scenario_setting.json_ file.
+
 
     Results
     -------
@@ -147,17 +149,17 @@ class eTraGoResults(egoBasic):
         self.etrago.generator = create_etrago_results(self.etrago_network,
                                                       self.scn_name)
         # add functions direct
-        #self.etrago_network.etrago_line_loading = etrago_line_loading
+        # self.etrago_network.etrago_line_loading = etrago_line_loading
 
         pass
 
     # include eTraGo functions and methods
-    # def etrago_line_loading(self, **kwargs):
-    #    """
-    #    Integrate and use function from eTraGo.
-    #    For more information see:
-    #    """
-    #    return plot_line_loading(network=self.etrago_network, **kwargs)
+     def etrago_line_loading(self, **kwargs):
+        """
+         Integrate and use function from eTraGo.
+         For more information see:
+         """
+         return plot_line_loading(network=self.etrago_network, **kwargs)
 
     # def etrago_stacked_gen(self, **kwargs):
     #    """
