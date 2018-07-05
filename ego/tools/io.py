@@ -13,18 +13,8 @@ import sys
 import os
 import logging
 logger = logging.getLogger('ego')
-
-if not 'READTHEDOCS' in os.environ:
-    import pyproj as proj
-    import geopandas as gpd
-    import pandas as pd
-    import numpy as np
-    from shapely.geometry import Polygon, Point, MultiPolygon
-    from sqlalchemy import MetaData, create_engine,  and_, func
-    from sqlalchemy.orm import sessionmaker
-    from sqlalchemy.ext.automap import automap_base
-    from geoalchemy2 import *
-
+import pandas as pd
+import numpy as np
 from egoio.tools import db
 from etrago.tools.plot import (plot_line_loading, plot_stacked_gen,
                                curtailment, gen_dist, storage_distribution,
@@ -40,25 +30,35 @@ from etrago.appl import etrago
 from egoio.db_tables.model_draft import RenpassGisParameterRegion
 from egoio.db_tables import model_draft, grid
 
+if not 'READTHEDOCS' in os.environ:
+    import pyproj as proj
+    import geopandas as gpd
+
+    from shapely.geometry import Polygon, Point, MultiPolygon
+    from sqlalchemy import MetaData, create_engine,  and_, func
+    from sqlalchemy.orm import sessionmaker
+    from sqlalchemy.ext.automap import automap_base
+    from geoalchemy2 import *
+
 
 class egoBasic(object):
-    """The eGo basic class creates based on your scenario_setting.json file
-    the ...
-
+    """The eGo basic class select and creates based on your
+    `scenario_setting.json` file  your definde eTraGo and
+    eDisGo results container.
 
     Parameters
     ----------
-    jsonpath : json
+    jsonpath : :obj:`json`
         Path to _scenario_setting.json_ file.
 
     Results
     -------
-    eTraGo : pandas.DataFrame of PyPSA
+    eTraGo : :pandas:`pandas.Dataframe<dataframe>` of PyPSA
         Network container of eTraGo based on PyPSA
-    eDisGo : pandas.DataFrame of PyPSA
+    eDisGo : :pandas:`pandas.Dataframe<dataframe>` of PyPSA
         Network container of eDisGo based on PyPSA
     json_file : dict
-        Dict of the scenario_setting.json
+        Dict of the scenario_setting.json file
     session : sqlalchemy
         Database session for the oedb connection.
 
