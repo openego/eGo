@@ -13,7 +13,7 @@
     "method": "lopf",
     "pf_post_lopf": false,
     "start_snapshot": 1,
-    "end_snapshot" : 5,
+    "end_snapshot" : 2,
     "solver": "gurobi",
     "solver_options":{},
     "scn_name": "NEP 2035",

@@ -1,24 +1,11 @@
-from tools.io import eGo, egoBasic, eDisGoResults, eTraGoResults
-
-
-c = egoBasic(jsonpath='scenario_setting.json')
-
-c.edisgo_network
-c.etrago_network
-
-b = eTraGoResults(jsonpath='scenario_setting.json')
-
-
-b.etrago_network.plot_line_loading
-b.etrago_network.plot_line_loading(b.etrago_network)
-b.etrago.storage_charges
-
+from tools.io import eGo
 
 ego = eGo(jsonpath='scenario_setting.json')
 
-ego.etrago.storage_charges
-ego.etrago_network.buses
-ego
+ego.etrago_line_loading()
+ego.etrago_network.plot()
+
+ego.edisgo_network
 
 
 """
@@ -35,3 +22,14 @@ ego.total # eGo gesamt Ergebnisse über alle Spannungsebenen
 
 
 """
+c = egoBasic(jsonpath='scenario_setting.json')
+
+c.edisgo_network
+c.etrago_network
+
+b = eTraGoResults(jsonpath='scenario_setting.json')
+
+
+b.etrago_network.plot_line_loading
+b.etrago_network.plot_line_loading(b.etrago_network)
+b.etrago.storage_charges
