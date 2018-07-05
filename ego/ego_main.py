@@ -27,14 +27,14 @@ logger = define_logging(log_name='ego.log')
 
 if __name__ == '__main__':
 
-    # import scenario settings **args of eTraGo
+        # import scenario settings **args of eTraGo
     logger.info('Start calculation')
 
     ego = eGo(jsonpath='scenario_setting.json')
 
-    ego.etrago.storage_charges
-    ego.etrago_network.buses
-    ego
+    print(ego.etrago.storage_charges)
+    ego.etrago_network.plot()
+"""
 
     # add country code to bus and geometry (shapely)
     # eTraGo.buses = eTraGo.buses.drop(['country_code','geometry'], axis=1)
@@ -143,3 +143,26 @@ if __name__ == '__main__':
     # possible aggregation of results
 
     # exports: total system costs, plots, csv export files
+
+"""
+"""
+# Using graphviz for Calculation Dokumentation.
+
+from pycallgraph import PyCallGraph
+from pycallgraph.output import GraphvizOutput
+
+def main():
+    graphviz = GraphvizOutput()
+    graphviz.output_file = 'basic.png'
+
+    with PyCallGraph(output=graphviz):
+        logger.info('Start calculation')
+
+        ego = eGo(jsonpath='scenario_setting.json')
+
+        print(ego.etrago.storage_charges)
+        ego.etrago_network.plot()
+
+if __name__ == '__main__':
+    main()
+"""
