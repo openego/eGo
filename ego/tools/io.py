@@ -154,12 +154,12 @@ class eTraGoResults(egoBasic):
         pass
 
     # include eTraGo functions and methods
-     def etrago_line_loading(self, **kwargs):
+    def etrago_line_loading(self, **kwargs):
         """
-         Integrate and use function from eTraGo.
-         For more information see:
-         """
-         return plot_line_loading(network=self.etrago_network, **kwargs)
+        Integrate and use function from eTraGo.
+        For more information see:
+        """
+        return plot_line_loading(network=self.etrago_network, **kwargs)
 
     # def etrago_stacked_gen(self, **kwargs):
     #    """
