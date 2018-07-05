@@ -107,9 +107,9 @@ def igeoplot(network, session, tiles=None, geoloc=None, args=None):
     Define center of map as (lon,lat)
 
     Returns
--------
-
-    HTML Plot page
+    -------
+    plot : html
+        HTML file this .js plot
 
     ToDo
     ----

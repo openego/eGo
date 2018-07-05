@@ -46,7 +46,7 @@ ego\.tools\.specs
     :show-inheritance:
     
 ego\.tools\.storages
------------------
+--------------------
 
 .. automodule:: ego.tools.storages
     :members:

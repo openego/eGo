@@ -58,8 +58,8 @@ def etrago_operating_costs(network):
     --------
 
     - losses
-          - grid losses : amount and costs
-      - use calc_line_losses(network)  from etrago pf_post_lopf
+    - grid losses : amount and costs
+    - use calc_line_losses(network)  from etrago pf_post_lopf
 
     ToDo
     ----

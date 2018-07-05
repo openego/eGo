@@ -7,6 +7,7 @@ import pandas as pd
 import json
 import logging
 
+
 __copyright__ = ("Flensburg University of Applied Sciences, "
                  "Europa-Universität Flensburg, "
                  "Centre for Sustainable Energy Systems")
@@ -42,7 +43,11 @@ def define_logging(log_name='ego.log'):
     return ego_logger
 
 
+logger = define_logging(log_name='ego.log')
+
 # import scenario settings **args
+
+
 def get_scenario_setting(json_file='scenario_setting.json'):
     """ Get and open json file with scenaio settings of eGo
 
@@ -55,16 +60,26 @@ def get_scenario_setting(json_file='scenario_setting.json'):
     """
     path = os.getcwd()
     # add try ego/
-    print(path)
+    print("Your path is:\n", path)
+
     with open(path + '/'+json_file) as f:
         scn_set = json.load(f)
 
     if scn_set['global'].get('eTraGo') == True:
-        print('Use eTraGo settings')
+
+        print('Using and importing eTraGo settings')
+
+        # special case of SH and model_draft
+        # ToDo: check and maybe remove this part
         sh_scen = ["SH Status Quo", "SH NEP 2035", "SH eGo 100"]
         if scn_set['eTraGo'].get('scn_name') in sh_scen and scn_set['eTraGo'].\
-                get('gridversion') == "v0.3.0":
+                get('gridversion') == "v0.4.2":
             scn_set['eTraGo']['gridversion'] = None
+
+    # add global parameter to eTraGo scn_set
+    scn_set['eTraGo'].update({'db': scn_set['global'].get('db')})
+    scn_set['eTraGo'].update(
+        {'gridversion': scn_set['global'].get('gridversion')})
 
     if scn_set['global'].get('eDisGo') == True:
         print('Use eDisGo settings')
