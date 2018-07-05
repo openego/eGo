@@ -162,47 +162,47 @@ class eTraGoResults(egoBasic):
             """
             return plot_line_loading(network=self.etrago_network, **kwargs)
 
-    # def etrago_stacked_gen(self, **kwargs):
-    #    """
-    #    Integrate function from eTraGo.
-    # For more information see:
-    #    """
-    #    return plot_stacked_gen(network=self.etrago_network, **kwargs)
+        def etrago_stacked_gen(self, **kwargs):
+            """
+            Integrate function from eTraGo.
+            For more information see:
+            """
+            return plot_stacked_gen(network=self.etrago_network, **kwargs)
 
-    # def etrago_curtailment(self, **kwargs):
-    #    """
-    #    Integrate function from eTraGo.
-    #    For more information see:
-    #    """
-    #    return curtailment(network=self.etrago_network, **kwargs)
+        def etrago_curtailment(self, **kwargs):
+            """
+            Integrate function from eTraGo.
+            For more information see:
+            """
+            return curtailment(network=self.etrago_network, **kwargs)
 
-    # def etrago_gen_dist(self, **kwargs):
-    #    """
-    #    Integrate function from eTraGo.
-    #    For more information see:
-    #    """
-    #    return gen_dist(network=self.etrago_network, **kwargs)
+        def etrago_gen_dist(self, **kwargs):
+            """
+            Integrate function from eTraGo.
+            For more information see:
+            """
+            return gen_dist(network=self.etrago_network, **kwargs)
 
-    # def etrago_storage_distribution(self, **kwargs):
-    #    """
-    #    Integrate function from eTraGo.
-    #    For more information see:
-    #    """
-    #    return storage_distribution(network=self.etrago_network, **kwargs)
+        def etrago_storage_distribution(self, **kwargs):
+            """
+            Integrate function from eTraGo.
+            For more information see:
+            """
+            return storage_distribution(network=self.etrago_network, **kwargs)
 
-    # def etrago_voltage(self, **kwargs):
-    #    """
-    #    Integrate function from eTraGo.
-    #    For more information see:
-    #    """
-    #    return plot_voltage(network=self.etrago_network, **kwargs)
+        def etrago_voltage(self, **kwargs):
+            """
+            Integrate function from eTraGo.
+            For more information see:
+            """
+            return plot_voltage(network=self.etrago_network, **kwargs)
 
-    # def etrago_residual_load(self, **kwargs):
-    #    """
-    #    Integrate function from eTraGo.
-    #    For more information see:
-    #    """
-    #    return plot_residual_load(network=self.etrago_network, **kwargs)
+        def etrago_residual_load(self, **kwargs):
+            """
+            Integrate function from eTraGo.
+            For more information see:
+            """
+            return plot_residual_load(network=self.etrago_network, **kwargs)
 
     # add other methods from eTraGo here
 
