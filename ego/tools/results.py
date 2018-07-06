@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
-"""
-Module of eGo results with functions for writing, creating and results of eGo
+"""This module include the results functions for analyze and creating results
+based on eTraGo or eDisGo for eGo.
+
 
 ToDo
 ----
- - add eDisGo
  - write results to database
- - integrate plot and other functions ad methods to the class eGo
 
 
 """
