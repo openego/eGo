@@ -4,7 +4,7 @@ Release v0.2.0 (July 13, 2018)
 The second release of the eGo application.
 
 New features have been included in this release. Major changes being the new
-class structure and seperation of methods into the given file structure.
+class structure and separation of methods into the given file structure.
 Moreover the use of the Dataprocessing version 'v0.4.1' and 'v0.4.2' is
 integrate. For eGo and the integration and interaction the app will depend on a
 data version >= 'v0.4.1' in order to ensure the correct data handling.
@@ -34,6 +34,6 @@ Added features
 
 Notes
 -----
-* AS an external user you need to have and account on the
+* As an external user you need to have and account on the
   `openenergy-platform.org/login <http://openenergy-platform.org/login/>`_
 * ...
