@@ -13,7 +13,7 @@ def read(fname):
 
 
 setup(name='eGo',
-      version='0.2',
+      version='0.2dev',
       author='wolfbunke, maltesc',
       author_email='',
       description=("A python package for distribution and transmission"
@@ -36,7 +36,7 @@ setup(name='eGo',
                         'geopandas==0.3.0',
                         'matplotlib>= 1.5.3, <=1.5.3',
                         'Rtree==0.8.3',
-                        'plotly==2.2.3'
+                        'plotly==2.2.3',
                         'oedialect'
                         ],
       dependency_links=[('git+https://git@github.com/openego/PyPSA.git'
@@ -50,7 +50,7 @@ setup(name='eGo',
       package_data={
           'ego': [os.path.join('tools', '*.csv')],
           'ego': [os.path.join('tools', '*.json')],
-          'ego': [os.path.join('', '*.json')]
+          'ego': [os.path.join('', '*.json')],
           'ego.data': ['*.csv']
       },
       )
