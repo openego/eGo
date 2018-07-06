@@ -54,3 +54,37 @@ Change of units from Mega to kilo:
    :file: storage_units.csv
    :delim: ,
    :header-rows: 1
+   
+   
+testing zone 
+============
+
+
+:ref:`apply <pandas:pandas.dataframe.apply>`
+:ref:`apply <pandas:pandas-dataframe-apply>`
+:ref:`apply <pandas:dataframe.apply>`
+:ref:`apply <pandas:DataFrame.apply>`
+:ref:`apply <pandas.DataFrame.apply>`
+:ref:`apply <pandas.dataframe.apply>`
+:meth:`apply <pandas:pandas.dataframe.apply>`
+:meth:`pandas:pandas.dataframe.apply`
+:meth:`pandas.dataframe.apply`
+
+
+Test
+:meth:`apply <pandas:pandas.DataFrame.apply>`
+:meth:`pandas:pandas.DataFrame.apply`
+:meth:`pandas.DataFrame.apply`
+
+
+and
+:meth:`apply <etrago:etrago.appl.etrago>`
+:meth:`etrago:etrago.appl.etrago`
+:meth:`etrago.appl.etrago`
+
+   
+:ref:`etrago <etrago:etrago.appl.etrago>`
+ :ref:`etrago <etrago.appl.etrago>`  
+   
+   
+   
