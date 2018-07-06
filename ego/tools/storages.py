@@ -41,7 +41,7 @@ def total_storage_charges(network):
 
     Parameters
     ----------
-    network : :class:`~.etrago.tools.io.NetworkScenario`
+    network : :etrago:`etrago.tools.io.NetworkScenario`
         eTraGo ``NetworkScenario`` based on PyPSA Network. See also:
         `pypsa.network <https://pypsa.org/doc/components.html#network>`_
 
