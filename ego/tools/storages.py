@@ -79,17 +79,18 @@ def total_storage_charges(network):
 
 
 def etrago_storages(network):
-    """Function for storage and grid expantion costs of eTraGo.
+    """Using function ``total_storage_charges`` for storage and grid expantion
+    costs of eTraGo.
 
     Parameters
     ----------
-
-    network : eTraGo Network
-        eTraGo Network Class based on PyPSA
+    network : :class:`~.etrago.tools.io.NetworkScenario`
+        eTraGo ``NetworkScenario`` based on PyPSA Network. See also:
+        `pypsa.network <https://pypsa.org/doc/components.html#network>`_
 
     Returns
     -------
-    storages : pandas.DataFrame
+    storages : :pandas:`pandas.DataFrame<dataframe>`
         DataFrame with cumulated results of storages
 
     """
