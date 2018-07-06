@@ -412,7 +412,7 @@ texinfo_documents = [
 intersphinx_mapping = {'python': ('https://docs.python.org/3', None),
                        'etrago': ('https://etrago.readthedocs.io/en/latest',
                                   None),
-                       'edisgo': ('http://edisgo.readthedocs.io/en/dev',None),)
+                       'edisgo': ('http://edisgo.readthedocs.io/en/dev',None),
                        'ding0': ('https://dingo.readthedocs.io/en/dev',None),
                        'pypsa': ('https://pypsa.org/doc/',None),
                        }
