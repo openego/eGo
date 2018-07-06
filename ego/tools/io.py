@@ -45,14 +45,14 @@ if not 'READTHEDOCS' in os.environ:
 
 class egoBasic(object):
     """The eGo basic class select and creates based on your
-    `scenario_setting.json` file  your definde eTraGo and
+    ``scenario_setting.json`` file  your definde eTraGo and
     eDisGo results container.
 
 
     Parameters
     ----------
     jsonpath : :obj:`json`
-        Path to _scenario_setting.json_ file.
+        Path to ``scenario_setting.json`` file.
 
 
     Results
@@ -112,15 +112,14 @@ class egoBasic(object):
 
 
 class eTraGoResults(egoBasic):
-    """eTraGo Results
-
-    This module contains all results of eTraGo for eGo.
+    """The ``eTraGoResults`` class create and contains all results
+    of eTraGo  and it's network container for eGo.
 
 
     Examples
     --------
 
-    The module can be used by ``etg = eTraGoResults()``
+    The module can be used by ``network = eTraGoResults()``
 
     See also
     --------
