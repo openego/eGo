@@ -1,10 +1,9 @@
-"""
-Module to collect useful functions for plotting results of eGo
+"""Module which collects useful functions for plotting eTraGo, eDisGo and
+eGo results.
 
 ToDo
-- histogram
-- etc.
-- Implement plotly
+----
+- Implement plotly for iplot
 """
 __copyright__ = "tba"
 __license__ = "tba"
@@ -37,13 +36,13 @@ logger = logging.getLogger('ego')
 
 # plot colore of Carriers
 def carriers_colore():
-    """
-    Return matplotlib colores per pypsa carrier of eTraGo
+    """ Return matplotlib colore set per carrier (technologies of
+    generators) of eTraGo.
 
     Returns
--------
-    :obj:`dict` : List of carriers and matplotlib colores
-
+    -------
+    colors :  :obj:`dict`
+        List of carriers and matplotlib colores
     """
 
     colors = {'biomass': 'green',
@@ -71,6 +70,9 @@ def carriers_colore():
 
 
 def make_all_plots(network):
+    """ Test function which run all ploting functions.
+
+    """
     # make a line loading plot
     plot_line_loading(network)
 
@@ -92,8 +94,7 @@ def make_all_plots(network):
 
 
 def igeoplot(network, session, tiles=None, geoloc=None, args=None):
-    """
-    Plot function in order to display eGo results on leaflet OSM map.
+    """Plot function in order to display eGo results on leaflet OSM map.
     This function will open the results in your main Webbrowser
 
     Parameters
