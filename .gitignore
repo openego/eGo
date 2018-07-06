@@ -9,3 +9,4 @@ ego/noise_values.csv
 .idea/
 noise_values.csv
 *.pkl
+.ipynb_checkpoints
