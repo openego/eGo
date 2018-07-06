@@ -12,7 +12,7 @@ Welcome to eGo documentation!
 
 
 .. toctree::
-   :maxdepth: 7
+   :maxdepth: 3
 
    welcome
    getting_started
