@@ -1,6 +1,6 @@
-############
+============
 The eGo tool
-############
+============
 
 The python package eGo is a toolbox and application which connects the tool eTraGo
 with a Optimization of flexibility options for transmission grids based on PyPSA
@@ -9,7 +9,8 @@ packages are part of the research project `open_eGo <https://openegoproject.word
 
 
 eTraGo
-------
+======
+
 The python package eTraGo provides a optimization of flexibility options for
 transmission grids based on PyPSA.A speciality in this context is that transmission
 grids are described by the 380, 220 and 110 kV in Germany. Conventionally the
@@ -21,7 +22,7 @@ energy storages and grid expansion measures.
 
 
 eDisGo
-------
+======
 The python package eDisGo provides a toolbox for analysis and optimization
 of distribution grids. It is closely related to the python project Ding0 as this
 project is currently the single data source for eDisGo providing synthetic

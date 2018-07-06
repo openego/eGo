@@ -1,0 +1,29 @@
+Release v0.2.0 (July 6, 2018)
++++++++++++++++++++++++++++++
+
+The second release of eGo ...
+and is still under construction and not ready for a normal use.
+
+
+
+
+Added features
+--------------
+
+* clean and restructured eGo classes and functions 
+* add eTraGo features zo eGo
+* add eDisGo ...
+* updated to eTraGo 0.6, eDisGo 0.2 version
+* implemented pep8 style 
+* implemented logging for the hole model
+* moved class eGo from results.py to io.py
+* Using the Restfull-API for the OpenEnergy Database connection, buy using 
+  ego.io v0.4.2. A registration is needed and can be done on 
+  `openenergy-platform.org/login <http://openenergy-platform.org/login/>`_
+* introduce new file storages.py
+* remove functionalities from main to the eGo class
+* ...
+
+Notes
+-----
+* AS an external user you need to 
