@@ -41,7 +41,7 @@ __license__ = "GNU Affero General Public License Version 3 (AGPL-3.0)"
 __author__ = "wolfbunke"
 
 
-def create_etrago_results(network, scn_name):
+def create_etrago_results(network, scn_name):  # rename function
     """
     Create eTraGo results
 
@@ -97,6 +97,27 @@ def create_etrago_results(network, scn_name):
     etrago = etrago.assign(investment_costs=result_invest['carrier_costs'])
 
     return etrago
+
+
+def results_per_voltage(network):
+    """Get eTraGo results per voltage level
+
+    Parameters
+    ----------
+    network : :etrago:`etrago.tools.io.NetworkScenario`
+        eTraGo ``NetworkScenario`` based on PyPSA Network. See also:
+        `pypsa.network <https://pypsa.org/doc/components.html#network>`_
+
+
+    """
+
+
+def ego_results_to_oedb(total):
+    """ ToDo: Funtion to upload results into oedb database
+
+    """
+
+    pass
 
 
 if __name__ == '__main__':
