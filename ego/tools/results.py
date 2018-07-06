@@ -113,7 +113,7 @@ def results_per_voltage(network):
 
 
 def ego_results_to_oedb(total):
-    """ ToDo: Funtion to upload results into oedb database
+    """ ToDo: Function to upload results into oedb database
 
     """
 
