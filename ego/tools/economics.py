@@ -1,5 +1,5 @@
 """
-Module to collect useful functions for economic calculation of eGo which can
+This module collects useful functions for economic calculation of eGo which can
 mainly distinguished in operational and investment costs.
 
 Todo:
