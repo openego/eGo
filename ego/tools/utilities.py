@@ -41,8 +41,8 @@ def define_logging(log_name='ego.log'):
 
     Results
     -------
-    ego_logger : :obj:??
-        Object of logging
+    ego_logger : :class:`logging.basicConfig`.
+        Set up ``ego_logger`` object of package ``logging``
     """
     # ToDo: Logger should be set up more specific
     logging.basicConfig(level=logging.INFO)
