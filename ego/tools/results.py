@@ -104,7 +104,7 @@ def results_per_voltage(network):
 
     Parameters
     ----------
-    network : :class:`etrago.tools.io.NetworkScenario>`
+    network : :class:`etrago.tools.io.NetworkScenario`
         eTraGo ``NetworkScenario`` based on PyPSA Network. See also:
         `pypsa.network <https://pypsa.org/doc/components.html#network>`_
 
