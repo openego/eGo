@@ -29,9 +29,20 @@ def create_etrago_results(network, scn_name):
     """
     Create eTraGo results
 
-    Returns
+    Parameters
+    ----------
+    network : :class:`~.etrago.tools.io.NetworkScenario`
+        eTraGo ``NetworkScenario`` based on PyPSA Network. See also:
+        `pypsa.network <https://pypsa.org/doc/components.html#network>`_
+
+    scn_name : str
+        Name of used scenario
+
+
+    Results
     -------
-    etrago :  :obj:pd.DataFrame
+    etrago :  :pandas:`pandas.DataFrame<dataframe>`
+        Results as DataFrame.
 
     """
 
