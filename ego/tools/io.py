@@ -1,21 +1,31 @@
-"""
-This file contains the eGo main class as well as input & output functions
+# -*- coding: utf-8 -*-
+# Copyright 2016-2018 Europa-Universität Flensburg,
+# Flensburg University of Applied Sciences,
+# Centre for Sustainable Energy Systems
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Affero General Public License as
+# published by the Free Software Foundation; either version 3 of the
+# License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+# File description
+"""This file contains the eGo main class as well as input & output functions
 of eGo in order to build the eGo application container.
-
 """
-
-__copyright__ = ("Europa-Universität Flensburg, "
-                 "Centre for Sustainable Energy Systems")
-__license__ = "GNU Affero General Public License Version 3 (AGPL-3.0)"
-__author__ = "wolf_bunke,maltesc"
-
 import sys
 import os
 import logging
 logger = logging.getLogger('ego')
 import pandas as pd
 import numpy as np
-
 
 if not 'READTHEDOCS' in os.environ:
     import pyproj as proj
@@ -39,8 +49,15 @@ if not 'READTHEDOCS' in os.environ:
     from egoio.db_tables import model_draft, grid
     from etrago.tools.plot import (plot_line_loading, plot_stacked_gen,
                                    curtailment, gen_dist, storage_distribution,
-                                   plot_voltage, plot_residual_load)
+                                   plot_voltage, plot_residual_load,
+                                   plot_line_loading_diff, full_load_hours,
+                                   extension_overlay_network)
     from etrago.appl import etrago
+
+__copyright__ = ("Europa-Universität Flensburg, "
+                 "Centre for Sustainable Energy Systems")
+__license__ = "GNU Affero General Public License Version 3 (AGPL-3.0)"
+__author__ = "wolf_bunke,maltesc"
 
 
 class egoBasic(object):
@@ -202,6 +219,29 @@ class eTraGoResults(egoBasic):
             For more information see:
             """
             return plot_residual_load(network=self.etrago_network, **kwargs)
+
+        def etrago_line_loading_diff(self, networkB, **kwargs):
+            """
+            Integrate function from eTraGo.
+            For more information see:
+            """
+            return plot_line_loading_diff(networkA=self.etrago_network,
+                                          networkB=networkB, **kwargs)
+
+        def etrago_extension_overlay_network(self, **kwargs):
+            """
+            Integrate function from eTraGo.
+            For more information see:
+            """
+            return extension_overlay_network(network=self.etrago_network,
+                                             **kwargs)
+
+        def etrago_full_load_hours(self, **kwargs):
+            """
+            Integrate function from eTraGo.
+            For more information see:
+            """
+            return full_load_hours(network=self.etrago_network, **kwargs)
 
     # add other methods from eTraGo here
 
