@@ -17,6 +17,7 @@ Welcome to eGo documentation!
    welcome
    getting_started
    usage_details
+   theoretical_background
    developer
    whatsnew
    api
