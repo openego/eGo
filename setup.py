@@ -26,7 +26,7 @@ setup(name='eGo',
       package_dir={'ego': 'ego'},
       include_package_data=True,
       install_requires=['egoio==0.4.1',
-                        'eDisGo==0.0.2',
+                        'eDisGo==0.0.3',
                         'eTraGo==0.6',
                         'pandas==0.20.3',
                         'pypsa==0.11.0fork',
@@ -37,6 +37,7 @@ setup(name='eGo',
                         'matplotlib>= 1.5.3, <=1.5.3',
                         'Rtree==0.8.3',
                         'plotly==2.2.3'
+                        'oedialect'
                         ],
       dependency_links=[('git+https://git@github.com/openego/PyPSA.git'
                          '@dev#egg=pypsa-0.11.0fork')
@@ -47,7 +48,9 @@ setup(name='eGo',
               'sphinx_rtd_theme',
               'sphinxcontrib-httpdomain']},
       package_data={
-          'ego': [os.path.join('tools/', '*.csv')],
-          'ego.data': ['/*.csv']
+          'ego': [os.path.join('tools', '*.csv')],
+          'ego': [os.path.join('tools', '*.json')],
+          'ego': [os.path.join('', '*.json')]
+          'ego.data': ['*.csv']
       },
       )
