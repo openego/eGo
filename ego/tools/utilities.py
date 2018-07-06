@@ -37,7 +37,8 @@ def define_logging(log_name='ego.log'):
     Parameters
     ----------
     log_name : str
-        Name of log file. Default: ``ego.log``
+        Name of log file. Default: ``ego.log``.
+
 
     Results
     -------
