@@ -1,3 +1,22 @@
+# -*- coding: utf-8 -*-
+# Copyright 2016-2018 Europa-Universität Flensburg,
+# Flensburg University of Applied Sciences,
+# Centre for Sustainable Energy Systems
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Affero General Public License as
+# published by the Free Software Foundation; either version 3 of the
+# License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+# File description
 """
 This is the application file for the tool eGo. The application eGo calculates
 the distribution and transmission grids of eTraGo and eDisGo.
@@ -6,25 +25,20 @@ the distribution and transmission grids of eTraGo and eDisGo.
     Note, that this Repository is under construction and relies on data provided
     by the OEDB. Currently, only members of the openego project team have access
     to this database.
-
 """
+
+import pandas as pd
+import os
+from ego.tools.utilities import define_logging
+logger = define_logging(log_name='ego.log')
+# if not 'READTHEDOCS' in os.environ:
+from ego.tools.io import eGo
+
 __copyright__ = ("Flensburg University of Applied Sciences, "
                  "Europa-Universität Flensburg, "
                  "Centre for Sustainable Energy Systems")
 __license__ = "GNU Affero General Public License Version 3 (AGPL-3.0)"
 __author__ = "wolf_bunke,maltesc"
-
-import pandas as pd
-import os
-
-from ego.tools.utilities import define_logging
-logger = define_logging(log_name='ego.log')
-
-from ego.tools.io import eGo
-
-# if not 'READTHEDOCS' in os.environ:
-#    from tools.io import eGo
-#from etrago.tools.io import results_to_oedb
 
 
 if __name__ == '__main__':
