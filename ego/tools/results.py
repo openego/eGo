@@ -108,6 +108,24 @@ def results_per_voltage(network):
         eTraGo ``NetworkScenario`` based on PyPSA Network. See also:
         `pypsa.network <https://pypsa.org/doc/components.html#network>`_
 
+    Results
+    -------
+
+    Test
+    :meth:`apply <pandas:pandas.DataFrame.apply>`
+    :meth:`pandas:pandas.DataFrame.apply`
+    :meth:`pandas.DataFrame.apply`
+
+
+    and
+    :meth:`apply <etrago:etrago.appl.etrago>`
+    :meth:`etrago:etrago.appl.etrago`
+    :meth:`etrago.appl.etrago`
+
+
+
+
+
 
     """
 
