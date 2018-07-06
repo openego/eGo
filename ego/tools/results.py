@@ -23,8 +23,6 @@ based on eTraGo or eDisGo for eGo.
 ToDo
 ----
  - write results to database
-
-
 """
 
 import io
