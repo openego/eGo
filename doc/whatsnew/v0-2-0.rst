@@ -14,9 +14,6 @@ is done.
 Please note, that this release is still under construction and not ready
 for a normal use.
 
-
-
-
 Added features
 --------------
 
