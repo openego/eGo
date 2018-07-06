@@ -1,5 +1,4 @@
-"""
-This file contains the eGo functions for studies on storages.
+"""This module contains functions to summarize and studies on storages.
 """
 
 __copyright__ = ("Europa-Universität Flensburg, "
@@ -18,48 +17,48 @@ if not 'READTHEDOCS' in os.environ:
 
 
 def total_storage_charges(network):
-    """
-    Sum up the pysical storage values of the total scenario based on
+    """Sum up the pysical storage values of the total scenario based on
     eTraGo results.
 
     Parameters
     ----------
-    network : eTraGo Network based on pypsa.network
-        PyPSA Network object modified by eTraGo
-
-    plot (bool):
-        Use plot function
-
-
-    Returns
+    network : :class:`~.etrago.tools.io.NetworkScenario`
+        eTraGo ``NetworkScenario`` based on PyPSA Network. See also:
+        `pypsa.network <https://pypsa.org/doc/components.html#network>`_
+    Results
     -------
-
-    results : pandas.DataFrame
-        Return ...
+    results : :pandas:`pandas.DataFrame<dataframe>`
+        Summarize and returns a ``DataFrame`` of the storages optimaziation.
 
     Notes
     -----
-    charge :
+    The ``results`` dataframe inclueds following parameters:
+
+    charge : numeric
          Quantity of charged Energy in MWh over scenario time steps
 
-    discharge :
+    discharge : numeric
         Quantity of discharged Energy in MWh over scenario time steps
 
-    count :
+    count : int
         Number of storage units
 
-    p_nom_o_sum:
+    p_nom_o_sum: numeric
         Sum of optimal installed power capacity
     """
 
-    charge = network.storage_units_t.p[network.storage_units_t.
-                                       p[network.storage_units[network.storage_units.
-                                                               p_nom_opt > 0].index].values > 0.].\
-        groupby(network.storage_units.carrier, axis=1).sum().sum()
+    charge = network.storage_units_t.\
+        p[network.storage_units_t.p[network.
+                                    storage_units[network.storage_units.
+                                                  p_nom_opt > 0].index].
+          values > 0.].groupby(network.storage_units.
+                               carrier, axis=1).sum().sum()
 
     discharge = network.storage_units_t.p[network.storage_units_t.
-                                          p[network.storage_units[network.storage_units.
-                                                                  p_nom_opt > 0].index].values < 0.].\
+                                          p[network.
+                                            storage_units[network.storage_units.
+                                                          p_nom_opt > 0].
+                                            index].values < 0.].\
         groupby(network.storage_units.carrier, axis=1).sum().sum()
 
     count = network.storage_units.bus[network.storage_units.p_nom_opt > 0].\
