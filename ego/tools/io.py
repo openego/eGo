@@ -91,9 +91,6 @@ class egoBasic(object):
         self.jsonpath = 'scenario_setting.json'
         self.json_file = get_scenario_setting(self.jsonpath)
 
-        # self.etrago_network = None
-        self.edisgo_network = None
-
         # Database connection from json_file
         try:
             conn = db.connection(section=self.json_file['global']['db'])
@@ -105,14 +102,6 @@ class egoBasic(object):
 
         # get scn_name
         self.scn_name = self.json_file['eTraGo']['scn_name']
-
-        if self.json_file['global']['eTraGo'] is True:
-            logger.info('Create eTraGo network')
-            self.etrago_network = etrago(self.json_file['eTraGo'])
-
-        if self.json_file['global']['eDisGo'] is True:
-            logger.info('Create eDisGo network')
-            self.edisgo_network = None  # add eDisGo initialisation here
 
         pass
 
@@ -155,6 +144,13 @@ class eTraGoResults(egoBasic):
         super(eTraGoResults, self).__init__(self, jsonpath,
                                             *args, **kwargs)
 
+        self.etrago_network = None
+
+        # create eTraGo NetworkScenario network
+        if self.json_file['global']['eTraGo'] is True:
+            logger.info('Create eTraGo network')
+            self.etrago_network = etrago(self.json_file['eTraGo'])
+
         # add selected results to Results container
         self.etrago = pd.DataFrame()
         self.etrago.generator = pd.DataFrame()
@@ -164,6 +160,7 @@ class eTraGoResults(egoBasic):
             self.etrago_network)
         self.etrago.generator = create_etrago_results(self.etrago_network,
                                                       self.scn_name)
+
         # add functions direct
         # self.etrago_network.etrago_line_loading = etrago_line_loading
 
@@ -261,9 +258,16 @@ class eDisGoResults(egoBasic):
     def __init__(self, jsonpath, *args, **kwargs):
         super(eDisGoResults, self).__init__(self, jsonpath, *args, **kwargs)
 
+        self.edisgo_network = None
         self.edisgo = pd.DataFrame()
 
+        if self.json_file['global']['eDisGo'] is True:
+            logger.info('Create eDisGo network')
+            self.edisgo_network = None  # add eDisGo initialisation here
+
         pass
+
+    pass
 
 
 class eGo(eTraGoResults, eDisGoResults):
