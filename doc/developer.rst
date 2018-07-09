@@ -8,7 +8,7 @@ Developer notes
 
 
 Interface eDisGo for grid and storage costs
--------------------------------------------
+===========================================
 
 
 .. code-block:: python
@@ -40,12 +40,13 @@ eDisGo units
 
 
 Definition of grid expansion costs
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+==================================
 
 `grid expansion costs <http://edisgo.readthedocs.io/en/dev/api/edisgo.grid.html#edisgo.grid.network.Results.grid_expansion_costs>`_
 
 Definition of storage exansion
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+------------------------------
+
 `Attributes according to PyPSA <https://pypsa.org/doc/components.html#storage-unit>`_
 
 Change of units from Mega to kilo:
@@ -54,9 +55,9 @@ Change of units from Mega to kilo:
    :file: storage_units.csv
    :delim: ,
    :header-rows: 1
-   
-   
-testing zone 
+
+
+Testing zone 
 ============
 
 
@@ -86,14 +87,9 @@ Test etrago
 :meth:`etrago.appl.etrago`
 
 ref etrago
-----------   
+----------
 
 :ref:`etrago <etrago:etrago.appl.etrago>`
-:ref:`etrago <etrago.appl.etrago>`  
+:ref:`etrago <etrago.appl.etrago>`
 
-The :meth:` etrago() method <etrago.appl.etrago>` creates your ``network``. 
- 
- 
-   
-   
-   
+The :meth:`etrago() method <etrago.appl.etrago>` creates your ``network``.
