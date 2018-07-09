@@ -153,17 +153,17 @@ class eTraGoResults(egoBasic):
             self.etrago_network = etrago(self.json_file['eTraGo'])
 
         # add selected results to Results container
-        self.etrago = pd.DataFrame()
-        self.etrago.generator = pd.DataFrame()
-        self.etrago.storage_charges = total_storage_charges(self.etrago_network)
-        self.etrago.storage_costs = etrago_storages(self.etrago_network)
-        self.etrago.operating_costs = etrago_operating_costs(
-            self.etrago_network)
-        self.etrago.generator = create_etrago_results(self.etrago_network,
-                                                      self.scn_name)
-
-        # add functions direct
-        # self.etrago_network.etrago_line_loading = etrago_line_loading
+            self.etrago = pd.DataFrame()
+            self.etrago.generator = pd.DataFrame()
+            self.etrago.storage_charges = total_storage_charges(self.etrago_network)
+            self.etrago.storage_costs = etrago_storages(self.etrago_network)
+            self.etrago.operating_costs = etrago_operating_costs(
+                self.etrago_network)
+            self.etrago.generator = create_etrago_results(self.etrago_network,
+                                                          self.scn_name)
+    
+            # add functions direct
+            # self.etrago_network.etrago_line_loading = etrago_line_loading
 
         pass
 

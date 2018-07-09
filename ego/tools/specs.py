@@ -389,8 +389,8 @@ __author__ = "wolf_bunke,maltesc"
 
 def get_etragospecs_direct(session,
                            bus_id,
-                           eTraGo,
-                           args):
+                           etrago_network,
+                           scn_name):
     """
     Reads eTraGo Results from Database and returns an Object of the Interface class ETraGoSpecs
 
@@ -416,28 +416,30 @@ def get_etragospecs_direct(session,
 
     specs_meta_data.update({'TG Bus ID': bus_id})
 
-    ormclass_result_meta = model_draft.__getattribute__('EgoGridPfHvResultMeta')
+#    ormclass_result_meta = model_draft.__getattribute__('EgoGridPfHvResultMeta')
     ormclass_aggr_w = model_draft.__getattribute__(
         'ego_supply_aggr_weather_mview')
+    logger.warning('Weather table taken from model_draft')
     ormclass_source = model_draft.__getattribute__('EgoGridPfHvSource')
+    logger.warning('Source table taken from model_draft')
 
-    snap_idx = eTraGo.snapshots
+    snap_idx = etrago_network.snapshots
 
-    # If the results are beeing recovered, the scn_name cannot be used from Scenario Settings File
-    if args['global']['recover'] == True:
-        result_id = args['global']['result_id']
-        scn_name = session.query(
-            ormclass_result_meta.scn_name
-        ).filter(
-            ormclass_result_meta.result_id == result_id
-        ).scalar(
-        )
-    else:
-        scn_name = args['eTraGo']['scn_name']
-    specs_meta_data.update({'scn_name': scn_name})
-
-    if scn_name == 'SH Status Quo':
-        scn_name = 'Status Quo'
+#    # If the results are beeing recovered, the scn_name cannot be used from Scenario Settings File
+#    if args['global']['recover'] == True:
+#        result_id = args['global']['result_id']
+#        scn_name = session.query(
+#            ormclass_result_meta.scn_name
+#        ).filter(
+#            ormclass_result_meta.result_id == result_id
+#        ).scalar(
+#        )
+#    else:
+#        scn_name = args['eTraGo']['scn_name']
+#    specs_meta_data.update({'scn_name': scn_name})
+#
+#    if scn_name == 'SH Status Quo':
+#        scn_name = 'Status Quo'
 
     # Generators
     t0 = time.perf_counter()
@@ -445,7 +447,7 @@ def get_etragospecs_direct(session,
     weather_dpdnt = ['wind', 'solar']
 
     # DF procesing
-    all_gens_df = eTraGo.generators[eTraGo.generators['bus'] == str(bus_id)]
+    all_gens_df = etrago_network.generators[etrago_network.generators['bus'] == str(bus_id)]
     all_gens_df.reset_index(inplace=True)
     all_gens_df = all_gens_df.rename(columns={'index': 'generator_id'})
     all_gens_df = all_gens_df[['generator_id', 'p_nom', 'p_nom_opt', 'carrier']]
@@ -479,7 +481,7 @@ def get_etragospecs_direct(session,
     for index, row in conv_df.iterrows():
         generator_id = row['generator_id']
         source = row['name']
-        p = eTraGo.generators_t.p[str(generator_id)]
+        p = etrago_network.generators_t.p[str(generator_id)]
         p_norm = p / conv_cap[source]['p_nom']
         conv_dsptch_norm[source] = conv_dsptch_norm[source] + p_norm
 
@@ -535,10 +537,10 @@ def get_etragospecs_direct(session,
             aggr_gens[aggr_gens['ren_id'] == ren_id]['p_nom_aggr'])
         p_nom = float(ren_df[ren_df['generator_id'] == gen_id]['p_nom'])
 
-        p_series = eTraGo.generators_t.p[str(gen_id)]
+        p_series = etrago_network.generators_t.p[str(gen_id)]
         p_norm_tot_series = p_series / p_nom_aggr
 
-        p_max_pu_series = eTraGo.generators_t.p_max_pu[str(gen_id)]
+        p_max_pu_series = etrago_network.generators_t.p_max_pu[str(gen_id)]
         p_max_norm_tot_series = p_max_pu_series * p_nom / p_nom_aggr
 
         p_curt_norm_tot_series = p_max_norm_tot_series - p_norm_tot_series
@@ -550,7 +552,7 @@ def get_etragospecs_direct(session,
     t3 = time.perf_counter()
     performance.update({'Renewable Dispatch and Curt.': t3-t2})
     # Capactiy
-    stor_df = eTraGo.storage_units[eTraGo.storage_units['bus'] == str(bus_id)]
+    stor_df = etrago_network.storage_units[etrago_network.storage_units['bus'] == str(bus_id)]
     stor_df.reset_index(inplace=True)
     stor_df = stor_df.rename(columns={'index': 'storage_id'})
     stor_df = stor_df[[
@@ -598,7 +600,7 @@ def get_etragospecs_direct(session,
         name = row['name']
         stor_id = row['storage_id']
         if name == 'battery':
-            stor_series = eTraGo.storage_units_t.p[str(stor_id)]
+            stor_series = etrago_network.storage_units_t.p[str(stor_id)]
             stor_series_kW = stor_series * 1000
             battery_active_power = battery_active_power + stor_series_kW
 
@@ -634,16 +636,16 @@ def get_etragospecs_direct(session,
     return specs
 
 
-def get_mvgrid_from_bus_id(session,
-                           bus_id):
-    # Mapping
-    ormclass_hvmv_subst = model_draft.__getattribute__('EgoGridHvmvSubstation')
-    subst_id = session.query(
-        ormclass_hvmv_subst.subst_id
-    ).filter(
-        ormclass_hvmv_subst.otg_id == bus_id
-    ).scalar(
-    )
-    # ToDo Check if subst_id is really the mv grid ID
-    # Anyway, this should be adapted by Dingo
-    return subst_id
+#def get_mvgrid_from_bus_id(session,
+#                           bus_id):
+#    # Mapping
+#    ormclass_hvmv_subst = model_draft.__getattribute__('EgoGridHvmvSubstation')
+#    subst_id = session.query(
+#        ormclass_hvmv_subst.subst_id
+#    ).filter(
+#        ormclass_hvmv_subst.otg_id == bus_id
+#    ).scalar(
+#    )
+#    # ToDo Check if subst_id is really the mv grid ID
+#    # Anyway, this should be adapted by Dingo
+#    return subst_id

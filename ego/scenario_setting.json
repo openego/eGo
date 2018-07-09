@@ -25,7 +25,7 @@
     "generator_noise": true,
     "reproduce_noise": false,
     "minimize_loading": false,
-    "network_clustering_kmeans": 20,
+    "network_clustering_kmeans": false,
     "load_cluster": false,
     "network_clustering_ehv": false,
     "snapshot_clustering": false,
@@ -38,6 +38,8 @@
   },
   "eDisGo": {
      "specs": true,
+     "ding0_files": "data/MV_grids/20180705104811",
+     "scn_name": "NEP 2035",
      "comments": "make a comment"
   }
 }
