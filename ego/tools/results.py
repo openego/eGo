@@ -1,19 +1,29 @@
 # -*- coding: utf-8 -*-
-"""
-Module of eGo results with functions for writing, creating and results of eGo
+# Copyright 2016-2018 Europa-Universität Flensburg,
+# Flensburg University of Applied Sciences,
+# Centre for Sustainable Energy Systems
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Affero General Public License as
+# published by the Free Software Foundation; either version 3 of the
+# License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+# File description
+"""This module include the results functions for analyze and creating results
+based on eTraGo or eDisGo for eGo.
 
 ToDo
 ----
- - add eDisGo
  - write results to database
- - integrate plot and other functions ad methods to the class eGo
-
-
 """
-__copyright__ = "Flensburg University of Applied Sciences, Europa-Universität"\
-    "Flensburg, Centre for Sustainable Energy Systems"
-__license__ = "GNU Affero General Public License Version 3 (AGPL-3.0)"
-__author__ = "wolfbunke"
 
 import io
 import os
@@ -25,14 +35,30 @@ if not 'READTHEDOCS' in os.environ:
     import numpy as np
     from tools.economics import get_generator_investment
 
+__copyright__ = "Flensburg University of Applied Sciences, Europa-Universität"\
+    "Flensburg, Centre for Sustainable Energy Systems"
+__license__ = "GNU Affero General Public License Version 3 (AGPL-3.0)"
+__author__ = "wolfbunke"
 
-def create_etrago_results(network, scn_name):
+
+def create_etrago_results(network, scn_name):  # rename function
     """
     Create eTraGo results
 
-    Returns
+    Parameters
+    ----------
+    network : :class:`~.etrago.tools.io.NetworkScenario`
+        eTraGo ``NetworkScenario`` based on PyPSA Network. See also:
+        `pypsa.network <https://pypsa.org/doc/components.html#network>`_
+
+    scn_name : str
+        Name of used scenario
+
+
+    Results
     -------
-    etrago :  :obj:pd.DataFrame
+    etrago :  :pandas:`pandas.DataFrame<dataframe>`
+        Results as DataFrame.
 
     """
 
@@ -71,6 +97,29 @@ def create_etrago_results(network, scn_name):
     etrago = etrago.assign(investment_costs=result_invest['carrier_costs'])
 
     return etrago
+
+
+def results_per_voltage(network):
+    """Get eTraGo results per voltage level
+
+    Parameters
+    ----------
+    network : :class:`etrago.tools.io.NetworkScenario`
+        eTraGo ``NetworkScenario`` based on PyPSA Network. See also:
+        `pypsa.network <https://pypsa.org/doc/components.html#network>`_
+
+    Results
+    -------
+
+    """
+
+
+def ego_results_to_oedb(total):
+    """ ToDo: Function to upload results into oedb database
+
+    """
+
+    pass
 
 
 if __name__ == '__main__':

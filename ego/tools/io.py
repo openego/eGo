@@ -1,21 +1,31 @@
-"""
-This file contains the eGo main class as well as input & output functions
+# -*- coding: utf-8 -*-
+# Copyright 2016-2018 Europa-Universität Flensburg,
+# Flensburg University of Applied Sciences,
+# Centre for Sustainable Energy Systems
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Affero General Public License as
+# published by the Free Software Foundation; either version 3 of the
+# License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+# File description
+"""This file contains the eGo main class as well as input & output functions
 of eGo in order to build the eGo application container.
-
 """
-
-__copyright__ = ("Europa-Universität Flensburg, "
-                 "Centre for Sustainable Energy Systems")
-__license__ = "GNU Affero General Public License Version 3 (AGPL-3.0)"
-__author__ = "wolf_bunke,maltesc"
-
 import sys
 import os
 import logging
 logger = logging.getLogger('ego')
 import pandas as pd
 import numpy as np
-
 
 if not 'READTHEDOCS' in os.environ:
     import pyproj as proj
@@ -39,20 +49,27 @@ if not 'READTHEDOCS' in os.environ:
     from egoio.db_tables import model_draft, grid
     from etrago.tools.plot import (plot_line_loading, plot_stacked_gen,
                                    curtailment, gen_dist, storage_distribution,
-                                   plot_voltage, plot_residual_load)
+                                   plot_voltage, plot_residual_load,
+                                   plot_line_loading_diff, full_load_hours,
+                                   extension_overlay_network)
     from etrago.appl import etrago
+
+__copyright__ = ("Europa-Universität Flensburg, "
+                 "Centre for Sustainable Energy Systems")
+__license__ = "GNU Affero General Public License Version 3 (AGPL-3.0)"
+__author__ = "wolf_bunke,maltesc"
 
 
 class egoBasic(object):
     """The eGo basic class select and creates based on your
-    `scenario_setting.json` file  your definde eTraGo and
+    ``scenario_setting.json`` file  your definde eTraGo and
     eDisGo results container.
 
 
     Parameters
     ----------
     jsonpath : :obj:`json`
-        Path to _scenario_setting.json_ file.
+        Path to ``scenario_setting.json`` file.
 
 
     Results
@@ -75,9 +92,6 @@ class egoBasic(object):
         self.jsonpath = 'scenario_setting.json'
         self.json_file = get_scenario_setting(self.jsonpath)
 
-        # self.etrago_network = None
-        self.edisgo_network = None
-
         # Database connection from json_file
         try:
             conn = db.connection(section=self.json_file['global']['db'])
@@ -89,14 +103,6 @@ class egoBasic(object):
 
         # get scn_name
         self.scn_name = self.json_file['eTraGo']['scn_name']
-
-        if self.json_file['global']['eTraGo'] is True:
-            logger.info('Create eTraGo network')
-            self.etrago_network = etrago(self.json_file['eTraGo'])
-
-        if self.json_file['global']['eDisGo'] is True:
-            logger.info('Create eDisGo network')
-            self.edisgo_networks = None
 
         pass
 
@@ -113,15 +119,14 @@ class egoBasic(object):
 
 
 class eTraGoResults(egoBasic):
-    """eTraGo Results
-
-    This module contains all results of eTraGo for eGo.
+    """The ``eTraGoResults`` class create and contains all results
+    of eTraGo  and it's network container for eGo.
 
 
     Examples
     --------
 
-    The module can be used by ``etg = eTraGoResults()``
+    The module can be used by ``network = eTraGoResults()``
 
     See also
     --------
@@ -140,6 +145,13 @@ class eTraGoResults(egoBasic):
         super(eTraGoResults, self).__init__(self, jsonpath,
                                             *args, **kwargs)
 
+        self.etrago_network = None
+
+        # create eTraGo NetworkScenario network
+        if self.json_file['global']['eTraGo'] is True:
+            logger.info('Create eTraGo network')
+            self.etrago_network = etrago(self.json_file['eTraGo'])
+
         # add selected results to Results container
         self.etrago = pd.DataFrame()
         self.etrago.generator = pd.DataFrame()
@@ -149,6 +161,7 @@ class eTraGoResults(egoBasic):
             self.etrago_network)
         self.etrago.generator = create_etrago_results(self.etrago_network,
                                                       self.scn_name)
+
         # add functions direct
         # self.etrago_network.etrago_line_loading = etrago_line_loading
 
@@ -205,6 +218,29 @@ class eTraGoResults(egoBasic):
             """
             return plot_residual_load(network=self.etrago_network, **kwargs)
 
+        def etrago_line_loading_diff(self, networkB, **kwargs):
+            """
+            Integrate function from eTraGo.
+            For more information see:
+            """
+            return plot_line_loading_diff(networkA=self.etrago_network,
+                                          networkB=networkB, **kwargs)
+
+        def etrago_extension_overlay_network(self, **kwargs):
+            """
+            Integrate function from eTraGo.
+            For more information see:
+            """
+            return extension_overlay_network(network=self.etrago_network,
+                                             **kwargs)
+
+        def etrago_full_load_hours(self, **kwargs):
+            """
+            Integrate function from eTraGo.
+            For more information see:
+            """
+            return full_load_hours(network=self.etrago_network, **kwargs)
+
     # add other methods from eTraGo here
 
 
@@ -223,9 +259,16 @@ class eDisGoResults(egoBasic):
     def __init__(self, jsonpath, *args, **kwargs):
         super(eDisGoResults, self).__init__(self, jsonpath, *args, **kwargs)
 
+        self.edisgo_network = None
         self.edisgo = pd.DataFrame()
 
+        if self.json_file['global']['eDisGo'] is True:
+            logger.info('Create eDisGo network')
+            self.edisgo_network = None  # add eDisGo initialisation here
+
         pass
+
+    pass
 
 
 class eGo(eTraGoResults, eDisGoResults):

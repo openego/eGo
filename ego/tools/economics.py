@@ -1,12 +1,30 @@
-"""
-Module to collect useful functions for economic calculation of eGo which can
+# -*- coding: utf-8 -*-
+# Copyright 2016-2018 Europa-Universität Flensburg,
+# Flensburg University of Applied Sciences,
+# Centre for Sustainable Energy Systems
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Affero General Public License as
+# published by the Free Software Foundation; either version 3 of the
+# License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+# File description
+"""This module collects useful functions for economic calculation of eGo which can
 mainly distinguished in operational and investment costs.
 
 Todo:
  1) Investment costs of eTrago and eDisGo
  2) Total system costs
-
 """
+
 import io
 import os
 import logging
@@ -16,8 +34,14 @@ if not 'READTHEDOCS' in os.environ:
     import pandas as pd
     import numpy as np
 
+__copyright__ = "Flensburg University of Applied Sciences, Europa-Universität"\
+    "Flensburg, Centre for Sustainable Energy Systems"
+__license__ = "GNU Affero General Public License Version 3 (AGPL-3.0)"
+__author__ = "wolfbunke"
 
 # calculate annuity per time step or periode
+
+
 def annuity_per_period(capex, n, wacc, t):
     """
     Parameters
