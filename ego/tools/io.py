@@ -72,7 +72,7 @@ class egoBasic(object):
         Path to ``scenario_setting.json`` file.
 
 
-    Results
+    Returns
     -------
     eTraGo : :pandas:`pandas.Dataframe<dataframe>` of PyPSA
         Network container of eTraGo based on PyPSA
