@@ -66,6 +66,27 @@ def annuity_per_period(capex, n, wacc, t):
     return capex * (wacc * (1 + wacc) ** n) / ((1 + wacc) ** n - 1)
 
 
+def edisgo_convert_capital_costs():
+    """
+
+    Parameters
+    ----------
+
+    grid_components : :obj:dict
+        Dictionary of ding0 grid components which are extendable
+        (Name, investment_cost, lifetime)
+    json_file : :obj:dict
+        Dictionary of the ``scenario_setting.json`` file
+
+
+    """
+    # eTraGo calculation in
+    # https://github.com/openego/eTraGo/blob/dev/etrago/tools/utilities.py#L651
+    # def convert_capital_costs(network, start_snapshot, end_snapshot,
+    #                           p=0.05, T=40):
+    # Define function
+
+
 def etrago_operating_costs(network):
     """ Function to get all operating costs of eTraGo.
 
@@ -124,7 +145,7 @@ def etrago_operating_costs(network):
     return power_price
 
 
-def etrago_grid_investment(network):
+def etrago_grid_investment(network, json_file):
     """ Function to get grid expantion costs form etrago
 
     Parameters
@@ -132,6 +153,9 @@ def etrago_grid_investment(network):
 
     network : Network
         eTraGo
+    json_file : :obj:dict
+        Dictionary of the ``scenario_setting.json`` file
+
 
     Returns
     -------
@@ -140,6 +164,14 @@ def etrago_grid_investment(network):
     ----
     - add new release of etrago 0.7
     """
+
+    # check settings for extendable
+    if 'network' not in ego.json_file['eTraGo']['extendable']:
+        print("The optimizition was not using parameter 'extendable': network")
+        print("No grid expantion costs form etrago")
+
+    # capital_cost
+    # check if extendable == true
 
     pass
 
