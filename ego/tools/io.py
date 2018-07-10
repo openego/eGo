@@ -72,16 +72,16 @@ class egoBasic(object):
         Path to ``scenario_setting.json`` file.
 
 
-    Results
+    Returns
     -------
     eTraGo : :pandas:`pandas.Dataframe<dataframe>` of PyPSA
         Network container of eTraGo based on PyPSA
     eDisGo : :pandas:`pandas.Dataframe<dataframe>` of PyPSA
         Network container of eDisGo based on PyPSA
-    json_file : dict
-        Dict of the scenario_setting.json file
-    session : sqlalchemy
-        Database session for the oedb connection.
+    json_file : :obj:dict
+        Dictionary of the ``scenario_setting.json`` file
+    session : :sqlalchemy:`sqlalchemy.orm.session.Session<orm/session_basics.html>`
+        SQLAlchemy session to the OEDB
 
     """
 
@@ -160,6 +160,8 @@ class eTraGoResults(egoBasic):
             self.etrago_network)
         self.etrago.generator = create_etrago_results(self.etrago_network,
                                                       self.scn_name)
+        self.etrago.grid_costs = etrago_grid_investment(self.etrago_network,
+                                                        self.json_file)
 
         # add functions direct
         # self.etrago_network.etrago_line_loading = etrago_line_loading
@@ -310,8 +312,8 @@ def geolocation_buses(network, session):
     ----------
     network : Network
         eTraGo Network
-    session : sqlalchemy
-        session to oedb
+    session : :sqlalchemy:`sqlalchemy.orm.session.Session<orm/session_basics.html>`
+        SQLAlchemy session to the OEDB
 
     ToDo
     ----
@@ -370,7 +372,7 @@ def geolocation_buses(network, session):
     return network
 
 
-def results_to_excel(results):
+def results_to_excel(ego):
     """
     Wirte results to excel
 
@@ -381,10 +383,10 @@ def results_to_excel(results):
     writer = pd.ExcelWriter('open_ego_results.xlsx', engine='xlsxwriter')
 
     # write results of installed Capacity by fuels
-    results.total.to_excel(writer, index=False, sheet_name='Total Calculation')
+    ego.total.to_excel(writer, index=False, sheet_name='Total Calculation')
 
     # write orgininal data in second sheet
-    results.to_excel(writer, index=True, sheet_name='Results by carriers')
+    ego.to_excel(writer, index=True, sheet_name='Results by carriers')
     # add plots
 
     # Close the Pandas Excel writer and output the Excel file.
@@ -398,8 +400,8 @@ def etrago_from_oedb(session, args):
 
     Parameters
     ----------
-    session (obj):
-        sqlalchemy session to the OEDB
+    session : :sqlalchemy:`sqlalchemy.orm.session.Session<orm/session_basics.html>`
+        SQLAlchemy session to the OEDB
 
     args (dict):
         args from eGo scenario_setting.json
@@ -414,7 +416,7 @@ def etrago_from_oedb(session, args):
     # modules from model_draft
     from egoio.db_tables.model_draft import EgoGridPfHvSource as Source,\
         EgoGridPfHvTempResolution as TempResolution
-    from etrago.tools.io import loadcfg
+    from etrago.tools.io import load_config_file
     from importlib import import_module
     import pypsa
     import re
@@ -438,6 +440,18 @@ def etrago_from_oedb(session, args):
     def dataframe_results(name, session, result_id, ormclass):
         """
         Function to get pandas DataFrames by the result_id
+
+
+
+        Parameters
+        ----------
+        session : :sqlalchemy:`sqlalchemy.orm.session.Session<orm/session_basics.html>`
+            SQLAlchemy session to the OEDB
+
+
+
+
+
         """
 
         query = session.query(ormclass).filter(ormclass.result_id == result_id)
@@ -457,6 +471,11 @@ def etrago_from_oedb(session, args):
     def series_results(name, column, session, meta_args, result_id, ormclass):
         """
         Function to get Time Series as pandas DataFrames by the result_id
+
+        Parameters
+        ----------
+        session : :sqlalchemy:`sqlalchemy.orm.session.Session<orm/session_basics.html>`
+            SQLAlchemy session to the OEDB
 
         ToDo
         ----
@@ -495,7 +514,7 @@ def etrago_from_oedb(session, args):
     # create config for results
     path = os.getcwd()
     # add meta_args with args of results
-    config = loadcfg(path+'/tools/config.json')['results']
+    config = load_config_file(path+'/tools/config.json')['results']
 
     # map and Database settings of etrago_from_oedb()
     _prefix = 'EgoGridPfHvResult'

@@ -45,7 +45,10 @@ def define_logging(log_name='ego.log'):
     ego_logger : :class:`logging.basicConfig`.
         Set up ``ego_logger`` object of package ``logging``
     """
+
     # ToDo: Logger should be set up more specific
+    #       add pypsa and other logger INFO to ego.log
+
     logging.basicConfig(level=logging.INFO)
     logger = logging.getLogger(__name__)
 
@@ -119,13 +122,13 @@ def get_scenario_setting(json_file='scenario_setting.json'):
     return scn_set
 
 
-def get_time_steps(scn_set):
+def get_time_steps(json_file):
     """ Get time step of calculation by scenario settings.
 
     Parameters
     ----------
-    scn_set : dict
-        dict of ``scenario_setting.json``
+    json_file : :obj:dict
+        Dictionary of the ``scenario_setting.json`` file
 
     Returns
     -------
@@ -133,8 +136,8 @@ def get_time_steps(scn_set):
         Number of timesteps of the calculation.
     """
 
-    end = args['eTraGo'].get('end_snapshot')
-    start = args['eTraGo'].get('start_snapshot')
+    end = json_file['eTraGo'].get('end_snapshot')
+    start = json_file['eTraGo'].get('start_snapshot')
     time_step = end - start
 
     return time_step
