@@ -169,8 +169,9 @@ def etrago_grid_investment(network, json_file):
     -------
 
         .. code-block:: python
-          ego = eGo(jsonpath='scenario_setting.json'
-          ego.etrago.grid_costs
+
+           ego = eGo(jsonpath='scenario_setting.json'
+           ego.etrago.grid_costs
 
     +-----+---------------------+----------------+-----------+
     |v_nom| number_of_expansion | s_nom_expansion| grid_costs|
