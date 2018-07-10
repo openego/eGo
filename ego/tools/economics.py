@@ -33,6 +33,7 @@ logger = logging.getLogger('ego')
 if not 'READTHEDOCS' in os.environ:
     import pandas as pd
     import numpy as np
+    from tools.utilities import get_time_steps
 
 __copyright__ = "Flensburg University of Applied Sciences, Europa-Universität"\
     "Flensburg, Centre for Sustainable Energy Systems"
@@ -166,14 +167,40 @@ def etrago_grid_investment(network, json_file):
     """
 
     # check settings for extendable
-    if 'network' not in ego.json_file['eTraGo']['extendable']:
+    if 'network' not in json_file['eTraGo']['extendable']:
         print("The optimizition was not using parameter 'extendable': network")
         print("No grid expantion costs form etrago")
 
-    # capital_cost
-    # check if extendable == true
+    if 'network' in json_file['eTraGo']['extendable']:
 
-    pass
+        lines = network.lines[['v_nom', 'capital_cost', 's_nom',
+                               's_nom_min', 's_nom_opt']]
+
+        lines['s_nom_expansion'] = lines.s_nom_opt.subtract(
+            lines.s_nom, axis='index')
+        lines['grid_costs'] = lines.s_nom_expansion.multiply(
+            lines.capital_cost, axis='index')
+        lines['number_of_expansion'] = lines.s_nom_expansion > 0.0
+        lines['time_step'] = get_time_steps(json_file)
+
+        # print(get_time_steps(json_file))
+
+        #network.lines[['v_nom','capital_cost','s_nom',  's_nom_min','s_nom_opt']]
+
+        # eTraGo Function:
+        # https://github.com/openego/eTraGo/blob/dev/etrago/tools/utilities.py#L651
+        # Definition https://pypsa.org/doc/components.html#line
+
+        # capital_cost
+        # s_nom_extendable
+        # check if extendable == true
+
+    return lines[['v_nom', 'number_of_expansion', 's_nom_expansion',
+                  'grid_costs']].groupby('v_nom').sum()
+
+    # ToDo: add  .agg({'number_of_expansion':lambda x: x.count(),
+    #  's_nom_expansion': np.sum,
+    #  'grid_costs': np.sum})  <-  time_step
 
 
 def edisgo_grid_investment(network):
