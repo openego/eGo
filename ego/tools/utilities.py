@@ -45,7 +45,10 @@ def define_logging(log_name='ego.log'):
     ego_logger : :class:`logging.basicConfig`.
         Set up ``ego_logger`` object of package ``logging``
     """
+
     # ToDo: Logger should be set up more specific
+    #       add pypsa and other logger INFO to ego.log
+
     logging.basicConfig(level=logging.INFO)
     logger = logging.getLogger(__name__)
 
