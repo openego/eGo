@@ -157,21 +157,20 @@ def etrago_grid_investment(network, json_file):
     json_file : :obj:dict
         Dictionary of the ``scenario_setting.json`` file
 
-
     Returns
     -------
     lines: :pandas:`pandas.Dataframe<dataframe>`
         Dataframe with ``number_of_expansion``, ``s_nom_expansion`` and
         ``grid_costs`` per calculated time steps
 
-
     Example
     -------
 
         .. code-block:: python
 
-           ego = eGo(jsonpath='scenario_setting.json'
-           ego.etrago.grid_costs
+           >>> from ego.tools.io import eGo
+           >>> ego = eGo(jsonpath='scenario_setting.json'
+           >>> ego.etrago.grid_costs
 
     +-----+---------------------+----------------+-----------+
     |v_nom| number_of_expansion | s_nom_expansion| grid_costs|
@@ -180,8 +179,6 @@ def etrago_grid_investment(network, json_file):
     +-----+---------------------+----------------+-----------+
     | 220 |            0.0      |      0.0       |     0.0   |
     +-----+---------------------+----------------+-----------+
-
-
     """
 
     # check settings for extendable
