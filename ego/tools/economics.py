@@ -178,6 +178,8 @@ def etrago_grid_investment(network, json_file):
     +=====+=====================+================+===========+
     | 380 |           27.0      | 12678.47943    |31514.1305 |
     +-----+---------------------+----------------+-----------+
+    | 220 |            0.0      |      0.0       |     0.0   |
+    +-----+---------------------+----------------+-----------+
 
 
     """
@@ -185,7 +187,7 @@ def etrago_grid_investment(network, json_file):
     # check settings for extendable
     if 'network' not in json_file['eTraGo']['extendable']:
         print("The optimizition was not using parameter 'extendable': network")
-        print("No grid expantion costs form etrago")
+        print("No grid expantion costs from etrago")
 
     if 'network' in json_file['eTraGo']['extendable']:
 
@@ -211,12 +213,13 @@ def etrago_grid_investment(network, json_file):
         # s_nom_extendable
         # check if extendable == true
 
-    return lines[['v_nom', 'number_of_expansion', 's_nom_expansion',
-                  'grid_costs']].groupby('v_nom').sum()
+        return lines[['v_nom', 'number_of_expansion', 's_nom_expansion',
+                      'grid_costs']].groupby('v_nom').sum()
 
     # ToDo: add  .agg({'number_of_expansion':lambda x: x.count(),
     #  's_nom_expansion': np.sum,
     #  'grid_costs': np.sum})  <-  time_step
+    pass
 
 
 def edisgo_grid_investment(network):
