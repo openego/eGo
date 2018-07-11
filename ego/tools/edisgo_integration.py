@@ -121,8 +121,6 @@ class EDisGoNetworks:
                 self._etrago_network,
                 self._scn_name)    
         
-        return specs
-                            
         ding0_filepath = (
                 self._ding0_files 
                 + '/ding0_grids__' 
@@ -151,17 +149,20 @@ class EDisGoNetworks:
             edisgo_grid.import_generators(
                     generator_scenario=self._generator_scn)
                   
-        edisgo_grid.network.timeseries = TimeSeriesControl(
-                timeseries_generation_fluctuating=specs['potential_abs'] ,
-                timeseries_generation_dispatchable=specs['conv_dispatch_abs'],
+        edisgo_grid.network.timeseries = TimeSeriesControl( 
+                # Here, I use only normalized values from specs
+                timeseries_generation_fluctuating=specs['potential'],
+                timeseries_generation_dispatchable=specs['conv_dispatch'],
                 timeseries_load='demandlib',
                 weather_cell_ids=edisgo_grid.network.mv_grid._weather_cells,
                 config_data=edisgo_grid.network.config,
-                timeindex=specs['conv_dispatch_abs'].index).timeseries
+                timeindex=specs['conv_dispatch'].index).timeseries
                   
-        edisgo_grid.curtail(curtailment_methodology='curtail_all',
-                            timeseries_curtailment=specs['curtailment_abs'])        
-
+#        edisgo_grid.curtail(curtailment_methodology='curtail_all',
+#                            # Here, I use absolute values
+#                            timeseries_curtailment=specs['curtailment_abs']) 
+        # Think about the other curtailment functions!!!!
+        
         edisgo_grid.network.pypsa = None
         
         edisgo_grid.analyze()
@@ -238,32 +239,6 @@ test = EDisGoNetworks(
         json_file=ego.json_file, 
         etrago_network=ego.etrago_network)   
 
-specs = test.run_edisgo(mv_grid_id=1729)
-
-#specs['dispatch']
-#specs['dispatch_abs']
-#specs['potential']
-#specs['potential_abs']
-#specs['curtailment']
-#specs['curtailment_abs']
-#
-#specs['conv_dispatch']
-#specs['conv_dispatch_abs']
-
-#specs['ren_feedin']
-#specs['ren_curtailment']
-#specs['ren_curtailment_abs']
+test.run_edisgo(mv_grid_id=1729)
 
 
-
-
-#        
-#test._edisgo_args
-#ed = test.run_edisgo(mv_grid_id=1729)
-#
-#ed.network.results.equipment_changes
-
-#test._session
-#t = test.get_mv_grid_from_bus_id(25214)
-#test.get_bus_id_from_mv_grid(168)
-#print(t)
