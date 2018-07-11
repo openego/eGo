@@ -21,7 +21,7 @@
     "lpfile":  false,
     "results": false,
     "export": false,
-    "extendable": "['storages']",
+    "extendable": null,
     "generator_noise": true,
     "reproduce_noise": false,
     "minimize_loading": false,
@@ -32,9 +32,9 @@
     "parallelisation": false,
     "skip_snapshots": false,
     "line_grouping": false,
-    "branch_capacity_factor": 1,
+    "branch_capacity_factor": 0.8,
     "load_shedding": true,
-    "comments": null
+    "comments": "eDisGo integration"
   },
   "eDisGo": {
      "specs": true,

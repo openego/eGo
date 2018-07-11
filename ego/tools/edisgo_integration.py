@@ -15,11 +15,18 @@ __author__ = "wolf_bunke,maltesc"
 ## Project Packages
 from egoio.db_tables import model_draft, grid
 from egoio.tools import db
-from edisgo.grid.network import Results
+from edisgo.grid.network import Results, TimeSeriesControl
 from edisgo.tools.edisgo_run import (
         run_edisgo_basic
         )
-from ego.tools.specs import (get_etragospecs_direct)
+from ego.tools.specs import (
+        get_etragospecs_direct,
+#        get_feedin_fluctuating,
+#        get_curtailment
+        )
+from ego.tools.mv_cluster import (
+        analyze_attributes,
+        cluster_mv_grids)
 
 ## Other Packages
 import os
@@ -32,7 +39,7 @@ logger = logging.getLogger(__name__)
 
 class EDisGoNetworks:
     """
-    Represents multiple eDisGo networks
+    Represents multiple eDisGo networks.
 
     """
 
@@ -52,10 +59,10 @@ class EDisGoNetworks:
         
         if self._scn_name == 'Status Quo':
             self._generator_scn = None
-        if self._scn_name == 'NEP 2035':
+        elif self._scn_name == 'NEP 2035':
             self._generator_scn = 'nep2035'
         elif self._scn_name == 'eGo100':
-            raise NotImplementedError
+            self._generator_scn = 'ego100'
         
         if self._grid_version is not None:
             self._versioned = True 
@@ -64,6 +71,27 @@ class EDisGoNetworks:
         
         self._etrago_network = kwargs.get('etrago_network', None)
 
+       
+    def analyze_cluster_attributes(self):
+        """
+        Analyses the attributes wind and solar capacity and farthest node
+        for clustering.
+        """
+        analyze_attributes(self._ding0_files)
+        
+    def cluster_mv_grids(self, no_grids):
+        """
+        Clusters the MV grids based on the attributes
+
+        """        
+        attributes_path = self._ding0_files + '/attributes.csv'
+        
+        if not os.path.isfile(attributes_path):
+            logger.info('Attributes file is missing')
+            logger.info('Attributes will be calculated')
+            self.analyze_cluster_attributes()
+
+        self._cluster = cluster_mv_grids(self._ding0_files, no_grids)
         
     def check_available_mv_grids(self):
        
@@ -80,10 +108,11 @@ class EDisGoNetworks:
         
     def run_edisgo(self, mv_grid_id):
         """
-        Runs eDisGo with the desired settings 
+        Runs eDisGo with the desired settings. 
         
         """      
  
+        logger.info('Calculating interface values')
         bus_id = self.get_bus_id_from_mv_grid(mv_grid_id)
         
         specs = get_etragospecs_direct(
@@ -93,38 +122,51 @@ class EDisGoNetworks:
                 self._scn_name)    
         
         return specs
-        
-#        ding0_filepath = (
-#                self._ding0_files 
-#                + '/ding0_grids__' 
-#                + str(mv_grid_id) 
-#                + '.pkl')
-#        
-#        if not os.path.isfile(ding0_filepath):
-#            msg =  'Not MV grid file for MV grid ID: ' + str(mv_grid_id)
-#            logger.error(msg)
-#            raise Exception(msg)
-#            
-#        
-        
-#        ### Base case with no generator import (initial reinforcement)
-#        edisgo_grid, \
-#        costs_before_geno_import, \
-#        grid_issues_before_geno_import = run_edisgo_basic(
-#                ding0_filepath=ding0_filepath,
-#                generator_scenario=None,
-#                analysis='worst-case')
-#         
-#        ### Second run for corresponding scenario
-#        edisgo_grid.network.results = Results()
-#        edisgo_grid.network.pypsa = None
-#        
-#        if self._generator_scn:
-#            edisgo_grid.import_generators(
-#                    generator_scenario=self._generator_scn)
-            
-            
+                            
+        ding0_filepath = (
+                self._ding0_files 
+                + '/ding0_grids__' 
+                + str(mv_grid_id) 
+                + '.pkl')
 
+        if not os.path.isfile(ding0_filepath):
+            msg =  'Not MV grid file for MV grid ID: ' + str(mv_grid_id)
+            logger.error(msg)
+            raise Exception(msg)
+            
+                
+        logger.info('Initial MV grid reinforcement (starting grid)')
+        edisgo_grid, \
+        costs_before_geno_import, \
+        grid_issues_before_geno_import = run_edisgo_basic(
+                ding0_filepath=ding0_filepath,
+                generator_scenario=None,
+                analysis='worst-case')
+         
+        logger.info('eTraGo feed-in case')
+        edisgo_grid.network.results = Results()
+        edisgo_grid.network.pypsa = None
+        
+        if self._generator_scn:
+            edisgo_grid.import_generators(
+                    generator_scenario=self._generator_scn)
+                  
+        edisgo_grid.network.timeseries = TimeSeriesControl(
+                timeseries_generation_fluctuating=specs['potential_abs'] ,
+                timeseries_generation_dispatchable=specs['conv_dispatch_abs'],
+                timeseries_load='demandlib',
+                weather_cell_ids=edisgo_grid.network.mv_grid._weather_cells,
+                config_data=edisgo_grid.network.config,
+                timeindex=specs['conv_dispatch_abs'].index).timeseries
+                  
+        edisgo_grid.curtail(curtailment_methodology='curtail_all',
+                            timeseries_curtailment=specs['curtailment_abs'])        
+
+        edisgo_grid.network.pypsa = None
+        
+        edisgo_grid.analyze()
+        
+        
         
 ## Helpful tools         
     def get_mv_grid_from_bus_id(self, bus_id):
@@ -187,21 +229,37 @@ class EDisGoNetworks:
     def get_hvmv_translation(self):
         raise NotImplementedError
 
-
-     # Hier clustering usw.       
+    
         
         
         
-        
-        
-        
+  
 test = EDisGoNetworks(
         json_file=ego.json_file, 
         etrago_network=ego.etrago_network)   
 
+specs = test.run_edisgo(mv_grid_id=1729)
+
+#specs['dispatch']
+#specs['dispatch_abs']
+#specs['potential']
+#specs['potential_abs']
+#specs['curtailment']
+#specs['curtailment_abs']
+#
+#specs['conv_dispatch']
+#specs['conv_dispatch_abs']
+
+#specs['ren_feedin']
+#specs['ren_curtailment']
+#specs['ren_curtailment_abs']
+
+
+
+
 #        
 #test._edisgo_args
-ed = test.run_edisgo(mv_grid_id=1729)
+#ed = test.run_edisgo(mv_grid_id=1729)
 #
 #ed.network.results.equipment_changes
 

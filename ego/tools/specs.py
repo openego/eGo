@@ -28,7 +28,7 @@ if not 'READTHEDOCS' in os.environ:
     from sqlalchemy import distinct
     # This gives me the specific ORM classes.
     from egoio.db_tables import model_draft
-    from edisgo.grid.network import ETraGoSpecs
+#    from edisgo.grid.network import ETraGoSpecs
 
 import logging
 logger = logging.getLogger('ego')
@@ -410,18 +410,20 @@ def get_etragospecs_direct(session,
 
     """
 
-    print("\nSpecs Direct")
     specs_meta_data = {}
     performance = {}
 
     specs_meta_data.update({'TG Bus ID': bus_id})
 
 #    ormclass_result_meta = model_draft.__getattribute__('EgoGridPfHvResultMeta')
-    ormclass_aggr_w = model_draft.__getattribute__(
-        'ego_supply_aggr_weather_mview')
+    ormclass_gen_single = model_draft.__getattribute__('EgoSupplyPfGeneratorSingle')
+#    ormclass_aggr_w = model_draft.t_ego_supply_aggr_weather_mview
+    
+#    __getattribute__(
+#        'ego_supply_aggr_weather_mview')
     logger.warning('Weather table taken from model_draft')
-    ormclass_source = model_draft.__getattribute__('EgoGridPfHvSource')
-    logger.warning('Source table taken from model_draft')
+#    ormclass_source = model_draft.__getattribute__('EgoGridPfHvSource')
+#    logger.warning('Source table taken from model_draft')
 
     snap_idx = etrago_network.snapshots
 
@@ -444,7 +446,7 @@ def get_etragospecs_direct(session,
     # Generators
     t0 = time.perf_counter()
 
-    weather_dpdnt = ['wind', 'solar']
+    weather_dpdnt = ['wind', 'solar', 'wind_onshore', 'wind_offshore']
 
     # DF procesing
     all_gens_df = etrago_network.generators[etrago_network.generators['bus'] == str(bus_id)]
@@ -452,20 +454,33 @@ def get_etragospecs_direct(session,
     all_gens_df = all_gens_df.rename(columns={'index': 'generator_id'})
     all_gens_df = all_gens_df[['generator_id', 'p_nom', 'p_nom_opt', 'carrier']]
 
-    names = []
+    all_gens_df = all_gens_df.rename(columns={"carrier": "name"})
+    
+    all_gens_df  = all_gens_df[all_gens_df['name'] != 'wind_offshore']
+    logger.warning('Wind offshore is disregarded in the interface')
+    
     for index, row in all_gens_df.iterrows():
-        carrier = row['carrier']
-        name = session.query(
-            ormclass_source.name
-        ).filter(
-            ormclass_source.source_id == carrier
-        ).scalar(
-        )
+        name = row['name']
+        if name == 'wind_onshore':
+            all_gens_df.at[index, 'name'] = 'wind'
+            logger.warning('wind onshore is renamed to wind')
+            
+#    print(all_gens_df)           
+#    names = []
+#    for index, row in all_gens_df.iterrows():
+#        carrier = row['carrier']
+#        name = session.query(
+#            ormclass_source.name
+#        ).filter(
+#            ormclass_source.source_id == carrier
+#        ).scalar(
+#        )
+#
+#        names.append(name)
 
-        names.append(name)
-
-    all_gens_df['name'] = names
-    all_gens_df = all_gens_df.drop(['carrier'], axis=1)
+#    all_gens_df['name'] = names
+        
+#    all_gens_df = all_gens_df.drop(['carrier'], axis=1)
 
     # Conventionals
     t1 = time.perf_counter()
@@ -477,6 +492,9 @@ def get_etragospecs_direct(session,
     conv_dsptch_norm = pd.DataFrame(0.0,
                                     index=snap_idx,
                                     columns=list(set(conv_df['name'])))
+    conv_dsptch_abs = pd.DataFrame(0.0,
+                                    index=snap_idx,
+                                    columns=list(set(conv_df['name'])))
 
     for index, row in conv_df.iterrows():
         generator_id = row['generator_id']
@@ -484,6 +502,7 @@ def get_etragospecs_direct(session,
         p = etrago_network.generators_t.p[str(generator_id)]
         p_norm = p / conv_cap[source]['p_nom']
         conv_dsptch_norm[source] = conv_dsptch_norm[source] + p_norm
+        conv_dsptch_abs[source] = conv_dsptch_abs[source] + p
 
     # Renewables
     t2 = time.perf_counter()
@@ -491,22 +510,28 @@ def get_etragospecs_direct(session,
     # Capacities
     ren_df = all_gens_df[all_gens_df.name.isin(weather_dpdnt)]
 
-    w_ids = []
+
+
+    
+#    w_ids = []
     for index, row in ren_df.iterrows():
         aggr_id = row['generator_id']
         w_id = session.query(
-            ormclass_aggr_w.c.w_id
+            ormclass_gen_single.w_id
         ).filter(
-            ormclass_aggr_w.c.aggr_id == aggr_id,
-            ormclass_aggr_w.c.scn_name == scn_name
-        ).scalar(
+            ormclass_gen_single.aggr_id == aggr_id,
+            ormclass_gen_single.scn_name == scn_name
+        ).limit(1).scalar(
         )
 
-        w_ids.append(w_id)
+        ren_df.at[index, 'w_id'] = w_id
+        
+#        w_ids.append(w_id)
 
-    ren_df = ren_df.assign(w_id=pd.Series(w_ids, index=ren_df.index))
-    # This should be unnecessary (and I think it isnt)
+#    ren_df = ren_df.assign(w_id=pd.Series(w_ids, index=ren_df.index))
+#    # This should be unnecessary (and I think it isnt)
     ren_df.dropna(inplace=True)
+#    print(ren_df)
 
     aggr_gens = ren_df.groupby([
         'name',
@@ -516,12 +541,27 @@ def get_etragospecs_direct(session,
     aggr_gens.rename(columns={'p_nom': 'p_nom_aggr'}, inplace=True)
 
     aggr_gens['ren_id'] = aggr_gens.index
+    
+#    print(aggr_gens)
 
     ### Dispatch and Curteilment
+    potential = pd.DataFrame(0.0,
+                            index=snap_idx,
+                            columns=aggr_gens['ren_id'])    
     dispatch = pd.DataFrame(0.0,
                             index=snap_idx,
                             columns=aggr_gens['ren_id'])
     curtailment = pd.DataFrame(0.0,
+                               index=snap_idx,
+                               columns=aggr_gens['ren_id'])
+ 
+    potential_abs = pd.DataFrame(0.0,
+                               index=snap_idx,
+                               columns=aggr_gens['ren_id'])
+    dispatch_abs = pd.DataFrame(0.0,
+                               index=snap_idx,
+                               columns=aggr_gens['ren_id'])   
+    curtailment_abs = pd.DataFrame(0.0,
                                index=snap_idx,
                                columns=aggr_gens['ren_id'])
 
@@ -535,19 +575,69 @@ def get_etragospecs_direct(session,
 
         p_nom_aggr = float(
             aggr_gens[aggr_gens['ren_id'] == ren_id]['p_nom_aggr'])
-        p_nom = float(ren_df[ren_df['generator_id'] == gen_id]['p_nom'])
+#        p_nom = float(ren_df[ren_df['generator_id'] == gen_id]['p_nom'])
+        p_nom = row['p_nom']
 
         p_series = etrago_network.generators_t.p[str(gen_id)]
         p_norm_tot_series = p_series / p_nom_aggr
 
         p_max_pu_series = etrago_network.generators_t.p_max_pu[str(gen_id)]
+        p_max_series = p_max_pu_series * p_nom
         p_max_norm_tot_series = p_max_pu_series * p_nom / p_nom_aggr
 
+        p_curt_tot_series = p_max_series - p_series
         p_curt_norm_tot_series = p_max_norm_tot_series - p_norm_tot_series
 
         dispatch[ren_id] = dispatch[ren_id] + p_norm_tot_series
         curtailment[ren_id] = curtailment[ren_id] + p_curt_norm_tot_series
+               
+        potential_abs[ren_id] = potential_abs[ren_id] + p_max_series
+        dispatch_abs[ren_id] = dispatch_abs[ren_id] + p_series
+        curtailment_abs[ren_id] = curtailment_abs[ren_id] + p_curt_tot_series
+        
 
+    potential = dispatch + curtailment
+    
+    new_columns = [
+        (aggr_gens[aggr_gens.ren_id == col].name.iloc[0],
+         aggr_gens[aggr_gens.ren_id == col].w_id.iloc[0])
+        for col in potential.columns]
+    potential.columns = pd.MultiIndex.from_tuples(new_columns)    
+ 
+    new_columns = [
+        (aggr_gens[aggr_gens.ren_id == col].name.iloc[0],
+         aggr_gens[aggr_gens.ren_id == col].w_id.iloc[0])
+        for col in dispatch.columns]
+    dispatch.columns = pd.MultiIndex.from_tuples(new_columns) 
+
+    new_columns = [
+        (aggr_gens[aggr_gens.ren_id == col].name.iloc[0],
+         aggr_gens[aggr_gens.ren_id == col].w_id.iloc[0])
+        for col in curtailment.columns]
+    curtailment.columns = pd.MultiIndex.from_tuples(new_columns) 
+
+    new_columns = [
+        (aggr_gens[aggr_gens.ren_id == col].name.iloc[0],
+         aggr_gens[aggr_gens.ren_id == col].w_id.iloc[0])
+        for col in potential_abs.columns]
+    potential_abs.columns = pd.MultiIndex.from_tuples(new_columns) 
+
+    new_columns = [
+        (aggr_gens[aggr_gens.ren_id == col].name.iloc[0],
+         aggr_gens[aggr_gens.ren_id == col].w_id.iloc[0])
+        for col in dispatch_abs.columns]
+    dispatch_abs.columns = pd.MultiIndex.from_tuples(new_columns) 
+
+    new_columns = [
+        (aggr_gens[aggr_gens.ren_id == col].name.iloc[0],
+         aggr_gens[aggr_gens.ren_id == col].w_id.iloc[0])
+        for col in curtailment_abs.columns]
+    curtailment_abs.columns = pd.MultiIndex.from_tuples(new_columns)     
+   
+    potential_abs = potential_abs * 1000
+    dispatch_abs = dispatch_abs * 1000
+    curtailment_abs = curtailment_abs * 1000
+    
     # Storage
     t3 = time.perf_counter()
     performance.update({'Renewable Dispatch and Curt.': t3-t2})
@@ -562,21 +652,25 @@ def get_etragospecs_direct(session,
         'max_hours',
         'carrier']]
 
-    names = []
-    for index, row in stor_df.iterrows():
-        carrier = row['carrier']
-        name = session.query(
-            ormclass_source.name
-        ).filter(
-            ormclass_source.source_id == carrier
-        ).scalar(
-        )
+#    print(stor_df)
+    
+#    names = []
+#    for index, row in stor_df.iterrows():
+#        carrier = row['carrier']
+#        name = session.query(
+#            ormclass_source.name
+#        ).filter(
+#            ormclass_source.source_id == carrier
+#        ).scalar(
+#        )
+#
+#        names.append(name)
+#
+#    stor_df = stor_df.assign(name=pd.Series(names, index=stor_df.index))
+#    stor_df = stor_df.drop(['carrier'], axis=1)
 
-        names.append(name)
-
-    stor_df = stor_df.assign(name=pd.Series(names, index=stor_df.index))
-    stor_df = stor_df.drop(['carrier'], axis=1)
-
+    stor_df = stor_df.rename(columns={"carrier": "name"})
+   
     stor_df['capacity_MWh'] = stor_df['p_nom_opt'] * stor_df['max_hours']
 
     count_bat = 0
@@ -607,29 +701,32 @@ def get_etragospecs_direct(session,
     t4 = time.perf_counter()
     performance.update({'Storage Data Processing and Dispatch': t4-t3})
 
-    specs = ETraGoSpecs(battery_capacity=battery_capacity,
-                        battery_active_power=battery_active_power,
-
-                        conv_dispatch=conv_dsptch_norm,
-
-                        renewables=aggr_gens,
-                        ren_dispatch=dispatch,
-                        ren_curtailment=curtailment)
+    specs = {
+#            'battery_capacity': battery_capacity, 
+#            'battery_active_power': battery_active_power, 
+            'conv_dispatch': conv_dsptch_norm,
+            'conv_dispatch_abs': conv_dsptch_abs,
+#            'renewables': aggr_gens,
+            'dispatch': dispatch,
+            'dispatch_abs': dispatch_abs,
+            'potential': potential,
+            'potential_abs': potential_abs,
+            'curtailment': curtailment,
+            'curtailment_abs': curtailment_abs
+            }
+    
+#    specs = ETraGoSpecs(battery_capacity=battery_capacity,
+#                        battery_active_power=battery_active_power,
+#
+#                        conv_dispatch=conv_dsptch_norm,
+#
+#                        renewables=aggr_gens,
+#                        ren_dispatch=dispatch,
+#                        ren_curtailment=curtailment)
 
     t5 = time.perf_counter()
     performance.update({'Overall time': t5-t0})
 
-    # print(performance)
-
-#    print("\n Conventional Dispatch (Normalized): \n",
-#          conv_dsptch_norm,
-#          "\n\n Renewable Generators: \n",
-#          aggr_gens,
-#          "\n\n Renewable Dispatch: \n",
-#          dispatch,
-#          "\n\n Renewable Curtailment: \n",
-#          curtailment, "\n\n")
-#
 #    for keys,values in performance.items():
 #        print(keys, ": ", values)
 
@@ -649,3 +746,63 @@ def get_etragospecs_direct(session,
 #    # ToDo Check if subst_id is really the mv grid ID
 #    # Anyway, this should be adapted by Dingo
 #    return subst_id
+
+#def get_feedin_fluctuating(ren_dispatch, curtailment, renewables):
+#    
+#    # get feed-in without curtailment
+#    if curtailment is not None:
+#        print(ren_dispatch)
+#        print(curtailment)
+#        feedin = ren_dispatch + curtailment
+#        print(feedin)
+#        logger.info('Feed-in calculated including curtailment')
+#    else:
+#        feedin = ren_dispatch
+#    # change column names
+#    new_columns = [
+#        (renewables[renewables.ren_id == col].name.iloc[0],
+#         renewables[renewables.ren_id == col].w_id.iloc[0])
+#        for col in feedin.columns]
+#    feedin.columns = pd.MultiIndex.from_tuples(new_columns)
+#    # aggregate wind and solar time series until generators get a weather
+#    # ID
+#    print(feedin)
+#    return feedin
+
+
+#def get_curtailment(edisgo_grid, curtailment, renewables):
+#
+#    # get installed capacities of wind and solar generators
+#    # ToDo: Differentiate by weather cell ID once generators have one
+#    gens = list(edisgo_grid.network.mv_grid.graph.nodes_by_attribute(
+#        'generator'))
+#    for lv_grid in edisgo_grid.network.mv_grid.lv_grids:
+#        gens.extend(list(lv_grid.graph.nodes_by_attribute('generator')))
+#    dict_capacities = {'solar': 0, 'wind': 0}
+#    for gen in gens:
+#        if gen.type in ['solar', 'wind']:
+#            dict_capacities[gen.type] = (
+#                    dict_capacities[gen.type] 
+#                    + gen.nominal_capacity)
+#            print(dict_capacities)
+#
+#    # change column names of curtailment DataFrame to
+#    new_columns = [
+#        (renewables[renewables.ren_id == col].name.iloc[0],
+#         renewables[renewables.ren_id == col].w_id.iloc[0])
+#        for col in curtailment.columns]
+#    curtailment.columns = pd.MultiIndex.from_tuples(new_columns)
+#
+#    
+#    return curtailment
+
+#Hier curtailment noch zusammenfassen!!
+    
+#    curtailment = pd.DataFrame(data={'wind': curtailment.wind.sum(axis=1),
+#                                     'solar': curtailment.solar.sum(axis=1)})
+#
+#    # calculate absolute curtailment
+#    timeseries_curtailment = curtailment.multiply(
+#        pd.Series(dict_capacities))
+#
+#    return timeseries_curtailment
