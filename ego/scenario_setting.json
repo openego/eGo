@@ -3,8 +3,8 @@
     "eTraGo": true,
     "eDisGo": false,
     "db": "oedb",
-    "result_id": 22,
-    "recover": false,
+    "result_id": 26,
+    "recover": true,
     "gridversion": "v0.4.2"
   },
   "eTraGo": {
