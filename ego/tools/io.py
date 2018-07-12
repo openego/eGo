@@ -464,6 +464,14 @@ def etrago_from_oedb(session, json_file):
 
         return _mapped
 
+    def id_to_source(query):
+
+        # ormclass = map_ormclass(name)
+        # query = session.query(ormclass).filter(ormclass.result_id == result_id)
+
+        # TODO column naming in database
+        return {k.source_id: k.name for k in query.all()}
+
     def dataframe_results(name, session, result_id, ormclass):
         """
         Function to get pandas DataFrames by the result_id
@@ -483,6 +491,18 @@ def etrago_from_oedb(session, json_file):
                          session.bind,
                          index_col=name.lower() + '_id')
 
+        if name == 'Link':
+            df['bus0'] = df.bus0.astype(int)
+            df['bus1'] = df.bus1.astype(int)
+
+        if 'source' in df:
+
+            source_orm = Source
+
+            source_query = session.query(source_orm)
+
+            df.source = df.source.map(id_to_source(source_query))
+
         if str(ormclass)[:-2].endswith('T'):
             df = pd.Dataframe()
 
@@ -494,7 +514,7 @@ def etrago_from_oedb(session, json_file):
 
         Parameters
         ----------
-        session : :sqlalchemy:`sqlalchemy.orm.session.Session<orm/session_basics.html>`
+        session: : sqlalchemy: `sqlalchemy.orm.session.Session < orm/session_basics.html >`
             SQLAlchemy session to the OEDB
 
         ToDo
@@ -587,7 +607,7 @@ def etrago_from_oedb(session, json_file):
     _mapped = {}
 
     # get metadata
-    #version = json_file['global']['gridversion']
+    # version = json_file['global']['gridversion']
 
     orm_meta = getattr(_pkg, _prefix + 'Meta')
 
@@ -720,6 +740,12 @@ def etrago_from_oedb(session, json_file):
                     except (ValueError, AttributeError):
                         print("Series %s of component %s could not be "
                               "imported" % (col, pypsa_comp_name))
+
+    # populate carrier attribute in PyPSA network
+    # network.import_components_from_dataframe(
+    #    self.fetch_by_relname(carr_ormclass), 'Carrier')
+
+    # add fetch_by_relname and
 
     print('Done')
     logger.info('Imported eTraGo results of id = %s ', result_id)
