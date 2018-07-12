@@ -465,7 +465,7 @@ def get_etragospecs_direct(session,
             all_gens_df.at[index, 'name'] = 'wind'
             logger.warning('wind onshore is renamed to wind')
             
-    print(all_gens_df)           
+#    print(all_gens_df)           
 #    names = []
 #    for index, row in all_gens_df.iterrows():
 #        carrier = row['carrier']

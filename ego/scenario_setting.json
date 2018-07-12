@@ -1,10 +1,10 @@
 {
   "global": {
     "eTraGo": true,
-    "eDisGo": false,
+    "eDisGo": true,
     "db": "oedb",
     "result_id": 26,
-    "recover": false,
+    "recover": true,
     "gridversion": "v0.4.2"
   },
   "eTraGo": {

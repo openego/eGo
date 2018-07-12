@@ -134,7 +134,7 @@ class EDisGoNetworks:
                     )
         self._grid_choice = cluster
         
-    def run_edisgo_pool(self, parallelization=True):
+    def run_edisgo_pool(self, parallelization=False):
                
         if parallelization is True:
             logger.info('Parallelization')
@@ -321,8 +321,3 @@ class EDisGoNetworks:
         raise NotImplementedError
 
     
-test = EDisGoNetworks(
-        json_file=ego.json_file, 
-etrago_network=ego.etrago_network)         
-        
-test._edisgo_grids
