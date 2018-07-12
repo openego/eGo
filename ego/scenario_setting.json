@@ -4,14 +4,14 @@
     "eDisGo": false,
     "db": "oedb",
     "result_id": 26,
-    "recover": true,
+    "recover": false,
     "gridversion": "v0.4.2"
   },
   "eTraGo": {
     "method": "lopf",
     "pf_post_lopf": false,
     "start_snapshot": 2952,
-    "end_snapshot" : 2966,
+    "end_snapshot" : 2953,
     "solver": "gurobi",
     "solver_options":{},
     "scn_name": "NEP 2035",
@@ -22,10 +22,10 @@
     "results": false,
     "export": false,
     "extendable": "['network', 'storages']",
-    "generator_noise": false,
+    "generator_noise": true,
     "reproduce_noise": false,
     "minimize_loading": false,
-    "network_clustering_kmeans": 100,
+    "network_clustering_kmeans": false,
     "load_cluster": false,
     "network_clustering_ehv": false,
     "snapshot_clustering": false,
@@ -33,7 +33,7 @@
     "skip_snapshots": false,
     "line_grouping": false,
     "branch_capacity_factor": 1,
-    "load_shedding": false,
+    "load_shedding": true,
     "comments": null
   },
   "eDisGo": {

@@ -1,7 +1,7 @@
-Release v0.2.0 (July 13, 2018)
+Release v0.2.0 (July 17, 2018)
 ++++++++++++++++++++++++++++++
 
-The second release of the eGo application.
+Second release of the eGo application.
 
 New features have been included in this release. Major changes being the new
 class structure and separation of methods into the given file structure.
@@ -18,22 +18,37 @@ Added features
 --------------
 
 * Cleaned and restructured eGo classes and functions
-** Moved classes of eGo from results.py to io.py
-
-* Updated eTraGo 0.6 and integrated new functions and features to eGo
+  - Moved classes of eGo from results.py to io.py
+  - Move serveral function
+  - Introduce new files for edisgo handling:
+    - edisgo_integration.py
+    - mv_cluster.py
+  - Introduce new file storages.py  for eTraGo
+* Updated eTraGo 0.6 and integrated eTraGo's new functions and features to eGo
 * Updated eDisGo 0.0.3 version which includes the features of a parallelization
   for custom function and other important API changes.
-* Implemented pep8 style to eGo Code
-* Implemented logging function for the hole model
+* Started to implemented pep8 style to eGo Code
+* Implemented logging function for the whole model
 * Using the Restfull-API for the OpenEnergy Database connection, buy using
   ego.io v0.4.2. A registration is needed and can be done on
   `openenergy-platform.org/login <http://openenergy-platform.org/login/>`_
-* Introduce new file storages.py and xxx edisgo.py
-* Remove functionalities from main to the eGo class
-* ...
+* Remove functionalities from ``ego_main.py`` to the eGo class
+* Fixed eTraGo scenario import of ``etrago_from_oedb()``
+
+
+ToDo's bis Release
+------------------
+
+* mv clustering for eDisGo / Ding0 grids
+* cost manipulation / skalling of global costs
+* all costs "over night" grid/storages (annuisiert)
+* Plot der Gesamt investkosten
+* operational costs edisgo ?   | pro Ebene
+* operational costs eTragGo    | pro Ebene
+
 
 Notes
 -----
 * As an external user you need to have and account on the
   `openenergy-platform.org/login <http://openenergy-platform.org/login/>`_
-* ...
+* Total operational costs are missing in this release

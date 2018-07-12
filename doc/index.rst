@@ -15,12 +15,11 @@ Welcome to eGo documentation!
           `openenergy-platform.org/login <http://openenergy-platform.org/login/>`_.
 
 
-
-
 .. toctree::
    :maxdepth: 3
 
    welcome
+   installation
    getting_started
    usage_details
    theoretical_background
