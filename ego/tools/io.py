@@ -291,7 +291,7 @@ class eDisGoResults(egoBasic):
 
         if self.json_file['global']['eDisGo'] is True:
             logger.info('Create eDisGo network')
-            self.edisgo_network = None  # add eDisGo initialisation here
+            self.edisgo_networks = None  # add eDisGo initialisation here
 
         pass
 

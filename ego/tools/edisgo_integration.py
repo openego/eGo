@@ -16,8 +16,10 @@ __author__ = "wolf_bunke,maltesc"
 from egoio.db_tables import model_draft, grid
 from egoio.tools import db
 from edisgo.grid.network import Results, TimeSeriesControl
+from edisgo.tools.pypsa_io import update_pypsa_timeseries
 from edisgo.tools.edisgo_run import (
-        run_edisgo_basic
+        run_edisgo_basic,
+        run_edisgo_pool_flexible
         )
 from ego.tools.specs import (
         get_etragospecs_direct,
@@ -31,12 +33,20 @@ from ego.tools.mv_cluster import (
 ## Other Packages
 import os
 import logging
+import pandas as pd
 from sqlalchemy.orm import sessionmaker
 
 # Logging
 logging.basicConfig(format='%(asctime)s %(message)s',level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
+#os.getcwd()
+#os.chdir('/home/student/Git/eGo/ego/')
+
+def test_pool(a, b):
+    print('hallo') 
+        
 class EDisGoNetworks:
     """
     Represents multiple eDisGo networks.
@@ -91,7 +101,7 @@ class EDisGoNetworks:
             logger.info('Attributes will be calculated')
             self.analyze_cluster_attributes()
 
-        self._cluster = cluster_mv_grids(self._ding0_files, no_grids)
+        return cluster_mv_grids(self._ding0_files, no_grids)
         
     def check_available_mv_grids(self):
        
@@ -105,13 +115,28 @@ class EDisGoNetworks:
  
         return mv_grids
         
+    def run_edisgo_pool(self, parallelization=False):
         
-    def run_edisgo(self, mv_grid_id):
+        
+        if parallelization is True:
+            
+            raise NotImplementedError
+#            id_list = self._cluster['the_selected_network_id'].tolist()
+#            
+#            self._pool = run_edisgo_pool_flexible(
+#                    ding0_id_list=id_list, 
+#                    func=test_pool,
+#                    func_arguments=['toll'])       
+            
+        else:
+            
+    
+    def run_edisgo(self, mv_grid_id, *args):
         """
         Runs eDisGo with the desired settings. 
         
         """      
- 
+
         logger.info('Calculating interface values')
         bus_id = self.get_bus_id_from_mv_grid(mv_grid_id)
         
@@ -142,31 +167,50 @@ class EDisGoNetworks:
                 analysis='worst-case')
          
         logger.info('eTraGo feed-in case')
-        edisgo_grid.network.results = Results()
-        edisgo_grid.network.pypsa = None
         
-        if self._generator_scn:
-            edisgo_grid.import_generators(
-                    generator_scenario=self._generator_scn)
-                  
+        edisgo_grid.network.results = Results()
+#        edisgo_grid.network.pypsa = None
+#        
+#        if self._generator_scn:
+#            edisgo_grid.import_generators(
+#                    generator_scenario=self._generator_scn)
+        logger.warning('No generators are imported')
+                    
         edisgo_grid.network.timeseries = TimeSeriesControl( 
                 # Here, I use only normalized values from specs
                 timeseries_generation_fluctuating=specs['potential'],
                 timeseries_generation_dispatchable=specs['conv_dispatch'],
                 timeseries_load='demandlib',
-                weather_cell_ids=edisgo_grid.network.mv_grid._weather_cells,
                 config_data=edisgo_grid.network.config,
                 timeindex=specs['conv_dispatch'].index).timeseries
-                  
+   
+        update_pypsa_timeseries(
+                edisgo_grid.network, 
+                timesteps=specs['conv_dispatch'].index) 
+            
 #        edisgo_grid.curtail(curtailment_methodology='curtail_all',
 #                            # Here, I use absolute values
 #                            timeseries_curtailment=specs['curtailment_abs']) 
-        # Think about the other curtailment functions!!!!
-        
-        edisgo_grid.network.pypsa = None
-        
+#        
+#        # Think about the other curtailment functions!!!!
+          
         edisgo_grid.analyze()
         
+        edisgo_grid.reinforce()
+
+        # Get costs
+        costs_grouped = \
+            edisgo_grid.network.results.grid_expansion_costs.groupby(
+                ['type']).sum()
+        costs = pd.DataFrame(costs_grouped.values,
+                             columns=costs_grouped.columns,
+                             index=[[edisgo_grid.network.id] * len(costs_grouped),
+                                    costs_grouped.index]).reset_index()
+        costs.rename(columns={'level_0': 'grid'}, inplace=True)
+        
+        # Grid issues besser verstehen!! Und evtl. mit aussgeben
+        
+        return edisgo_grid
         
         
 ## Helpful tools         
@@ -239,6 +283,15 @@ test = EDisGoNetworks(
         json_file=ego.json_file, 
         etrago_network=ego.etrago_network)   
 
-test.run_edisgo(mv_grid_id=1729)
+#grid = test.run_edisgo(mv_grid_id=1729)
+test.cluster_mv_grids(2)
+
+    
+test.run_edisgo_pool(parallelization=False)
+
+
+
+#ret.network.mv_grid.graph.
+
 
 
