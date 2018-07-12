@@ -33,6 +33,7 @@ logger = logging.getLogger('ego')
 if not 'READTHEDOCS' in os.environ:
     import pandas as pd
     import numpy as np
+    from tools.utilities import get_time_steps
 
 __copyright__ = "Flensburg University of Applied Sciences, Europa-Universität"\
     "Flensburg, Centre for Sustainable Energy Systems"
@@ -64,6 +65,27 @@ def annuity_per_period(capex, n, wacc, t):
 
     # ToDo change formular to hourly annuity costs
     return capex * (wacc * (1 + wacc) ** n) / ((1 + wacc) ** n - 1)
+
+
+def edisgo_convert_capital_costs():
+    """
+
+    Parameters
+    ----------
+
+    grid_components : :obj:dict
+        Dictionary of ding0 grid components which are extendable
+        (Name, investment_cost, lifetime)
+    json_file : :obj:dict
+        Dictionary of the ``scenario_setting.json`` file
+
+
+    """
+    # eTraGo calculation in
+    # https://github.com/openego/eTraGo/blob/dev/etrago/tools/utilities.py#L651
+    # def convert_capital_costs(network, start_snapshot, end_snapshot,
+    #                           p=0.05, T=40):
+    # Define function
 
 
 def etrago_operating_costs(network):
@@ -124,7 +146,7 @@ def etrago_operating_costs(network):
     return power_price
 
 
-def etrago_grid_investment(network):
+def etrago_grid_investment(network, json_file):
     """ Function to get grid expantion costs form etrago
 
     Parameters
@@ -132,15 +154,68 @@ def etrago_grid_investment(network):
 
     network : Network
         eTraGo
+    json_file : :obj:dict
+        Dictionary of the ``scenario_setting.json`` file
 
     Returns
     -------
+    lines: :pandas:`pandas.Dataframe<dataframe>`
+        Dataframe with ``number_of_expansion``, ``s_nom_expansion`` and
+        ``grid_costs`` per calculated time steps
 
-    ToDo
-    ----
-    - add new release of etrago 0.7
+    Example
+    -------
+
+        .. code-block:: python
+
+           >>> from ego.tools.io import eGo
+           >>> ego = eGo(jsonpath='scenario_setting.json'
+           >>> ego.etrago.grid_costs
+
+    +-----+---------------------+----------------+-----------+
+    |v_nom| number_of_expansion | s_nom_expansion| grid_costs|
+    +=====+=====================+================+===========+
+    | 380 |           27.0      | 12678.47943    |31514.1305 |
+    +-----+---------------------+----------------+-----------+
+    | 220 |            0.0      |      0.0       |     0.0   |
+    +-----+---------------------+----------------+-----------+
     """
 
+    # check settings for extendable
+    if 'network' not in json_file['eTraGo']['extendable']:
+        print("The optimizition was not using parameter 'extendable': network")
+        print("No grid expantion costs from etrago")
+
+    if 'network' in json_file['eTraGo']['extendable']:
+
+        lines = network.lines[['v_nom', 'capital_cost', 's_nom',
+                               's_nom_min', 's_nom_opt']]
+
+        lines['s_nom_expansion'] = lines.s_nom_opt.subtract(
+            lines.s_nom, axis='index')
+        lines['grid_costs'] = lines.s_nom_expansion.multiply(
+            lines.capital_cost, axis='index')
+        lines['number_of_expansion'] = lines.s_nom_expansion > 0.0
+        lines['time_step'] = get_time_steps(json_file)
+
+        # print(get_time_steps(json_file))
+
+        #network.lines[['v_nom','capital_cost','s_nom',  's_nom_min','s_nom_opt']]
+
+        # eTraGo Function:
+        # https://github.com/openego/eTraGo/blob/dev/etrago/tools/utilities.py#L651
+        # Definition https://pypsa.org/doc/components.html#line
+
+        # capital_cost
+        # s_nom_extendable
+        # check if extendable == true
+
+        return lines[['v_nom', 'number_of_expansion', 's_nom_expansion',
+                      'grid_costs']].groupby('v_nom').sum()
+
+    # ToDo: add  .agg({'number_of_expansion':lambda x: x.count(),
+    #  's_nom_expansion': np.sum,
+    #  'grid_costs': np.sum})  <-  time_step
     pass
 
 

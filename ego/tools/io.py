@@ -72,16 +72,16 @@ class egoBasic(object):
         Path to ``scenario_setting.json`` file.
 
 
-    Results
+    Returns
     -------
     eTraGo : :pandas:`pandas.Dataframe<dataframe>` of PyPSA
         Network container of eTraGo based on PyPSA
     eDisGo : :pandas:`pandas.Dataframe<dataframe>` of PyPSA
         Network container of eDisGo based on PyPSA
-    json_file : dict
-        Dict of the scenario_setting.json file
-    session : sqlalchemy
-        Database session for the oedb connection.
+    json_file : :obj:dict
+        Dictionary of the ``scenario_setting.json`` file
+    session : :sqlalchemy:`sqlalchemy.orm.session.Session<orm/session_basics.html>`
+        SQLAlchemy session to the OEDB
 
     """
 
@@ -147,12 +147,37 @@ class eTraGoResults(egoBasic):
 
         self.etrago_network = None
 
+        if self.json_file['global']['recover'] is True:
+
+            # Delete arguments from scenario_setting
+            logger.info('Remove given eTraGo settings from scenario_setting')
+
+            try:
+                self.json_file['global']['eTraGo'] = False
+
+                for i in self.json_file['eTraGo'].keys():
+
+                    self.json_file['eTraGo'][i] = 'removed by recover'
+
+                # ToDo add scenario_setting for results
+                self.json_file['eTraGo']['db'] = self.json_file['global']['db']
+                logger.info(
+                    'Add `eTraGo` scenario_setting from oedb result')
+                # To do ....
+
+            except KeyError:
+                pass
+
+            logger.info('Create eTraGo network from oedb result')
+            self.etrago_network = etrago_from_oedb(self.session, self.json_file)
+
         # create eTraGo NetworkScenario network
         if self.json_file['global']['eTraGo'] is True:
             logger.info('Create eTraGo network')
             self.etrago_network = etrago(self.json_file['eTraGo'])
 
         # add selected results to Results container
+
             self.etrago = pd.DataFrame()
             self.etrago.generator = pd.DataFrame()
             self.etrago.storage_charges = total_storage_charges(self.etrago_network)
@@ -161,6 +186,8 @@ class eTraGoResults(egoBasic):
                 self.etrago_network)
             self.etrago.generator = create_etrago_results(self.etrago_network,
                                                           self.scn_name)
+            self.etrago.grid_costs = etrago_grid_investment(self.etrago_network,
+                                                            self.json_file)
     
             # add functions direct
             # self.etrago_network.etrago_line_loading = etrago_line_loading
@@ -311,8 +338,8 @@ def geolocation_buses(network, session):
     ----------
     network : Network
         eTraGo Network
-    session : sqlalchemy
-        session to oedb
+    session : :sqlalchemy:`sqlalchemy.orm.session.Session<orm/session_basics.html>`
+        SQLAlchemy session to the OEDB
 
     ToDo
     ----
@@ -371,7 +398,7 @@ def geolocation_buses(network, session):
     return network
 
 
-def results_to_excel(results):
+def results_to_excel(ego):
     """
     Wirte results to excel
 
@@ -382,10 +409,10 @@ def results_to_excel(results):
     writer = pd.ExcelWriter('open_ego_results.xlsx', engine='xlsxwriter')
 
     # write results of installed Capacity by fuels
-    results.total.to_excel(writer, index=False, sheet_name='Total Calculation')
+    ego.total.to_excel(writer, index=False, sheet_name='Total Calculation')
 
     # write orgininal data in second sheet
-    results.to_excel(writer, index=True, sheet_name='Results by carriers')
+    ego.to_excel(writer, index=True, sheet_name='Results by carriers')
     # add plots
 
     # Close the Pandas Excel writer and output the Excel file.
@@ -393,35 +420,37 @@ def results_to_excel(results):
     # buses
 
 
-def etrago_from_oedb(session, args):
+def etrago_from_oedb(session, json_file):
     """
     Function with import eTraGo results for the Database.
 
     Parameters
     ----------
-    session (obj):
-        sqlalchemy session to the OEDB
+    session : :sqlalchemy:`sqlalchemy.orm.session.Session<orm/session_basics.html>`
+        SQLAlchemy session to the OEDB
+    json_file : :obj:dict
+        Dictionary of the ``scenario_setting.json`` file
 
-    args (dict):
-        args from eGo scenario_setting.json
+    Returns
+    -------
+    network :
 
     ToDo
     ----
         add Mapping for grid schema
         make it more generic -> class?
     """
-    result_id = args['global']['result_id']
+    result_id = json_file['global']['result_id']
 
     # modules from model_draft
     from egoio.db_tables.model_draft import EgoGridPfHvSource as Source,\
         EgoGridPfHvTempResolution as TempResolution
-    from etrago.tools.io import loadcfg
+    from etrago.tools.io import load_config_file
     from importlib import import_module
     import pypsa
     import re
     import logging
-    logging.basicConfig(level=logging.INFO)
-    logger = logging.getLogger(__name__)
+    logger = logging.getLogger('ego')
 
     # functions
     def map_ormclass(name):
@@ -439,6 +468,11 @@ def etrago_from_oedb(session, args):
     def dataframe_results(name, session, result_id, ormclass):
         """
         Function to get pandas DataFrames by the result_id
+
+        Parameters
+        ----------
+        session : :sqlalchemy:`sqlalchemy.orm.session.Session<orm/session_basics.html>`
+            SQLAlchemy session to the OEDB
         """
 
         query = session.query(ormclass).filter(ormclass.result_id == result_id)
@@ -458,6 +492,11 @@ def etrago_from_oedb(session, args):
     def series_results(name, column, session, meta_args, result_id, ormclass):
         """
         Function to get Time Series as pandas DataFrames by the result_id
+
+        Parameters
+        ----------
+        session : :sqlalchemy:`sqlalchemy.orm.session.Session<orm/session_basics.html>`
+            SQLAlchemy session to the OEDB
 
         ToDo
         ----
@@ -493,10 +532,51 @@ def etrago_from_oedb(session, args):
 
         return df
 
+    def recover_resultsettings(session, json_file, orm_meta):
+        """ Recover scenario_setting from database
+        """
+
+        # check result_id
+        result_id_in = session.query(
+            orm_meta.result_id).filter(orm_meta.
+                                       result_id == result_id).all()
+        if result_id_in:
+            logger.info('Choosen result_id %s found in DB', result_id)
+        else:
+            logger.info('Error: result_id not found in DB')
+
+        # get meta data as json_file
+        meta = session.query(orm_meta.result_id, orm_meta.scn_name, orm_meta.calc_date,
+                             orm_meta.user_name, orm_meta.method, orm_meta.start_snapshot,
+                             orm_meta.end_snapshot, orm_meta.solver, orm_meta.settings
+                             ).filter(orm_meta.result_id == result_id)
+
+        meta_df = pd.read_sql(
+            meta.statement, meta.session.bind, index_col='result_id')
+
+        # update json_file with main data by result_id
+        json_file['eTraGo']['scn_name'] = meta_df.scn_name[result_id]
+        json_file['eTraGo']['method'] = meta_df.method[result_id]
+        json_file['eTraGo']['start_snapshot'] = meta_df.start_snapshot[result_id]
+        json_file['eTraGo']['end_snapshot'] = meta_df.end_snapshot[result_id]
+        json_file['eTraGo']['solver'] = meta_df.solver[result_id]
+
+        # update json_file with specific data by result_id
+        meta_set = dict(meta_df.settings[result_id])
+
+        for key in json_file['eTraGo'].keys():
+
+            try:
+                json_file['eTraGo'][key] = meta_set[key]
+            except KeyError:
+                pass
+
+        return json_file
+
     # create config for results
     path = os.getcwd()
     # add meta_args with args of results
-    config = loadcfg(path+'/tools/config.json')['results']
+    config = load_config_file(path+'/tools/config.json')['results']
 
     # map and Database settings of etrago_from_oedb()
     _prefix = 'EgoGridPfHvResult'
@@ -508,14 +588,15 @@ def etrago_from_oedb(session, args):
     _mapped = {}
 
     # get metadata
-    version = args['global']['gridversion']
+    #version = json_file['global']['gridversion']
 
     orm_meta = getattr(_pkg, _prefix + 'Meta')
 
     # check result_id
 
-    result_id_in = session.query(orm_meta.result_id).filter(orm_meta.
-                                                            result_id == result_id).all()
+    result_id_in = session.query(
+        orm_meta.result_id).filter(orm_meta.
+                                   result_id == result_id).all()
     if result_id_in:
         logger.info('Choosen result_id %s found in DB', result_id)
     else:
@@ -551,6 +632,11 @@ def etrago_from_oedb(session, args):
                           1: meta_args['end_snapshot']]
 
     meta_args['temp_id'] = tr.temp_id
+    print(meta_args)
+    print('und das neue')
+
+    meta_test = recover_resultsettings(session, json_file, orm_meta)
+    print(meta_test)
 
     # create df for PyPSA network
 

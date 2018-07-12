@@ -2,6 +2,10 @@
 Welcome to eGo documentation!
 =============================
 
+.. image:: https://openegoproject.files.wordpress.com/2017/02/open_ego_logo_breit.png?w=400
+   :align: right
+   :scale: 100%
+
 .. note:: Note, this software is under construction and not
           ready for a normal use.
 
@@ -11,9 +15,6 @@ Welcome to eGo documentation!
           `openenergy-platform.org/login <http://openenergy-platform.org/login/>`_.
 
 
-.. image:: https://openegoproject.files.wordpress.com/2017/02/open_ego_logo_breit.png?w=400
-   :align: right
-   :scale: 100%
 
 
 .. toctree::
