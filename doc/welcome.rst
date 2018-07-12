@@ -40,9 +40,7 @@ LICENSE
 © Copyright 2015-2018
 
 Flensburg University of Applied Sciences,
-
 Europa-Universität Flensburg,
-
 Centre for Sustainable Energy Systems
 
 
