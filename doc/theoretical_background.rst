@@ -6,9 +6,6 @@ Theoretical background
 
 
 
-
-
-
 Models overview
 ================
 
@@ -19,6 +16,8 @@ Models overview
    :scale: 70%
    :alt: Overview of Models and processes which are used by eGo
    :align: center
+
+
 
 
 
