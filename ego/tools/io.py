@@ -38,13 +38,15 @@ if not 'READTHEDOCS' in os.environ:
     from geoalchemy2 import *
 
     from egoio.tools import db
+    from etrago.tools.io import load_config_file
+    from egoio.db_tables.model_draft import EgoGridPfHvSource as Source,\
+        EgoGridPfHvTempResolution as TempResolution
     from tools.results import (create_etrago_results)
     from tools.storages import (total_storage_charges, etrago_storages)
     from tools.economics import (etrago_operating_costs, etrago_grid_investment,
                                  edisgo_grid_investment, investment_costs,
                                  get_generator_investment)
     from tools.utilities import get_scenario_setting, get_time_steps
-    from etrago.appl import etrago
     from egoio.db_tables.model_draft import RenpassGisParameterRegion
     from egoio.db_tables import model_draft, grid
     from etrago.tools.plot import (plot_line_loading, plot_stacked_gen,
@@ -53,6 +55,9 @@ if not 'READTHEDOCS' in os.environ:
                                    plot_line_loading_diff, full_load_hours,
                                    extension_overlay_network)
     from etrago.appl import etrago
+    from importlib import import_module
+    import pypsa
+    import re
 
 __copyright__ = ("Europa-Universität Flensburg, "
                  "Centre for Sustainable Energy Systems")
@@ -161,8 +166,22 @@ class eTraGoResults(egoBasic):
                 # ToDo add scenario_setting for results
                 self.json_file['eTraGo']['db'] = self.json_file['global']['db']
                 logger.info(
-                    'Add `eTraGo` scenario_setting from oedb result')
+                    'Add eTraGo scenario_setting from oedb result')
                 # To do ....
+                _prefix = 'EgoGridPfHvResult'
+                schema = 'model_draft'
+                packagename = 'egoio.db_tables'
+                _pkg = import_module(packagename + '.' + schema)
+
+                # get metadata
+                # version = json_file['global']['gridversion']
+
+                orm_meta = getattr(_pkg, _prefix + 'Meta')
+                self.jsonpath = recover_resultsettings(self.session,
+                                                       self.json_file,
+                                                       orm_meta,
+                                                       self.json_file['global']
+                                                       ['result_id'])
 
             except KeyError:
                 pass
@@ -175,18 +194,18 @@ class eTraGoResults(egoBasic):
             logger.info('Create eTraGo network')
             self.etrago_network = etrago(self.json_file['eTraGo'])
 
-            # add selected results to Results container
-            self.etrago = pd.DataFrame()
-            self.etrago.generator = pd.DataFrame()
-            self.etrago.storage_charges = total_storage_charges(
-                self.etrago_network)
-            self.etrago.storage_costs = etrago_storages(self.etrago_network)
-            self.etrago.operating_costs = etrago_operating_costs(
-                self.etrago_network)
-            self.etrago.generator = create_etrago_results(self.etrago_network,
-                                                          self.scn_name)
-            self.etrago.grid_costs = etrago_grid_investment(self.etrago_network,
-                                                            self.json_file)
+        # add selected results to Results container
+        self.etrago = pd.DataFrame()
+        self.etrago.generator = pd.DataFrame()
+        self.etrago.storage_charges = total_storage_charges(
+            self.etrago_network)
+        self.etrago.storage_costs = etrago_storages(self.etrago_network)
+        self.etrago.operating_costs = etrago_operating_costs(
+            self.etrago_network)
+        self.etrago.generator = create_etrago_results(self.etrago_network,
+                                                      self.scn_name)
+        self.etrago.grid_costs = etrago_grid_investment(self.etrago_network,
+                                                        self.json_file)
 
         # add functions direct
         # self.etrago_network.etrago_line_loading = etrago_line_loading
@@ -439,17 +458,8 @@ def etrago_from_oedb(session, json_file):
         add Mapping for grid schema
         make it more generic -> class?
     """
-    result_id = json_file['global']['result_id']
 
-    # modules from model_draft
-    from egoio.db_tables.model_draft import EgoGridPfHvSource as Source,\
-        EgoGridPfHvTempResolution as TempResolution
-    from etrago.tools.io import load_config_file
-    from importlib import import_module
-    import pypsa
-    import re
-    import logging
-    logger = logging.getLogger('ego')
+    result_id = json_file['global']['result_id']
 
     # functions
     def map_ormclass(name):
@@ -508,7 +518,7 @@ def etrago_from_oedb(session, json_file):
 
         return df
 
-    def series_results(name, column, session, meta_args, result_id, ormclass):
+    def series_results(name, column, session, result_id, ormclass):
         """
         Function to get Time Series as pandas DataFrames by the result_id
 
@@ -551,47 +561,6 @@ def etrago_from_oedb(session, json_file):
 
         return df
 
-    def recover_resultsettings(session, json_file, orm_meta):
-        """ Recover scenario_setting from database
-        """
-
-        # check result_id
-        result_id_in = session.query(
-            orm_meta.result_id).filter(orm_meta.
-                                       result_id == result_id).all()
-        if result_id_in:
-            logger.info('Choosen result_id %s found in DB', result_id)
-        else:
-            logger.info('Error: result_id not found in DB')
-
-        # get meta data as json_file
-        meta = session.query(orm_meta.result_id, orm_meta.scn_name, orm_meta.calc_date,
-                             orm_meta.user_name, orm_meta.method, orm_meta.start_snapshot,
-                             orm_meta.end_snapshot, orm_meta.solver, orm_meta.settings
-                             ).filter(orm_meta.result_id == result_id)
-
-        meta_df = pd.read_sql(
-            meta.statement, meta.session.bind, index_col='result_id')
-
-        # update json_file with main data by result_id
-        json_file['eTraGo']['scn_name'] = meta_df.scn_name[result_id]
-        json_file['eTraGo']['method'] = meta_df.method[result_id]
-        json_file['eTraGo']['start_snapshot'] = meta_df.start_snapshot[result_id]
-        json_file['eTraGo']['end_snapshot'] = meta_df.end_snapshot[result_id]
-        json_file['eTraGo']['solver'] = meta_df.solver[result_id]
-
-        # update json_file with specific data by result_id
-        meta_set = dict(meta_df.settings[result_id])
-
-        for key in json_file['eTraGo'].keys():
-
-            try:
-                json_file['eTraGo'][key] = meta_set[key]
-            except KeyError:
-                pass
-
-        return json_file
-
     # create config for results
     path = os.getcwd()
     # add meta_args with args of results
@@ -622,20 +591,7 @@ def etrago_from_oedb(session, json_file):
         logger.info('Error: result_id not found in DB')
 
     # get meta data as args
-    meta = session.query(orm_meta.result_id, orm_meta.scn_name, orm_meta.calc_date,
-                         orm_meta.user_name, orm_meta.method, orm_meta.start_snapshot,
-                         orm_meta.end_snapshot, orm_meta.solver, orm_meta.settings
-                         ).filter(orm_meta.result_id == result_id)
-
-    meta_df = pd.read_sql(
-        meta.statement, meta.session.bind, index_col='result_id')
-
-    meta_args = dict(meta_df.settings[result_id])
-    meta_args['scn_name'] = meta_df.scn_name[result_id]
-    meta_args['method'] = meta_df.method[result_id]
-    meta_args['start_snapshot'] = meta_df.start_snapshot[result_id]
-    meta_args['end_snapshot'] = meta_df.end_snapshot[result_id]
-    meta_args['solver'] = meta_df.solver[result_id]
+    meta_args = recover_resultsettings(session, json_file, orm_meta, result_id)
 
     # get TempResolution
     temp = TempResolution
@@ -647,15 +603,8 @@ def etrago_from_oedb(session, json_file):
                                  periods=tr.timesteps,
                                  freq=tr.resolution)
 
-    timeindex = timeindex[meta_args['start_snapshot'] -
-                          1: meta_args['end_snapshot']]
-
-    meta_args['temp_id'] = tr.temp_id
-    print(meta_args)
-    print('und das neue')
-
-    meta_test = recover_resultsettings(session, json_file, orm_meta)
-    print(meta_test)
+    timeindex = timeindex[meta_args['eTraGo']['start_snapshot'] -
+                          1: meta_args['eTraGo']['end_snapshot']]
 
     # create df for PyPSA network
 
@@ -721,7 +670,7 @@ def etrago_from_oedb(session, json_file):
                 for col in columns:
 
                     df_series = series_results(
-                        name, col, session, meta_args, result_id, ormclass)
+                        name, col, session, result_id, ormclass)
 
                     # TODO: VMagPuSet?
                     if timevarying_override and comp == 'Generator':
@@ -741,15 +690,46 @@ def etrago_from_oedb(session, json_file):
                         print("Series %s of component %s could not be "
                               "imported" % (col, pypsa_comp_name))
 
-    # populate carrier attribute in PyPSA network
-    # network.import_components_from_dataframe(
-    #    self.fetch_by_relname(carr_ormclass), 'Carrier')
-
-    # add fetch_by_relname and
-
     print('Done')
     logger.info('Imported eTraGo results of id = %s ', result_id)
     return network
+
+
+def recover_resultsettings(session, json_file, orm_meta, result_id):
+    """ Recover scenario_setting from database
+    """
+
+    # check result_id
+    result_id_in = session.query(
+        orm_meta.result_id).filter(orm_meta.
+                                   result_id == result_id).all()
+
+    # get meta data as json_file
+    meta = session.query(orm_meta.result_id, orm_meta.scn_name, orm_meta.calc_date,
+                         orm_meta.user_name, orm_meta.method, orm_meta.start_snapshot,
+                         orm_meta.end_snapshot, orm_meta.solver, orm_meta.settings
+                         ).filter(orm_meta.result_id == result_id)
+
+    meta_df = pd.read_sql(
+        meta.statement, meta.session.bind, index_col='result_id')
+
+    # update json_file with main data by result_id
+    json_file['eTraGo']['scn_name'] = meta_df.scn_name[result_id]
+    json_file['eTraGo']['method'] = meta_df.method[result_id]
+    json_file['eTraGo']['start_snapshot'] = meta_df.start_snapshot[result_id]
+    json_file['eTraGo']['end_snapshot'] = meta_df.end_snapshot[result_id]
+    json_file['eTraGo']['solver'] = meta_df.solver[result_id]
+
+    # update json_file with specific data by result_id
+    meta_set = dict(meta_df.settings[result_id])
+
+    for key in json_file['eTraGo'].keys():
+        try:
+            json_file['eTraGo'][key] = meta_set[key]
+        except KeyError:
+            pass
+
+    return json_file
 
 
 if __name__ == '__main__':
