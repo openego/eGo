@@ -33,6 +33,7 @@ from ego.tools.mv_cluster import (
 ## Other Packages
 import os
 import logging
+import multiprocessing as mp
 import pandas as pd
 from sqlalchemy.orm import sessionmaker
 
@@ -40,12 +41,6 @@ from sqlalchemy.orm import sessionmaker
 logging.basicConfig(format='%(asctime)s %(message)s',level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-
-#os.getcwd()
-#os.chdir('/home/student/Git/eGo/ego/')
-
-def test_pool(a, b):
-    print('hallo') 
         
 class EDisGoNetworks:
     """
@@ -59,14 +54,16 @@ class EDisGoNetworks:
         Session = sessionmaker(bind=conn)
         self._session = Session()
 
+        ## Json Inputs
         self._json_file = kwargs.get('json_file', None)
-        
         self._grid_version = self._json_file['global']['gridversion']
-        self._edisgo_args = self._json_file['eDisGo']
         
+        ### eDisGo args
+        self._edisgo_args = self._json_file['eDisGo']       
         self._ding0_files = self._edisgo_args['ding0_files']
-        self._scn_name = self._edisgo_args['scn_name']
-        
+        self._mv_cluster = self._edisgo_args['mv_cluster']
+              
+        self._scn_name = self._edisgo_args['scn_name']       
         if self._scn_name == 'Status Quo':
             self._generator_scn = None
         elif self._scn_name == 'NEP 2035':
@@ -79,7 +76,12 @@ class EDisGoNetworks:
         else:
             self._versioned = False
         
+        ## eTraGo
         self._etrago_network = kwargs.get('etrago_network', None)
+        
+        ## Functions
+        self.grid_choice()
+        self.run_edisgo_pool()
 
        
     def analyze_cluster_attributes(self):
@@ -89,7 +91,7 @@ class EDisGoNetworks:
         """
         analyze_attributes(self._ding0_files)
         
-    def cluster_mv_grids(self, no_grids):
+    def cluster_mv_grids(self):
         """
         Clusters the MV grids based on the attributes
 
@@ -101,7 +103,7 @@ class EDisGoNetworks:
             logger.info('Attributes will be calculated')
             self.analyze_cluster_attributes()
 
-        return cluster_mv_grids(self._ding0_files, no_grids)
+        return cluster_mv_grids(self._ding0_files, self._mv_cluster)
         
     def check_available_mv_grids(self):
        
@@ -115,12 +117,29 @@ class EDisGoNetworks:
  
         return mv_grids
         
-    def run_edisgo_pool(self, parallelization=False):
+    def grid_choice(self):
         
+        if self._mv_cluster:
+            logger.info('Clustering to {} MV grids'.format(self._mv_cluster))
+            cluster = self.cluster_mv_grids()
+        else:
+            mv_grids = self.check_available_mv_grids()
+            cluster = pd.DataFrame(
+                    mv_grids,
+                    columns=['the_selected_network_id'])
+            cluster['no_of_points_per_cluster'] = 1
+            no_grids = len(mv_grids)
+            logger.info(
+                    'Calculating all available {} MV grids'.format(no_grids)
+                    )
+        self._grid_choice = cluster
         
+    def run_edisgo_pool(self, parallelization=True):
+               
         if parallelization is True:
-            
+            logger.info('Parallelization')
             raise NotImplementedError
+            
 #            id_list = self._cluster['the_selected_network_id'].tolist()
 #            
 #            self._pool = run_edisgo_pool_flexible(
@@ -130,7 +149,33 @@ class EDisGoNetworks:
             
         else:
             
-    
+            self._edisgo_grids = {}
+            
+            no_grids = len(self._grid_choice)
+            count = 0
+            for idx, row in self._grid_choice.iterrows():
+                prog = '%.1f' % (count / no_grids * 100)
+                logger.info(
+                        '{} % Calculated by eDisGo'.format(prog)
+                    )
+                
+                mv_grid_id = int(row['the_selected_network_id'])
+                logger.info(
+                        'MV grid {}'.format(mv_grid_id)
+                    )  
+                try:
+                    self._edisgo_grids[
+                            mv_grid_id
+                            ] = self.run_edisgo(mv_grid_id)
+                except:
+                    self._edisgo_grids[mv_grid_id] = None
+                    logger.info(
+                            'MV grid {} failed'.format(mv_grid_id)
+                            )                    
+                    
+                count += 1
+                
+                
     def run_edisgo(self, mv_grid_id, *args):
         """
         Runs eDisGo with the desired settings. 
@@ -187,7 +232,8 @@ class EDisGoNetworks:
         update_pypsa_timeseries(
                 edisgo_grid.network, 
                 timesteps=specs['conv_dispatch'].index) 
-            
+        
+        logger.warning('Curtailment can only be included after gen import')
 #        edisgo_grid.curtail(curtailment_methodology='curtail_all',
 #                            # Here, I use absolute values
 #                            timeseries_curtailment=specs['curtailment_abs']) 
@@ -275,23 +321,8 @@ class EDisGoNetworks:
         raise NotImplementedError
 
     
-        
-        
-        
-  
 test = EDisGoNetworks(
         json_file=ego.json_file, 
-        etrago_network=ego.etrago_network)   
-
-#grid = test.run_edisgo(mv_grid_id=1729)
-test.cluster_mv_grids(2)
-
-    
-test.run_edisgo_pool(parallelization=False)
-
-
-
-#ret.network.mv_grid.graph.
-
-
-
+etrago_network=ego.etrago_network)         
+        
+test._edisgo_grids

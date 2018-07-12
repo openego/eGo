@@ -4,7 +4,7 @@
     "eDisGo": false,
     "db": "oedb",
     "result_id": 26,
-    "recover": false,
+    "recover": true,
     "gridversion": "v0.4.2"
   },
   "eTraGo": {
@@ -39,7 +39,7 @@
   "eDisGo": {
      "specs": true,
      "ding0_files": "data/MV_grids/20180712120156",
-     "mv_cluster": 2,
+     "mv_cluster": null,
      "scn_name": "NEP 2035",
      "comments": "make a comment"
   }
