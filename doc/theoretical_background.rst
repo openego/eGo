@@ -4,6 +4,8 @@ Theoretical background
 
 
 
+
+
 Models overview
 ================
 
@@ -11,9 +13,11 @@ Models overview
 .. figure:: images/open_ego_models_overview.png
    :width: 1123px
    :height: 794px
-   :scale: 95%
+   :scale: 70%
    :alt: Overview of Models and processes which are used by eGo
    :align: center
+
+
 
 
 

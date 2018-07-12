@@ -112,15 +112,6 @@ class egoBasic(object):
 
         pass
 
-    def __repr__(self):
-
-        r = ('eGoResults is created.')
-        if not self.etrago_network:
-            r += "\nThe results does not incluede eTraGo results"
-        if not self.edisgo_network:
-            r += "\nThe results does not incluede eDisGo results"
-        return r
-
     pass
 
 
@@ -152,6 +143,8 @@ class eTraGoResults(egoBasic):
                                             *args, **kwargs)
 
         self.etrago_network = None
+
+        logger.info('eTraGoResults startet')
 
         if self.json_file['global']['recover'] is True:
 
@@ -293,7 +286,7 @@ class eTraGoResults(egoBasic):
     # add other methods from eTraGo here
 
 
-class eDisGoResults(egoBasic):
+class eDisGoResults(eTraGoResults):
     """ eDisGo Results
 
     This module contains all results of eDisGo for eGo.
@@ -308,18 +301,18 @@ class eDisGoResults(egoBasic):
     def __init__(self, jsonpath, *args, **kwargs):
         super(eDisGoResults, self).__init__(self, jsonpath, *args, **kwargs)
 
-#        self._edisgo_networks = None
-#        self.edisgo = pd.DataFrame()
+        logger.info('eDisGoResults startet')
+
+        self.edisgo_network = None
+        self.edisgo = pd.DataFrame()
 
         if self.json_file['global']['eDisGo'] is True:
             logger.info('Create eDisGo network')
-#            self.edisgo_networks = EDisGoNetworks(
-#                    json_file=self.json_file, 
-#                    etrago_network=self.etrago_network)
+            self.edisgo_network = None  # add eDisGo initialisation here
+            self.hansOS = self.etrago_network
 
 
-
-class eGo(eTraGoResults, eDisGoResults):
+class eGo(eDisGoResults):
     """Main eGo module which including all results and main functionalities.
 
 
@@ -344,6 +337,14 @@ class eGo(eTraGoResults, eDisGoResults):
 
         # add all ego function
         pass
+
+    def __repr__(self):
+        r = ('eGoResults is created.')
+        if not self.etrago_network:
+            r += "\nThe results does not incluede eTraGo results"
+        if not self.edisgo_network:
+            r += "\nThe results does not incluede eDisGo results"
+        return r
 
     # write_results_to_db():
     logging.info('Initialisation of eGo Results')
