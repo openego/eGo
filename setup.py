@@ -37,6 +37,7 @@ setup(name='eGo',
                         'matplotlib>= 1.5.3, <=1.5.3',
                         'Rtree==0.8.3',
                         'plotly==2.2.3',
+                        'Pyomo==5.5.0',
                         'oedialect'
                         ],
       dependency_links=[('git+https://git@github.com/openego/PyPSA.git'
