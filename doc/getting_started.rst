@@ -34,9 +34,9 @@ Examples
     ego.etrago_line_loading()
 
 
-Reesult Examples k=30 Cluster Plot of Germany
-=============================================
+Example Cluster of Germany
+==========================
 
 
 .. raw:: html
-   :file: images/iplot_k30_cluster.html
+   :file: images/iplot_cluster.html
