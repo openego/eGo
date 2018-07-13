@@ -11,67 +11,52 @@ Installation
 
 1. Create a virtualenvironment (where you like it) and activate it:
 
-    ``$virtualenv --clear -p python3.5  ego_dev`` and ``$ cd ego_dev/``
-    followed by ``$ source bin/activate``
+.. code-block:: bash
+
+   $ virtualenv --clear -p python3.5  ego_dev``
+   $ cd ego_dev/
+   $ source bin/activate
 
 
 2. Clone eGo from github.com by running following command in your terminal:
 
-    ```
-    git clone https://github.com/openego/eGo
-    ```
+.. code-block:: bash
+
+   $ git clone https://github.com/openego/eGo
+
 
 With your activated environment `cd` to the cloned directory and run
-``pip3 install -e eGo --process-dependency-links --allow-all-external`` . This will install all needed packages into your environment.
+``pip3 install -e eGo --process-dependency-links --allow-all-external`` .
+This will install all needed packages into your environment.
 
 .. warning::
 
       Note, that the first release for deveolper is partly dependent on
       forks and developent versions which could not automaticly be installed.
       Check your installed packages using ``pip3 freeze`` with the
-      `ego_dependencies.txt <https://github.com/openego/eGo/blob/dev/ego_dependencies.txt>`_
+      `ego_dependencies.txt
+      <https://github.com/openego/eGo/blob/dev/ego_dependencies.txt>`_
 
 
-3. Temporary solution:
+3. Work arounds :
 
-After your installation install the eGo PyPSA fork on `dev <https://github.com/openego/PyPSA/tree/dev>`_
+After your installation install the eGo PyPSA fork on
+`dev <https://github.com/openego/PyPSA/tree/dev>`_
 ``pip3 install -e git+https://github.com/openego/PyPSA.git@dev#egg=PyPSA``
 and Folium for an web based ploting with
-``pip3 install -e git+git@github.com:python-visualization/folium.git@5739244acb9868d001032df288500a047b232857#egg=folium``
+``pip3 install -e git+git@github.com:python-visualization/folium.git@dev#egg=folium``
 
 Check if the `config.json <https://github.com/openego/eTraGo/blob/dev/etrago/tools/config.json>`_
-file from eTraGo is installed in your libary ``/lib/python3.5/site-packages/etrago/tools`` .
+file from eTraGo is installed in your libary
+``/lib/python3.5/site-packages/etrago/tools`` .
 If not copy and paste this file into this folder.
 
-If Database connection or table erros appears use: ``pip3 install -e git+git@github.com:openego/ego.io.git@3b76dfddea14d67eb4421b6223bf981d8851e4e6#egg=ego.io``
+If Database connection or table erros appears use:
+``pip3 install -e git+git@github.com:openego/ego.io.git@dev#egg=ego.io``
 
 
-
-
-
-
-
-
-Interface eDisGo for grid and storage costs
-===========================================
-
-
-.. code-block:: python
-
-    # get setting from eTraGo for eDisGo
-    specs = get_etragospecs_from_db(session, bus_id, result_id, scn_name)
-    ...
-    # Create scenario or eDisGo of one mv Grid
-    scenario = Scenario(etrago_specs=specs,
-                        power_flow=(),
-                        mv_grid_id=mv_grid_id,
-                        scenario_name='NEP 2035')
-    ...
-    # import ding0 mv grid
-    network = Network.import_from_ding0(file_path,
-                                        id=mv_grid_id,
-                                        scenario=scenario)
-
+eDisGo
+======
 
 eDisGo units
 ------------
@@ -100,3 +85,6 @@ Change of units from Mega to kilo:
    :file: storage_units.csv
    :delim: ,
    :header-rows: 1
+
+eTraGo
+======
