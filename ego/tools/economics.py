@@ -19,10 +19,6 @@
 # File description
 """This module collects useful functions for economic calculation of eGo which can
 mainly distinguished in operational and investment costs.
-
-Todo:
- 1) Investment costs of eTrago and eDisGo
- 2) Total system costs
 """
 
 import io
@@ -40,11 +36,11 @@ __copyright__ = "Flensburg University of Applied Sciences, Europa-Universität"\
 __license__ = "GNU Affero General Public License Version 3 (AGPL-3.0)"
 __author__ = "wolfbunke"
 
+
 # calculate annuity per time step or periode
+def annuity_per_period(capex, n, wacc, t, p):
+    """ Calculate per given period
 
-
-def annuity_per_period(capex, n, wacc, t):
-    """
     Parameters
     ----------
     capex : float
@@ -53,21 +49,18 @@ def annuity_per_period(capex, n, wacc, t):
         Number of years that the investment is used (economic lifetime)
     wacc : float
         Weighted average cost of capital
-
-    ToDo
-    ----
     t : int
         Timesteps in hours
-    i : float
+    p : float
         interest rate
-        ...
+
     """
 
     # ToDo change formular to hourly annuity costs
     return capex * (wacc * (1 + wacc) ** n) / ((1 + wacc) ** n - 1)
 
 
-def edisgo_convert_capital_costs():
+def edisgo_convert_capital_costs(grid_components, json_file):
     """
 
     Parameters
@@ -78,8 +71,19 @@ def edisgo_convert_capital_costs():
         (Name, investment_cost, lifetime)
     json_file : :obj:dict
         Dictionary of the ``scenario_setting.json`` file
+    _start_snapshot : int
+        Start point of calculation from ``scenario_setting.json`` file
+    _end_snapshot : int
+        End point of calculation from ``scenario_setting.json`` file
+    _p : numeric
+        interest rate of investment
+    _T : int
+        lifetime of investment
 
-
+    Returns
+    -------
+    capital_cost :
+        calculated capital costs of components
     """
     # eTraGo calculation in
     # https://github.com/openego/eTraGo/blob/dev/etrago/tools/utilities.py#L651
@@ -87,14 +91,16 @@ def edisgo_convert_capital_costs():
     #                           p=0.05, T=40):
     # Define function
 
+    pass
+
 
 def etrago_operating_costs(network):
     """ Function to get all operating costs of eTraGo.
 
     Parameters
     ----------
-    network : Network of eTraGo
-        Network of eTraGo
+    network_etrago: :class:`etrago.tools.io.NetworkScenario`
+        eTraGo network object compiled by :meth:`etrago.appl.etrago`
 
     Returns
     -------
@@ -107,12 +113,10 @@ def etrago_operating_costs(network):
     - grid losses : amount and costs
     - use calc_line_losses(network)  from etrago pf_post_lopf
 
-    ToDo
-    ----
-    - change naming and function structure
-    - seperate operation costs in other functions ?
-
     """
+    # TODO   - change naming and function structure
+    # TODO    - seperate operation costs in other functions ?
+
     etg = network
     #etg = eTraGo
     # groupby v_nom
@@ -152,8 +156,8 @@ def etrago_grid_investment(network, json_file):
     Parameters
     ----------
 
-    network : Network
-        eTraGo
+    network_etrago: :class:`etrago.tools.io.NetworkScenario`
+        eTraGo network object compiled by :meth:`etrago.appl.etrago`
     json_file : :obj:dict
         Dictionary of the ``scenario_setting.json`` file
 
@@ -219,13 +223,18 @@ def etrago_grid_investment(network, json_file):
     pass
 
 
-def edisgo_grid_investment(network):
+def edisgo_grid_investment(network_edisgo):
     """Function to get all costs of grid investment of eDisGo.
 
-    Notes
-    -----
-    - ToDo add iteration and container of all costs of edisgo network
+    Parameters
+    ----------
+
+    network_edisgo : :pandas:`pandas.Dataframe<dataframe>`
+        Network container of eDisGo
+
+
     """
+
     pass
 
 
@@ -233,13 +242,10 @@ def get_generator_investment(network, scn_name):
     """ Get investment costs per carrier/gernator.
 
     work around later db table ->  check capital_cost as cost input?!?
-
-    ToDo
-    ----
-    - change values in csv
-    - add values to database
-
     """
+    # TODO   - change values in csv
+    #        - add values to database
+
     etg = network
 
     path = os.getcwd()
@@ -268,8 +274,7 @@ def get_generator_investment(network, scn_name):
 
 
 def investment_costs(network):
-    """
-    Return pandas DataFrame with investment costs of
+    """Return pandas DataFrame with investment costs of
 
     etrago:
     Storages
@@ -279,11 +284,9 @@ def investment_costs(network):
     Line extentation
     Storage costs?
 
-    ToDo
-    ----
-    - add edisgo
-
     """
+    # TODO  add edisgo
+
     etg = network
     invest = pd.DataFrame()
 
