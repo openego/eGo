@@ -1,10 +1,10 @@
 {
   "global": {
     "eTraGo": true,
-    "eDisGo": false,
+    "eDisGo": true,
     "db": "oedb",
     "result_id": 26,
-    "recover": false,
+    "recover": true,
     "gridversion": "v0.4.2"
   },
   "eTraGo": {
@@ -25,7 +25,11 @@
     "lpfile":  false,
     "results": false,
     "export": false,
+<<<<<<< HEAD
     "extendable": "['network','storages']",
+=======
+    "extendable": [],
+>>>>>>> 922690afb3df33d44831ea2880c18e9856e50133
     "generator_noise": true,
     "reproduce_noise": false,
     "minimize_loading": false,
@@ -36,13 +40,17 @@
     "parallelisation": false,
     "skip_snapshots": false,
     "line_grouping": false,
-    "branch_capacity_factor": 1,
+    "branch_capacity_factor": 0.8,
     "load_shedding": true,
-    "comments": null
+    "comments": "eDisGo integration"
   },
   "eDisGo": {
-     "direct_specs": false,
      "specs": true,
-     "comments": "make a comment, SH SQ"
+     "ding0_files": "data/MV_grids/20180713110719",
+     "choice_mode": "manual",
+     "no_grids": null,
+     "manual_grids": [1729, 1730],
+     "scn_name": "NEP 2035",
+     "comments": "make a comment"
   }
 }
