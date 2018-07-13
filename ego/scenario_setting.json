@@ -1,17 +1,17 @@
 {
   "global": {
     "eTraGo": true,
-    "eDisGo": false,
+    "eDisGo": true,
     "db": "oedb",
     "result_id": 26,
-    "recover": false,
+    "recover": true,
     "gridversion": "v0.4.2"
   },
   "eTraGo": {
     "method": "lopf",
     "pf_post_lopf": false,
-    "start_snapshot": 2952,
-    "end_snapshot" : 2953,
+    "start_snapshot": 1,
+    "end_snapshot" : 2,
     "solver": "gurobi",
     "solver_options":{},
     "scn_name": "NEP 2035",
@@ -21,7 +21,7 @@
     "lpfile":  false,
     "results": false,
     "export": false,
-    "extendable": "['network', 'storages']",
+    "extendable": [],
     "generator_noise": true,
     "reproduce_noise": false,
     "minimize_loading": false,
@@ -32,13 +32,17 @@
     "parallelisation": false,
     "skip_snapshots": false,
     "line_grouping": false,
-    "branch_capacity_factor": 1,
+    "branch_capacity_factor": 0.8,
     "load_shedding": true,
-    "comments": null
+    "comments": "eDisGo integration"
   },
   "eDisGo": {
-     "direct_specs": false,
      "specs": true,
-     "comments": "make a comment, SH SQ"
+     "ding0_files": "data/MV_grids/20180713110719",
+     "choice_mode": "manual",
+     "no_grids": null,
+     "manual_grids": [1729, 1730],
+     "scn_name": "NEP 2035",
+     "comments": "make a comment"
   }
 }

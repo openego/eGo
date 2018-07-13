@@ -47,6 +47,7 @@ if not 'READTHEDOCS' in os.environ:
                                  edisgo_grid_investment, investment_costs,
                                  get_generator_investment)
     from tools.utilities import get_scenario_setting, get_time_steps
+    from tools.edisgo_integration import EDisGoNetworks
     from egoio.db_tables.model_draft import RenpassGisParameterRegion
     from egoio.db_tables import model_draft, grid
     from etrago.tools.plot import (plot_line_loading, plot_stacked_gen,
@@ -91,7 +92,8 @@ class egoBasic(object):
     """
 
     def __init__(self,
-                 jsonpath, * args, **kwargs):
+                 jsonpath, *args, **kwargs):
+
 
         self.jsonpath = 'scenario_setting.json'
         self.json_file = get_scenario_setting(self.jsonpath)
@@ -188,6 +190,7 @@ class eTraGoResults(egoBasic):
             self.etrago_network = etrago(self.json_file['eTraGo'])
 
         # add selected results to Results container
+
         self.etrago = pd.DataFrame()
         self.etrago.generator = pd.DataFrame()
         self.etrago.storage_charges = total_storage_charges(
@@ -202,6 +205,7 @@ class eTraGoResults(egoBasic):
 
         # add functions direct
         # self.etrago_network.etrago_line_loading = etrago_line_loading
+
 
         pass
 
@@ -299,17 +303,19 @@ class eDisGoResults(eTraGoResults):
 
         logger.info('eDisGoResults startet')
 
-        self.edisgo_network = None
+#        self.edisgo_networks = None
         self.edisgo = pd.DataFrame()
 
         if self.json_file['global']['eDisGo'] is True:
             logger.info('Create eDisGo network')
-            self.edisgo_network = None  # add eDisGo initialisation here
-            self.hansOS = self.etrago_network
-
-        pass
-
-    pass
+            self.edisgo_networks = EDisGoNetworks(
+                    json_file=self.json_file,
+                    etrago_network=self.etrago_network)
+            
+        def edisgo_total_costs(self, **kwargs):
+            
+            return df
+ 
 
 
 class eGo(eDisGoResults):
