@@ -40,7 +40,7 @@ def define_logging(log_name='ego.log'):
         Name of log file. Default: ``ego.log``.
 
 
-    Results
+    Returns
     -------
     ego_logger : :class:`logging.basicConfig`.
         Set up ``ego_logger`` object of package ``logging``
@@ -76,7 +76,7 @@ logger = define_logging(log_name='ego.log')
 # import scenario settings **args
 
 
-def get_scenario_setting(json_file='scenario_setting.json'):
+def get_scenario_setting(jsonpath='scenario_setting.json'):
     """Get and open json file with scenaio settings of eGo.
     The settings incluede global, eTraGo and eDisGo specific
     settings of arguments and parameters for a reproducible
@@ -88,38 +88,38 @@ def get_scenario_setting(json_file='scenario_setting.json'):
         Default: ``scenario_setting.json``
         Name of scenario setting json file
 
-    Results
+    Returns
     -------
-    scn_set : dict
+    json_file : dict
         Dictionary of json file
     """
     path = os.getcwd()
     # add try ego/
     print("Your path is:\n", path)
 
-    with open(path + '/'+json_file) as f:
-        scn_set = json.load(f)
+    with open(path + '/'+jsonpath) as f:
+        json_file = json.load(f)
 
-    if scn_set['global'].get('eTraGo') == True:
+    if json_file['global'].get('eTraGo') == True:
 
         print('Using and importing eTraGo settings')
 
         # special case of SH and model_draft
         # ToDo: check and maybe remove this part
         sh_scen = ["SH Status Quo", "SH NEP 2035", "SH eGo 100"]
-        if scn_set['eTraGo'].get('scn_name') in sh_scen and scn_set['eTraGo'].\
+        if json_file['eTraGo'].get('scn_name') in sh_scen and json_file['eTraGo'].\
                 get('gridversion') == "v0.4.2":
-            scn_set['eTraGo']['gridversion'] = None
+            json_file['eTraGo']['gridversion'] = None
 
     # add global parameter to eTraGo scn_set
-    scn_set['eTraGo'].update({'db': scn_set['global'].get('db')})
-    scn_set['eTraGo'].update(
-        {'gridversion': scn_set['global'].get('gridversion')})
+    json_file['eTraGo'].update({'db': json_file['global'].get('db')})
+    json_file['eTraGo'].update(
+        {'gridversion': json_file['global'].get('gridversion')})
 
-    if scn_set['global'].get('eDisGo') == True:
+    if json_file['global'].get('eDisGo') == True:
         print('Use eDisGo settings')
 
-    return scn_set
+    return json_file
 
 
 def get_time_steps(json_file):
