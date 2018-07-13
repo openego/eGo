@@ -2,6 +2,9 @@
 The eGo tool
 ============
 
+eGo
+===
+
 The python package eGo is a toolbox and application which connects the tool eTraGo
 with a Optimization of flexibility options for transmission grids based on PyPSA
 and eDisGo which analysis and optimization distribution grids. All those python
@@ -57,4 +60,3 @@ more details.
 You should have received a copy of the GNU General Public License along
 with this program.
 If not, see `www.gnu.org/licenses <https://www.gnu.org/licenses/>`_.
-
