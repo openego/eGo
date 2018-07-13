@@ -221,6 +221,7 @@ class eTraGoResults(egoBasic):
             Integrate and use function from eTraGo.
             For more information see:
             """
+            # add if time_step <1  -> plot
             return plot_line_loading(network=self.etrago_network, **kwargs)
 
         def etrago_stacked_gen(self, **kwargs):
