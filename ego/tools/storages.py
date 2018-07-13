@@ -42,27 +42,25 @@ def total_storage_charges(network):
     Parameters
     ----------
     network : :etrago:`etrago.tools.io.NetworkScenario`
-        eTraGo ``NetworkScenario`` based on PyPSA Network. See also:
+        eTraGo ``NetworkScenario`` based on PyPSA Network. See also
         `pypsa.network <https://pypsa.org/doc/components.html#network>`_
 
-    Results
+    Returns
     -------
     results : :pandas:`pandas.DataFrame<dataframe>`
         Summarize and returns a ``DataFrame`` of the storages optimaziation.
 
     Notes
     -----
+
     The ``results`` dataframe inclueds following parameters:
 
     charge : numeric
          Quantity of charged Energy in MWh over scenario time steps
-
     discharge : numeric
         Quantity of discharged Energy in MWh over scenario time steps
-
     count : int
         Number of storage units
-
     p_nom_o_sum: numeric
         Sum of optimal installed power capacity
     """
@@ -105,7 +103,7 @@ def etrago_storages(network):
     Parameters
     ----------
     network : :class:`~.etrago.tools.io.NetworkScenario`
-        eTraGo ``NetworkScenario`` based on PyPSA Network. See also:
+        eTraGo ``NetworkScenario`` based on PyPSA Network. See also
         `pypsa.network <https://pypsa.org/doc/components.html#network>`_
 
     Returns
