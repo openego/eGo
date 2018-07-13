@@ -21,7 +21,6 @@ Welcome to eGo documentation!
    welcome
    installation
    getting_started
-   usage_details
    theoretical_background
    developer
    whatsnew
