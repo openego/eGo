@@ -29,6 +29,7 @@ from ego.tools.specs import (
 from ego.tools.mv_cluster import (
         analyze_attributes,
         cluster_mv_grids)
+from ego.tools.utilities import define_logging
 
 ## Other Packages
 import os
@@ -39,7 +40,7 @@ from sqlalchemy.orm import sessionmaker
 
 # Logging
 logging.basicConfig(format='%(asctime)s %(message)s',level=logging.INFO)
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('ego')
 
         
 class EDisGoNetworks:
@@ -61,8 +62,8 @@ class EDisGoNetworks:
         ### eDisGo args
         self._edisgo_args = self._json_file['eDisGo']       
         self._ding0_files = self._edisgo_args['ding0_files']
-        self._mv_cluster = self._edisgo_args['mv_cluster']
-              
+        self._choice_mode = self._edisgo_args['choice_mode']
+             
         self._scn_name = self._edisgo_args['scn_name']       
         if self._scn_name == 'Status Quo':
             self._generator_scn = None
@@ -91,7 +92,7 @@ class EDisGoNetworks:
         """
         analyze_attributes(self._ding0_files)
         
-    def cluster_mv_grids(self):
+    def cluster_mv_grids(self, no_grids):
         """
         Clusters the MV grids based on the attributes
 
@@ -103,7 +104,7 @@ class EDisGoNetworks:
             logger.info('Attributes will be calculated')
             self.analyze_cluster_attributes()
 
-        return cluster_mv_grids(self._ding0_files, self._mv_cluster)
+        return cluster_mv_grids(self._ding0_files, no_grids)
         
     def check_available_mv_grids(self):
        
@@ -119,10 +120,22 @@ class EDisGoNetworks:
         
     def grid_choice(self):
         
-        if self._mv_cluster:
-            logger.info('Clustering to {} MV grids'.format(self._mv_cluster))
-            cluster = self.cluster_mv_grids()
-        else:
+        if self._choice_mode == 'cluster':
+            no_grids = self._edisgo_args['no_grids']
+            logger.info('Clustering to {} MV grids'.format(no_grids))
+            cluster = self.cluster_mv_grids(no_grids)
+
+        elif self._choice_mode == 'manual':
+            man_grids = self._edisgo_args['manual_grids']
+            cluster = pd.DataFrame(
+                    man_grids,
+                    columns=['the_selected_network_id'])
+            cluster['no_of_points_per_cluster'] = 1
+            logger.info(
+                    'Calculating manually chosen MV grids {}'.format(man_grids)
+                    )
+            
+        elif self._choice_mode == 'all':
             mv_grids = self.check_available_mv_grids()
             cluster = pd.DataFrame(
                     mv_grids,
@@ -132,7 +145,11 @@ class EDisGoNetworks:
             logger.info(
                     'Calculating all available {} MV grids'.format(no_grids)
                     )
+
         self._grid_choice = cluster
+        
+        
+        
         
     def run_edisgo_pool(self, parallelization=False):
                
@@ -167,14 +184,14 @@ class EDisGoNetworks:
                     self._edisgo_grids[
                             mv_grid_id
                             ] = self.run_edisgo(mv_grid_id)
-                except:
+                except Exception:
                     self._edisgo_grids[mv_grid_id] = None
-                    logger.info(
-                            'MV grid {} failed'.format(mv_grid_id)
+                    logger.exception(
+                            'MV grid {} failed: \n'.format(mv_grid_id)
+                            
                             )                    
                     
                 count += 1
-                
                 
     def run_edisgo(self, mv_grid_id, *args):
         """
@@ -214,12 +231,13 @@ class EDisGoNetworks:
         logger.info('eTraGo feed-in case')
         
         edisgo_grid.network.results = Results()
-#        edisgo_grid.network.pypsa = None
-#        
-#        if self._generator_scn:
-#            edisgo_grid.import_generators(
-#                    generator_scenario=self._generator_scn)
+        edisgo_grid.network.pypsa = None
+        
+        if self._generator_scn:
+            edisgo_grid.import_generators(
+                    generator_scenario=self._generator_scn)
         logger.warning('No generators are imported')
+        edisgo_grid.network.pypsa = None
                     
         edisgo_grid.network.timeseries = TimeSeriesControl( 
                 # Here, I use only normalized values from specs
