@@ -16,7 +16,7 @@ Welcome to eGo documentation!
 
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
 
    welcome
    installation
