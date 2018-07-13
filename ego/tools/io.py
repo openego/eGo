@@ -118,6 +118,15 @@ class eTraGoResults(egoBasic):
     of eTraGo  and it's network container for eGo.
 
 
+
+    Returns
+    -------
+    network_etrago: :meth:`etrago.appl.etrago`
+        eTraGo network object
+
+
+
+
     Examples
     --------
 
@@ -125,7 +134,10 @@ class eTraGoResults(egoBasic):
 
     See also
     --------
+
     The `eTraGo`_ documentation.
+
+
 
     References
     ----------
