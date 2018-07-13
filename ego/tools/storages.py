@@ -45,7 +45,7 @@ def total_storage_charges(network):
         eTraGo ``NetworkScenario`` based on PyPSA Network. See also
         `pypsa.network <https://pypsa.org/doc/components.html#network>`_
 
-    Results
+    Returns
     -------
     results : :pandas:`pandas.DataFrame<dataframe>`
         Summarize and returns a ``DataFrame`` of the storages optimaziation.
