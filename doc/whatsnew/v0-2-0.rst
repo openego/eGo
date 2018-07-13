@@ -18,12 +18,12 @@ Added features
 --------------
 
 * Cleaned and restructured eGo classes and functions
-  - Moved classes of eGo from results.py to io.py
-  - Move serveral function
+    * Moved classes of eGo from results.py to io.py
+    * Move serveral function
   
 * Introduce new files for edisgo handling
-  - edisgo_integration.py
-  - mv_cluster.py
+    * edisgo_integration.py
+    * mv_cluster.py
 
 * Introduce new file storages.py  for eTraGo
 * Updated eTraGo 0.6 and integrated eTraGo's new functions and features to eGo
