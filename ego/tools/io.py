@@ -94,7 +94,6 @@ class egoBasic(object):
     def __init__(self,
                  jsonpath, *args, **kwargs):
 
-
         self.jsonpath = 'scenario_setting.json'
         self.json_file = get_scenario_setting(self.jsonpath)
 
@@ -201,7 +200,6 @@ class eTraGoResults(egoBasic):
         # add selected results to Results container
 
         self.etrago = pd.DataFrame()
-        self.etrago.generator = pd.DataFrame()
         self.etrago.storage_charges = total_storage_charges(
             self.etrago_network)
         self.etrago.storage_costs = etrago_storages(self.etrago_network)
@@ -214,7 +212,6 @@ class eTraGoResults(egoBasic):
 
         # add functions direct
         # self.etrago_network.etrago_line_loading = etrago_line_loading
-
 
         pass
 
@@ -313,13 +310,12 @@ class eDisGoResults(eTraGoResults):
         if self.json_file['global']['eDisGo'] is True:
             logger.info('Create eDisGo network')
             self.edisgo_networks = EDisGoNetworks(
-                    json_file=self.json_file,
-                    etrago_network=self.etrago_network)
-            
+                json_file=self.json_file,
+                etrago_network=self.etrago_network)
+
         def edisgo_total_costs(self, **kwargs):
-            
+
             return df
- 
 
 
 class eGo(eDisGoResults):
