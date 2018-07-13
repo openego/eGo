@@ -231,14 +231,13 @@ class EDisGoNetworks:
         logger.info('eTraGo feed-in case')
         
         edisgo_grid.network.results = Results()
-        edisgo_grid.network.pypsa = None
-        
-        if self._generator_scn:
-            edisgo_grid.import_generators(
-                    generator_scenario=self._generator_scn)
-        logger.warning('No generators are imported')
-        edisgo_grid.network.pypsa = None
+ 
+# Generator Import is currently not working in eDisGo       
+#        if self._generator_scn:
+#            edisgo_grid.import_generators(
+#                    generator_scenario=self._generator_scn)
                     
+        print(specs['conv_dispatch'])
         edisgo_grid.network.timeseries = TimeSeriesControl( 
                 # Here, I use only normalized values from specs
                 timeseries_generation_fluctuating=specs['potential'],
@@ -247,9 +246,10 @@ class EDisGoNetworks:
                 config_data=edisgo_grid.network.config,
                 timeindex=specs['conv_dispatch'].index).timeseries
    
-        update_pypsa_timeseries(
-                edisgo_grid.network, 
-                timesteps=specs['conv_dispatch'].index) 
+# This will be used after the next eDisGo release    
+#        update_pypsa_timeseries(
+#                edisgo_grid.network, 
+#                timesteps=specs['conv_dispatch'].index) 
         
         logger.warning('Curtailment can only be included after gen import')
 #        edisgo_grid.curtail(curtailment_methodology='curtail_all',
@@ -257,10 +257,12 @@ class EDisGoNetworks:
 #                            timeseries_curtailment=specs['curtailment_abs']) 
 #        
 #        # Think about the other curtailment functions!!!!
-          
+        
+# This will become unnecessary with the next eDisGo release
+        edisgo_grid.network.pypsa = None 
         edisgo_grid.analyze()
         
-        edisgo_grid.reinforce()
+        edisgo_grid.reinforce() 
 
         # Get costs
         costs_grouped = \
@@ -273,7 +275,7 @@ class EDisGoNetworks:
         costs.rename(columns={'level_0': 'grid'}, inplace=True)
         
         # Grid issues besser verstehen!! Und evtl. mit aussgeben
-        
+        print(costs)
         return edisgo_grid
         
         
