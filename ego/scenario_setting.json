@@ -4,7 +4,7 @@
     "eDisGo": true,
     "db": "oedb",
     "result_id": 26,
-    "recover": true,
+    "recover": false,
     "gridversion": "v0.4.2"
   },
   "eTraGo": {
