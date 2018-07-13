@@ -19,11 +19,9 @@
 # File description
 """Module which collects useful functions for plotting eTraGo, eDisGo and
 eGo results.
-
-ToDo
-----
-- Implement plotly for iplot
 """
+# TODO  - Implement plotly for iplot
+
 import numpy as np
 import pandas as pd
 import os
@@ -92,6 +90,15 @@ def carriers_colore():
 def make_all_plots(network):
     """ Test function which run all ploting functions.
 
+    Parameters
+    ----------
+    network_etrago: :class:`etrago.tools.io.NetworkScenario`
+        eTraGo network object compiled by :meth:`etrago.appl.etrago`
+
+    Returns
+    -------
+    plots : :meth:`matplotlib.pyplot`
+        Returns plots
     """
     # make a line loading plot
     plot_line_loading(network)
@@ -120,27 +127,26 @@ def igeoplot(network, session, tiles=None, geoloc=None, args=None):
     Parameters
     ----------
 
-    network : PyPSA
-            PyPSA network container
+    network_etrago: :class:`etrago.tools.io.NetworkScenario`
+        eTraGo network object compiled by :meth:`etrago.appl.etrago`
     tiles : str
             Folium background map style `None` as OSM or `Nasa`
-    geoloc : list of str
-    Define center of map as (lon,lat)
+    geoloc : :obj:list
+        List which define center of map as (lon,lat)
 
     Returns
     -------
     plot : html
-        HTML file this .js plot
-
-    ToDo
-    ----
-    - implement eDisGo Polygons
-    - fix version problems of data
-    - use  grid.ego_dp_hvmv_substation subst_id and otg_id
-    - use cluster or boxes to limit data volumn
-    - add Legend
-    - Map see: http://nbviewer.jupyter.org/gist/BibMartin/f153aa957ddc5fadc64929abdee9ff2e
+        HTML file with .js plot
     """
+    # TODO
+    # - implement eDisGo Polygons
+    # - fix version problems of data
+    # - use  grid.ego_dp_hvmv_substation subst_id and otg_id
+    # - use cluster or boxes to limit data volumn
+    # - add Legend
+    # - Map see: http://nbviewer.jupyter.org/gist/BibMartin/f153aa957ddc5fadc64929abdee9ff2e
+    # - test cluster
 
     if geoloc is None:
         geoloc = [network.buses.y.mean(), network.buses.x.mean()]
@@ -293,6 +299,8 @@ def igeoplot(network, session, tiles=None, geoloc=None, args=None):
 
 
 def prepareGD(session, subst_id=None, version=None):
+    """
+    """
 
     if version == 'v0.2.11':
         query = session.query(EgoDpMvGriddistrict.subst_id,
@@ -316,7 +324,7 @@ def prepareGD(session, subst_id=None, version=None):
     return region
 
 
-def total_power_costs_plot(eTraGo):
+def total_power_costs_plot(etrago_network):
     """
     plot power price of eTraGo
 
@@ -327,7 +335,7 @@ def total_power_costs_plot(eTraGo):
     Returns
     -------
     plot :obj:`matplotlib.pyplot.show`
-            <https://matplotlib.org/api/pyplot_api.html#matplotlib.pyplot.show`_
+            https://matplotlib.org/api/pyplot_api.html#matplotlib.pyplot.show
 
 
     """
