@@ -311,6 +311,10 @@ class eDisGoResults(eTraGoResults):
             self.edisgo_networks = EDisGoNetworks(
                     json_file=self.json_file,
                     etrago_network=self.etrago_network)
+            
+        def edisgo_total_costs(self, **kwargs):
+            
+            return df
  
 
 

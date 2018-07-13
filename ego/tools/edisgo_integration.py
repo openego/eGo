@@ -157,11 +157,11 @@ class EDisGoNetworks:
             logger.info('Parallelization')
             raise NotImplementedError
             
-#            id_list = self._cluster['the_selected_network_id'].tolist()
+#            id_list = self._grid_choice['the_selected_network_id'].tolist()
 #            
 #            self._pool = run_edisgo_pool_flexible(
 #                    ding0_id_list=id_list, 
-#                    func=test_pool,
+#                    func=EDisGoNetworks.run_edisgo,
 #                    func_arguments=['toll'])       
             
         else:
@@ -181,9 +181,16 @@ class EDisGoNetworks:
                         'MV grid {}'.format(mv_grid_id)
                     )  
                 try:
+                    bus_id = self.get_bus_id_from_mv_grid(mv_grid_id)
                     self._edisgo_grids[
                             mv_grid_id
-                            ] = self.run_edisgo(mv_grid_id)
+                            ] = self.run_edisgo(
+                            mv_grid_id=mv_grid_id,
+                            bus_id=bus_id,
+                            session=self._session,
+                            etrago_network=self._etrago_network,
+                            scn_name=self._scn_name,
+                            ding0_files=self._ding0_files)
                 except Exception:
                     self._edisgo_grids[mv_grid_id] = None
                     logger.exception(
@@ -192,24 +199,31 @@ class EDisGoNetworks:
                             )                    
                     
                 count += 1
-                
-    def run_edisgo(self, mv_grid_id, *args):
+    
+    @staticmethod            
+    def run_edisgo(
+            mv_grid_id, 
+            bus_id,
+            session,
+            etrago_network,
+            scn_name,
+            ding0_files):
+        
         """
         Runs eDisGo with the desired settings. 
         
         """      
 
         logger.info('Calculating interface values')
-        bus_id = self.get_bus_id_from_mv_grid(mv_grid_id)
-        
+                
         specs = get_etragospecs_direct(
-                self._session, 
+                session, 
                 bus_id, 
-                self._etrago_network,
-                self._scn_name)    
+                etrago_network,
+                scn_name)    
         
         ding0_filepath = (
-                self._ding0_files 
+                ding0_files
                 + '/ding0_grids__' 
                 + str(mv_grid_id) 
                 + '.pkl')
