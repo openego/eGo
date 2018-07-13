@@ -25,11 +25,7 @@
     "lpfile":  false,
     "results": false,
     "export": false,
-<<<<<<< HEAD
     "extendable": "['network','storages']",
-=======
-    "extendable": [],
->>>>>>> 922690afb3df33d44831ea2880c18e9856e50133
     "generator_noise": true,
     "reproduce_noise": false,
     "minimize_loading": false,
