@@ -48,8 +48,9 @@ if __name__ == '__main__':
     logger.info('Start calculation')
 
     ego = eGo(jsonpath='scenario_setting.json')
+    logger.info('Print results')
     ego.etrago_line_loading()
     print(ego.etrago.generator)
-    print(ego.etrago.storage_charges)
+    print(ego.etrago.grid_costs)
     print(ego.etrago.storage_costs)
     print(ego.etrago.operating_costs)
