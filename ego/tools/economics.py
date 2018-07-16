@@ -250,29 +250,29 @@ def etrago_grid_investment(network, json_file):
         trafos['grid_costs'] = trafos.s_nom_extendable.multiply(
             trafos.capital_cost, axis='index')
         trafos['number_of_expansion'] = trafos.s_nom_extendable > 0.0
-        trafos['time_step'] = get_time_steps(json_fi
+        trafos['time_step'] = get_time_steps(json_file)
 
         # add v_level
-        trafos['v_level']='unknown'
+        trafos['v_level'] = 'unknown'
 
         # TODO check
-        ix_ehv=trafos[trafos['v_nom0'] >= 380].index
+        ix_ehv = trafos[trafos['v_nom0'] >= 380].index
         trafos.set_value(ix_ehv, 'v_level', 'ehv')
 
-        ix_hv=trafos[(trafos['v_nom0'] <= 220) &
+        ix_hv = trafos[(trafos['v_nom0'] <= 220) &
                        (trafos['v_nom0'] >= 110)].index
         trafos.set_value(ix_hv, 'v_level', 'hv')
 
         # aggregate lines and trafo
-        line=lines[['v_level', 'number_of_expansion',
+        line = lines[['v_level', 'number_of_expansion',
                       'grid_costs', 'time_step']].groupby('v_level').sum()
-        trafo=trafos[['v_level', 'number_of_expansion',
+        trafo = trafos[['v_level', 'number_of_expansion',
                         'grid_costs', 'time_step']].groupby('v_level').sum()
 
         # merge trafos and line
-        frames=[line, trafo]
+        frames = [line, trafo]
 
-        result=pd.concat(frames)
+        result = pd.concat(frames)
 
         return result
 
@@ -305,28 +305,28 @@ def get_generator_investment(network, scn_name):
     # TODO   - change values in csv
     #        - add values to database
 
-    etg=network
+    etg = network
 
-    path=os.getcwd()
-    filename='investment_costs.csv'
-    invest=pd.DataFrame.from_csv(path + '/data/'+filename)
+    path = os.getcwd()
+    filename = 'investment_costs.csv'
+    invest = pd.DataFrame.from_csv(path + '/data/'+filename)
 
     if scn_name in ['SH Status Quo', 'Status Quo']:
-        invest_scn='Status Quo'
+        invest_scn = 'Status Quo'
 
     if scn_name in ['SH NEP 2035', 'NEP 2035']:
-        invest_scn='NEP 2035'
+        invest_scn = 'NEP 2035'
 
     if scn_name in ['SH eGo 100', 'eGo 100']:
-        invest_scn='eGo 100'
+        invest_scn = 'eGo 100'
 
-    gen_invest=pd.concat([invest[invest_scn],
+    gen_invest = pd.concat([invest[invest_scn],
                             etg.generators.groupby('carrier')['p_nom'].sum()],
                            axis=1, join='inner')
 
-    gen_invest=pd.concat([invest[invest_scn], etg.generators.groupby('carrier')
+    gen_invest = pd.concat([invest[invest_scn], etg.generators.groupby('carrier')
                             ['p_nom'].sum()], axis=1, join='inner')
-    gen_invest['carrier_costs']=gen_invest[invest_scn] * \
+    gen_invest['carrier_costs'] = gen_invest[invest_scn] * \
         gen_invest['p_nom'] * 1000  # in MW
 
     return gen_invest
@@ -346,40 +346,40 @@ def investment_costs(network):
     """
     # TODO  add edisgo
 
-    etg=network
-    invest=pd.DataFrame()
+    etg = network
+    invest = pd.DataFrame()
 
     # storages
     # get total storage investment costs
     # unit of costs?
-    installed_storages=etg.storage_units[etg.storage_units.p_nom_opt != 0]
-    costs=sum(installed_storages.capital_cost * installed_storages.p_nom_opt)
-    invest=invest.append({'storage_costs': costs}, ignore_index=True)
+    installed_storages = etg.storage_units[etg.storage_units.p_nom_opt != 0]
+    costs = sum(installed_storages.capital_cost * installed_storages.p_nom_opt)
+    invest = invest.append({'storage_costs': costs}, ignore_index=True)
 
     #  get storage costs per voltage level
-    loc=etg.storage_units[etg.storage_units.p_nom_opt != 0]['bus']
-    v_level=etg.buses.loc[loc, :]['v_nom']
-    installed_storages=installed_storages.assign(v_nom=0)
+    loc = etg.storage_units[etg.storage_units.p_nom_opt != 0]['bus']
+    v_level = etg.buses.loc[loc, :]['v_nom']
+    installed_storages = installed_storages.assign(v_nom=0)
 
     for i, k in v_level.iteritems():
         installed_storages.loc[installed_storages[installed_storages.bus ==
-                                                  i].index, 'v_nom']=k
+                                                  i].index, 'v_nom'] = k
 
-    storage_level=installed_storages.groupby('v_nom')['capital_cost'].sum()
+    storage_level = installed_storages.groupby('v_nom')['capital_cost'].sum()
 
     # Line extentation costs
     # (eTraGo.lines.s_nom_opt -  eTraGo.lines.s_nom) * eTraGo.lines.capital_cost
-    line_expen=(etg.lines.groupby('v_nom')['s_nom_opt'].sum()
+    line_expen = (etg.lines.groupby('v_nom')['s_nom_opt'].sum()
                   - etg.lines.groupby('v_nom')['s_nom'].sum())
 
     if line_expen.sum() <= 0:
         print('Warning: !line extentation, set random costs for plotting!')
 
-        lines_level=pd.DataFrame([[110., 722*np.exp(8)], [220., 822*np.exp(8)],
+        lines_level = pd.DataFrame([[110., 722*np.exp(8)], [220., 822*np.exp(8)],
                                     [380., 999*np.exp(9)]], columns=['v_nom', 'capital_cost']).\
             groupby('v_nom')['capital_cost'].sum()
 
-    invest=invest.assign(line_costs=lines_level.sum())
+    invest = invest.assign(line_costs=lines_level.sum())
 
     # invest.transpose()
 
