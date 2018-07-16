@@ -97,8 +97,8 @@ def edisgo_convert_capital_costs(grid_components, cost_config, json_file):
     --------
     .. math::
 
-        PVA &=   (1 / p_{interest rate})  \\
-            &=    (1 / (p_{interest rate}*(1 + p_{interest rate})^T_{Lifetime}))
+        PVA =   (1 / p_{interest rate}) - (1 / (p_{interest rate}
+                  *(1 + p_{interest rate})^T_{Lifetime}))
     """
     # Based on eTraGo calculation in
     # https://github.com/openego/eTraGo/blob/dev/etrago/tools/utilities.py#L651
