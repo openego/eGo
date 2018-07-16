@@ -16,7 +16,7 @@ __author__ = "wolf_bunke,maltesc"
 from egoio.db_tables import model_draft, grid
 from egoio.tools import db
 from edisgo.grid.network import Results, TimeSeriesControl
-from edisgo.tools.pypsa_io import update_pypsa_timeseries
+#from edisgo.tools.pypsa_io import update_pypsa_timeseries
 from edisgo.tools.edisgo_run import (
         run_edisgo_basic,
         run_edisgo_pool_flexible
@@ -80,19 +80,37 @@ class EDisGoNetworks:
         ## eTraGo
         self._etrago_network = kwargs.get('etrago_network', None)
         
+        self._edisgo_grids = {}
+        self._edisgo_costs = {}
+            
         ## Functions
-        self.grid_choice()
-        self.run_edisgo_pool()
+        self._set_grid_choice()
+        self._run_edisgo_pool()
 
-       
-    def analyze_cluster_attributes(self):
+    @property
+    def edisgo_grids(self):
+        """
+        Returns all calculated MV grids as dictionary
+
+        """
+        return self._edisgo_grids
+
+    @property
+    def edisgo_costs(self):
+        """
+        Returns all calculated MV costs as dictionary
+
+        """
+        return self._edisgo_costs   
+    
+    def _analyze_cluster_attributes(self):
         """
         Analyses the attributes wind and solar capacity and farthest node
         for clustering.
         """
         analyze_attributes(self._ding0_files)
         
-    def cluster_mv_grids(self, no_grids):
+    def _cluster_mv_grids(self, no_grids):
         """
         Clusters the MV grids based on the attributes
 
@@ -102,11 +120,15 @@ class EDisGoNetworks:
         if not os.path.isfile(attributes_path):
             logger.info('Attributes file is missing')
             logger.info('Attributes will be calculated')
-            self.analyze_cluster_attributes()
+            self._analyze_cluster_attributes()
 
         return cluster_mv_grids(self._ding0_files, no_grids)
         
-    def check_available_mv_grids(self):
+    def _check_available_mv_grids(self):
+        """
+        Checks all available MV grids in the given folder from the settings
+        
+        """          
        
         mv_grids = []
         for file in os.listdir(self._ding0_files):
@@ -118,12 +140,16 @@ class EDisGoNetworks:
  
         return mv_grids
         
-    def grid_choice(self):
+    def _set_grid_choice(self):
+        """
+        Sets the grid choice based on the settings file
+        
+        """         
         
         if self._choice_mode == 'cluster':
             no_grids = self._edisgo_args['no_grids']
             logger.info('Clustering to {} MV grids'.format(no_grids))
-            cluster = self.cluster_mv_grids(no_grids)
+            cluster = self._cluster_mv_grids(no_grids)
 
         elif self._choice_mode == 'manual':
             man_grids = self._edisgo_args['manual_grids']
@@ -136,7 +162,7 @@ class EDisGoNetworks:
                     )
             
         elif self._choice_mode == 'all':
-            mv_grids = self.check_available_mv_grids()
+            mv_grids = self._check_available_mv_grids()
             cluster = pd.DataFrame(
                     mv_grids,
                     columns=['the_selected_network_id'])
@@ -148,26 +174,26 @@ class EDisGoNetworks:
 
         self._grid_choice = cluster
         
+    def _run_edisgo_pool(self, parallelization=False):
+        """
+        Runs eDisGo for the chosen grids
         
-        
-        
-    def run_edisgo_pool(self, parallelization=False):
-               
+        """                
         if parallelization is True:
             logger.info('Parallelization')
-            raise NotImplementedError
             
+            raise NotImplementedError
+#            
 #            id_list = self._grid_choice['the_selected_network_id'].tolist()
 #            
 #            self._pool = run_edisgo_pool_flexible(
 #                    ding0_id_list=id_list, 
-#                    func=EDisGoNetworks.run_edisgo,
-#                    func_arguments=['toll'])       
+#                    func=_run_edisgo,
+#                    func_arguments=[
+#                            'args...'
+#                            ])       
             
-        else:
-            
-            self._edisgo_grids = {}
-            
+        else:                      
             no_grids = len(self._grid_choice)
             count = 0
             for idx, row in self._grid_choice.iterrows():
@@ -181,16 +207,13 @@ class EDisGoNetworks:
                         'MV grid {}'.format(mv_grid_id)
                     )  
                 try:
-                    bus_id = self.get_bus_id_from_mv_grid(mv_grid_id)
+                    edisgo_grid, costs = self._run_edisgo(mv_grid_id)
                     self._edisgo_grids[
                             mv_grid_id
-                            ] = self.run_edisgo(
-                            mv_grid_id=mv_grid_id,
-                            bus_id=bus_id,
-                            session=self._session,
-                            etrago_network=self._etrago_network,
-                            scn_name=self._scn_name,
-                            ding0_files=self._ding0_files)
+                            ] = edisgo_grid
+                    self._edisgo_costs[
+                            mv_grid_id
+                            ] = costs                            
                 except Exception:
                     self._edisgo_grids[mv_grid_id] = None
                     logger.exception(
@@ -200,40 +223,34 @@ class EDisGoNetworks:
                     
                 count += 1
     
-    @staticmethod            
-    def run_edisgo(
-            mv_grid_id, 
-            bus_id,
-            session,
-            etrago_network,
-            scn_name,
-            ding0_files):
+    def _run_edisgo(self, mv_grid_id):
         
         """
         Runs eDisGo with the desired settings. 
         
         """      
-
+    
         logger.info('Calculating interface values')
                 
+        bus_id = self._get_bus_id_from_mv_grid(mv_grid_id)
+        
         specs = get_etragospecs_direct(
-                session, 
+                self._session, 
                 bus_id, 
-                etrago_network,
-                scn_name)    
+                self._etrago_network,
+                self._scn_name)    
         
         ding0_filepath = (
-                ding0_files
+                self._ding0_files
                 + '/ding0_grids__' 
                 + str(mv_grid_id) 
                 + '.pkl')
-
+    
         if not os.path.isfile(ding0_filepath):
             msg =  'Not MV grid file for MV grid ID: ' + str(mv_grid_id)
             logger.error(msg)
             raise Exception(msg)
-            
-                
+                            
         logger.info('Initial MV grid reinforcement (starting grid)')
         edisgo_grid, \
         costs_before_geno_import, \
@@ -245,13 +262,13 @@ class EDisGoNetworks:
         logger.info('eTraGo feed-in case')
         
         edisgo_grid.network.results = Results()
- 
-# Generator Import is currently not working in eDisGo       
-#        if self._generator_scn:
-#            edisgo_grid.import_generators(
-#                    generator_scenario=self._generator_scn)
+     
+    # Generator Import is currently not working in eDisGo       
+    #        if self._generator_scn:
+    #            edisgo_grid.import_generators(
+    #                    generator_scenario=self._generator_scn)
                     
-        print(specs['conv_dispatch'])
+
         edisgo_grid.network.timeseries = TimeSeriesControl( 
                 # Here, I use only normalized values from specs
                 timeseries_generation_fluctuating=specs['potential'],
@@ -259,25 +276,25 @@ class EDisGoNetworks:
                 timeseries_load='demandlib',
                 config_data=edisgo_grid.network.config,
                 timeindex=specs['conv_dispatch'].index).timeseries
-   
-# This will be used after the next eDisGo release    
-#        update_pypsa_timeseries(
-#                edisgo_grid.network, 
-#                timesteps=specs['conv_dispatch'].index) 
+       
+    # This will be used after the next eDisGo release    
+    #        update_pypsa_timeseries(
+    #                edisgo_grid.network, 
+    #                timesteps=specs['conv_dispatch'].index) 
         
         logger.warning('Curtailment can only be included after gen import')
-#        edisgo_grid.curtail(curtailment_methodology='curtail_all',
-#                            # Here, I use absolute values
-#                            timeseries_curtailment=specs['curtailment_abs']) 
-#        
-#        # Think about the other curtailment functions!!!!
+    #        edisgo_grid.curtail(curtailment_methodology='curtail_all',
+    #                            # Here, I use absolute values
+    #                            timeseries_curtailment=specs['curtailment_abs']) 
+    #        
+    #        # Think about the other curtailment functions!!!!
         
-# This will become unnecessary with the next eDisGo release
+    # This will become unnecessary with the next eDisGo release
         edisgo_grid.network.pypsa = None 
         edisgo_grid.analyze()
         
         edisgo_grid.reinforce() 
-
+    
         # Get costs
         costs_grouped = \
             edisgo_grid.network.results.grid_expansion_costs.groupby(
@@ -289,12 +306,12 @@ class EDisGoNetworks:
         costs.rename(columns={'level_0': 'grid'}, inplace=True)
         
         # Grid issues besser verstehen!! Und evtl. mit aussgeben
-        print(costs)
-        return edisgo_grid
+        return edisgo_grid, costs   
+
         
         
 ## Helpful tools         
-    def get_mv_grid_from_bus_id(self, bus_id):
+    def _get_mv_grid_from_bus_id(self, bus_id):
         """
         Returns the MV grid ID for a given eTraGo bus
 
@@ -323,7 +340,7 @@ class EDisGoNetworks:
         
         return subst_id
             
-    def get_bus_id_from_mv_grid(self, subst_id):
+    def _get_bus_id_from_mv_grid(self, subst_id):
         """
         Returns the eTraGo bus ID for a given MV grid
 
@@ -351,7 +368,6 @@ class EDisGoNetworks:
         
         return bus_id       
 
-    def get_hvmv_translation(self):
+    def _get_hvmv_translation(self):
         raise NotImplementedError
-
-    
+  

@@ -79,7 +79,6 @@ def edisgo_convert_capital_costs():
     json_file : :obj:dict
         Dictionary of the ``scenario_setting.json`` file
 
-
     """
     # eTraGo calculation in
     # https://github.com/openego/eTraGo/blob/dev/etrago/tools/utilities.py#L651
@@ -219,7 +218,7 @@ def etrago_grid_investment(network, json_file):
     pass
 
 
-def edisgo_grid_investment(network):
+def edisgo_grid_investment(edisgo_networks):
     """Function to get all costs of grid investment of eDisGo.
 
     Notes
