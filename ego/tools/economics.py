@@ -241,8 +241,39 @@ def etrago_grid_investment(network, json_file):
         # https://github.com/openego/eTraGo/blob/dev/etrago/tools/utilities.py#L651
         # Definition https://pypsa.org/doc/components.html#line
 
-        return lines[['v_level', 'number_of_expansion',
-                      'grid_costs']].groupby('v_nom').sum()
+        # get costs of transfomers
+        trafos = network.transformers[['v_nom0', 'v_nom1', 'capital_cost',
+                                       's_nom_extendable', 's_nom', 's_nom_opt']]
+
+        trafos['s_nom_extendable'] = trafos.s_nom_opt.subtract(
+            trafos.s_nom, axis='index')
+        trafos['grid_costs'] = trafos.s_nom_extendable.multiply(
+            trafos.capital_cost, axis='index')
+        trafos['number_of_expansion'] = trafos.s_nom_extendable > 0.0
+
+        # add v_level
+        trafos['v_level'] = 'unknown'
+
+        # TODO check
+        ix_ehv = trafos[trafos['v_nom0'] >= 380].index
+        trafos.set_value(ix_ehv, 'v_level', 'ehv')
+
+        ix_hv = trafos[(trafos['v_nom0'] <= 220) &
+                       (trafos['v_nom0'] >= 110)].index
+        trafos.set_value(ix_hv, 'v_level', 'hv')
+
+        # aggregate lines and trafo
+        line = lines[['v_level', 'number_of_expansion',
+                      'grid_costs', 'time_step']].groupby('v_level').sum()
+        trafo = trafos[['v_level', 'number_of_expansion',
+                        'grid_costs', 'time_step']].groupby('v_level').sum()
+
+        # merge trafos and line
+        frames = [line, trafo]
+
+        result = pd.concat(frames)
+
+        return result
 
     # ToDo: add  .agg({'number_of_expansion':lambda x: x.count(),
     #  's_nom_expansion': np.sum,
