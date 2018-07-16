@@ -241,7 +241,7 @@ def etrago_grid_investment(network, json_file):
         # https://github.com/openego/eTraGo/blob/dev/etrago/tools/utilities.py#L651
         # Definition https://pypsa.org/doc/components.html#line
 
-        return lines[['v_nom', 'number_of_expansion', 's_nom_expansion',
+        return lines[['v_level', 'number_of_expansion',
                       'grid_costs']].groupby('v_nom').sum()
 
     # ToDo: add  .agg({'number_of_expansion':lambda x: x.count(),
