@@ -219,13 +219,41 @@ def etrago_grid_investment(network, json_file):
 
 
 def edisgo_grid_investment(edisgo_networks):
+ 
     """Function to get all costs of grid investment of eDisGo.
 
     Notes
     -----
     - ToDo add iteration and container of all costs of edisgo network
     """
-    pass
+    
+    t = 40
+    p=0.05
+    logger.warning('For all components T={} and p={} is used'.format(t, p))  
+    
+    capital_costs = pd.DataFrame(columns=['v_lev', 'capital_costs'])
+    
+    for key, value in edisgo_networks.edisgo_grids.items():
+        costs_grouped = value.network.results.grid_expansion_costs
+        costs_grouped.to_csv('test.csv')
+        costs_grouped = costs_grouped.rename(
+                columns={'voltage_level': 'v_lev'}
+                )
+    
+
+        costs_grouped['capital_costs'] = test(costs_grouped['total_costs'])
+        
+        costs_grouped = costs_grouped[['v_lev', 'capital_costs']]
+        
+        capital_costs = capital_costs.append(costs_grouped, ignore_index=True)
+        
+    aggr_capital_costs = capital_costs.groupby(['v_lev']).sum().reset_index()
+    aggr_capital_costs = aggr_capital_costs.rename(
+            columns={'capital_costs': 'grid_costs'}
+            )
+    aggr_capital_costs['grid_costs'] = aggr_capital_costs['grid_costs'] * 1000
+    
+    return aggr_capital_costs
 
 
 def get_generator_investment(network, scn_name):

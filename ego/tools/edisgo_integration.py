@@ -81,7 +81,7 @@ class EDisGoNetworks:
         self._etrago_network = kwargs.get('etrago_network', None)
         
         self._edisgo_grids = {}
-        self._edisgo_costs = {}
+#        self._edisgo_costs = {}
             
         ## Functions
         self._set_grid_choice()
@@ -95,13 +95,13 @@ class EDisGoNetworks:
         """
         return self._edisgo_grids
 
-    @property
-    def edisgo_costs(self):
-        """
-        Returns all calculated MV costs as dictionary
-
-        """
-        return self._edisgo_costs   
+#    @property
+#    def edisgo_costs(self):
+#        """
+#        Returns all calculated MV costs as dictionary
+#
+#        """
+#        return self._edisgo_costs   
     
     def _analyze_cluster_attributes(self):
         """
@@ -207,13 +207,13 @@ class EDisGoNetworks:
                         'MV grid {}'.format(mv_grid_id)
                     )  
                 try:
-                    edisgo_grid, costs = self._run_edisgo(mv_grid_id)
+                    edisgo_grid = self._run_edisgo(mv_grid_id)
                     self._edisgo_grids[
                             mv_grid_id
                             ] = edisgo_grid
-                    self._edisgo_costs[
-                            mv_grid_id
-                            ] = costs                            
+#                    self._edisgo_costs[
+#                            mv_grid_id
+#                            ] = costs                            
                 except Exception:
                     self._edisgo_grids[mv_grid_id] = None
                     logger.exception(
@@ -230,15 +230,15 @@ class EDisGoNetworks:
         
         """      
     
-        logger.info('Calculating interface values')
-                
-        bus_id = self._get_bus_id_from_mv_grid(mv_grid_id)
-        
-        specs = get_etragospecs_direct(
-                self._session, 
-                bus_id, 
-                self._etrago_network,
-                self._scn_name)    
+#        logger.info('Calculating interface values')
+#                
+#        bus_id = self._get_bus_id_from_mv_grid(mv_grid_id)
+#        
+#        specs = get_etragospecs_direct(
+#                self._session, 
+#                bus_id, 
+#                self._etrago_network,
+#                self._scn_name)    
         
         ding0_filepath = (
                 self._ding0_files
@@ -252,29 +252,35 @@ class EDisGoNetworks:
             raise Exception(msg)
                             
         logger.info('Initial MV grid reinforcement (starting grid)')
-        edisgo_grid, \
-        costs_before_geno_import, \
-        grid_issues_before_geno_import = run_edisgo_basic(
+        edisgo_grid = run_edisgo_basic(
                 ding0_filepath=ding0_filepath,
                 generator_scenario=None,
-                analysis='worst-case')
+                analysis='worst-case')[0] # only the edisgo_grid is returned
+        
+        logger.warning('Function not fully executed!!')
+        return edisgo_grid
          
         logger.info('eTraGo feed-in case')
         
         edisgo_grid.network.results = Results()
      
-    # Generator Import is currently not working in eDisGo       
-    #        if self._generator_scn:
-    #            edisgo_grid.import_generators(
-    #                    generator_scenario=self._generator_scn)
+#     Generator Import is currently not working in eDisGo       
+        if self._generator_scn:
+            logger.info(
+                    'Importing generators for scenario {}'.format(
+                            self._generator_scn)
+                    )
+            edisgo_grid.import_generators(
+                    generator_scenario=self._generator_scn)
                     
 
         edisgo_grid.network.timeseries = TimeSeriesControl( 
+                network=edisgo_grid.network,
                 # Here, I use only normalized values from specs
                 timeseries_generation_fluctuating=specs['potential'],
                 timeseries_generation_dispatchable=specs['conv_dispatch'],
                 timeseries_load='demandlib',
-                config_data=edisgo_grid.network.config,
+#                config_data=edisgo_grid.network.config,
                 timeindex=specs['conv_dispatch'].index).timeseries
        
     # This will be used after the next eDisGo release    
@@ -290,23 +296,23 @@ class EDisGoNetworks:
     #        # Think about the other curtailment functions!!!!
         
     # This will become unnecessary with the next eDisGo release
-        edisgo_grid.network.pypsa = None 
+#            
         edisgo_grid.analyze()
         
         edisgo_grid.reinforce() 
     
-        # Get costs
-        costs_grouped = \
-            edisgo_grid.network.results.grid_expansion_costs.groupby(
-                ['type']).sum()
-        costs = pd.DataFrame(costs_grouped.values,
-                             columns=costs_grouped.columns,
-                             index=[[edisgo_grid.network.id] * len(costs_grouped),
-                                    costs_grouped.index]).reset_index()
-        costs.rename(columns={'level_0': 'grid'}, inplace=True)
+#        # Get costs
+#        costs_grouped = \
+#            edisgo_grid.network.results.grid_expansion_costs.groupby(
+#                ['type']).sum()
+#        costs = pd.DataFrame(costs_grouped.values,
+#                             columns=costs_grouped.columns,
+#                             index=[[edisgo_grid.network.id] * len(costs_grouped),
+#                                    costs_grouped.index]).reset_index()
+#        costs.rename(columns={'level_0': 'grid'}, inplace=True)
         
         # Grid issues besser verstehen!! Und evtl. mit aussgeben
-        return edisgo_grid, costs   
+        return edisgo_grid 
 
         
         
