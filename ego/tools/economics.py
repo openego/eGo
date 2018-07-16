@@ -60,6 +60,12 @@ def annuity_per_period(capex, n, wacc, t, p):
     return capex * (wacc * (1 + wacc) ** n) / ((1 + wacc) ** n - 1)
 
 
+# grid_components = {"hv_mv_transformer": "40 MVA", "mv_lv_transformer": "630 kVA",
+#                   "mv_line": "NA2XS2Y 3x1x185 RM/25", "lv_line": "NAYY 4x1x150"}
+# json_file = ego.json_file
+# cost_config = {"p": 0.04}
+
+
 def edisgo_convert_capital_costs(grid_components, cost_config, json_file):
     """ Get scenario and calculation specific annuity cost by given capital
     costs and lifetime.
@@ -195,14 +201,29 @@ def etrago_grid_investment(network, json_file):
            >>> ego = eGo(jsonpath='scenario_setting.json')
            >>> ego.etrago.grid_costs
 
-    +-----+---------------------+----------------+-----------+
-    |v_nom| number_of_expansion | s_nom_expansion| grid_costs|
-    +=====+=====================+================+===========+
-    | 380 |           27.0      | 12678.47943    |31514.1305 |
-    +-----+---------------------+----------------+-----------+
-    | 220 |            0.0      |      0.0       |     0.0   |
-    +-----+---------------------+----------------+-----------+
+    +-----+--------+-------------------+----------------+-----------+
+    |v_nom| v_level|number_of_expansion| s_nom_expansion| grid_costs|
+    +=====+========+===================+================+===========+
+    | 380 |  ehv   |   27.0            | 12678.47943    |31514.1305 |
+    +-----+--------+-------------------+----------------+-----------+
+    | 110 |  hv    |    0.0            |      0.0       |     0.0   |
+    +-----+--------+-------------------+----------------+-----------+
     """
+    def v_level(lines):
+        """ Get v_level by v_nom
+        """
+
+        if lines['v_nom'] == 380.:
+            lines['v_level'] == 'ehv'
+        if lines['v_nom'] == 220.:
+            lines['v_level'] == 'ehv'
+        if lines['v_nom'] == 110.:
+            lines['v_level'] == 'hv'
+        else:
+            lines['v_level'] == 'unknown'
+            logger.info("Found unknown voltage leve: %s", lines['v_nom'])
+
+        pass
 
     # check settings for extendable
     if 'network' not in json_file['eTraGo']['extendable']:
@@ -220,18 +241,11 @@ def etrago_grid_investment(network, json_file):
             lines.capital_cost, axis='index')
         lines['number_of_expansion'] = lines.s_nom_expansion > 0.0
         lines['time_step'] = get_time_steps(json_file)
+        lines['v_level'] = v_level(lines)
 
-        # print(get_time_steps(json_file))
-
-        #network.lines[['v_nom','capital_cost','s_nom',  's_nom_min','s_nom_opt']]
-
-        # eTraGo Function:
+        # based on eTraGo Function:
         # https://github.com/openego/eTraGo/blob/dev/etrago/tools/utilities.py#L651
         # Definition https://pypsa.org/doc/components.html#line
-
-        # capital_cost
-        # s_nom_extendable
-        # check if extendable == true
 
         return lines[['v_nom', 'number_of_expansion', 's_nom_expansion',
                       'grid_costs']].groupby('v_nom').sum()
