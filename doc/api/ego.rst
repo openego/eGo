@@ -11,8 +11,8 @@ Subpackages
 Submodules
 ----------
 
-ego\.ego_main module
---------------------
+ego\.ego_main
+-------------
 
 .. automodule:: ego.ego_main
     :members:

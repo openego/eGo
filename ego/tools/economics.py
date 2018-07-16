@@ -19,10 +19,6 @@
 # File description
 """This module collects useful functions for economic calculation of eGo which can
 mainly distinguished in operational and investment costs.
-
-Todo:
- 1) Investment costs of eTrago and eDisGo
- 2) Total system costs
 """
 
 import io
@@ -40,11 +36,11 @@ __copyright__ = "Flensburg University of Applied Sciences, Europa-Universität"\
 __license__ = "GNU Affero General Public License Version 3 (AGPL-3.0)"
 __author__ = "wolfbunke"
 
+
 # calculate annuity per time step or periode
+def annuity_per_period(capex, n, wacc, t, p):
+    """ Calculate per given period
 
-
-def annuity_per_period(capex, n, wacc, t):
-    """
     Parameters
     ----------
     capex : float
@@ -53,38 +49,75 @@ def annuity_per_period(capex, n, wacc, t):
         Number of years that the investment is used (economic lifetime)
     wacc : float
         Weighted average cost of capital
-
-    ToDo
-    ----
     t : int
         Timesteps in hours
-    i : float
+    p : float
         interest rate
-        ...
+
     """
 
     # ToDo change formular to hourly annuity costs
     return capex * (wacc * (1 + wacc) ** n) / ((1 + wacc) ** n - 1)
 
 
-def edisgo_convert_capital_costs():
-    """
+# grid_components = {"hv_mv_transformer": "40 MVA", "mv_lv_transformer": "630 kVA",
+#                   "mv_line": "NA2XS2Y 3x1x185 RM/25", "lv_line": "NAYY 4x1x150"}
+# json_file = ego.json_file
+# cost_config = {"p": 0.04}
+
+
+def edisgo_convert_capital_costs(grid_components, cost_config, json_file):
+    """ Get scenario and calculation specific annuity cost by given capital
+    costs and lifetime.
+
 
     Parameters
     ----------
-
     grid_components : :obj:dict
         Dictionary of ding0 grid components which are extendable
         (Name, investment_cost, lifetime)
     json_file : :obj:dict
         Dictionary of the ``scenario_setting.json`` file
+    _start_snapshot : int
+        Start point of calculation from ``scenario_setting.json`` file
+    _end_snapshot : int
+        End point of calculation from ``scenario_setting.json`` file
+    _p : numeric
+        interest rate of investment
+    _T : int
+        lifetime of investment
 
+    Returns
+    -------
+    annuity_cost : numeric
+        Scenario and calculation specific annuity cost by given capital
+        costs and lifetime
+
+    Examples
+    --------
+    .. math::
+
+        PVA =   \frac{\frac{1}{p_{rate}}}{(\frac{1}{p_{rate}}*(1 + \
+                 p_{rate})^{T_{Lifetime}})}
     """
-    # eTraGo calculation in
+    # Based on eTraGo calculation in
     # https://github.com/openego/eTraGo/blob/dev/etrago/tools/utilities.py#L651
-    # def convert_capital_costs(network, start_snapshot, end_snapshot,
-    #                           p=0.05, T=40):
-    # Define function
+
+    T = 40  # from grid_components ?
+    p = cost_config['p']
+
+    # Calculate present value of an annuity (PVA)
+    PVA = (1 / p) - (1 / (p*(1 + p) ** T))
+
+    year = 8760
+    # get period of calculation
+    period = (json_file['eTraGo']['start_snapshot']
+              - json_file['eTraGo']['start_snapshot'])
+
+    # calculation of capital_cost
+    annuity_cost = (capital_cost / (PVA * (year/(period+1))))
+
+    return annuity_cost
 
 
 def etrago_operating_costs(network):
@@ -92,8 +125,8 @@ def etrago_operating_costs(network):
 
     Parameters
     ----------
-    network : Network of eTraGo
-        Network of eTraGo
+    network_etrago: :class:`etrago.tools.io.NetworkScenario`
+        eTraGo network object compiled by :meth:`etrago.appl.etrago`
 
     Returns
     -------
@@ -106,12 +139,10 @@ def etrago_operating_costs(network):
     - grid losses : amount and costs
     - use calc_line_losses(network)  from etrago pf_post_lopf
 
-    ToDo
-    ----
-    - change naming and function structure
-    - seperate operation costs in other functions ?
-
     """
+    # TODO   - change naming and function structure
+    # TODO    - seperate operation costs in other functions ?
+
     etg = network
     #etg = eTraGo
     # groupby v_nom
@@ -151,8 +182,8 @@ def etrago_grid_investment(network, json_file):
     Parameters
     ----------
 
-    network : Network
-        eTraGo
+    network_etrago: :class:`etrago.tools.io.NetworkScenario`
+        eTraGo network object compiled by :meth:`etrago.appl.etrago`
     json_file : :obj:dict
         Dictionary of the ``scenario_setting.json`` file
 
@@ -171,14 +202,29 @@ def etrago_grid_investment(network, json_file):
            >>> ego = eGo(jsonpath='scenario_setting.json')
            >>> ego.etrago.grid_costs
 
-    +-----+---------------------+----------------+-----------+
-    |v_nom| number_of_expansion | s_nom_expansion| grid_costs|
-    +=====+=====================+================+===========+
-    | 380 |           27.0      | 12678.47943    |31514.1305 |
-    +-----+---------------------+----------------+-----------+
-    | 220 |            0.0      |      0.0       |     0.0   |
-    +-----+---------------------+----------------+-----------+
+    +--------+-------------------+----------------+-----------+
+    | v_level|number_of_expansion| s_nom_expansion| grid_costs|
+    +========+===================+================+===========+
+    |  ehv   |   27.0            | 12678.47943    |31514.1305 |
+    +--------+-------------------+----------------+-----------+
+    |  hv    |    0.0            |      0.0       |     0.0   |
+    s+--------+-------------------+----------------+-----------+
     """
+    def v_level(lines):
+        """ Get v_level by v_nom
+        """
+
+        if lines['v_nom'] == 380.:
+            lines['v_level'] == 'ehv'
+        if lines['v_nom'] == 220.:
+            lines['v_level'] == 'ehv'
+        if lines['v_nom'] == 110.:
+            lines['v_level'] == 'hv'
+        else:
+            lines['v_level'] == 'unknown'
+            logger.info("Found unknown voltage leve: %s", lines['v_nom'])
+
+        pass
 
     # check settings for extendable
     if 'network' not in json_file['eTraGo']['extendable']:
@@ -196,18 +242,11 @@ def etrago_grid_investment(network, json_file):
             lines.capital_cost, axis='index')
         lines['number_of_expansion'] = lines.s_nom_expansion > 0.0
         lines['time_step'] = get_time_steps(json_file)
+        lines['v_level'] = v_level(lines)
 
-        # print(get_time_steps(json_file))
-
-        #network.lines[['v_nom','capital_cost','s_nom',  's_nom_min','s_nom_opt']]
-
-        # eTraGo Function:
+        # based on eTraGo Function:
         # https://github.com/openego/eTraGo/blob/dev/etrago/tools/utilities.py#L651
         # Definition https://pypsa.org/doc/components.html#line
-
-        # capital_cost
-        # s_nom_extendable
-        # check if extendable == true
 
         return lines[['v_nom', 'number_of_expansion', 's_nom_expansion',
                       'grid_costs']].groupby('v_nom').sum()
@@ -218,13 +257,17 @@ def etrago_grid_investment(network, json_file):
     pass
 
 
+
 def edisgo_grid_investment(edisgo_networks):
- 
     """Function to get all costs of grid investment of eDisGo.
 
-    Notes
-    -----
-    - ToDo add iteration and container of all costs of edisgo network
+    Parameters
+    ----------
+
+    network_edisgo : :pandas:`pandas.Dataframe<dataframe>`
+        Network container of eDisGo
+
+
     """
     
     t = 40
@@ -260,13 +303,10 @@ def get_generator_investment(network, scn_name):
     """ Get investment costs per carrier/gernator.
 
     work around later db table ->  check capital_cost as cost input?!?
-
-    ToDo
-    ----
-    - change values in csv
-    - add values to database
-
     """
+    # TODO   - change values in csv
+    #        - add values to database
+
     etg = network
 
     path = os.getcwd()
@@ -295,8 +335,7 @@ def get_generator_investment(network, scn_name):
 
 
 def investment_costs(network):
-    """
-    Return pandas DataFrame with investment costs of
+    """Return pandas DataFrame with investment costs of
 
     etrago:
     Storages
@@ -306,11 +345,9 @@ def investment_costs(network):
     Line extentation
     Storage costs?
 
-    ToDo
-    ----
-    - add edisgo
-
     """
+    # TODO  add edisgo
+
     etg = network
     invest = pd.DataFrame()
 

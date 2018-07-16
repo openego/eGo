@@ -4,24 +4,40 @@ ego\.tools package
 Submodules
 ----------
 
-ego\.tools\.economics module
-----------------------------
+ego\.tools\.economics
+---------------------
 
 .. automodule:: ego.tools.economics
     :members:
     :undoc-members:
     :show-inheritance:
 
-ego\.tools\.io module
----------------------
+ego\.tools\.edisgo_integration
+------------------------------
+
+.. automodule:: ego.tools.edisgo_integration
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+ego\.tools\.io
+--------------
 
 .. automodule:: ego.tools.io
     :members:
     :undoc-members:
     :show-inheritance:
 
-ego\.tools\.plots module
-------------------------
+ego\.tools\.mv_cluster
+----------------------
+
+.. automodule:: ego.tools.mv_cluster
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+ego\.tools\.plots
+-----------------
 
 .. automodule:: ego.tools.plots
     :members:
@@ -34,8 +50,8 @@ ego\.tools\.results
 .. automodule:: ego.tools.results
     :members:
     :undoc-members:
-    :show-inheritance:        
-    
+    :show-inheritance:
+
 
 ego\.tools\.specs
 -----------------
@@ -44,7 +60,7 @@ ego\.tools\.specs
     :members:
     :undoc-members:
     :show-inheritance:
-    
+
 ego\.tools\.storages
 --------------------
 
@@ -53,12 +69,10 @@ ego\.tools\.storages
     :undoc-members:
     :show-inheritance:
 
-ego\.tools\.utilities module
-----------------------------
+ego\.tools\.utilities
+---------------------
 
 .. automodule:: ego.tools.utilities
     :members:
     :undoc-members:
     :show-inheritance:
-
-

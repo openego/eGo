@@ -19,11 +19,8 @@
 # File description
 """This module include the results functions for analyze and creating results
 based on eTraGo or eDisGo for eGo.
-
-ToDo
-----
- - write results to database
 """
+# TODO  - write results to database
 
 import io
 import os
@@ -48,17 +45,17 @@ def create_etrago_results(network, scn_name):  # rename function
     Parameters
     ----------
     network : :class:`~.etrago.tools.io.NetworkScenario`
-        eTraGo ``NetworkScenario`` based on PyPSA Network. See also:
+        eTraGo ``NetworkScenario`` based on PyPSA Network. See also
         `pypsa.network <https://pypsa.org/doc/components.html#network>`_
 
     scn_name : str
         Name of used scenario
 
 
-    Results
+    Returns
     -------
-    etrago :  :pandas:`pandas.DataFrame<dataframe>`
-        Results as DataFrame.
+    generator :  :pandas:`pandas.DataFrame<dataframe>`
+        Result of generator as DataFrame in ``ego.etrago.generator``
 
     """
 
@@ -105,19 +102,20 @@ def results_per_voltage(network):
     Parameters
     ----------
     network : :class:`etrago.tools.io.NetworkScenario`
-        eTraGo ``NetworkScenario`` based on PyPSA Network. See also:
+        eTraGo ``NetworkScenario`` based on PyPSA Network. See also
         `pypsa.network <https://pypsa.org/doc/components.html#network>`_
 
-    Results
+    Returns
     -------
 
     """
 
 
 def ego_results_to_oedb(total):
-    """ ToDo: Function to upload results into oedb database
+    """ Function to upload results into oedb database
 
     """
+    # TODO
 
     pass
 

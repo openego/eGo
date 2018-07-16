@@ -5,9 +5,9 @@ Second release of the eGo application.
 
 New features have been included in this release. Major changes being the new
 class structure and separation of methods into the given file structure.
-Moreover the use of the Dataprocessing version 'v0.4.1' and 'v0.4.2' is
+Moreover the use of the Dataprocessing version ``'v0.4.1' ``and ``'v0.4.2'`` is
 integrate. For eGo and the integration and interaction the app will depend on a
-data version >= 'v0.4.1' in order to ensure the correct data handling.
+data version ``>= 'v0.4.1'`` in order to ensure the correct data handling.
 Furthermore the inclusion of new methods and classes for eDisGo, storages etc.
 is done.
 
@@ -18,12 +18,14 @@ Added features
 --------------
 
 * Cleaned and restructured eGo classes and functions
-  - Moved classes of eGo from results.py to io.py
-  - Move serveral function
-  - Introduce new files for edisgo handling:
-    - edisgo_integration.py
-    - mv_cluster.py
-  - Introduce new file storages.py  for eTraGo
+    * Moved classes of eGo from results.py to io.py
+    * Move serveral function
+  
+* Introduce new files for edisgo handling
+    * edisgo_integration.py
+    * mv_cluster.py
+
+* Introduce new file storages.py  for eTraGo
 * Updated eTraGo 0.6 and integrated eTraGo's new functions and features to eGo
 * Updated eDisGo 0.0.3 version which includes the features of a parallelization
   for custom function and other important API changes.

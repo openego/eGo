@@ -80,10 +80,10 @@ class egoBasic(object):
 
     Returns
     -------
-    eTraGo : :pandas:`pandas.Dataframe<dataframe>` of PyPSA
-        Network container of eTraGo based on PyPSA
-    eDisGo : :pandas:`pandas.Dataframe<dataframe>` of PyPSA
-        Network container of eDisGo based on PyPSA
+    network_etrago: :class:`etrago.tools.io.NetworkScenario`
+        eTraGo network object compiled by :meth:`etrago.appl.etrago`
+    network_edisgo : :pandas:`pandas.Dataframe<dataframe>`
+        Network container of eDisGo
     json_file : :obj:dict
         Dictionary of the ``scenario_setting.json`` file
     session : :sqlalchemy:`sqlalchemy.orm.session.Session<orm/session_basics.html>`
@@ -93,7 +93,6 @@ class egoBasic(object):
 
     def __init__(self,
                  jsonpath, *args, **kwargs):
-
 
         self.jsonpath = 'scenario_setting.json'
         self.json_file = get_scenario_setting(self.jsonpath)
@@ -119,6 +118,12 @@ class eTraGoResults(egoBasic):
     """The ``eTraGoResults`` class create and contains all results
     of eTraGo  and it's network container for eGo.
 
+    Returns
+    -------
+    network_etrago: :class:`etrago.tools.io.NetworkScenario`
+        eTraGo network object compiled by :meth:`etrago.appl.etrago`
+    etrago: :pandas:`pandas.Dataframe<dataframe>`
+        eTraGo results
 
     Examples
     --------
@@ -127,7 +132,10 @@ class eTraGoResults(egoBasic):
 
     See also
     --------
+
     The `eTraGo`_ documentation.
+
+
 
     References
     ----------
@@ -192,7 +200,6 @@ class eTraGoResults(egoBasic):
         # add selected results to Results container
 
         self.etrago = pd.DataFrame()
-        self.etrago.generator = pd.DataFrame()
         self.etrago.storage_charges = total_storage_charges(
             self.etrago_network)
         self.etrago.storage_costs = etrago_storages(self.etrago_network)
@@ -206,7 +213,6 @@ class eTraGoResults(egoBasic):
         # add functions direct
         # self.etrago_network.etrago_line_loading = etrago_line_loading
 
-
         pass
 
     if not 'READTHEDOCS' in os.environ:
@@ -216,6 +222,7 @@ class eTraGoResults(egoBasic):
             Integrate and use function from eTraGo.
             For more information see:
             """
+            # add if time_step <1  -> plot
             return plot_line_loading(network=self.etrago_network, **kwargs)
 
         def etrago_stacked_gen(self, **kwargs):
@@ -290,12 +297,6 @@ class eDisGoResults(eTraGoResults):
     """ eDisGo Results
 
     This module contains all results of eDisGo for eGo.
-
-    ToDo
-    ----
-    - add eDisGo
-    - add iteration for multiple ding0 grids
-
     """
 
     def __init__(self, jsonpath, *args, **kwargs):
@@ -309,28 +310,30 @@ class eDisGoResults(eTraGoResults):
         if self.json_file['global']['eDisGo'] is True:
             logger.info('Create eDisGo network')
             self.edisgo_networks = EDisGoNetworks(
-                    json_file=self.json_file,
-                    etrago_network=self.etrago_network)
-            
+                json_file=self.json_file,
+                etrago_network=self.etrago_network)
+
         def edisgo_total_costs(self, **kwargs):
-            
+
             return df
- 
 
 
 class eGo(eDisGoResults):
     """Main eGo module which including all results and main functionalities.
 
 
-    Parameters
-    ----------
-    eTraGo : Network
+    Returns
+    -------
+    network_etrago: :class:`etrago.tools.io.NetworkScenario`
+        eTraGo network object compiled by :meth:`etrago.appl.etrago`
+    network_edisgo : :pandas:`pandas.Dataframe<dataframe>`
+        Network container of eDisGo
+    edisgo : :pandas:`pandas.Dataframe<dataframe>`
+        aggregated results of eDisGo
+    etrago : :pandas:`pandas.Dataframe<dataframe>`
+        aggregated results of eTraGo
 
-    eDisGo : Network
 
-    ToDo
-    ----
-    - add eDisGo
     """
 
     def __init__(self, jsonpath, *args, **kwargs):
@@ -364,16 +367,13 @@ def geolocation_buses(network, session):
 
     Parameters
     ----------
-    network : Network
-        eTraGo Network
+    network_etrago: :class:`etrago.tools.io.NetworkScenario`
+        eTraGo network object compiled by :meth:`etrago.appl.etrago`
     session : :sqlalchemy:`sqlalchemy.orm.session.Session<orm/session_basics.html>`
         SQLAlchemy session to the OEDB
 
-    ToDo
-    ----
-     - check eTrago stack generation plots and other in order of adaptation
-
     """
+    # ToDo: check eTrago stack generation plots and other in order of adaptation
     # Start db connetion
     # get renpassG!S scenario data
 
@@ -429,7 +429,6 @@ def geolocation_buses(network, session):
 def results_to_excel(ego):
     """
     Wirte results to excel
-
     """
     # Write the results as xlsx file
     # ToDo add time of calculation to file name
@@ -449,8 +448,8 @@ def results_to_excel(ego):
 
 
 def etrago_from_oedb(session, json_file):
-    """
-    Function with import eTraGo results for the Database.
+    """Function which import eTraGo results for the Database by
+    ``result_id`` and if ``recover`` is set to ``true``.
 
     Parameters
     ----------
@@ -461,12 +460,9 @@ def etrago_from_oedb(session, json_file):
 
     Returns
     -------
-    network :
+    network_etrago: :class:`etrago.tools.io.NetworkScenario`
+        eTraGo network object compiled by :meth:`etrago.appl.etrago`
 
-    ToDo
-    ----
-        add Mapping for grid schema
-        make it more generic -> class?
     """
 
     result_id = json_file['global']['result_id']
@@ -536,13 +532,11 @@ def etrago_from_oedb(session, json_file):
         ----------
         session: : sqlalchemy: `sqlalchemy.orm.session.Session < orm/session_basics.html >`
             SQLAlchemy session to the OEDB
-
-        ToDo
-        ----
-        - check index of bus_t and soon is wrong!
-
         """
+
+        # TODO - check index of bus_t and soon is wrong!
         # TODO: pls make more robust
+
         id_column = re.findall(r'[A-Z][^A-Z]*', name)[0] + '_' + 'id'
         id_column = id_column.lower()
 
