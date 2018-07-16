@@ -98,16 +98,16 @@ def edisgo_convert_capital_costs(grid_components, cost_config, json_file):
     .. math::
 
         PVA =   (1 / p_{interest rate}) - (1 / (p_{interest rate}
-                  *(1 + p_{interest rate})^T_{Lifetime}))
+                  *(1 + p_{interest rate})^{T_{Lifetime}}))
     """
     # Based on eTraGo calculation in
     # https://github.com/openego/eTraGo/blob/dev/etrago/tools/utilities.py#L651
 
-    _T = 40  # from grid_components ?
-    _p = cost_config['p']
+    T = 40  # from grid_components ?
+    p = cost_config['p']
 
     # Calculate present value of an annuity (PVA)
-    PVA = (1 / _p) - (1 / (_p*(1 + _p) ** _T))
+    PVA = (1 / p) - (1 / (p*(1 + p) ** T))
 
     year = 8760
     # get period of calculation
