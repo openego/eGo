@@ -265,9 +265,9 @@ def etrago_grid_investment(network, json_file):
 
         # aggregate lines and trafo
         line = lines[['v_level', 'number_of_expansion',
-                      'grid_costs', 'time_step']].groupby('v_level').sum()
+                      'grid_costs']].groupby('v_level').sum()
         trafo = trafos[['v_level', 'number_of_expansion',
-                        'grid_costs', 'time_step']].groupby('v_level').sum()
+                        'grid_costs']].groupby('v_level').sum()
 
         # merge trafos and line
         frames = [line, trafo]
