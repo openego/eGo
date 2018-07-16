@@ -60,12 +60,13 @@ def annuity_per_period(capex, n, wacc, t, p):
     return capex * (wacc * (1 + wacc) ** n) / ((1 + wacc) ** n - 1)
 
 
-def edisgo_convert_capital_costs(grid_components, json_file):
-    """
+def edisgo_convert_capital_costs(grid_components, cost_config, json_file):
+    """ Get scenario and calculation specific annuity cost by given capital
+    costs and lifetime.
+
 
     Parameters
     ----------
-
     grid_components : :obj:dict
         Dictionary of ding0 grid components which are extendable
         (Name, investment_cost, lifetime)
@@ -82,16 +83,34 @@ def edisgo_convert_capital_costs(grid_components, json_file):
 
     Returns
     -------
-    capital_cost :
-        calculated capital costs of components
-    """
-    # eTraGo calculation in
-    # https://github.com/openego/eTraGo/blob/dev/etrago/tools/utilities.py#L651
-    # def convert_capital_costs(network, start_snapshot, end_snapshot,
-    #                           p=0.05, T=40):
-    # Define function
+    annuity_cost : numeric
+        Scenario and calculation specific annuity cost by given capital
+        costs and lifetime
 
-    pass
+    Examples
+    --------
+    .. math::
+
+        PVA  =  (1 / _p) - (1 / (_p*(1 + _p) ** _T))
+    """
+    # Based on eTraGo calculation in
+    # https://github.com/openego/eTraGo/blob/dev/etrago/tools/utilities.py#L651
+
+    _T = 40  # from grid_components ?
+    _p = cost_config['p']
+
+    # Calculate present value of an annuity (PVA)
+    PVA = (1 / _p) - (1 / (_p*(1 + _p) ** _T))
+
+    year = 8760
+    # get period of calculation
+    period = (json_file['eTraGo']['start_snapshot']
+              - json_file['eTraGo']['start_snapshot'])
+
+    # calculation of capital_cost
+    annuity_cost = (capital_cost / (PVA * (year/(period+1))))
+
+    return annuity_cost
 
 
 def etrago_operating_costs(network):
