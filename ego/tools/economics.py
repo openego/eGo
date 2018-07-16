@@ -202,29 +202,14 @@ def etrago_grid_investment(network, json_file):
            >>> ego = eGo(jsonpath='scenario_setting.json')
            >>> ego.etrago.grid_costs
 
-    +--------+-------------------+----------------+-----------+
-    | v_level|number_of_expansion| s_nom_expansion| grid_costs|
-    +========+===================+================+===========+
-    |  ehv   |   27.0            | 12678.47943    |31514.1305 |
-    +--------+-------------------+----------------+-----------+
-    |  hv    |    0.0            |      0.0       |     0.0   |
-    s+--------+-------------------+----------------+-----------+
+    +--------+-------------------+------------+
+    | v_level|number_of_expansion|  grid_costs|
+    +========+===================+============+
+    |  ehv   |   27.0            | 31514.1305 |
+    +--------+-------------------+------------+
+    |  hv    |    0.0            |      0.0   |
+    +--------+-------------------+------------+
     """
-    def v_level(lines):
-        """ Get v_level by v_nom
-        """
-
-        if lines['v_nom'] == 380.:
-            lines['v_level'] == 'ehv'
-        if lines['v_nom'] == 220.:
-            lines['v_level'] == 'ehv'
-        if lines['v_nom'] == 110.:
-            lines['v_level'] == 'hv'
-        else:
-            lines['v_level'] == 'unknown'
-            logger.info("Found unknown voltage leve: %s", lines['v_nom'])
-
-        pass
 
     # check settings for extendable
     if 'network' not in json_file['eTraGo']['extendable']:
@@ -242,7 +227,15 @@ def etrago_grid_investment(network, json_file):
             lines.capital_cost, axis='index')
         lines['number_of_expansion'] = lines.s_nom_expansion > 0.0
         lines['time_step'] = get_time_steps(json_file)
-        lines['v_level'] = v_level(lines)
+
+        # add v_level
+        lines['v_level'] = 'unknown'
+
+        ix_ehv = lines[lines['v_nom'] >= 380].index
+        lines.set_value(ix_ehv, 'v_level', 'ehv')
+
+        ix_hv = lines[(lines['v_nom'] <= 220) & (lines['v_nom'] >= 110)].index
+        lines.set_value(ix_hv, 'v_level', 'hv')
 
         # based on eTraGo Function:
         # https://github.com/openego/eTraGo/blob/dev/etrago/tools/utilities.py#L651
