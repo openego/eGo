@@ -298,9 +298,9 @@ class eTraGoResults(egoBasic):
 
 
 class eDisGoResults(eTraGoResults):
-    """ eDisGo Results
+    """The ``eDisGoResults`` class create and contains all results
+    of eDisGo and its network containers.
 
-    This module contains all results of eDisGo for eGo.
     """
 
     def __init__(self, jsonpath, *args, **kwargs):
@@ -318,11 +318,17 @@ class eDisGoResults(eTraGoResults):
                 json_file=self.json_file,
                 etrago_network=self.etrago_network)
 
+<<<<<<< HEAD
             self.edisgo.grid_costs = edisgo_grid_investment(
                 self.edisgo_networks,
                 self.json_file
             )
-
+=======
+            self.edisgo.grid_investment_costs = edisgo_grid_investment(
+                    self.edisgo_networks,
+                    self.json_file
+                    )
+>>>>>>> bfb1615171dd00c37c1510050bd6c92490d27343
 
 class eGo(eDisGoResults):
     """Main eGo module which including all results and main functionalities.
@@ -332,8 +338,8 @@ class eGo(eDisGoResults):
     -------
     network_etrago: :class:`etrago.tools.io.NetworkScenario`
         eTraGo network object compiled by :meth:`etrago.appl.etrago`
-    network_edisgo : :pandas:`pandas.Dataframe<dataframe>`
-        Network container of eDisGo
+    edisgo_networks : :class:`ego.tools.edisgo_integration.EDisGoNetworks`
+        Contains multiple eDisGo networks
     edisgo : :pandas:`pandas.Dataframe<dataframe>`
         aggregated results of eDisGo
     etrago : :pandas:`pandas.Dataframe<dataframe>`

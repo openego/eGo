@@ -52,6 +52,5 @@ if __name__ == '__main__':
     logger.info('Print results')
     ego.etrago_line_loading()
     print(ego.etrago.generator)
-    print(ego.etrago.grid_costs)
     print(ego.etrago.storage_costs)
     print(ego.etrago.operating_costs)
