@@ -300,6 +300,9 @@ def edisgo_grid_investment(edisgo_networks, json_file):
     
     for key, value in edisgo_networks.edisgo_grids.items():
         costs_single = value.network.results.grid_expansion_costs
+        if not costs_single:
+            logger.warning('No results for grid {}'.format(key))
+            continue
 
         costs_single = costs_single.rename(
                 columns={'voltage_level': 'v_lev'}
