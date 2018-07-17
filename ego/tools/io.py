@@ -42,7 +42,7 @@ if not 'READTHEDOCS' in os.environ:
     from egoio.db_tables.model_draft import EgoGridPfHvSource as Source,\
         EgoGridPfHvTempResolution as TempResolution
     from tools.results import (create_etrago_results)
-    from tools.storages import (total_storage_charges, etrago_storages)
+    from tools.storages import (etrago_storages_investment, etrago_storages)
     from tools.economics import (
         etrago_operating_costs,
         etrago_grid_investment,
@@ -203,14 +203,15 @@ class eTraGoResults(egoBasic):
         # add selected results to Results container
 
         self.etrago = pd.DataFrame()
-        self.etrago.storage_charges = total_storage_charges(
+        self.etrago.storage_investment_costs = etrago_storages_investment(
             self.etrago_network)
-        self.etrago.storage_costs = etrago_storages(self.etrago_network)
+        self.etrago.storage_charges = etrago_storages(self.etrago_network)
         self.etrago.operating_costs = etrago_operating_costs(
             self.etrago_network)
         self.etrago.generator = create_etrago_results(self.etrago_network,
                                                       self.scn_name)
-        self.etrago.grid_investment_costs = etrago_grid_investment(self.etrago_network,
+        self.etrago.grid_investment_costs = etrago_grid_investment(self.
+                                                                   etrago_network,
                                                                    self.json_file)
 
         # add functions direct
