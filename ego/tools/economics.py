@@ -97,8 +97,8 @@ def edisgo_convert_capital_costs(grid_components, cost_config, json_file):
     --------
     .. math::
 
-        PVA =   \frac{\frac{1}{p_{rate}}}{(\frac{1}{p_{rate}}*(1 + \
-                 p_{rate})^{T_{Lifetime}})}
+        PVA =   (1 / p) - (1 / (p*(1 + p)^T))
+
     """
     # Based on eTraGo calculation in
     # https://github.com/openego/eTraGo/blob/dev/etrago/tools/utilities.py#L651
@@ -130,7 +130,7 @@ def etrago_operating_costs(network):
 
     Returns
     -------
-    power_price :  :class:`~.pd.DataFrame`
+    power_price :  :pandas:`pandas.Dataframe<dataframe>`
 
     Examples
     --------
@@ -219,7 +219,7 @@ def etrago_grid_investment(network, json_file):
     if 'network' in json_file['eTraGo']['extendable']:
 
         lines = network.lines[['v_nom', 'capital_cost', 's_nom',
-                               's_nom_min', 's_nom_opt']]
+                               's_nom_min', 's_nom_opt']].reset_index()
 
         lines['s_nom_expansion'] = lines.s_nom_opt.subtract(
             lines.s_nom, axis='index')
@@ -243,7 +243,8 @@ def etrago_grid_investment(network, json_file):
 
         # get costs of transfomers
         trafos = network.transformers[['v_nom0', 'v_nom1', 'capital_cost',
-                                       's_nom_extendable', 's_nom', 's_nom_opt']]
+                                       's_nom_extendable', 's_nom',
+                                       's_nom_opt']].reset_index()
 
         trafos['s_nom_extendable'] = trafos.s_nom_opt.subtract(
             trafos.s_nom, axis='index')
@@ -265,9 +266,10 @@ def etrago_grid_investment(network, json_file):
 
         # aggregate lines and trafo
         line = lines[['v_level', 'number_of_expansion',
-                      'grid_costs']].groupby('v_level').sum()
+                      'grid_costs']].groupby('v_level').sum().reset_index()
+
         trafo = trafos[['v_level', 'number_of_expansion',
-                        'grid_costs']].groupby('v_level').sum()
+                        'grid_costs']].groupby('v_level').sum().reset_index()
 
         # merge trafos and line
         frames = [line, trafo]
