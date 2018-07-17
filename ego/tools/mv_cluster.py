@@ -18,24 +18,41 @@
 
 # File description
 """
-Make MV Cluster
+This file contains all functions regarding the clustering of MV grids
 """
+__copyright__ = ("Flensburg University of Applied Sciences, "
+                 "Europa-Universität Flensburg, "
+                 "Centre for Sustainable Energy Systems")
+__license__ = "GNU Affero General Public License Version 3 (AGPL-3.0)"
+__author__ = "wolf_bunke, maltesc"
 
-from __future__ import print_function
-
-import pickle
+# Import
+#from __future__ import print_function
 import os
-import pandas as pd
-
-from sklearn.cluster import KMeans
-import numpy as np
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
-import matplotlib.cm as cm
+if not 'READTHEDOCS' in os.environ:
+    import pickle
+    
+    import pandas as pd
+    
+    from sklearn.cluster import KMeans
+    import numpy as np
+    
+    #import matplotlib.pyplot as plt
+    #from mpl_toolkits.mplot3d import Axes3D
+    #import matplotlib.cm as cm
 
 
 def analyze_attributes(ding0_files):
-
+    """
+    Calculates the attributes wind and solar capacity and farthest node
+    for all files in ding0_files. Results are written to ding0_files
+    
+    Parameters
+    ----------
+    ding0_files : :obj:`str`
+        Path to ding0 files
+        
+    """
     base_path = ding0_files
 
     not_found = []
@@ -195,7 +212,23 @@ def analyze_attributes(ding0_files):
 
 
 def cluster_mv_grids(ding0_files, no_grids):
+    """
+    Clusters the MV grids based on the attributes, for a given number
+    of MV grids
+    
+    Parameters
+    ----------
+    ding0_files : :obj:`str`
+        Path to ding0 files
+    no_grids : int
+        Desired number of clusters (of MV grids)
+        
+    Returns
+    -------
+    :pandas:`pandas.DataFrame<dataframe>`
+        Dataframe containing the clustered MV grids and their weightings
 
+    """
     # import CSV data file that exported from Networks_analysis_solar_wind_farthest-node.py and assign it to a data frame
     df = pd.read_csv(ding0_files + '/attributes.csv')
 

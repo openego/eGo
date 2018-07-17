@@ -18,25 +18,27 @@
 
 # File description
 """
+This files contains all eGo interface functions 
 """
+
+__copyright__ = ("Europa-Universität Flensburg, "
+                 "Centre for Sustainable Energy Systems")
+__license__ = "GNU Affero General Public License Version 3 (AGPL-3.0)"
+__author__ = "wolf_bunke,maltesc"
+
 # Import
 # General Packages
 import os
 import pandas as pd
 import time
 if not 'READTHEDOCS' in os.environ:
-    from sqlalchemy import distinct
+#    from sqlalchemy import distinct
     # This gives me the specific ORM classes.
     from egoio.db_tables import model_draft
 #    from edisgo.grid.network import ETraGoSpecs
 
 import logging
 logger = logging.getLogger('ego')
-
-__copyright__ = ("Europa-Universität Flensburg, "
-                 "Centre for Sustainable Energy Systems")
-__license__ = "GNU Affero General Public License Version 3 (AGPL-3.0)"
-__author__ = "wolf_bunke,maltesc"
 
 
 # Functions
@@ -392,21 +394,25 @@ def get_etragospecs_direct(session,
                            etrago_network,
                            scn_name):
     """
-    Reads eTraGo Results from Database and returns an Object of the Interface class ETraGoSpecs
-
+    Reads eTraGo Results from Database and returns and returns
+    the interface values as a dictionary of corresponding dataframes
+    
     Parameters
     ----------
-    session : :class:`~.` #Todo: Add class etc....
-        Oemof session object (Database Interface)
+    session : sqla.orm.session.Session
+        Handles conversations with the database.
     bus_id : int
         ID of the corresponding HV bus
-    eTraGo : :class:`~.` #Todo: Add class etc....
+    etrago_network: :class:`etrago.tools.io.NetworkScenario`
+        eTraGo network object compiled by :meth:`etrago.appl.etrago`
+    scn_name : str
+        Name of used scenario 'Status Quo', 'NEP 2035' or 'eGo 100'
 
 
     Returns
     -------
-    etragospecs : :class:~.`
-        eDisGo ETraGoSpecs Object
+    :obj:`dict` of :pandas:`pandas.DataFrame<dataframe>`
+        Dataframes used as eDisGo inputs
 
     """
 
@@ -555,15 +561,15 @@ def get_etragospecs_direct(session,
                                index=snap_idx,
                                columns=aggr_gens['ren_id'])
  
-    potential_abs = pd.DataFrame(0.0,
-                               index=snap_idx,
-                               columns=aggr_gens['ren_id'])
-    dispatch_abs = pd.DataFrame(0.0,
-                               index=snap_idx,
-                               columns=aggr_gens['ren_id'])   
-    curtailment_abs = pd.DataFrame(0.0,
-                               index=snap_idx,
-                               columns=aggr_gens['ren_id'])
+#    potential_abs = pd.DataFrame(0.0,
+#                               index=snap_idx,
+#                               columns=aggr_gens['ren_id'])
+#    dispatch_abs = pd.DataFrame(0.0,
+#                               index=snap_idx,
+#                               columns=aggr_gens['ren_id'])   
+#    curtailment_abs = pd.DataFrame(0.0,
+#                               index=snap_idx,
+#                               columns=aggr_gens['ren_id'])
 
     for index, row in ren_df.iterrows():
         gen_id = row['generator_id']
@@ -740,78 +746,3 @@ def get_etragospecs_direct(session,
 #        print(keys, ": ", values)
 
     return specs
-
-
-#def get_mvgrid_from_bus_id(session,
-#                           bus_id):
-#    # Mapping
-#    ormclass_hvmv_subst = model_draft.__getattribute__('EgoGridHvmvSubstation')
-#    subst_id = session.query(
-#        ormclass_hvmv_subst.subst_id
-#    ).filter(
-#        ormclass_hvmv_subst.otg_id == bus_id
-#    ).scalar(
-#    )
-#    # ToDo Check if subst_id is really the mv grid ID
-#    # Anyway, this should be adapted by Dingo
-#    return subst_id
-
-#def get_feedin_fluctuating(ren_dispatch, curtailment, renewables):
-#    
-#    # get feed-in without curtailment
-#    if curtailment is not None:
-#        print(ren_dispatch)
-#        print(curtailment)
-#        feedin = ren_dispatch + curtailment
-#        print(feedin)
-#        logger.info('Feed-in calculated including curtailment')
-#    else:
-#        feedin = ren_dispatch
-#    # change column names
-#    new_columns = [
-#        (renewables[renewables.ren_id == col].name.iloc[0],
-#         renewables[renewables.ren_id == col].w_id.iloc[0])
-#        for col in feedin.columns]
-#    feedin.columns = pd.MultiIndex.from_tuples(new_columns)
-#    # aggregate wind and solar time series until generators get a weather
-#    # ID
-#    print(feedin)
-#    return feedin
-
-
-#def get_curtailment(edisgo_grid, curtailment, renewables):
-#
-#    # get installed capacities of wind and solar generators
-#    # ToDo: Differentiate by weather cell ID once generators have one
-#    gens = list(edisgo_grid.network.mv_grid.graph.nodes_by_attribute(
-#        'generator'))
-#    for lv_grid in edisgo_grid.network.mv_grid.lv_grids:
-#        gens.extend(list(lv_grid.graph.nodes_by_attribute('generator')))
-#    dict_capacities = {'solar': 0, 'wind': 0}
-#    for gen in gens:
-#        if gen.type in ['solar', 'wind']:
-#            dict_capacities[gen.type] = (
-#                    dict_capacities[gen.type] 
-#                    + gen.nominal_capacity)
-#            print(dict_capacities)
-#
-#    # change column names of curtailment DataFrame to
-#    new_columns = [
-#        (renewables[renewables.ren_id == col].name.iloc[0],
-#         renewables[renewables.ren_id == col].w_id.iloc[0])
-#        for col in curtailment.columns]
-#    curtailment.columns = pd.MultiIndex.from_tuples(new_columns)
-#
-#    
-#    return curtailment
-
-#Hier curtailment noch zusammenfassen!!
-    
-#    curtailment = pd.DataFrame(data={'wind': curtailment.wind.sum(axis=1),
-#                                     'solar': curtailment.solar.sum(axis=1)})
-#
-#    # calculate absolute curtailment
-#    timeseries_curtailment = curtailment.multiply(
-#        pd.Series(dict_capacities))
-#
-#    return timeseries_curtailment
