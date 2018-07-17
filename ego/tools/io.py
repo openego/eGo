@@ -41,16 +41,16 @@ if not 'READTHEDOCS' in os.environ:
     from etrago.tools.io import load_config_file
     from egoio.db_tables.model_draft import EgoGridPfHvSource as Source,\
         EgoGridPfHvTempResolution as TempResolution
-    from tools.results import (create_etrago_results)
-    from tools.storages import (etrago_storages_investment, etrago_storages)
-    from tools.economics import (
+    from ego.tools.results import (create_etrago_results)
+    from ego.tools.storages import (etrago_storages_investment, etrago_storages)
+    from ego.tools.economics import (
         etrago_operating_costs,
         etrago_grid_investment,
         edisgo_grid_investment,
         investment_costs,
         get_generator_investment)
-    from tools.utilities import get_scenario_setting, get_time_steps
-    from tools.edisgo_integration import EDisGoNetworks
+    from ego.tools.utilities import get_scenario_setting, get_time_steps
+    from ego.tools.edisgo_integration import EDisGoNetworks
     from egoio.db_tables.model_draft import RenpassGisParameterRegion
     from egoio.db_tables import model_draft, grid
     from etrago.tools.plot import (plot_line_loading, plot_stacked_gen,

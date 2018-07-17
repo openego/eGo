@@ -36,6 +36,7 @@ from unittest.mock import MagicMock
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #sys.path.insert(0, os.path.abspath('.'))
 sys.path.insert(0, os.path.abspath('../'))
+sys.path.insert(0, os.path.abspath('../..'))
 
 # -- General configuration ------------------------------------------------
 
@@ -63,6 +64,8 @@ extensions = [
 ]
 
 
+# https://stackoverflow.com/questions/12206334/sphinx-autosummary-toctree-contains-reference-to-nonexisting-document-warnings
+numpydoc_show_class_members = False
 
 # Napoleon settings
 napoleon_google_docstring = True
@@ -176,7 +179,7 @@ language = None
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
-exclude_patterns = ['_build', 'whatsnew']
+exclude_patterns = ['_build', 'whatsnew', '_static']
 
 # The reST default role (used for this markup: `text`) to use for all
 # documents.
