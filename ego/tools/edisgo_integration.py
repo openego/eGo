@@ -31,7 +31,8 @@ __author__ = "wolf_bunke, maltesc"
 # Local Packages
 
 # Project Packages
-#import os
+import os
+import logging
 if not 'READTHEDOCS' in os.environ:
     from egoio.db_tables import model_draft, grid
     from egoio.tools import db
@@ -51,11 +52,12 @@ if not 'READTHEDOCS' in os.environ:
         cluster_mv_grids)
     from ego.tools.utilities import define_logging
 
-# Other Packages
-import logging
-import multiprocessing as mp
-import pandas as pd
-from sqlalchemy.orm import sessionmaker
+    # Other Packages
+    import logging
+    import multiprocessing as mp
+    import pandas as pd
+    from sqlalchemy.orm import sessionmaker
+
 
 # Logging
 logging.basicConfig(format='%(asctime)s %(message)s', level=logging.INFO)
