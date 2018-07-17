@@ -1,5 +1,36 @@
+===
 ego
 ===
+
+ego_main.py
+===========
+
+
+Run the ``ego_main.py`` file with:
+
+.. code-block:: bash
+
+   >>> python3 ego_main.py
+   >>> ...
+   >>> INFO:ego:Start calculation
+   >>> ...
+
+
+
+.. code-block:: python
+
+  >>> from ego.tools.io import eGo
+  >>> ego = eGo(jsonpath='scenario_setting.json')
+  >>> ego.etrago_line_loading()
+  >>> print(ego.etrago.storage_costs)
+  >>> ...
+  >>> INFO:ego:Start calculation
+  >>> ...
+
+
+Overview of modules
+===================
+
 
 .. toctree::
    :maxdepth: 4
