@@ -13,6 +13,7 @@ __author__ = "wolf_bunke,maltesc"
 # Local Packages
 
 # Project Packages
+import os
 if not 'READTHEDOCS' in os.environ:
     from egoio.db_tables import model_draft, grid
     from egoio.tools import db
@@ -33,7 +34,6 @@ if not 'READTHEDOCS' in os.environ:
     from ego.tools.utilities import define_logging
 
 # Other Packages
-import os
 import logging
 import multiprocessing as mp
 import pandas as pd
