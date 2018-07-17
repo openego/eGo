@@ -2,8 +2,7 @@
 Theoretical background
 ======================
 
-
-
+.. contents::
 
 
 Models overview
@@ -17,8 +16,12 @@ Models overview
    :alt: Overview of Models and processes which are used by eGo
    :align: center
 
+Cluster methods
+===============
 
 
+Economic calculation
+====================
 
 
 References
