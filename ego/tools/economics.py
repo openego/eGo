@@ -281,14 +281,19 @@ def etrago_grid_investment(network, json_file):
 
 
 def edisgo_grid_investment(edisgo_networks, json_file):
-    """Function to get all costs of grid investment of eDisGo.
+    """
+    Function aggregates all costs, based on all calculated eDisGo
+    grids and their weightings
 
     Parameters
     ----------
-
-    network_edisgo : :pandas:`pandas.Dataframe<dataframe>`
-        Network container of eDisGo
-
+    edisgo_networks : :class:`ego.tools.edisgo_integration.EDisGoNetworks`
+        Contains multiple eDisGo networks
+        
+    Returns
+    -------
+    None or :pandas:`pandas.DataFrame<dataframe>`
+        Dataframe containing annuity costs per voltage level
 
     """
 
@@ -299,9 +304,15 @@ def edisgo_grid_investment(edisgo_networks, json_file):
     annuity_costs = pd.DataFrame(columns=['v_lev', 'annuity_costs'])
     
     for key, value in edisgo_networks.edisgo_grids.items():
+        
+        if value is None:
+            logger.warning('No results available for grid {}'.format(key))
+            continue
+        
         costs_single = value.network.results.grid_expansion_costs
-        if not costs_single:
-            logger.warning('No results for grid {}'.format(key))
+        
+        if (costs_single['total_costs'].sum() == 0.):
+            logger.info('No expansion costs for grid {}'.format(key))
             continue
 
         costs_single = costs_single.rename(
@@ -327,14 +338,19 @@ def edisgo_grid_investment(edisgo_networks, json_file):
         costs_single = costs_single[['v_lev', 'annuity_costs']]
         
         annuity_costs = annuity_costs.append(costs_single, ignore_index=True)
-        
-    aggr_capital_costs = annuity_costs.groupby(['v_lev']).sum().reset_index()
-    aggr_capital_costs = aggr_capital_costs.rename(
-            columns={'annuity_costs': 'grid_costs'}
-            )
-    aggr_capital_costs['grid_costs'] = aggr_capital_costs['grid_costs'] * 1000
+      
+    if len(annuity_costs) == 0:
+        logger.info('No expansion costs in any MV grid')
+        return None
     
-    return aggr_capital_costs
+    else:
+        aggr_capital_costs = annuity_costs.groupby(['v_lev']).sum().reset_index()
+        aggr_capital_costs = aggr_capital_costs.rename(
+                columns={'annuity_costs': 'grid_costs'}
+                )
+        aggr_capital_costs['grid_costs'] = aggr_capital_costs['grid_costs'] * 1000
+        
+        return aggr_capital_costs
 
 
 def get_generator_investment(network, scn_name):
