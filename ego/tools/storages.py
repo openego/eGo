@@ -41,7 +41,7 @@ def total_storage_charges(network):
 
     Parameters
     ----------
-    network : :etrago:`etrago.tools.io.NetworkScenario`
+    network : :class:`etrago.tools.io.NetworkScenario`
         eTraGo ``NetworkScenario`` based on PyPSA Network. See also
         `pypsa.network <https://pypsa.org/doc/components.html#network>`_
 
@@ -102,7 +102,7 @@ def etrago_storages(network):
 
     Parameters
     ----------
-    network : :class:`~.etrago.tools.io.NetworkScenario`
+    network : :class:`etrago.tools.io.NetworkScenario`
         eTraGo ``NetworkScenario`` based on PyPSA Network. See also
         `pypsa.network <https://pypsa.org/doc/components.html#network>`_
 
@@ -123,8 +123,9 @@ def etrago_storages_investment(network):
 
     Parameters
     ----------
-    network_etrago: :class:`etrago.tools.io.NetworkScenario`
-        eTraGo network object compiled by :meth:`etrago.appl.etrago`
+    network : :class:`etrago.tools.io.NetworkScenario`
+        eTraGo ``NetworkScenario`` based on PyPSA Network. See also
+        `pypsa.network <https://pypsa.org/doc/components.html#network>`_
 
 
     Returns

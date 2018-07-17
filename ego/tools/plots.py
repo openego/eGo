@@ -40,7 +40,7 @@ if not 'READTHEDOCS' in os.environ:
     import webbrowser
     from egoio.db_tables.model_draft import EgoGridMvGriddistrict
     from egoio.db_tables.grid import EgoDpMvGriddistrict
-    from tools.io import eGo
+    from ego.tools.io import eGo
     import matplotlib.pyplot as plt
 
 import logging

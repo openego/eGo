@@ -9,10 +9,10 @@ Overview of modules
 
 
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 7
 
    ego.tools
-   ego
+   
    
 
 ego_main.py
