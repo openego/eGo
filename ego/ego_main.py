@@ -29,11 +29,12 @@ the distribution and transmission grids of eTraGo and eDisGo.
 
 import pandas as pd
 import os
-from ego.tools.utilities import define_logging
-logger = define_logging(log_name='ego.log')
+
 
 if not 'READTHEDOCS' in os.environ:
     from ego.tools.io import eGo
+    from ego.tools.utilities import define_logging
+    logger = define_logging(log_name='ego.log')
 
 __copyright__ = ("Flensburg University of Applied Sciences, "
                  "Europa-Universität Flensburg, "

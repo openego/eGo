@@ -1,4 +1,4 @@
-Release v0.2.0 (July 17, 2018)
+Release v0.2.0 (July 18, 2018)
 ++++++++++++++++++++++++++++++
 
 Second release of the eGo application.
@@ -20,7 +20,7 @@ Added features
 * Cleaned and restructured eGo classes and functions
     * Moved classes of eGo from results.py to io.py
     * Move serveral function
-  
+
 * Introduce new files for edisgo handling
     * edisgo_integration.py
     * mv_cluster.py

@@ -37,6 +37,6 @@ Examples
 Example Cluster of Germany
 ==========================
 
-
 .. raw:: html
    :file: images/iplot_cluster.html
+

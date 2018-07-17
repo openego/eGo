@@ -2,6 +2,19 @@
 ego
 ===
 
+
+
+Overview of modules
+===================
+
+
+.. toctree::
+   :maxdepth: 4
+
+   ego.ego_main
+   ego.tools
+   
+
 ego_main.py
 ===========
 
@@ -15,7 +28,7 @@ Run the ``ego_main.py`` file with:
    >>> INFO:ego:Start calculation
    >>> ...
 
-
+The eGo App works like:
 
 .. code-block:: python
 
@@ -26,14 +39,3 @@ Run the ``ego_main.py`` file with:
   >>> ...
   >>> INFO:ego:Start calculation
   >>> ...
-
-
-Overview of modules
-===================
-
-
-.. toctree::
-   :maxdepth: 4
-
-   ego.ego_main
-   ego.tools
