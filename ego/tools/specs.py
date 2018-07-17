@@ -542,7 +542,7 @@ def get_etragospecs_direct(session,
 
     aggr_gens['ren_id'] = aggr_gens.index
     
-#    print(aggr_gens)
+    print(aggr_gens)
 
     ### Dispatch and Curteilment
     potential = pd.DataFrame(0.0,
@@ -582,21 +582,30 @@ def get_etragospecs_direct(session,
         p_norm_tot_series = p_series / p_nom_aggr
 
         p_max_pu_series = etrago_network.generators_t.p_max_pu[str(gen_id)]
-        p_max_series = p_max_pu_series * p_nom
+#        p_max_series = p_max_pu_series * p_nom
         p_max_norm_tot_series = p_max_pu_series * p_nom / p_nom_aggr
 
-        p_curt_tot_series = p_max_series - p_series
-        p_curt_norm_tot_series = p_max_norm_tot_series - p_norm_tot_series
-
+#        p_curt_tot_series = p_max_series - p_series
+#        p_curt_norm_tot_series = p_max_norm_tot_series - p_norm_tot_series
+        
+        
+        potential[ren_id] = potential[ren_id] + p_max_norm_tot_series
         dispatch[ren_id] = dispatch[ren_id] + p_norm_tot_series
-        curtailment[ren_id] = curtailment[ren_id] + p_curt_norm_tot_series
+#        curtailment[ren_id] = curtailment[ren_id] + p_curt_norm_tot_series
+      
+    potential = potential.round(3)
+    dispatch = dispatch.round(3)
+    
+    logger.warning('Rounding normalized values')
+    curtailment = potential.sub(dispatch)
+    
                
-        potential_abs[ren_id] = potential_abs[ren_id] + p_max_series
-        dispatch_abs[ren_id] = dispatch_abs[ren_id] + p_series
-        curtailment_abs[ren_id] = curtailment_abs[ren_id] + p_curt_tot_series
+#        potential_abs[ren_id] = potential_abs[ren_id] + p_max_series
+#        dispatch_abs[ren_id] = dispatch_abs[ren_id] + p_series
+#        curtailment_abs[ren_id] = curtailment_abs[ren_id] + p_curt_tot_series
         
 
-    potential = dispatch + curtailment
+#    potential = dispatch + curtailment
     
     new_columns = [
         (aggr_gens[aggr_gens.ren_id == col].name.iloc[0],
@@ -616,27 +625,27 @@ def get_etragospecs_direct(session,
         for col in curtailment.columns]
     curtailment.columns = pd.MultiIndex.from_tuples(new_columns) 
 
-    new_columns = [
-        (aggr_gens[aggr_gens.ren_id == col].name.iloc[0],
-         aggr_gens[aggr_gens.ren_id == col].w_id.iloc[0])
-        for col in potential_abs.columns]
-    potential_abs.columns = pd.MultiIndex.from_tuples(new_columns) 
-
-    new_columns = [
-        (aggr_gens[aggr_gens.ren_id == col].name.iloc[0],
-         aggr_gens[aggr_gens.ren_id == col].w_id.iloc[0])
-        for col in dispatch_abs.columns]
-    dispatch_abs.columns = pd.MultiIndex.from_tuples(new_columns) 
-
-    new_columns = [
-        (aggr_gens[aggr_gens.ren_id == col].name.iloc[0],
-         aggr_gens[aggr_gens.ren_id == col].w_id.iloc[0])
-        for col in curtailment_abs.columns]
-    curtailment_abs.columns = pd.MultiIndex.from_tuples(new_columns)     
-   
-    potential_abs = potential_abs * 1000
-    dispatch_abs = dispatch_abs * 1000
-    curtailment_abs = curtailment_abs * 1000
+#    new_columns = [
+#        (aggr_gens[aggr_gens.ren_id == col].name.iloc[0],
+#         aggr_gens[aggr_gens.ren_id == col].w_id.iloc[0])
+#        for col in potential_abs.columns]
+#    potential_abs.columns = pd.MultiIndex.from_tuples(new_columns) 
+#
+#    new_columns = [
+#        (aggr_gens[aggr_gens.ren_id == col].name.iloc[0],
+#         aggr_gens[aggr_gens.ren_id == col].w_id.iloc[0])
+#        for col in dispatch_abs.columns]
+#    dispatch_abs.columns = pd.MultiIndex.from_tuples(new_columns) 
+#
+#    new_columns = [
+#        (aggr_gens[aggr_gens.ren_id == col].name.iloc[0],
+#         aggr_gens[aggr_gens.ren_id == col].w_id.iloc[0])
+#        for col in curtailment_abs.columns]
+#    curtailment_abs.columns = pd.MultiIndex.from_tuples(new_columns)     
+#   
+#    potential_abs = potential_abs * 1000 # Absolute amounts in kW
+#    dispatch_abs = dispatch_abs * 1000
+#    curtailment_abs = curtailment_abs * 1000
     
     # Storage
     t3 = time.perf_counter()
@@ -705,14 +714,14 @@ def get_etragospecs_direct(session,
 #            'battery_capacity': battery_capacity, 
 #            'battery_active_power': battery_active_power, 
             'conv_dispatch': conv_dsptch_norm,
-            'conv_dispatch_abs': conv_dsptch_abs,
+#            'conv_dispatch_abs': conv_dsptch_abs,
 #            'renewables': aggr_gens,
             'dispatch': dispatch,
-            'dispatch_abs': dispatch_abs,
+#            'dispatch_abs': dispatch_abs,
             'potential': potential,
-            'potential_abs': potential_abs,
-            'curtailment': curtailment,
-            'curtailment_abs': curtailment_abs
+#            'potential_abs': potential_abs,
+            'curtailment': curtailment#,
+#            'curtailment_abs': curtailment_abs
             }
     
 #    specs = ETraGoSpecs(battery_capacity=battery_capacity,

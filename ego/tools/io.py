@@ -43,9 +43,12 @@ if not 'READTHEDOCS' in os.environ:
         EgoGridPfHvTempResolution as TempResolution
     from tools.results import (create_etrago_results)
     from tools.storages import (total_storage_charges, etrago_storages)
-    from tools.economics import (etrago_operating_costs, etrago_grid_investment,
-                                 edisgo_grid_investment, investment_costs,
-                                 get_generator_investment)
+    from tools.economics import (
+            etrago_operating_costs, 
+            etrago_grid_investment,
+            edisgo_grid_investment, 
+            investment_costs,
+            get_generator_investment)
     from tools.utilities import get_scenario_setting, get_time_steps
     from tools.edisgo_integration import EDisGoNetworks
     from egoio.db_tables.model_draft import RenpassGisParameterRegion
@@ -313,9 +316,10 @@ class eDisGoResults(eTraGoResults):
                 json_file=self.json_file,
                 etrago_network=self.etrago_network)
 
-        def edisgo_total_costs(self, **kwargs):
-
-            return df
+            self.edisgo.grid_costs = edisgo_grid_investment(
+                    self.edisgo_networks,
+                    self.json_file
+                    )
 
 
 class eGo(eDisGoResults):

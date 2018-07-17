@@ -66,16 +66,13 @@ def annuity_per_period(capex, n, wacc, t, p):
 # cost_config = {"p": 0.04}
 
 
-def edisgo_convert_capital_costs(grid_components, cost_config, json_file):
+def edisgo_convert_capital_costs(overnight_cost, t, p, json_file):
     """ Get scenario and calculation specific annuity cost by given capital
     costs and lifetime.
 
 
     Parameters
     ----------
-    grid_components : :obj:dict
-        Dictionary of ding0 grid components which are extendable
-        (Name, investment_cost, lifetime)
     json_file : :obj:dict
         Dictionary of the ``scenario_setting.json`` file
     _start_snapshot : int
@@ -103,11 +100,9 @@ def edisgo_convert_capital_costs(grid_components, cost_config, json_file):
     # Based on eTraGo calculation in
     # https://github.com/openego/eTraGo/blob/dev/etrago/tools/utilities.py#L651
 
-    T = 40  # from grid_components ?
-    p = cost_config['p']
-
+    
     # Calculate present value of an annuity (PVA)
-    PVA = (1 / p) - (1 / (p*(1 + p) ** T))
+    PVA = (1 / p) - (1 / (p*(1 + p) ** t))
 
     year = 8760
     # get period of calculation
@@ -115,7 +110,7 @@ def edisgo_convert_capital_costs(grid_components, cost_config, json_file):
               - json_file['eTraGo']['start_snapshot'])
 
     # calculation of capital_cost
-    annuity_cost = (capital_cost / (PVA * (year/(period+1))))
+    annuity_cost = (overnight_cost / (PVA * (year/(period+1))))
 
     return annuity_cost
 
@@ -258,7 +253,7 @@ def etrago_grid_investment(network, json_file):
 
 
 
-def edisgo_grid_investment(edisgo_networks):
+def edisgo_grid_investment(edisgo_networks, json_file):
     """Function to get all costs of grid investment of eDisGo.
 
     Parameters
@@ -269,30 +264,43 @@ def edisgo_grid_investment(edisgo_networks):
 
 
     """
-    
+
     t = 40
-    p=0.05
+    p = 0.05
     logger.warning('For all components T={} and p={} is used'.format(t, p))  
     
-    capital_costs = pd.DataFrame(columns=['v_lev', 'capital_costs'])
+    annuity_costs = pd.DataFrame(columns=['v_lev', 'annuity_costs'])
     
     for key, value in edisgo_networks.edisgo_grids.items():
-        costs_grouped = value.network.results.grid_expansion_costs
-        costs_grouped.to_csv('test.csv')
-        costs_grouped = costs_grouped.rename(
+        costs_single = value.network.results.grid_expansion_costs
+
+        costs_single = costs_single.rename(
                 columns={'voltage_level': 'v_lev'}
                 )
     
-
-        costs_grouped['capital_costs'] = test(costs_grouped['total_costs'])
+        choice = edisgo_networks.grid_choice
+        weighting = choice.loc[
+                choice['the_selected_network_id'] == key
+                ][
+                        'no_of_points_per_cluster'
+                        ].values[0]
         
-        costs_grouped = costs_grouped[['v_lev', 'capital_costs']]
+        costs_single['annuity_costs'] = edisgo_convert_capital_costs(
+                costs_single['total_costs'], 
+                t=t,
+                p=p,
+                json_file=json_file)
         
-        capital_costs = capital_costs.append(costs_grouped, ignore_index=True)
+        costs_single['annuity_costs'] = (
+                costs_single['annuity_costs'] * weighting)
         
-    aggr_capital_costs = capital_costs.groupby(['v_lev']).sum().reset_index()
+        costs_single = costs_single[['v_lev', 'annuity_costs']]
+        
+        annuity_costs = annuity_costs.append(costs_single, ignore_index=True)
+        
+    aggr_capital_costs = annuity_costs.groupby(['v_lev']).sum().reset_index()
     aggr_capital_costs = aggr_capital_costs.rename(
-            columns={'capital_costs': 'grid_costs'}
+            columns={'annuity_costs': 'grid_costs'}
             )
     aggr_capital_costs['grid_costs'] = aggr_capital_costs['grid_costs'] * 1000
     

@@ -21,6 +21,7 @@ from edisgo.tools.edisgo_run import (
         run_edisgo_basic,
         run_edisgo_pool_flexible
         )
+from edisgo.grid import tools
 from ego.tools.specs import (
         get_etragospecs_direct,
 #        get_feedin_fluctuating,
@@ -94,6 +95,14 @@ class EDisGoNetworks:
 
         """
         return self._edisgo_grids
+    
+    @property
+    def grid_choice(self):
+        """
+        Returns the chosen grids
+
+        """
+        return self._grid_choice
 
 #    @property
 #    def edisgo_costs(self):
@@ -230,16 +239,15 @@ class EDisGoNetworks:
         
         """      
     
-#        logger.info('Calculating interface values')
-#                
-#        bus_id = self._get_bus_id_from_mv_grid(mv_grid_id)
-#        
-#        specs = get_etragospecs_direct(
-#                self._session, 
-#                bus_id, 
-#                self._etrago_network,
-#                self._scn_name)    
+        logger.info('Calculating interface values')               
+        bus_id = self._get_bus_id_from_mv_grid(mv_grid_id)
         
+        specs = get_etragospecs_direct(
+                self._session, 
+                bus_id, 
+                self._etrago_network,
+                self._scn_name)    
+                   
         ding0_filepath = (
                 self._ding0_files
                 + '/ding0_grids__' 
@@ -256,15 +264,11 @@ class EDisGoNetworks:
                 ding0_filepath=ding0_filepath,
                 generator_scenario=None,
                 analysis='worst-case')[0] # only the edisgo_grid is returned
-        
-        logger.warning('Function not fully executed!!')
-        return edisgo_grid
-         
-        logger.info('eTraGo feed-in case')
-        
+    
+    
+        logger.info('eTraGo feed-in case')        
         edisgo_grid.network.results = Results()
-     
-#     Generator Import is currently not working in eDisGo       
+         
         if self._generator_scn:
             logger.info(
                     'Importing generators for scenario {}'.format(
@@ -273,45 +277,38 @@ class EDisGoNetworks:
             edisgo_grid.import_generators(
                     generator_scenario=self._generator_scn)
                     
-
         edisgo_grid.network.timeseries = TimeSeriesControl( 
                 network=edisgo_grid.network,
                 # Here, I use only normalized values from specs
                 timeseries_generation_fluctuating=specs['potential'],
                 timeseries_generation_dispatchable=specs['conv_dispatch'],
                 timeseries_load='demandlib',
-#                config_data=edisgo_grid.network.config,
                 timeindex=specs['conv_dispatch'].index).timeseries
-       
-    # This will be used after the next eDisGo release    
-    #        update_pypsa_timeseries(
-    #                edisgo_grid.network, 
-    #                timesteps=specs['conv_dispatch'].index) 
+          
+        logger.info('Including Curtailment')
+        gens_df = tools.get_gen_info(edisgo_grid.network)
+        solar_wind_capacities = gens_df.groupby(by=['type', 'weather_cell_id'])[
+            'nominal_capacity'].sum()
         
-        logger.warning('Curtailment can only be included after gen import')
-    #        edisgo_grid.curtail(curtailment_methodology='curtail_all',
-    #                            # Here, I use absolute values
-    #                            timeseries_curtailment=specs['curtailment_abs']) 
-    #        
-    #        # Think about the other curtailment functions!!!!
+        curt_abs = pd.DataFrame(columns=specs['curtailment'].columns)
+
+        for col in curt_abs:
+            curt_abs[col] = (
+                    specs['curtailment'][col] 
+                    * solar_wind_capacities[col])
         
-    # This will become unnecessary with the next eDisGo release
-#            
+        curt_abs = curt_abs * 0.999
+        logger.warning('Curtailment reduced to 99.9 %')
+        
+        edisgo_grid.curtail(curtailment_methodology='curtail_all',
+                            # Here, I use absolute values
+                            timeseries_curtailment=curt_abs)            
+#             Think about the other curtailment functions!!!!
+                  
         edisgo_grid.analyze()
         
         edisgo_grid.reinforce() 
     
-#        # Get costs
-#        costs_grouped = \
-#            edisgo_grid.network.results.grid_expansion_costs.groupby(
-#                ['type']).sum()
-#        costs = pd.DataFrame(costs_grouped.values,
-#                             columns=costs_grouped.columns,
-#                             index=[[edisgo_grid.network.id] * len(costs_grouped),
-#                                    costs_grouped.index]).reset_index()
-#        costs.rename(columns={'level_0': 'grid'}, inplace=True)
-        
-        # Grid issues besser verstehen!! Und evtl. mit aussgeben
         return edisgo_grid 
 
         
