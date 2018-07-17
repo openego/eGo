@@ -318,17 +318,11 @@ class eDisGoResults(eTraGoResults):
                 json_file=self.json_file,
                 etrago_network=self.etrago_network)
 
-<<<<<<< HEAD
             self.edisgo.grid_costs = edisgo_grid_investment(
                 self.edisgo_networks,
                 self.json_file
             )
-=======
-            self.edisgo.grid_investment_costs = edisgo_grid_investment(
-                    self.edisgo_networks,
-                    self.json_file
-                    )
->>>>>>> bfb1615171dd00c37c1510050bd6c92490d27343
+
 
 class eGo(eDisGoResults):
     """Main eGo module which including all results and main functionalities.
