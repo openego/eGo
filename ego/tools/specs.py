@@ -542,7 +542,7 @@ def get_etragospecs_direct(session,
 
     aggr_gens['ren_id'] = aggr_gens.index
     
-    print(aggr_gens)
+#    print(aggr_gens)
 
     ### Dispatch and Curteilment
     potential = pd.DataFrame(0.0,
