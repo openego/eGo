@@ -2,9 +2,14 @@
 Welcome to eGo documentation!
 =============================
 
-.. image:: https://openegoproject.files.wordpress.com/2017/02/open_ego_logo_breit.png?w=400
+
+
+.. image:: images/open_ego_logo.png
    :align: right
-   :scale: 100%
+   :scale: 40%
+
+
+
 
 .. note:: Note, this software is under construction and not
           ready for a normal use.
@@ -14,6 +19,9 @@ Welcome to eGo documentation!
           accessible API can be found on
           `openenergy-platform.org/login <http://openenergy-platform.org/login/>`_.
 
+
+Overview
+========
 
 .. toctree::
    :maxdepth: 2
@@ -43,5 +51,4 @@ Indices and tables
 
 
 .. raw:: html
-   <a href="https://github.com/openego/eGo"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_green_007200.png" alt="Fork me on GitHub"></a>
-
+   :file: _static/ribbons.html

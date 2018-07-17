@@ -73,7 +73,7 @@ access / login data will be saved in the folder ``.egoio`` in the file
 oedialect connection
 --------------------
 
-.. code-block:: desktop
+.. code-block:: bash
 
   [oedb]
   dialect  = oedialect
@@ -87,7 +87,7 @@ oedialect connection
 Local database connection
 -------------------------
 
-.. code-block:: desktop
+.. code-block:: bash
 
    [local]
    username = YourOEDBUserName
@@ -101,7 +101,7 @@ Local database connection
 Old developer connection
 ------------------------
 
-.. code-block:: desktop
+.. code-block:: bash
 
   [oedb]
   username = YourOEDBUserName
