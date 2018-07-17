@@ -44,11 +44,11 @@ if not 'READTHEDOCS' in os.environ:
     from tools.results import (create_etrago_results)
     from tools.storages import (total_storage_charges, etrago_storages)
     from tools.economics import (
-            etrago_operating_costs, 
-            etrago_grid_investment,
-            edisgo_grid_investment, 
-            investment_costs,
-            get_generator_investment)
+        etrago_operating_costs,
+        etrago_grid_investment,
+        edisgo_grid_investment,
+        investment_costs,
+        get_generator_investment)
     from tools.utilities import get_scenario_setting, get_time_steps
     from tools.edisgo_integration import EDisGoNetworks
     from egoio.db_tables.model_draft import RenpassGisParameterRegion
@@ -318,9 +318,9 @@ class eDisGoResults(eTraGoResults):
                 etrago_network=self.etrago_network)
 
             self.edisgo.grid_costs = edisgo_grid_investment(
-                    self.edisgo_networks,
-                    self.json_file
-                    )
+                self.edisgo_networks,
+                self.json_file
+            )
 
 
 class eGo(eDisGoResults):
@@ -351,14 +351,6 @@ class eGo(eDisGoResults):
 
         # add all ego function
         pass
-
-    def __repr__(self):
-        r = ('eGoResults is created.')
-        if not self.etrago_network:
-            r += "\nThe results does not incluede eTraGo results"
-        if not self.edisgo_network:
-            r += "\nThe results does not incluede eDisGo results"
-        return r
 
     # write_results_to_db():
     logging.info('Initialisation of eGo Results')
