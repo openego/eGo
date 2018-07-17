@@ -14,9 +14,8 @@ eGo
 
 Integrated optimization of flexibility options and grid extension measures
 for power grids based on `eTraGo <http://eTraGo.readthedocs.io/>`_ and
-`eDisGo <http://edisgo.readthedocs.io/>`_.
-
-The Documentation of the eGo tool can be found on
+`eDisGo <http://edisgo.readthedocs.io/>`_. The Documentation of the eGo tool 
+can be found on 
 `openego.readthedocs.io <https://openego.readthedocs.io/en/dev/`_.
 
 .. contents::
