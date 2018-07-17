@@ -309,6 +309,7 @@ class eDisGoResults(eTraGoResults):
 
         if self.json_file['global']['eDisGo'] is True:
             logger.info('Create eDisGo network')
+
             self.edisgo_networks = EDisGoNetworks(
                 json_file=self.json_file,
                 etrago_network=self.etrago_network)
