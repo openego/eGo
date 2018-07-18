@@ -13,6 +13,55 @@ Overview of modules
 
    ego.tools
    
+scenario_settings.json
+======================
+
+https://sphinx-jsondomain.readthedocs.io/en/latest/examples.html#github-user
+https://etrago.readthedocs.io/en/latest/api/etrago.html#module-etrago.appl
+
+.. json:object:: scenario_setting.json
+
+   Text Text scenario_setting.json
+
+
+
+   :property global: Global settings
+   :proptype global: :json:object:`global setting`
+   :property eTraGo: eDisGo settings
+   :proptype eTraGo: :json:object:`eTraGo settings`
+   :property eDisGo: eDisGo settings
+   :proptype eDisGo: :json:object:`eDisGo settings`
+
+
+.. json:object:: global settings
+  
+    Text Text
+   
+   
+   :property bool eTraGo: ``true`` or ``false``
+   :property bool eDisGo: ``true`` or ``false``...
+   :property string db: Name od db, default="oedb"
+   
+
+.. json:object:: eTraGo settings
+    
+    Text Text
+   
+   
+   :property bool pf_post_lopf: ``true`` or ``false``
+   :property string method: "lopf
+   :property int start_snapshot: Start hour of calcualtion
+   
+
+       
+.. json:object:: eDisGo settings
+       
+    Text Text
+   
+   
+   :property pf_post_lopf: ``true`` or ``false``
+   :property method: "lopf
+   :property int start_snapshot: Start hour of calcualtion
    
 
 ego_main.py
