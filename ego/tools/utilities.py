@@ -39,36 +39,31 @@ def define_logging(log_name='ego.log'):
     log_name : str
         Name of log file. Default: ``ego.log``.
 
-
     Returns
     -------
-    ego_logger : :class:`logging.basicConfig`.
-        Set up ``ego_logger`` object of package ``logging``
+    logger : :class:`logging.basicConfig`.
+        Set up ``logger`` object of package ``logging``
     """
 
     # ToDo: Logger should be set up more specific
     #       add pypsa and other logger INFO to ego.log
-
-    logging.basicConfig(level=logging.INFO)
-    logger = logging.getLogger(__name__)
 
     # Logging
     logging.basicConfig(format='%(asctime)s %(message)s',
                         level=logging.INFO)
 
     logger = logging.getLogger(__name__)
-    ego_logger = logging.getLogger('ego')
+    logger = logging.getLogger('ego')
 
-    fh = logging.FileHandler(log_name, mode='w')
-    fh.setLevel(logging.INFO)
+    logger = logging.FileHandler(log_name, mode='w')
+
     formatter = logging.Formatter('%(asctime)s - %(name)s - \
                                    %(levelname)s - %(message)s')
-    fh.setFormatter(formatter)
+    logger.setFormatter(formatter)
 
-    logger.addHandler(fh)
-    ego_logger.addHandler(fh)
+    # logger.addHandler(xy)
 
-    return ego_logger
+    return logger
 
 
 logger = define_logging(log_name='ego.log')

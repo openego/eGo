@@ -18,6 +18,13 @@ Overview of modules
 ego_main.py
 ===========
 
+This is the application file for the tool eGo. The application eGo calculates
+the distribution and transmission grids of eTraGo and eDisGo.
+
+.. note:: Note, the data source of eGo relies on
+          the Open Energy Database. - The registration for the public
+          accessible API can be found on
+          `openenergy-platform.org/login <http://openenergy-platform.org/login/>`_.
 
 Run the ``ego_main.py`` file with:
 

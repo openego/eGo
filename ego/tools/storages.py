@@ -138,6 +138,7 @@ def etrago_storages_investment(network):
     if sum(network.storage_units.p_nom_opt) != 0:
         installed_storages = \
             network.storage_units[network.storage_units.p_nom_opt != 0]
+        storage_costs = pd.DataFrame()
         storage_costs = sum(
             installed_storages.capital_cost *
             installed_storages.p_nom_opt)
