@@ -326,8 +326,9 @@ class eGo(eDisGoResults):
         # super().__init__(eDisGo)
         self.total = pd.DataFrame()
         # add total results here
+        self.total_investment_costs = investment_costs(self.etrago_network)
+        self.total_operation_costs = pd.DataFrame()  # TODO
 
-        # add all ego function
         pass
 
     # write_results_to_db():
