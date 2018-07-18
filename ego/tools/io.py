@@ -283,24 +283,49 @@ class eDisGoResults(eTraGoResults):
     def __init__(self, jsonpath, *args, **kwargs):
         super(eDisGoResults, self).__init__(self, jsonpath, *args, **kwargs)
 
-        logger.info('eDisGoResults startet')
-
-#        self.edisgo_networks = None
-        self.edisgo = pd.DataFrame()
-
+        self._edisgo = None
+        self._edisgo_networks = None
+        
         if self.json_file['global']['eDisGo'] is True:
-            logger.info('Create eDisGo network')
+            logger.info('Create eDisGo networks')
+            
+            self._edisgo = pd.DataFrame()
 
-            self.edisgo_networks = EDisGoNetworks(
+            self._edisgo_networks = EDisGoNetworks(
                 json_file=self.json_file,
                 etrago_network=self.etrago_network)
 
-            self.edisgo.grid_costs = edisgo_grid_investment(
-                self.edisgo_networks,
+            self._edisgo.grid_investment_costs = edisgo_grid_investment(
+                self._edisgo_networks,
                 self.json_file
             )
 
+    @property
+    def edisgo_networks(self):
+        """
+        Container for eDisGo grids, including all results 
 
+        Returns
+        -------
+        :obj:`dict` of :class:`edisgo.grid.network.EDisGo`
+            Dictionary of eDisGo objects, keyed by MV grid ID
+
+        """
+        return self._edisgo_networks
+
+    @property
+    def edisgo(self):   
+        """
+        Contains basic informations about eDisGo
+
+        Returns
+        -------
+        :pandas:`pandas.DataFrame<dataframe>`
+
+        """
+        return self._edisgo
+            
+            
 class eGo(eDisGoResults):
     """Main eGo module which including all results and main functionalities.
 
@@ -330,7 +355,8 @@ class eGo(eDisGoResults):
         self.total_operation_costs = pd.DataFrame()  # TODO
 
         pass
-
+        
+        
     # write_results_to_db():
     logging.info('Initialisation of eGo Results')
 
