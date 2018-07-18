@@ -411,6 +411,7 @@ def investment_costs(network):
 
 
     """
+    # TODO Function outdated?
     # TODO  add edisgo
     # etrago:
     # Storages
