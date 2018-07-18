@@ -107,7 +107,7 @@ class EDisGoNetworks:
     @property
     def edisgo_grids(self):
         """
-        Container for eDisGo grids, including all results
+        Container for eDisGo grids, including all results :star:
 
         Returns
         -------
