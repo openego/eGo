@@ -41,16 +41,16 @@ if not 'READTHEDOCS' in os.environ:
     from etrago.tools.io import load_config_file
     from egoio.db_tables.model_draft import EgoGridPfHvSource as Source,\
         EgoGridPfHvTempResolution as TempResolution
-    from tools.results import (create_etrago_results)
-    from tools.storages import (total_storage_charges, etrago_storages)
-    from tools.economics import (
-            etrago_operating_costs, 
-            etrago_grid_investment,
-            edisgo_grid_investment, 
-            investment_costs,
-            get_generator_investment)
-    from tools.utilities import get_scenario_setting, get_time_steps
-    from tools.edisgo_integration import EDisGoNetworks
+    from ego.tools.results import (create_etrago_results)
+    from ego.tools.storages import (etrago_storages_investment, etrago_storages)
+    from ego.tools.economics import (
+        etrago_operating_costs,
+        etrago_grid_investment,
+        edisgo_grid_investment,
+        investment_costs,
+        get_generator_investment)
+    from ego.tools.utilities import get_scenario_setting, get_time_steps
+    from ego.tools.edisgo_integration import EDisGoNetworks
     from egoio.db_tables.model_draft import RenpassGisParameterRegion
     from egoio.db_tables import model_draft, grid
     from etrago.tools.plot import (plot_line_loading, plot_stacked_gen,
@@ -203,14 +203,15 @@ class eTraGoResults(egoBasic):
         # add selected results to Results container
 
         self.etrago = pd.DataFrame()
-        self.etrago.storage_charges = total_storage_charges(
+        self.etrago.storage_investment_costs = etrago_storages_investment(
             self.etrago_network)
-        self.etrago.storage_costs = etrago_storages(self.etrago_network)
+        self.etrago.storage_charges = etrago_storages(self.etrago_network)
         self.etrago.operating_costs = etrago_operating_costs(
             self.etrago_network)
         self.etrago.generator = create_etrago_results(self.etrago_network,
                                                       self.scn_name)
-        self.etrago.grid_investment_costs = etrago_grid_investment(self.etrago_network,
+        self.etrago.grid_investment_costs = etrago_grid_investment(self.
+                                                                   etrago_network,
                                                                    self.json_file)
 
         # add functions direct
@@ -317,10 +318,11 @@ class eDisGoResults(eTraGoResults):
                 json_file=self.json_file,
                 etrago_network=self.etrago_network)
 
-            self.edisgo.grid_investment_costs = edisgo_grid_investment(
-                    self.edisgo_networks,
-                    self.json_file
-                    )
+            self.edisgo.grid_costs = edisgo_grid_investment(
+                self.edisgo_networks,
+                self.json_file
+            )
+
 
 class eGo(eDisGoResults):
     """Main eGo module which including all results and main functionalities.
@@ -350,14 +352,6 @@ class eGo(eDisGoResults):
 
         # add all ego function
         pass
-
-    def __repr__(self):
-        r = ('eGoResults is created.')
-        if not self.etrago_network:
-            r += "\nThe results does not incluede eTraGo results"
-        if not self.edisgo_network:
-            r += "\nThe results does not incluede eDisGo results"
-        return r
 
     # write_results_to_db():
     logging.info('Initialisation of eGo Results')

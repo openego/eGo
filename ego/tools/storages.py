@@ -41,7 +41,7 @@ def total_storage_charges(network):
 
     Parameters
     ----------
-    network : :etrago:`etrago.tools.io.NetworkScenario`
+    network : :class:`etrago.tools.io.NetworkScenario`
         eTraGo ``NetworkScenario`` based on PyPSA Network. See also
         `pypsa.network <https://pypsa.org/doc/components.html#network>`_
 
@@ -102,7 +102,7 @@ def etrago_storages(network):
 
     Parameters
     ----------
-    network : :class:`~.etrago.tools.io.NetworkScenario`
+    network : :class:`etrago.tools.io.NetworkScenario`
         eTraGo ``NetworkScenario`` based on PyPSA Network. See also
         `pypsa.network <https://pypsa.org/doc/components.html#network>`_
 
@@ -116,3 +116,34 @@ def etrago_storages(network):
     storages = total_storage_charges(network=network)
 
     return storages
+
+
+def etrago_storages_investment(network):
+    """Calculate storage investment costs of eTraGo
+
+    Parameters
+    ----------
+    network : :class:`etrago.tools.io.NetworkScenario`
+        eTraGo ``NetworkScenario`` based on PyPSA Network. See also
+        `pypsa.network <https://pypsa.org/doc/components.html#network>`_
+
+
+    Returns
+    -------
+    storage_costs : numeric
+        Storage costs of selected snapshots in [EUR]
+
+    """
+    # provide storage installation costs
+    if sum(network.storage_units.p_nom_opt) != 0:
+        installed_storages = \
+            network.storage_units[network.storage_units.p_nom_opt != 0]
+        storage_costs = sum(
+            installed_storages.capital_cost *
+            installed_storages.p_nom_opt)
+        print(
+            "Investment costs for all storages in selected snapshots [EUR]:",
+            round(
+                storage_costs,
+                2))
+    return storage_costs

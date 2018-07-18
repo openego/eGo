@@ -30,7 +30,7 @@ logger = logging.getLogger('ego')
 if not 'READTHEDOCS' in os.environ:
     import pandas as pd
     import numpy as np
-    from tools.economics import get_generator_investment
+    from ego.tools.economics import get_generator_investment
 
 __copyright__ = "Flensburg University of Applied Sciences, Europa-Universität"\
     "Flensburg, Centre for Sustainable Energy Systems"
