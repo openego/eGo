@@ -313,7 +313,7 @@ def edisgo_grid_investment(edisgo_networks, json_file):
     p = 0.05
     logger.warning('For all components T={} and p={} is used'.format(t, p))
 
-    annuity_costs = pd.DataFrame(columns=['v_lev', 'annuity_costs'])
+    annuity_costs = pd.DataFrame(columns=['voltage_level', 'annuity_costs'])
 
     for key, value in edisgo_networks.edisgo_grids.items():
 
@@ -327,9 +327,9 @@ def edisgo_grid_investment(edisgo_networks, json_file):
             logger.info('No expansion costs for grid {}'.format(key))
             continue
 
-        costs_single = costs_single.rename(
-            columns={'voltage_level': 'v_lev'}
-        )
+#        costs_single = costs_single.rename(
+#            columns={'voltage_level': 'voltage_level'}
+#        )
 
         choice = edisgo_networks.grid_choice
         weighting = choice.loc[
@@ -347,7 +347,7 @@ def edisgo_grid_investment(edisgo_networks, json_file):
         costs_single['annuity_costs'] = (
             costs_single['annuity_costs'] * weighting)
 
-        costs_single = costs_single[['v_lev', 'annuity_costs']]
+        costs_single = costs_single[['voltage_level', 'annuity_costs']]
 
         annuity_costs = annuity_costs.append(costs_single, ignore_index=True)
 
@@ -357,11 +357,14 @@ def edisgo_grid_investment(edisgo_networks, json_file):
 
     else:
         aggr_capital_costs = annuity_costs.groupby(
-            ['v_lev']).sum().reset_index()
+            ['voltage_level']).sum().reset_index()
         aggr_capital_costs = aggr_capital_costs.rename(
-            columns={'annuity_costs': 'grid_costs'}
+            columns={'annuity_costs': 'capital_cost'}
         )
-        aggr_capital_costs['grid_costs'] = aggr_capital_costs['grid_costs'] * 1000
+        aggr_capital_costs['capital_cost'] = (
+                aggr_capital_costs['capital_cost'] 
+                * 1000) # In eDisGo all costs are in kEuro, however 
+        # eGo only takes Euro
 
         return aggr_capital_costs
 

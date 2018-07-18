@@ -46,11 +46,11 @@ __author__ = "wolf_bunke, maltesc"
 if __name__ == '__main__':
 
     # import scenario settings **args of eTraGo
-    logger.info('Start calculation')
+#    logger.info('Start calculation')
 
     ego = eGo(jsonpath='scenario_setting.json')
-    logger.info('Print results')
-    ego.etrago_line_loading()
-    print(ego.etrago.generator)
-    print(ego.etrago.storage_costs)
-    print(ego.etrago.operating_costs)
+#    logger.info('Print results')
+#    ego.etrago_line_loading()
+#    print(ego.etrago.generator)
+#    print(ego.etrago.storage_costs)
+#    print(ego.etrago.operating_costs)
