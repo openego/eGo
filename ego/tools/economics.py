@@ -60,12 +60,6 @@ def annuity_per_period(capex, n, wacc, t, p):
     return capex * (wacc * (1 + wacc) ** n) / ((1 + wacc) ** n - 1)
 
 
-# grid_components = {"hv_mv_transformer": "40 MVA", "mv_lv_transformer": "630 kVA",
-#                   "mv_line": "NA2XS2Y 3x1x185 RM/25", "lv_line": "NAYY 4x1x150"}
-# json_file = ego.json_file
-# cost_config = {"p": 0.04}
-
-
 def edisgo_convert_capital_costs(overnight_cost, t, p, json_file):
     """ Get scenario and calculation specific annuity cost by given capital
     costs and lifetime.
