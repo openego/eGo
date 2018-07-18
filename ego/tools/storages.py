@@ -118,7 +118,7 @@ def etrago_storages(network):
     return storages
 
 
-def etrago_storages_investment(network):
+def etrago_storages_investment(network, json_file):
     """Calculate storage investment costs of eTraGo
 
     Parameters
@@ -134,17 +134,41 @@ def etrago_storages_investment(network):
         Storage costs of selected snapshots in [EUR]
 
     """
-    # provide storage installation costs
-    if sum(network.storage_units.p_nom_opt) != 0:
+    # check settings for extendable
+    if 'storages' not in json_file['eTraGo']['extendable']:
+        print("The optimizition was not using parameter 'extendable': storages")
+        print("No storages expantion costs from etrago")
+
+    if 'storages' in json_file['eTraGo']['extendable']:
+
+        # get v_nom
+        _bus = pd.DataFrame(network.buses['v_nom'])
+        _bus.reset_index(level=0, inplace=True)
+
+        _storage = network.storage_units[network.storage_units.p_nom_opt != 0]
+
+        # provide storage installation costs per voltage level
         installed_storages = \
-            network.storage_units[network.storage_units.p_nom_opt != 0]
-        storage_costs = pd.DataFrame()
-        storage_costs = sum(
-            installed_storages.capital_cost *
-            installed_storages.p_nom_opt)
-        print(
-            "Investment costs for all storages in selected snapshots [EUR]:",
-            round(
-                storage_costs,
-                2))
-    return storage_costs
+            pd.merge(_storage, _bus, left_on='bus', right_on='index')
+
+        installed_storages['investment_costs'] = (installed_storages.
+                                                  capital_cost *
+                                                  installed_storages.p_nom_opt)
+
+        # add voltage_level
+        installed_storages['voltage_level'] = 'unknown'
+
+        ix_ehv = installed_storages[installed_storages['v_nom'] >= 380].index
+        installed_storages.set_value(ix_ehv, 'voltage_level', 'ehv')
+
+        ix_hv = installed_storages[(installed_storages['v_nom'] <= 220) &
+                                   (installed_storages['v_nom'] >= 110)].index
+        installed_storages.set_value(ix_hv, 'voltage_level', 'hv')
+
+        storages_investment = installed_storages[
+            ['voltage_level', 'investment_costs']].groupby('voltage_level').\
+            sum().reset_index()
+        storages_investment = storages_investment.\
+            rename(columns={'investment_costs': 'capital_cost'})
+
+        return storages_investment
