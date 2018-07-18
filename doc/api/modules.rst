@@ -21,47 +21,47 @@ https://etrago.readthedocs.io/en/latest/api/etrago.html#module-etrago.appl
 
 .. json:object:: scenario_setting.json
 
-   Text Text scenario_setting.json
+   This file contains all input settings for the eGo tool.
+
+   :property global: Global settings that are valid for both eTraGo and eDisGo
+   :proptype global: :json:object:`global`
+   :property eTraGo: eTraGo settings, only valid for eTraGo run
+   :proptype eTraGo: :json:object:`eTraGo`
+   :property eDisGo: eDisGo settings, only valid for eDisGo runs
+   :proptype eDisGo: :json:object:`eDisGo`
 
 
+.. json:object:: global
+   
+   :property bool eTraGo: Decide if you want to run the eTraGo tool (HV/EHV grid optimization).
+   :property bool eDisGo: Decide if you want to run the eDisGo tool (MV grid optimiztaion).
+   :property string db: Name of your database (e.g.``''oedb''``).
+   :property bool recover: If ``true``, (previously calculated) eTraGo results are queried from your database (instead of performing a new run).
+   :property int result_id: ID of the (previeously calculated) eTraGo results that are queried if **recover** is set ``true``.
+   :property string gridversion: Version of the *open_eGo* input data-sets (e.g. ``''v0.4.2''``) 
 
-   :property global: Global settings
-   :proptype global: :json:object:`global setting`
-   :property eTraGo: eDisGo settings
-   :proptype eTraGo: :json:object:`eTraGo settings`
-   :property eDisGo: eDisGo settings
-   :proptype eDisGo: :json:object:`eDisGo settings`
+   
+.. json:object:: eTraGo
 
+   This section of :json:object:`scenario_setting.json` contains all input parameters for the eTraGo tool. A description of the parameters can be found `here. <https://etrago.readthedocs.io/en/dev/api/etrago.html#module-etrago.appl>`_
 
-.. json:object:: global settings
-  
-    Text Text
-   
-   
-   :property bool eTraGo: ``true`` or ``false``
-   :property bool eDisGo: ``true`` or ``false``...
-   :property string db: Name od db, default="oedb"
-   
+   Please note that some parameters are already included in :json:object:`global`
+	
 
-.. json:object:: eTraGo settings
-    
-    Text Text
-   
-   
-   :property bool pf_post_lopf: ``true`` or ``false``
-   :property string method: "lopf
-   :property int start_snapshot: Start hour of calcualtion
-   
+.. json:object:: solver_options
+
+   :property int threads: ???
 
        
-.. json:object:: eDisGo settings
-       
-    Text Text
+.. json:object:: eDisGo
+
+   This section of :json:object:`scenario_setting.json` contains all input parameters for the eDisGo tool and the Clustering of MV grids.
+
+   :property string ding0_files: Relative path to the MV grid files (created by `**ding0** <https://readthedocs.org/projects/dingo/>`_) (e.g. ``''data/MV_grids/20180713110719''``)
+   :property string choice_mode: Mode that eGo uses to chose MV grids out of the files in **ding0_files** (e.g. ``''manual''``, ``''cluster''`` or ``''all''``). If ``''manual''`` is chosen, the parameter **manual_grids** must contain a list of the desired grids. If ``''cluster''`` is chosen, **no_grids** must specify the desired number of clusters. If ``''all''`` is chosen, all MV grids from **ding0_files** are calculated.
+   :property list manual_grids: List of MV grid ID's (*open_eGo* HV/MV substation ID's)
+   :property int no_grids: Number of MV grid clusters (from all files in **ding0_files**, a specified number of representative clusters is calculated)
    
-   
-   :property pf_post_lopf: ``true`` or ``false``
-   :property method: "lopf
-   :property int start_snapshot: Start hour of calcualtion
    
 
 ego_main.py

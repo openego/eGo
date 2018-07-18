@@ -3,8 +3,8 @@
     "eTraGo": true,
     "eDisGo": true,
     "db": "oedb",
-    "result_id": null,
-    "recover": false,
+    "recover": true,
+    "result_id": 26,
     "gridversion": "v0.4.2"
   },
   "eTraGo": {
@@ -18,13 +18,13 @@
                       "crossover":1,
                       "BarConvTol":"1.e-5",
                       "FeasibilityTol":"1.e-5"},
-    "scn_name": "Status Quo",
+    "scn_name": "NEP 2035",
     "scn_extension": null,
     "scn_decommissioning": null,
     "add_Belgium_Norway": false,
     "lpfile":  false,
     "results": false,
-    "export": true,
+    "export": false,
     "extendable": "[]",
     "generator_noise": true,
     "reproduce_noise": false,
@@ -41,11 +41,9 @@
     "comments": "eDisGo integration"
   },
   "eDisGo": {
-     "specs": true,
      "ding0_files": "data/MV_grids/20180713110719",
      "choice_mode": "cluster",
-     "no_grids": 2,
      "manual_grids": [],
-     "comments": "make a comment"
+     "no_grids": 2
   }
 }

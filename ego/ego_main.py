@@ -46,7 +46,7 @@ __author__ = "wolf_bunke, maltesc"
 if __name__ == '__main__':
 
     # import scenario settings **args of eTraGo
-    logger.info('Start calculation')
+#    logger.info('Start calculation')
 
     ego = eGo(jsonpath='scenario_setting.json')
 #    logger.info('Print results')

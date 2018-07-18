@@ -250,7 +250,7 @@ class EDisGoNetworks:
                 )
             count += 1
     
-    def _run_edisgo(self, mv_grid_id):
+    def _run_edisgo(self, mv_grid_id, apply_curtailment=True):
         
         """
         Performs a single eDisGo run
@@ -316,22 +316,23 @@ class EDisGoNetworks:
                 timeseries_load='demandlib',
                 timeindex=specs['conv_dispatch'].index).timeseries
           
-        logger.info('Including Curtailment')
-        gens_df = tools.get_gen_info(edisgo_grid.network)
-        solar_wind_capacities = gens_df.groupby(
-                by=['type', 'weather_cell_id']
-                )['nominal_capacity'].sum()
-        
-        curt_abs = pd.DataFrame(columns=specs['curtailment'].columns)
-
-        for col in curt_abs:
-            curt_abs[col] = (
-                    specs['curtailment'][col] 
-                    * solar_wind_capacities[col])
-        
-        edisgo_grid.curtail(curtailment_methodology='curtail_all',
-                            timeseries_curtailment=curt_abs)            
-#             Think about the other curtailment functions!!!!
+        if apply_curtailment:        
+            logger.info('Including Curtailment')
+            gens_df = tools.get_gen_info(edisgo_grid.network)
+            solar_wind_capacities = gens_df.groupby(
+                    by=['type', 'weather_cell_id']
+                    )['nominal_capacity'].sum()
+            
+            curt_abs = pd.DataFrame(columns=specs['curtailment'].columns)
+    
+            for col in curt_abs:
+                curt_abs[col] = (
+                        specs['curtailment'][col] 
+                        * solar_wind_capacities[col])
+            
+            edisgo_grid.curtail(curtailment_methodology='curtail_all',
+                                timeseries_curtailment=curt_abs)            
+    #             Think about the other curtailment functions!!!!
                   
         edisgo_grid.analyze()
         

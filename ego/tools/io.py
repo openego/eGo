@@ -295,7 +295,7 @@ class eDisGoResults(eTraGoResults):
                 json_file=self.json_file,
                 etrago_network=self.etrago_network)
 
-            self._edisgo.grid_costs = edisgo_grid_investment(
+            self._edisgo.grid_investment_costs = edisgo_grid_investment(
                 self._edisgo_networks,
                 self.json_file
             )
@@ -314,7 +314,7 @@ class eDisGoResults(eTraGoResults):
         return self._edisgo_networks
 
     @property
-    def edisgo(self):
+    def edisgo(self):   
         """
         Contains basic informations about eDisGo
 
@@ -355,7 +355,8 @@ class eGo(eDisGoResults):
         self.total_operation_costs = pd.DataFrame()  # TODO
 
         pass
-
+        
+        
     # write_results_to_db():
     logging.info('Initialisation of eGo Results')
 
