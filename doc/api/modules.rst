@@ -48,13 +48,6 @@ https://etrago.readthedocs.io/en/latest/api/etrago.html#module-etrago.appl
    Please note that some parameters are already included in :json:object:`global`
 	
 
-..
-  json:object:: solver_options
-
-   :property int threads: ???
-..
-
-       
 .. json:object:: eDisGo
 
    This section of :json:object:`scenario_setting.json` contains all input parameters for the eDisGo tool and the Clustering of MV grids.
