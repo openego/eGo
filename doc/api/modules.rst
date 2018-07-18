@@ -48,16 +48,18 @@ https://etrago.readthedocs.io/en/latest/api/etrago.html#module-etrago.appl
    Please note that some parameters are already included in :json:object:`global`
 	
 
-.. json:object:: solver_options
+..
+  json:object:: solver_options
 
    :property int threads: ???
+..
 
        
 .. json:object:: eDisGo
 
    This section of :json:object:`scenario_setting.json` contains all input parameters for the eDisGo tool and the Clustering of MV grids.
 
-   :property string ding0_files: Relative path to the MV grid files (created by `**ding0** <https://readthedocs.org/projects/dingo/>`_) (e.g. ``''data/MV_grids/20180713110719''``)
+   :property string ding0_files: Relative path to the MV grid files (created by `ding0 <https://readthedocs.org/projects/dingo/>`_) (e.g. ``''data/MV_grids/20180713110719''``)
    :property string choice_mode: Mode that eGo uses to chose MV grids out of the files in **ding0_files** (e.g. ``''manual''``, ``''cluster''`` or ``''all''``). If ``''manual''`` is chosen, the parameter **manual_grids** must contain a list of the desired grids. If ``''cluster''`` is chosen, **no_grids** must specify the desired number of clusters. If ``''all''`` is chosen, all MV grids from **ding0_files** are calculated.
    :property list manual_grids: List of MV grid ID's (*open_eGo* HV/MV substation ID's)
    :property int no_grids: Number of MV grid clusters (from all files in **ding0_files**, a specified number of representative clusters is calculated)
