@@ -47,7 +47,6 @@ if not 'READTHEDOCS' in os.environ:
         etrago_operating_costs,
         etrago_grid_investment,
         edisgo_grid_investment,
-        investment_costs,
         get_generator_investment)
     from ego.tools.utilities import get_scenario_setting, get_time_steps
     from ego.tools.edisgo_integration import EDisGoNetworks
@@ -181,7 +180,7 @@ class eTraGoResults(egoBasic):
 
         self.etrago = pd.DataFrame()
         self.etrago.storage_investment_costs = etrago_storages_investment(
-            self.etrago_network)
+            self.etrago_network, self.json_file)
         self.etrago.storage_charges = etrago_storages(self.etrago_network)
         self.etrago.operating_costs = etrago_operating_costs(
             self.etrago_network)
@@ -190,6 +189,7 @@ class eTraGoResults(egoBasic):
         self.etrago.grid_investment_costs = etrago_grid_investment(self.
                                                                    etrago_network,
                                                                    self.json_file)
+        #
 
         # add functions direct
         # self.etrago_network.etrago_line_loading = etrago_line_loading
@@ -351,11 +351,45 @@ class eGo(eDisGoResults):
         # super().__init__(eDisGo)
         self.total = pd.DataFrame()
         # add total results here
-        self.total_investment_costs = pd.DataFrame()  # TODO
-        self.total_operation_costs = pd.DataFrame()  # TODO
+        #self.total_investment_costs = pd.DataFrame()
+        # self.total_operation_costs = pd.DataFrame()  # TODO
 
-        pass
-        
+    def total_investment_costs(self):
+        """ Get total investment costs of all voltage level for storages
+        and grid expansion
+        """
+
+        _grid_ehv = self.etrago.grid_investment_costs.capital_cost.sum()
+
+        _storage = self.etrago.storage_investment_costs.capital_cost.sum()
+        # test data
+        _grid_mv_lv = pd.DataFrame(data=[{'voltage_level': 'mv',
+                                          'capital_cost': 8823.22},
+                                         {'voltage_level': 'lv',
+                                          'capital_cost': 333.12}])\
+            .capital_cost.sum()
+        #
+        self._total_inv_cost = pd.DataFrame(columns=['component',
+                                                     'capital_cost'])
+        self._total_inv_cost = self._total_inv_cost.append({'component': 'ehv hv grid',
+                                                            'capital_cost': _grid_ehv},
+                                                           ignore_index=True)
+        self._total_inv_cost = self._total_inv_cost.append({'component': 'storage',
+                                                            'capital_cost': _storage},
+                                                           ignore_index=True)
+        self._total_inv_cost = self._total_inv_cost.append({'component': 'mv lv grid',
+                                                            'capital_cost': _grid_mv_lv},
+                                                           ignore_index=True)
+        self.total_investment_cost = self._total_inv_cost
+
+    def plot_total_investment_costs(self):
+        """ Plot total investment costs
+        """
+        self.total_investment_costs()
+
+        return self.total_investment_cost.plot.bar(x='component',
+                                                   y='capital_cost', rot=1)
+
         
     # write_results_to_db():
     logging.info('Initialisation of eGo Results')
