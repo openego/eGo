@@ -194,9 +194,9 @@ def etrago_grid_investment(network, json_file):
 
     Returns
     -------
-    lines: :pandas:`pandas.Dataframe<dataframe>`
-        Dataframe with ``number_of_expansion``, ``s_nom_expansion`` and
-        ``grid_costs`` per calculated time steps
+    grid_investment_costs : :pandas:`pandas.Dataframe<dataframe>`
+        Dataframe with ``voltage_level``, ``number_of_expansion`` and
+        ``capital_cost`` per calculated time steps
 
     Example
     -------
@@ -205,15 +205,15 @@ def etrago_grid_investment(network, json_file):
 
            >>> from ego.tools.io import eGo
            >>> ego = eGo(jsonpath='scenario_setting.json')
-           >>> ego.etrago.grid_costs
+           >>> ego.etrago.grid_investment_costs
 
-    +--------+-------------------+------------+
-    | v_level|number_of_expansion|  grid_costs|
-    +========+===================+============+
-    |  ehv   |   27.0            | 31514.1305 |
-    +--------+-------------------+------------+
-    |  hv    |    0.0            |      0.0   |
-    +--------+-------------------+------------+
+    +--------------+-------------------+--------------+
+    | voltage_level|number_of_expansion|  capital_cost|
+    +==============+===================+==============+
+    |  ehv         |   27.0            | 31514.1305   |
+    +--------------+-------------------+--------------+
+    |  hv          |    0.0            |      0.0     |
+    +--------------+-------------------+--------------+
     """
 
     # check settings for extendable
@@ -228,19 +228,19 @@ def etrago_grid_investment(network, json_file):
 
         lines['s_nom_expansion'] = lines.s_nom_opt.subtract(
             lines.s_nom, axis='index')
-        lines['grid_costs'] = lines.s_nom_expansion.multiply(
+        lines['capital_cost'] = lines.s_nom_expansion.multiply(
             lines.capital_cost, axis='index')
         lines['number_of_expansion'] = lines.s_nom_expansion > 0.0
         lines['time_step'] = get_time_steps(json_file)
 
         # add v_level
-        lines['v_level'] = 'unknown'
+        lines['voltage_level'] = 'unknown'
 
         ix_ehv = lines[lines['v_nom'] >= 380].index
-        lines.set_value(ix_ehv, 'v_level', 'ehv')
+        lines.set_value(ix_ehv, 'voltage_level', 'ehv')
 
         ix_hv = lines[(lines['v_nom'] <= 220) & (lines['v_nom'] >= 110)].index
-        lines.set_value(ix_hv, 'v_level', 'hv')
+        lines.set_value(ix_hv, 'voltage_level', 'hv')
 
         # based on eTraGo Function:
         # https://github.com/openego/eTraGo/blob/dev/etrago/tools/utilities.py#L651
@@ -249,39 +249,42 @@ def etrago_grid_investment(network, json_file):
         # get costs of transfomers
         trafos = network.transformers[['v_nom0', 'v_nom1', 'capital_cost',
                                        's_nom_extendable', 's_nom',
-                                       's_nom_opt']].reset_index()
+                                       's_nom_opt']]
+        trafos.columns.name = ""
+        trafos.index.name = ""
+        trafos.reset_index()
 
         trafos['s_nom_extendable'] = trafos.s_nom_opt.subtract(
             trafos.s_nom, axis='index')
-        trafos['grid_costs'] = trafos.s_nom_extendable.multiply(
+        trafos['capital_cost'] = trafos.s_nom_extendable.multiply(
             trafos.capital_cost, axis='index')
         trafos['number_of_expansion'] = trafos.s_nom_extendable > 0.0
         trafos['time_step'] = get_time_steps(json_file)
 
         # add v_level
-        trafos['v_level'] = 'unknown'
+        trafos['voltage_level'] = 'unknown'
 
         # TODO check
         ix_ehv = trafos[trafos['v_nom0'] >= 380].index
-        trafos.set_value(ix_ehv, 'v_level', 'ehv')
+        trafos.set_value(ix_ehv, 'voltage_level', 'ehv')
 
         ix_hv = trafos[(trafos['v_nom0'] <= 220) &
                        (trafos['v_nom0'] >= 110)].index
-        trafos.set_value(ix_hv, 'v_level', 'hv')
+        trafos.set_value(ix_hv, 'voltage_level', 'hv')
 
         # aggregate lines and trafo
-        line = lines[['v_level', 'number_of_expansion',
-                      'grid_costs']].groupby('v_level').sum().reset_index()
+        line = lines[['voltage_level',
+                      'capital_cost']].groupby('voltage_level').sum().reset_index()
 
-        trafo = trafos[['v_level', 'number_of_expansion',
-                        'grid_costs']].groupby('v_level').sum().reset_index()
+        trafo = trafos[['voltage_level',
+                        'capital_cost']].groupby('voltage_level').sum().reset_index()
 
         # merge trafos and line
         frames = [line, trafo]
 
-        result = pd.concat(frames)
+        grid_investment_costs = pd.concat(frames)
 
-        return result
+        return grid_investment_costs
 
     # ToDo: add  .agg({'number_of_expansion':lambda x: x.count(),
     #  's_nom_expansion': np.sum,
@@ -366,7 +369,6 @@ def edisgo_grid_investment(edisgo_networks, json_file):
 def get_generator_investment(network, scn_name):
     """ Get investment costs per carrier/ generator.
 
-
     """
     # TODO   - change values in csv
     #        - add values to database
@@ -397,59 +399,3 @@ def get_generator_investment(network, scn_name):
         gen_invest['p_nom'] * 1000  # in MW
 
     return gen_invest
-
-
-def investment_costs(network):
-    """Return pandas DataFrame with investment costs of
-
-
-
-    """
-    # TODO Function outdated?
-    # TODO  add edisgo
-    # etrago:
-    # Storages
-    # Line extentation
-    # edisgo:
-    # Line extentation
-    # Storage costs?
-
-    etg = network
-    invest = pd.DataFrame()
-
-    # storages
-    # get total storage investment costs
-    # unit of costs?
-    installed_storages = etg.storage_units[etg.storage_units.p_nom_opt != 0]
-    costs = sum(installed_storages.capital_cost * installed_storages.p_nom_opt)
-    invest = invest.append({'storage_costs': costs}, ignore_index=True)
-
-    #  get storage costs per voltage level
-    loc = etg.storage_units[etg.storage_units.p_nom_opt != 0]['bus']
-    v_level = etg.buses.loc[loc, :]['v_nom']
-    installed_storages = installed_storages.assign(v_nom=0)
-
-    for i, k in v_level.iteritems():
-        installed_storages.loc[installed_storages[installed_storages.bus ==
-                                                  i].index, 'v_nom'] = k
-
-    storage_level = installed_storages.groupby('v_nom')['capital_cost'].sum()
-
-    # Line extentation costs
-    # (eTraGo.lines.s_nom_opt -  eTraGo.lines.s_nom) * eTraGo.lines.capital_cost
-    line_expen = (etg.lines.groupby('v_nom')['s_nom_opt'].sum()
-                  - etg.lines.groupby('v_nom')['s_nom'].sum())
-
-    if line_expen.sum() <= 0:
-        print('Warning: !line extentation, set random costs for plotting!')
-
-        lines_level = pd.DataFrame([[110., 722*np.exp(8)], [220., 822*np.exp(8)],
-                                    [380., 999*np.exp(9)]], columns=['v_nom', 'capital_cost']).\
-            groupby('v_nom')['capital_cost'].sum()
-
-    invest = invest.assign(line_costs=lines_level.sum())
-
-    # invest.transpose()
-
-    # transfomers expantion costs
-    return invest
