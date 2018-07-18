@@ -72,29 +72,34 @@ class EDisGoNetworks:
         Session = sessionmaker(bind=conn)
         self._session = Session()
 
-        # Json Inputs
+        # Genral Json Inputs
         self._json_file = json_file
         self._grid_version = self._json_file['global']['gridversion']
 
+        # eTraGo args
+        self._etrago_args = self._json_file['eTraGo']
+        self._scn_name = self._etrago_args['scn_name']
+        
         # eDisGo args
         self._edisgo_args = self._json_file['eDisGo']
         self._ding0_files = self._edisgo_args['ding0_files']
         self._choice_mode = self._edisgo_args['choice_mode']
-
-        self._scn_name = self._edisgo_args['scn_name']
+        
+        ## Scenario translation
         if self._scn_name == 'Status Quo':
             self._generator_scn = None
         elif self._scn_name == 'NEP 2035':
             self._generator_scn = 'nep2035'
         elif self._scn_name == 'eGo 100':
             self._generator_scn = 'ego100'
-
+            
+        ## Versioning
         if self._grid_version is not None:
             self._versioned = True
         else:
             self._versioned = False
 
-        # eTraGo
+        # eTraGo Results (Input)
         self._etrago_network = etrago_network
         
         # eDisGo Results
@@ -107,7 +112,7 @@ class EDisGoNetworks:
     @property
     def edisgo_grids(self):
         """
-        Container for eDisGo grids, including all results :star:
+        Container for eDisGo grids, including all results 
 
         Returns
         -------
@@ -293,10 +298,15 @@ class EDisGoNetworks:
         if self._generator_scn:
             logger.info(
                     'Importing generators for scenario {}'.format(
-                            self._generator_scn)
+                            self._scn_name)
                     )
             edisgo_grid.import_generators(
                     generator_scenario=self._generator_scn)
+        else:
+            logger.info(
+                    'No generators imported for scenario {}'.format(
+                            self._scn_name)
+                    )
           
         logger.info('Updating eDisGo timeseries with eTraGo values')    
         edisgo_grid.network.timeseries = TimeSeriesControl( 
