@@ -72,21 +72,16 @@ __author__ = "wolf_bunke,maltesc"
 class egoBasic(object):
     """The eGo basic class select and creates based on your
     ``scenario_setting.json`` file  your definde eTraGo and
-    eDisGo results container.
-
+    eDisGo results container. And contains the session for the
+    database connection.
 
     Parameters
     ----------
     jsonpath : :obj:`json`
         Path to ``scenario_setting.json`` file.
 
-
     Returns
     -------
-    network_etrago: :class:`etrago.tools.io.NetworkScenario`
-        eTraGo network object compiled by :meth:`etrago.appl.etrago`
-    network_edisgo : :pandas:`pandas.Dataframe<dataframe>`
-        Network container of eDisGo
     json_file : :obj:dict
         Dictionary of the ``scenario_setting.json`` file
     session : :sqlalchemy:`sqlalchemy.orm.session.Session<orm/session_basics.html>`
@@ -126,25 +121,7 @@ class eTraGoResults(egoBasic):
     network_etrago: :class:`etrago.tools.io.NetworkScenario`
         eTraGo network object compiled by :meth:`etrago.appl.etrago`
     etrago: :pandas:`pandas.Dataframe<dataframe>`
-        eTraGo results
-
-    Examples
-    --------
-
-    The module can be used by ``network = eTraGoResults()``
-
-    See also
-    --------
-
-    The `eTraGo`_ documentation.
-
-
-
-    References
-    ----------
-    .. _eTraGo:
-        `eTraGo <http://etrago.readthedocs.io/en/latest/api/etrago.html>`_, \
-        eTraGo Documentation.
+        DataFrame which collects several eTraGo results
     """
 
     def __init__(self, jsonpath, *args, **kwargs):
