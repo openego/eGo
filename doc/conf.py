@@ -60,7 +60,8 @@ extensions = [
      'numpydoc',
      'sphinxcontrib.httpdomain',   # for restfull API
      'sphinxcontrib.autohttp.flask',
-     'sphinx.ext.extlinks' # enables external links with a key
+     'sphinx.ext.extlinks', # enables external links with a key
+     'sphinxjsondomain'
 ]
 
 
@@ -117,12 +118,12 @@ power_class = requests.get(oep_url+'/api/v0/schema/model_draft/tables/ego_power_
 
 import json
 path = os.getcwd()
-json_file ='../ego/scenario_setting.json'
+json_file = '../ego/scenario_setting.json'
 
 with open(path +'/'+json_file) as f:
     scn_set = json.load(f)
 
-
+json_global = list(scn_set['eTraGo'])
 
 html_context = {
     'power_class': power_class,

@@ -60,12 +60,6 @@ def annuity_per_period(capex, n, wacc, t, p):
     return capex * (wacc * (1 + wacc) ** n) / ((1 + wacc) ** n - 1)
 
 
-# grid_components = {"hv_mv_transformer": "40 MVA", "mv_lv_transformer": "630 kVA",
-#                   "mv_line": "NA2XS2Y 3x1x185 RM/25", "lv_line": "NAYY 4x1x150"}
-# json_file = ego.json_file
-# cost_config = {"p": 0.04}
-
-
 def edisgo_convert_capital_costs(overnight_cost, t, p, json_file):
     """ Get scenario and calculation specific annuity cost by given capital
     costs and lifetime.
@@ -100,7 +94,6 @@ def edisgo_convert_capital_costs(overnight_cost, t, p, json_file):
     # Based on eTraGo calculation in
     # https://github.com/openego/eTraGo/blob/dev/etrago/tools/utilities.py#L651
 
-    
     # Calculate present value of an annuity (PVA)
     PVA = (1 / p) - (1 / (p*(1 + p) ** t))
 
@@ -126,20 +119,37 @@ def etrago_operating_costs(network):
     Returns
     -------
     power_price :  :pandas:`pandas.Dataframe<dataframe>`
+        DataFrame with aggregate operational costs per component and voltage
+        level in [EUR] per calculated time steps.
 
-    Examples
-    --------
+    Example
+    -------
 
-    - losses
-    - grid losses : amount and costs
-    - use calc_line_losses(network)  from etrago pf_post_lopf
+    .. code-block:: python
+
+       >>> from ego.tools.io import eGo
+       >>> ego = eGo(jsonpath='scenario_setting.json')
+       >>> ego.etrago.operating_costs
+
+    +-------------+-------------------+------------+
+    | component   |operation_costs    |  v_level   |
+    +=============+===================+============+
+    |biomass      |   27.0            |            |
+    +-------------+-------------------+------------+
+    |line losses  |    0.0            |            |
+    +-------------+-------------------+------------+
+    |wind_onshore |    0.0            |            |
+    +-------------+-------------------+------------+
 
     """
     # TODO   - change naming and function structure
     # TODO    - seperate operation costs in other functions ?
+    #      - losses
+    #    - grid losses : amount and costs
+    #    - use calc_line_losses(network)  from etrago pf_post_lopf
 
     etg = network
-    # etg = eTraGo
+
     # groupby v_nom
     power_price = etg.generators_t.p[etg.generators[etg.generators.
                                                     control != 'Slack'].index] * etg.generators.\
@@ -279,7 +289,6 @@ def etrago_grid_investment(network, json_file):
     pass
 
 
-
 def edisgo_grid_investment(edisgo_networks, json_file):
     """
     Function aggregates all costs, based on all calculated eDisGo
@@ -289,7 +298,7 @@ def edisgo_grid_investment(edisgo_networks, json_file):
     ----------
     edisgo_networks : :class:`ego.tools.edisgo_integration.EDisGoNetworks`
         Contains multiple eDisGo networks
-        
+
     Returns
     -------
     None or :pandas:`pandas.DataFrame<dataframe>`
@@ -299,67 +308,69 @@ def edisgo_grid_investment(edisgo_networks, json_file):
 
     t = 40
     p = 0.05
-    logger.warning('For all components T={} and p={} is used'.format(t, p))  
-    
+    logger.warning('For all components T={} and p={} is used'.format(t, p))
+
     annuity_costs = pd.DataFrame(columns=['v_lev', 'annuity_costs'])
-    
+
     for key, value in edisgo_networks.edisgo_grids.items():
-        
+
         if value is None:
             logger.warning('No results available for grid {}'.format(key))
             continue
-        
+
         costs_single = value.network.results.grid_expansion_costs
-        
+
         if (costs_single['total_costs'].sum() == 0.):
             logger.info('No expansion costs for grid {}'.format(key))
             continue
 
         costs_single = costs_single.rename(
-                columns={'voltage_level': 'v_lev'}
-                )
-    
+            columns={'voltage_level': 'v_lev'}
+        )
+
         choice = edisgo_networks.grid_choice
         weighting = choice.loc[
-                choice['the_selected_network_id'] == key
-                ][
-                        'no_of_points_per_cluster'
-                        ].values[0]
-        
+            choice['the_selected_network_id'] == key
+        ][
+            'no_of_points_per_cluster'
+        ].values[0]
+
         costs_single['annuity_costs'] = edisgo_convert_capital_costs(
-                costs_single['total_costs'], 
-                t=t,
-                p=p,
-                json_file=json_file)
-        
+            costs_single['total_costs'],
+            t=t,
+            p=p,
+            json_file=json_file)
+
         costs_single['annuity_costs'] = (
-                costs_single['annuity_costs'] * weighting)
-        
+            costs_single['annuity_costs'] * weighting)
+
         costs_single = costs_single[['v_lev', 'annuity_costs']]
-        
+
         annuity_costs = annuity_costs.append(costs_single, ignore_index=True)
-      
+
     if len(annuity_costs) == 0:
         logger.info('No expansion costs in any MV grid')
         return None
-    
+
     else:
-        aggr_capital_costs = annuity_costs.groupby(['v_lev']).sum().reset_index()
+        aggr_capital_costs = annuity_costs.groupby(
+            ['v_lev']).sum().reset_index()
         aggr_capital_costs = aggr_capital_costs.rename(
-                columns={'annuity_costs': 'grid_costs'}
-                )
+            columns={'annuity_costs': 'grid_costs'}
+        )
         aggr_capital_costs['grid_costs'] = aggr_capital_costs['grid_costs'] * 1000
-        
+
         return aggr_capital_costs
 
 
 def get_generator_investment(network, scn_name):
-    """ Get investment costs per carrier/gernator.
+    """ Get investment costs per carrier/ generator.
 
-    work around later db table ->  check capital_cost as cost input?!?
+
     """
     # TODO   - change values in csv
     #        - add values to database
+    # work around later db table ->  check capital_cost as cost input?!?
 
     etg = network
 
@@ -391,16 +402,17 @@ def get_generator_investment(network, scn_name):
 def investment_costs(network):
     """Return pandas DataFrame with investment costs of
 
-    etrago:
-    Storages
-    Line extentation
 
-    edisgo:
-    Line extentation
-    Storage costs?
 
     """
+    # TODO Function outdated?
     # TODO  add edisgo
+    # etrago:
+    # Storages
+    # Line extentation
+    # edisgo:
+    # Line extentation
+    # Storage costs?
 
     etg = network
     invest = pd.DataFrame()
