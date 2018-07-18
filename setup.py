@@ -13,7 +13,7 @@ def read(fname):
 
 
 setup(name='eGo',
-      version='0.2',
+      version='0.2.0',
       author='wolfbunke, maltesc',
       author_email='',
       description=("A python package for distribution and transmission"
