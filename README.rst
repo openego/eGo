@@ -16,7 +16,7 @@ Integrated optimization of flexibility options and grid extension measures
 for power grids based on `eTraGo <http://eTraGo.readthedocs.io/>`_ and
 `eDisGo <http://edisgo.readthedocs.io/>`_. The Documentation of the eGo tool 
 can be found on 
-`openego.readthedocs.io <https://openego.readthedocs.io/en/dev/`_.
+`openego.readthedocs.io <https://openego.readthedocs.io/en/dev/>`_ .
 
 .. contents::
 
@@ -31,7 +31,7 @@ Create a virtualenvironment (where you like it) and activate it:
    $ source venv/bin/activate
    $ cd venv
    $ pip3 install -e git+https://github.com/openego/eGo@dev#egg=eGo
-     --process-dependency-links)
+     --process-dependency-links
 
 
 LICENSE
