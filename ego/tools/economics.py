@@ -376,8 +376,11 @@ def get_generator_investment(network, scn_name):
 
     etg = network
 
-    path = os.getcwd()
+    # TODO change it to utilities function
+    dirname = os.path.dirname(__file__)
     filename = 'investment_costs.csv'
+    path = os.path.join(dirname, filename)
+
     invest = pd.DataFrame.from_csv(path + '/data/'+filename)
 
     if scn_name in ['SH Status Quo', 'Status Quo']:
