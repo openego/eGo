@@ -35,4 +35,5 @@ Notes
 -----
 * As an external user you need to have and account on the
   `openenergy-platform.org/login <http://openenergy-platform.org/login/>`_
+* In future versions, all MV grids (*ding0* grids) will be queried from your database. However, in this version all MV grids have to be generated with the tool `ding0 <https://github.com/openego/ding0>`_ and stored in *eGo*'s *data* folder.
 * Total operational costs are missing in this release
