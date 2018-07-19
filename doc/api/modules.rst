@@ -16,8 +16,9 @@ Overview of modules
 scenario_settings.json
 ======================
 
-https://sphinx-jsondomain.readthedocs.io/en/latest/examples.html#github-user
-https://etrago.readthedocs.io/en/latest/api/etrago.html#module-etrago.appl
+With the ``scenario_settings.json`` file you set up your calcualtion. 
+The file can be found on 
+`github <https://github.com/openego/eGo/blob/master/ego/scenario_setting.json>`_.
 
 .. json:object:: scenario_setting.json
 
