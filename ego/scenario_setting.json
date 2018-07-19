@@ -3,8 +3,8 @@
     "eTraGo": true,
     "eDisGo": true,
     "db": "oedb",
-    "recover": false,
-    "result_id": null,
+    "recover": true,
+    "result_id": 26,
     "gridversion": "v0.4.2"
   },
   "eTraGo": {
@@ -18,7 +18,7 @@
                       "crossover":1,
                       "BarConvTol":"1.e-5",
                       "FeasibilityTol":"1.e-5"},
-    "scn_name": "Status Quo",
+    "scn_name": "NEP 2035",
     "scn_extension": null,
     "scn_decommissioning": null,
     "add_Belgium_Norway": false,
@@ -26,11 +26,10 @@
     "results": false,
     "export": false,
     "extendable": "[]",
-    "generator_noise": true,
+    "generator_noise": false,
     "reproduce_noise": false,
     "minimize_loading": false,
-    "network_clustering_kmeans": 5,
-    "disaggregation": "uniform",
+    "network_clustering_kmeans": false,
     "load_cluster": false,
     "network_clustering_ehv": false,
     "snapshot_clustering": false,
@@ -38,13 +37,13 @@
     "skip_snapshots": false,
     "line_grouping": false,
     "branch_capacity_factor": 0.8,
-    "load_shedding": true,
+    "load_shedding": false,
     "comments": "eDisGo integration"
   },
   "eDisGo": {
      "ding0_files": "data/MV_grids/20180713110719",
-     "choice_mode": "cluster",
-     "manual_grids": [],
-     "no_grids": 2
+     "choice_mode": "manual",
+     "manual_grids": [1729],
+     "no_grids": null
   }
 }

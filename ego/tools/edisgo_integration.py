@@ -325,7 +325,6 @@ class EDisGoNetworks:
                     )['nominal_capacity'].sum()
             
             curt_abs = pd.DataFrame(columns=specs['curtailment'].columns)
-    
             for col in curt_abs:
                 curt_abs[col] = (
                         specs['curtailment'][col] 
