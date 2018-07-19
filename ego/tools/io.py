@@ -490,7 +490,7 @@ def etrago_from_oedb(session, json_file):
     ----------
     session : :sqlalchemy:`sqlalchemy.orm.session.Session<orm/session_basics.html>`
         SQLAlchemy session to the OEDB
-    json_file : :obj:dict
+    json_file : :obj:`dict`
         Dictionary of the ``scenario_setting.json`` file
 
     Returns
