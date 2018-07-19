@@ -33,7 +33,7 @@ if not 'READTHEDOCS' in os.environ:
     import pyproj as proj
     from shapely.geometry import Polygon, Point, MultiPolygon
     from geoalchemy2 import *
-    import geopandas as gpd
+    # import geopandas as gpd
     import folium
     from folium import plugins
     import branca.colormap as cm
@@ -120,6 +120,8 @@ def make_all_plots(network):
     return
 
 
+"""
+
 def igeoplot(network, session, tiles=None, geoloc=None, args=None):
     """Plot function in order to display eGo results on leaflet OSM map.
     This function will open the results in your main Webbrowser
@@ -127,16 +129,16 @@ def igeoplot(network, session, tiles=None, geoloc=None, args=None):
     Parameters
     ----------
 
-    network_etrago: :class:`etrago.tools.io.NetworkScenario`
-        eTraGo network object compiled by :meth:`etrago.appl.etrago`
-    tiles : str
+    network_etrago:: class: `etrago.tools.io.NetworkScenario`
+        eTraGo network object compiled by: meth: `etrago.appl.etrago`
+    tiles: str
             Folium background map style `None` as OSM or `Nasa`
-    geoloc : :obj:`list`
-        List which define center of map as (lon,lat)
+    geoloc: : obj: `list`
+        List which define center of map as (lon, lat)
 
     Returns
     -------
-    plot : html
+    plot: html
         HTML file with .js plot
     """
     # TODO
@@ -173,17 +175,17 @@ def igeoplot(network, session, tiles=None, geoloc=None, args=None):
     version = args['eTraGo']['gridversion']
 
     for name, row in network.buses.iterrows():
-        popup = """ <b> Bus:</b> {} <br>
-					carrier: {} <br>
-					control: {} <br>
-					type:{} <br>
-					v_nom:{} <br>
-					v_mag_pu_set:{} <br>
-					v_mag_pu_min:{} <br>
-					v_mag_pu_max:{} <br>
-					sub_network:{} <br>
-					Scenario: {} <br>
-					version: {}  <br>
+        popup = """ < b > Bus: < /b > {} < br >
+					carrier: {} < br >
+					control: {} < br >
+					type: {} < br >
+					v_nom: {} < br >
+					v_mag_pu_set: {} < br >
+					v_mag_pu_min: {} < br >
+					v_mag_pu_max: {} < br >
+					sub_network: {} < br >
+					Scenario: {} < br >
+					version: {} < br >
 				""".format(row.name, scn_name, row['carrier'],
                row['control'], row['type'], row['v_nom'], row['v_mag_pu_set'],
                row['v_mag_pu_min'], row['v_mag_pu_max'], row['sub_network'], version)  # add Popup values use HTML for formating
@@ -296,8 +298,8 @@ def igeoplot(network, session, tiles=None, geoloc=None, args=None):
     path = os.getcwd()
     url = path+"/map.html"
     webbrowser.open(url, new=new)
-
-
+"""
+"""
 def prepareGD(session, subst_id=None, version=None):
     """
     """
@@ -322,7 +324,7 @@ def prepareGD(session, subst_id=None, version=None):
         Regions, columns=['subst_id', 'geometry'], crs=crs)
 
     return region
-
+"""
 
 def total_power_costs_plot(etrago_network):
     """
@@ -339,10 +341,10 @@ def total_power_costs_plot(etrago_network):
 
 
     """
-    #import matplotlib.pyplot as plt
+    # import matplotlib.pyplot as plt
     plt.rcdefaults()
-    #import numpy as np
-    #import matplotlib.pyplot as plt
+    # import numpy as np
+    # import matplotlib.pyplot as plt
 
     fig, ax = plt.subplots()
 
@@ -374,9 +376,9 @@ def plot_etrago_production(ego):
     Bar plot all etrago costs
     """
 
-    #fig = plt.figure(figsize=(18,10), dpi=1600)
+    # fig = plt.figure(figsize=(18,10), dpi=1600)
     # plt.pie(ego.etrago['p'],autopct='%.1f')
-    #plt.title('Procentage of power production')
+    # plt.title('Procentage of power production')
 
     # max(ego.etrago['investment_costs'])/(1000*1000*1000) # T€/kW->M€/KW ->GW/MW
 
