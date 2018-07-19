@@ -286,7 +286,7 @@ class EDisGoNetworks:
             logger.error(msg)
             raise Exception(msg)
                             
-        logger.info('Initial MV grid reinforcement (starting grid)')
+        logger.info('Initial MV grid reinforcement (worst-case anaylsis)')
         edisgo_grid = run_edisgo_basic(
                 ding0_filepath=ding0_filepath,
                 generator_scenario=None,
@@ -306,8 +306,9 @@ class EDisGoNetworks:
             logger.info(
                     'No generators imported for scenario {}'.format(
                             self._scn_name)
-                    )
-          
+                    )          
+            edisgo_grid.network.pypsa = None
+            
         logger.info('Updating eDisGo timeseries with eTraGo values')    
         edisgo_grid.network.timeseries = TimeSeriesControl( 
                 network=edisgo_grid.network,
