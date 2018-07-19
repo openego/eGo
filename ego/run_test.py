@@ -22,13 +22,13 @@ def main():
         pd.DataFrame(ego.etrago.storage_investment_costs)\
             .to_csv(date+'__etrago_storage_costs.csv')
         print(ego.etrago.grid_investment_costs)
-        pd.DataFrame(ego.etrago.grid_investment_costs).\
-            to_csv(date+'__etrago_grid_costs.csv')
+        etg_gic = pd.DataFrame(ego.etrago.grid_investment_costs)
+        etg_gic.to_csv(date+'__etrago_grid_costs.csv')
         # test eTraGo plot and functions
 
         print(ego.edisgo.grid_investment_costs)
-        pd.DataFrame(ego.edisgo.grid_investment_costs)\
-            .to_csv(date+'__edisgo_gridscosts.csv')
+        edg_gic = pd.DataFrame(ego.edisgo.grid_investment_costs)
+        edg_gic.to_csv(date+'__edisgo_gridscosts.csv')
 
         ego.etrago_line_loading()
         ego.etrago_stacked_gen()
