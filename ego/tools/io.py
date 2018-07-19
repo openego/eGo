@@ -362,9 +362,7 @@ class eGo(eDisGoResults):
         _grid_ehv = self.etrago.grid_investment_costs.capital_cost.sum()
 
         _storage = self.etrago.storage_investment_costs.capital_cost.sum()
-        # test data
-        _grid_mv_lv = self.edisgo.grid_investment_costs.capital_cost.sum()
-        #
+
         self._total_inv_cost = pd.DataFrame(columns=['component',
                                                      'capital_cost'])
         self._total_inv_cost = self._total_inv_cost.append({'component': 'ehv-hv grid',
@@ -373,9 +371,15 @@ class eGo(eDisGoResults):
         self._total_inv_cost = self._total_inv_cost.append({'component': 'storage',
                                                             'capital_cost': _storage},
                                                            ignore_index=True)
-        self._total_inv_cost = self._total_inv_cost.append({'component': 'mv-lv grid',
-                                                            'capital_cost': _grid_mv_lv},
-                                                           ignore_index=True)
+
+        if self.json_file['global']['eDisGo'] is True:
+
+            _grid_mv_lv = self.edisgo.grid_investment_costs.capital_cost.sum()
+
+            self._total_inv_cost = self._total_inv_cost.\
+                append({'component': 'mv-lv grid',
+                        'capital_cost': _grid_mv_lv},
+                       ignore_index=True)
         self.total_investment_cost = self._total_inv_cost
 
     def plot_total_investment_costs(self):
