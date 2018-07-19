@@ -131,15 +131,15 @@ def etrago_operating_costs(network):
        >>> ego = eGo(jsonpath='scenario_setting.json')
        >>> ego.etrago.operating_costs
 
-    +-------------+-------------------+------------+
-    | component   |operation_costs    |  v_level   |
-    +=============+===================+============+
-    |biomass      |   27.0            |            |
-    +-------------+-------------------+------------+
-    |line losses  |    0.0            |            |
-    +-------------+-------------------+------------+
-    |wind_onshore |    0.0            |            |
-    +-------------+-------------------+------------+
+    +-------------+-------------------+------------------+
+    | component   |operation_costs    |  voltage_level   |
+    +=============+===================+==================+
+    |biomass      |   27.0            |                  |
+    +-------------+-------------------+------------------+
+    |line losses  |    0.0            |                  |
+    +-------------+-------------------+------------------+
+    |wind_onshore |    0.0            |                  |
+    +-------------+-------------------+------------------+
 
     """
     # TODO   - change naming and function structure
@@ -310,11 +310,11 @@ def edisgo_grid_investment(edisgo_networks, json_file):
     """
     etrago_args = json_file['eTraGo']
     scn_name = etrago_args['scn_name']
-    
+
     if scn_name == 'Status Quo':
         logger.info('No eDisGo grid investment in Status Quo scenario')
         return None
-               
+
     t = 40
     p = 0.05
     logger.warning('For all components T={} and p={} is used'.format(t, p))
