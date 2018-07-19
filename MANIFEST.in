@@ -1,0 +1,10 @@
+include README.rst
+include LICENSE
+include *txt
+include MANIFEST.in
+include *.json
+include *.rst
+include *.csv
+include ego/scenario_setting.json
+include ego/data/*.csv
+include ego/tools/*.json

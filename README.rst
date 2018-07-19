@@ -1,15 +1,22 @@
-.. image:: https://readthedocs.org/projects/openego/badge/?version=latest
-    :target: http://openego.readthedocs.io/en/latest/?badge=latest
-    :alt: Documentation Status
+|readthedocs| |badge_githubstars|
+
 
 .. image:: https://openegoproject.files.wordpress.com/2017/02/open_ego_logo_breit.png?w=400
+   :align: right
+   :scale: 100%
+
+*A cross-grid-level electricity grid and storage optimization tool*
+| `openegoproject.wordpress.com <https://openegoproject.wordpress.com/>`_
+
 
 eGo
-======
+===
 
-Integrated optimization of flexibility options and grid extension measures for power grids based on eTraGo and eDisGo.
-
-A speciality in this context is that transmission grids are described by the 380, 220 and 110 kV in Germany. The integration of the transmission grid (via eTraGo) and distribution grid (via eDisGo) is part of eGo.
+Integrated optimization of flexibility options and grid extension measures
+for power grids based on `eTraGo <http://eTraGo.readthedocs.io/>`_ and
+`eDisGo <http://edisgo.readthedocs.io/>`_. The Documentation of the eGo tool 
+can be found on 
+`openego.readthedocs.io <https://openego.readthedocs.io/en/dev/>`_ .
 
 .. contents::
 
@@ -20,15 +27,39 @@ Create a virtualenvironment (where you like it) and activate it:
 
 .. code-block::
 
-   $ virtualenv eGo --clear -p python3.5
+   $ virtualenv venv --clear -p python3.5
    $ source venv/bin/activate
+   $ cd venv
+   $ pip3 install -e git+https://github.com/openego/eGo@dev#egg=eGo --process-dependency-links
 
-   $ pip3 install -e git+https://github.com/openego/eGo@dev#egg=eGo --process-dependency-links --allow-all-external
+
+LICENSE
+=======
+© Europa-Universität Flensburg,
+© Flensburg University of Applied Sciences,
+  Centre for Sustainable Energy Systems
+© DLR Institute for Networked Energy Systems,
+© Reiner-Lemoine-Institute"
+
+This program is free software: you can redistribute it and/or modify it under
+the terms of the GNU Affero General Public License as published by the Free
+Software Foundation, either version 3 of the License, or (at your option) any
+later version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more
+details.
+
+You should have received a copy of the GNU General Public License along with
+this program. If not, see https://www.gnu.org/licenses/.
 
 
-Copyleft
-========
 
-Code licensed under "GNU Affero General Public License Version 3 (AGPL-3.0)"
-It is a collaborative work with several copyright owner:
-Cite as "eGo" © Flensburg University of Applied Sciences, Centre for Sustainable Energy Systems © Europa-Universität Flensburg, Centre for Sustainable Energy Systems © DLR Institute for Networked Energy Systems, © Reiner-Lemoine-Institute"
+.. |badge_githubstars| image:: https://img.shields.io/github/stars/openego/eGo.svg?style=flat-square&label=github%20stars
+    :target: https://github.com/openego/eGo/
+    :alt: GitHub stars
+
+.. |readthedocs| image:: https://readthedocs.org/projects/openego/badge/?version=latest
+    :target: http://openego.readthedocs.io/en/latest/?badge=latest
+    :alt: Documentation Status
