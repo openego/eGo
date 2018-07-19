@@ -29,7 +29,7 @@ import numpy as np
 
 if not 'READTHEDOCS' in os.environ:
     import pyproj as proj
-    import geopandas as gpd
+    #import geopandas as gpd
 
     from shapely.geometry import Polygon, Point, MultiPolygon
     from sqlalchemy import MetaData, create_engine,  and_, func
@@ -394,17 +394,18 @@ class eGo(eDisGoResults):
     logging.info('Initialisation of eGo Results')
 
 
+"""
 def geolocation_buses(network, session):
     """
-    Use Geometries of buses x/y (lon/lat) and Polygons
+    Use Geometries of buses x/y(lon/lat) and Polygons
     of Countries from RenpassGisParameterRegion
     in order to locate the buses
 
     Parameters
     ----------
-    network_etrago: :class:`etrago.tools.io.NetworkScenario`
-        eTraGo network object compiled by :meth:`etrago.appl.etrago`
-    session : :sqlalchemy:`sqlalchemy.orm.session.Session<orm/session_basics.html>`
+    network_etrago: : class: `etrago.tools.io.NetworkScenario`
+        eTraGo network object compiled by: meth: `etrago.appl.etrago`
+    session: : sqlalchemy: `sqlalchemy.orm.session.Session < orm/session_basics.html >`
         SQLAlchemy session to the OEDB
 
     """
@@ -459,6 +460,7 @@ def geolocation_buses(network, session):
     session.close()
 
     return network
+"""
 
 
 def results_to_excel(ego):
