@@ -122,7 +122,7 @@ def get_time_steps(json_file):
 
     Parameters
     ----------
-    json_file : :obj:dict
+    json_file : :obj:`dict`
         Dictionary of the ``scenario_setting.json`` file
 
     Returns
