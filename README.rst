@@ -30,8 +30,7 @@ Create a virtualenvironment (where you like it) and activate it:
    $ virtualenv venv --clear -p python3.5
    $ source venv/bin/activate
    $ cd venv
-   $ pip3 install -e git+https://github.com/openego/eGo@dev#egg=eGo
-     --process-dependency-links
+   $ pip3 install -e git+https://github.com/openego/eGo@dev#egg=eGo --process-dependency-links
 
 
 LICENSE
