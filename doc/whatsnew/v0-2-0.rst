@@ -1,18 +1,11 @@
 Release v0.2.0 (July 18, 2018)
 ++++++++++++++++++++++++++++++
 
-Second release of the eGo application.
+Fundamental structural changes of the eGo tool are included in this release. A new feature is the integration of the MV grid power flow simulations, performed by the tool `eDisGo. <https://github.com/openego/eDisGo>`_. Thereby, eGo can be used to perforem power flow simulations and optimizations for EHV, HV (*eTraGo*) and MV (*eDisGo*) grids.
 
-New features have been included in this release. Major changes being the new
-class structure and separation of methods into the given file structure.
-Moreover the use of the Dataprocessing version ``'v0.4.1' ``and ``'v0.4.2'`` is
-integrate. For eGo and the integration and interaction the app will depend on a
-data version ``>= 'v0.4.1'`` in order to ensure the correct data handling.
-Furthermore the inclusion of new methods and classes for eDisGo, storages etc.
-is done.
+Moreover, the use of the Dataprocessing versions ``''v0.4.1''`` and ``''v0.4.2''`` is supported. Please note, that this release is still under construction and only recommended for developers of the *open_eGo* project.
 
-Please note, that this release is still under construction and not ready
-for a normal use.
+Furthermore, overall cost aggregation functions are available.
 
 Added features
 --------------
@@ -21,7 +14,7 @@ Added features
     * Moved classes of eGo from results.py to io.py
     * Move serveral function
 
-* Introduce new files for edisgo handling
+* Introduce new files for *eDisGo* handling
     * edisgo_integration.py
     * mv_cluster.py
 
@@ -36,17 +29,6 @@ Added features
   `openenergy-platform.org/login <http://openenergy-platform.org/login/>`_
 * Remove functionalities from ``ego_main.py`` to the eGo class
 * Fixed eTraGo scenario import of ``etrago_from_oedb()``
-
-
-ToDo's bis Release
-------------------
-
-* mv clustering for eDisGo / Ding0 grids
-* cost manipulation / skalling of global costs
-* all costs "over night" grid/storages (annuisiert)
-* Plot der Gesamt investkosten
-* operational costs edisgo ?   | pro Ebene
-* operational costs eTragGo    | pro Ebene
 
 
 Notes

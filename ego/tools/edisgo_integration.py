@@ -72,29 +72,34 @@ class EDisGoNetworks:
         Session = sessionmaker(bind=conn)
         self._session = Session()
 
-        # Json Inputs
+        # Genral Json Inputs
         self._json_file = json_file
         self._grid_version = self._json_file['global']['gridversion']
 
+        # eTraGo args
+        self._etrago_args = self._json_file['eTraGo']
+        self._scn_name = self._etrago_args['scn_name']
+        
         # eDisGo args
         self._edisgo_args = self._json_file['eDisGo']
         self._ding0_files = self._edisgo_args['ding0_files']
         self._choice_mode = self._edisgo_args['choice_mode']
-
-        self._scn_name = self._edisgo_args['scn_name']
+        
+        ## Scenario translation
         if self._scn_name == 'Status Quo':
             self._generator_scn = None
         elif self._scn_name == 'NEP 2035':
             self._generator_scn = 'nep2035'
         elif self._scn_name == 'eGo 100':
             self._generator_scn = 'ego100'
-
+            
+        ## Versioning
         if self._grid_version is not None:
             self._versioned = True
         else:
             self._versioned = False
 
-        # eTraGo
+        # eTraGo Results (Input)
         self._etrago_network = etrago_network
         
         # eDisGo Results
@@ -107,7 +112,7 @@ class EDisGoNetworks:
     @property
     def edisgo_grids(self):
         """
-        Container for eDisGo grids, including all results
+        Container for eDisGo grids, including all results 
 
         Returns
         -------
@@ -245,7 +250,7 @@ class EDisGoNetworks:
                 )
             count += 1
     
-    def _run_edisgo(self, mv_grid_id):
+    def _run_edisgo(self, mv_grid_id, apply_curtailment=True):
         
         """
         Performs a single eDisGo run
@@ -293,10 +298,15 @@ class EDisGoNetworks:
         if self._generator_scn:
             logger.info(
                     'Importing generators for scenario {}'.format(
-                            self._generator_scn)
+                            self._scn_name)
                     )
             edisgo_grid.import_generators(
                     generator_scenario=self._generator_scn)
+        else:
+            logger.info(
+                    'No generators imported for scenario {}'.format(
+                            self._scn_name)
+                    )
           
         logger.info('Updating eDisGo timeseries with eTraGo values')    
         edisgo_grid.network.timeseries = TimeSeriesControl( 
@@ -306,22 +316,23 @@ class EDisGoNetworks:
                 timeseries_load='demandlib',
                 timeindex=specs['conv_dispatch'].index).timeseries
           
-        logger.info('Including Curtailment')
-        gens_df = tools.get_gen_info(edisgo_grid.network)
-        solar_wind_capacities = gens_df.groupby(
-                by=['type', 'weather_cell_id']
-                )['nominal_capacity'].sum()
-        
-        curt_abs = pd.DataFrame(columns=specs['curtailment'].columns)
-
-        for col in curt_abs:
-            curt_abs[col] = (
-                    specs['curtailment'][col] 
-                    * solar_wind_capacities[col])
-        
-        edisgo_grid.curtail(curtailment_methodology='curtail_all',
-                            timeseries_curtailment=curt_abs)            
-#             Think about the other curtailment functions!!!!
+        if apply_curtailment:        
+            logger.info('Including Curtailment')
+            gens_df = tools.get_gen_info(edisgo_grid.network)
+            solar_wind_capacities = gens_df.groupby(
+                    by=['type', 'weather_cell_id']
+                    )['nominal_capacity'].sum()
+            
+            curt_abs = pd.DataFrame(columns=specs['curtailment'].columns)
+    
+            for col in curt_abs:
+                curt_abs[col] = (
+                        specs['curtailment'][col] 
+                        * solar_wind_capacities[col])
+            
+            edisgo_grid.curtail(curtailment_methodology='curtail_all',
+                                timeseries_curtailment=curt_abs)            
+    #             Think about the other curtailment functions!!!!
                   
         edisgo_grid.analyze()
         
