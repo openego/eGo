@@ -368,8 +368,8 @@ def edisgo_grid_investment(edisgo_networks, json_file):
             columns={'annuity_costs': 'capital_cost'}
         )
         aggr_capital_costs['capital_cost'] = (
-                aggr_capital_costs['capital_cost'] 
-                * 1000) # In eDisGo all costs are in kEuro, however 
+            aggr_capital_costs['capital_cost']
+            * 1000)  # In eDisGo all costs are in kEuro, however
         # eGo only takes Euro
 
         return aggr_capital_costs
@@ -385,9 +385,16 @@ def get_generator_investment(network, scn_name):
 
     etg = network
 
-    path = os.getcwd()
-    filename = 'investment_costs.csv'
-    invest = pd.DataFrame.from_csv(path + '/data/'+filename)
+    # TODO change it to utilities function
+    try:
+        dirname = os.path.dirname(__file__)
+        filename = 'investment_costs.csv'
+        path = os.path.join(dirname, filename)
+        invest = pd.DataFrame.from_csv(path + '~/data/'+filename)
+    except FileNotFoundError:
+        path = os.getcwd()
+        filename = 'investment_costs.csv'
+        invest = pd.DataFrame.from_csv(path + '/data/'+filename)
 
     if scn_name in ['SH Status Quo', 'Status Quo']:
         invest_scn = 'Status Quo'

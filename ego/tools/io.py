@@ -285,10 +285,10 @@ class eDisGoResults(eTraGoResults):
 
         self._edisgo = None
         self._edisgo_networks = None
-        
+
         if self.json_file['global']['eDisGo'] is True:
             logger.info('Create eDisGo networks')
-            
+
             self._edisgo = pd.DataFrame()
 
             self._edisgo_networks = EDisGoNetworks(
@@ -303,7 +303,7 @@ class eDisGoResults(eTraGoResults):
     @property
     def edisgo_networks(self):
         """
-        Container for eDisGo grids, including all results 
+        Container for eDisGo grids, including all results
 
         Returns
         -------
@@ -314,7 +314,7 @@ class eDisGoResults(eTraGoResults):
         return self._edisgo_networks
 
     @property
-    def edisgo(self):   
+    def edisgo(self):
         """
         Contains basic informations about eDisGo
 
@@ -324,8 +324,8 @@ class eDisGoResults(eTraGoResults):
 
         """
         return self._edisgo
-            
-            
+
+
 class eGo(eDisGoResults):
     """Main eGo module which including all results and main functionalities.
 
@@ -363,21 +363,17 @@ class eGo(eDisGoResults):
 
         _storage = self.etrago.storage_investment_costs.capital_cost.sum()
         # test data
-        _grid_mv_lv = pd.DataFrame(data=[{'voltage_level': 'mv',
-                                          'capital_cost': 8823.22},
-                                         {'voltage_level': 'lv',
-                                          'capital_cost': 333.12}])\
-            .capital_cost.sum()
+        _grid_mv_lv = self.edisgo.grid_investment_costs.capital_cost.sum()
         #
         self._total_inv_cost = pd.DataFrame(columns=['component',
                                                      'capital_cost'])
-        self._total_inv_cost = self._total_inv_cost.append({'component': 'ehv hv grid',
+        self._total_inv_cost = self._total_inv_cost.append({'component': 'ehv-hv grid',
                                                             'capital_cost': _grid_ehv},
                                                            ignore_index=True)
         self._total_inv_cost = self._total_inv_cost.append({'component': 'storage',
                                                             'capital_cost': _storage},
                                                            ignore_index=True)
-        self._total_inv_cost = self._total_inv_cost.append({'component': 'mv lv grid',
+        self._total_inv_cost = self._total_inv_cost.append({'component': 'mv-lv grid',
                                                             'capital_cost': _grid_mv_lv},
                                                            ignore_index=True)
         self.total_investment_cost = self._total_inv_cost
@@ -390,7 +386,6 @@ class eGo(eDisGoResults):
         return self.total_investment_cost.plot.bar(x='component',
                                                    y='capital_cost', rot=1)
 
-        
     # write_results_to_db():
     logging.info('Initialisation of eGo Results')
 
