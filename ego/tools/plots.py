@@ -131,7 +131,7 @@ def igeoplot(network, session, tiles=None, geoloc=None, args=None):
         eTraGo network object compiled by :meth:`etrago.appl.etrago`
     tiles : str
             Folium background map style `None` as OSM or `Nasa`
-    geoloc : :obj:list
+    geoloc : :obj:`list`
         List which define center of map as (lon,lat)
 
     Returns
