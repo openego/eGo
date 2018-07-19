@@ -18,13 +18,13 @@ def main():
 
         print(ego.etrago.storage_investment_costs)
         ego.etrago.storage_investment_costs.to_csv(
-            date+'etrago_storage_costs.csv')
+            date+'__etrago_storage_costs.csv')
         print(ego.etrago.grid_investment_costs)
-        ego.etrago.grid_investment_costs.to_csv(date+'etrago_grid_costs.csv')
+        ego.etrago.grid_investment_costs.to_csv(date+'__etrago_grid_costs.csv')
         # test eTraGo plot and functions
 
         print(ego.edisgo.grid_investment_costs)
-        ego.edisgo.grid_investment_costs.to_csv(date+'edisgo_gridscosts.csv')
+        ego.edisgo.grid_investment_costs.to_csv(date+'__edisgo_gridscosts.csv')
 
         ego.etrago_line_loading()
         ego.etrago_stacked_gen()
