@@ -4,6 +4,7 @@ import sys
 from pycallgraph import PyCallGraph
 from pycallgraph.output import GraphvizOutput
 import pandas as pd
+import matplotlib.pyplot as plt
 
 
 def main():
@@ -13,7 +14,7 @@ def main():
     print(date)
     with PyCallGraph(output=graphviz):
 
-        ego = eGo(jsonpath='scenario_setting.json')
+        ego = eGo(jsonpath='scenario_setting_01.json')
 
         print(ego.etrago.storage_charges)
         pd.DataFrame(ego.etrago.storage_charges)\
@@ -31,11 +32,15 @@ def main():
         edg_gic = pd.DataFrame(ego.edisgo.grid_investment_costs)
         edg_gic.to_csv(date+'__edisgo_gridscosts.csv')
 
-        ego.etrago_line_loading()
+        a = ego.etrago_line_loading()
+        a.savefig("etrago_line_loading.pdf", bbox_inches='tight')
+
         ego.etrago_storage_distribution()
         ego.etrago_voltage()
 
-        ego.plot_total_investment_cost()
+        b = ego.plot_total_investment_cost()
+        b.savefig("plot_total_investment_cost.pdf", bbox_inches='tight')
+
         print(ego.total_investment_costs)
         ego_t = pd.DataFrame(ego.total_investment_costs)
         ego_t.to_csv(date+'__ego_total-costs.csv')
