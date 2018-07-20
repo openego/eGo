@@ -354,40 +354,56 @@ class eGo(eDisGoResults):
         #self.total_investment_costs = pd.DataFrame()
         # self.total_operation_costs = pd.DataFrame()  # TODO
 
-    def total_investment_costs(self):
+    def total_investment_cost(self):
         """ Get total investment costs of all voltage level for storages
         and grid expansion
         """
 
-        _grid_ehv = self.etrago.grid_investment_costs.capital_cost.sum()
-
-        _storage = self.etrago.storage_investment_costs.capital_cost.sum()
-
         self._total_inv_cost = pd.DataFrame(columns=['component',
+                                                     'voltage_level',
                                                      'capital_cost'])
-        self._total_inv_cost = self._total_inv_cost.append({'component': 'ehv-hv grid',
-                                                            'capital_cost': _grid_ehv},
-                                                           ignore_index=True)
-        self._total_inv_cost = self._total_inv_cost.append({'component': 'storage',
-                                                            'capital_cost': _storage},
-                                                           ignore_index=True)
+        _grid_ehv = None
+        if 'network' in self.json_file['eTraGo']['extendable']:
+            _grid_ehv = self.etrago.grid_investment_costs  # .capital_cost.sum()
 
+            self._total_inv_cost = self._total_inv_cost.\
+                append({'component': ' EHV HV grid',
+                        'voltage_level': 'voltage_level',
+                        'capital_cost': _grid_ehv.capital_cost.sum()},
+                       ignore_index=True)
+
+        _storage = None
+        if 'storages' in self.json_file['eTraGo']['extendable']:
+            _storage = self.etrago.grid_investment_costs  # .capital_cost.sum()
+
+            self._total_inv_cost = self._total_inv_cost.\
+                append({'component': 'storage',
+                        'voltage_level': 'ehv hv grid',
+                        'capital_cost': _storage.capital_cost.sum()},
+                       ignore_index=True)
+
+        _grid_mv_lv = None
         if self.json_file['global']['eDisGo'] is True:
 
-            _grid_mv_lv = self.edisgo.grid_investment_costs.capital_cost.sum()
+            _grid_mv_lv = self.edisgo.grid_investment_costs  # .capital_cost.sum()
 
             self._total_inv_cost = self._total_inv_cost.\
                 append({'component': 'mv-lv grid',
-                        'capital_cost': _grid_mv_lv},
+                        'voltage_level': 'mv lv grid',
+                        'capital_cost': _grid_mv_lv.capital_cost.sum()},
                        ignore_index=True)
-        self.total_investment_cost = self._total_inv_cost
+
+        self.total_investment_costs = self._total_inv_cost
+        self.storage_costs = _storage
+        self.ehv_grid_costs = _grid_ehv
+        self.mv_grid_costs = _grid_mv_lv
 
     def plot_total_investment_costs(self):
         """ Plot total investment costs
         """
-        self.total_investment_costs()
+        self.total_investment_cost()
 
-        return self.total_investment_cost.plot.bar(x='component',
+        return self.total_investment_cost.plot.bar(x='voltage_level',
                                                    y='capital_cost', rot=1)
 
     # write_results_to_db():
