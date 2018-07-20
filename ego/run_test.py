@@ -13,10 +13,11 @@ def main():
     print(date)
     with PyCallGraph(output=graphviz):
 
-        ego = eGo(jsonpath='scenario_setting_solver_option.json')
+        ego = eGo(jsonpath='scenario_setting.json')
 
         print(ego.etrago.storage_charges)
-
+        pd.DataFrame(ego.etrago.storage_charges)\
+            .to_csv(date+'__etrago_storage_charges.csv')
         print(ego.etrago.storage_investment_costs)
 
         pd.DataFrame(ego.etrago.storage_investment_costs)\
@@ -31,10 +32,15 @@ def main():
         edg_gic.to_csv(date+'__edisgo_gridscosts.csv')
 
         ego.etrago_line_loading()
-        ego.etrago_stacked_gen()
-        ego.etrago_gen_dist()
         ego.etrago_storage_distribution()
         ego.etrago_voltage()
+
+        ego.plot_total_investment_cost()
+        print(ego.total_investment_costs)
+        ego_t = pd.DataFrame(ego.total_investment_costs)
+        ego_t.to_csv(date+'__ego_total-costs.csv')
+
+        ego.mv_grid_costd
 
         # object size
         print(sys.getsizeof(ego))

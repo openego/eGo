@@ -3,7 +3,7 @@
     "eTraGo": true,
     "eDisGo": true,
     "db": "oedb",
-    "recover": true,
+    "recover": false,
     "result_id": 26,
     "gridversion": "v0.4.2"
   },
@@ -11,7 +11,7 @@
     "method": "lopf",
     "pf_post_lopf": false,
     "start_snapshot": 720,
-    "end_snapshot" : 730,
+    "end_snapshot" : 721,
     "solver": "gurobi",
     "solver_options":{"threads":4,
                       "method":2,
@@ -25,11 +25,11 @@
     "lpfile":  false,
     "results": false,
     "export": false,
-    "extendable": "[]",
+    "extendable": "['network','storages']",
     "generator_noise": false,
     "reproduce_noise": false,
     "minimize_loading": false,
-    "network_clustering_kmeans": false,
+    "network_clustering_kmeans": 30,
     "load_cluster": false,
     "network_clustering_ehv": false,
     "snapshot_clustering": false,
@@ -43,7 +43,7 @@
   "eDisGo": {
      "ding0_files": "data/MV_grids/20180713110719",
      "choice_mode": "manual",
-     "manual_grids": [1729],
-     "no_grids": null
+     "manual_grids": [1729,1730],
+     "no_grids": 2
   }
 }
