@@ -53,17 +53,18 @@ if not 'READTHEDOCS' in os.environ:
 logging.basicConfig(format='%(asctime)s %(message)s', level=logging.INFO)
 logger = logging.getLogger('ego')
 
+
 class EDisGoNetworks:
     """
     Performs multiple eDisGo runs and stores the resulting edisgo_grids
-    
+
     Parameters
     ----------
     json_file : :obj:dict
         Dictionary of the ``scenario_setting.json`` file
     etrago_network: :class:`etrago.tools.io.NetworkScenario`
-        eTraGo network object compiled by :meth:`etrago.appl.etrago`  
-        
+        eTraGo network object compiled by :meth:`etrago.appl.etrago`
+
     """
 
     def __init__(self, json_file, etrago_network):
@@ -79,21 +80,21 @@ class EDisGoNetworks:
         # eTraGo args
         self._etrago_args = self._json_file['eTraGo']
         self._scn_name = self._etrago_args['scn_name']
-        
+
         # eDisGo args
         self._edisgo_args = self._json_file['eDisGo']
         self._ding0_files = self._edisgo_args['ding0_files']
         self._choice_mode = self._edisgo_args['choice_mode']
-        
-        ## Scenario translation
+
+        # Scenario translation
         if self._scn_name == 'Status Quo':
             self._generator_scn = None
         elif self._scn_name == 'NEP 2035':
             self._generator_scn = 'nep2035'
         elif self._scn_name == 'eGo 100':
             self._generator_scn = 'ego100'
-            
-        ## Versioning
+
+        # Versioning
         if self._grid_version is not None:
             self._versioned = True
         else:
@@ -101,18 +102,18 @@ class EDisGoNetworks:
 
         # eTraGo Results (Input)
         self._etrago_network = etrago_network
-        
+
         # eDisGo Results
         self._edisgo_grids = {}
-            
-        ## Execute Functions
+
+        # Execute Functions
         self._set_grid_choice()
         self._run_edisgo_pool()
 
     @property
     def edisgo_grids(self):
         """
-        Container for eDisGo grids, including all results 
+        Container for eDisGo grids, including all results
 
         Returns
         -------
@@ -121,37 +122,37 @@ class EDisGoNetworks:
 
         """
         return self._edisgo_grids
-    
+
     @property
     def grid_choice(self):
         """
         Container for the choice of MV grids, including their weighting
-        
+
         Returns
         -------
         :pandas:`pandas.DataFrame<dataframe>`
             Dataframe containing the chosen grids and their weightings
-            
+
         """
         return self._grid_choice
-    
+
     def _analyze_cluster_attributes(self):
         """
         Analyses the attributes wind and solar capacity and farthest node
         for clustering.
         """
         analyze_attributes(self._ding0_files)
-       
+
     def _cluster_mv_grids(self, no_grids):
         """
         Clusters the MV grids based on the attributes, for a given number
         of MV grids
-        
+
         Parameters
         ----------
         no_grids : int
             Desired number of clusters (of MV grids)
-            
+
         Returns
         -------
         :pandas:`pandas.DataFrame<dataframe>`
@@ -166,17 +167,17 @@ class EDisGoNetworks:
             self._analyze_cluster_attributes()
 
         return cluster_mv_grids(self._ding0_files, no_grids)
-      
+
     def _check_available_mv_grids(self):
         """
         Checks all available MV grids in the given folder (from the settings)
-    
+
         Returns
         -------
         :obj:`list`
             List of MV grid ID's
-        
-        """          
+
+        """
         mv_grids = []
         for file in os.listdir(self._ding0_files):
             if file.endswith('.pkl'):
@@ -186,12 +187,12 @@ class EDisGoNetworks:
                     ).replace('.pkl', '')))
 
         return mv_grids
-        
+
     def _set_grid_choice(self):
         """
         Sets the grid choice based on the settings file
-        
-        """         
+
+        """
         if self._choice_mode == 'cluster':
             no_grids = self._edisgo_args['no_grids']
             logger.info('Clustering to {} MV grids'.format(no_grids))
@@ -219,13 +220,13 @@ class EDisGoNetworks:
             )
 
         self._grid_choice = cluster
-        
+
     def _run_edisgo_pool(self):
         """
         Runs eDisGo for the chosen grids
-        
-        """                
-        logger.warning('Parallelization not implemented yet')                   
+
+        """
+        logger.warning('Parallelization not implemented yet')
         no_grids = len(self._grid_choice)
         count = 0
         for idx, row in self._grid_choice.iterrows():
@@ -241,119 +242,118 @@ class EDisGoNetworks:
             try:
                 edisgo_grid = self._run_edisgo(mv_grid_id)
                 self._edisgo_grids[
-                        mv_grid_id
-                        ] = edisgo_grid                       
+                    mv_grid_id
+                ] = edisgo_grid
             except Exception:
                 self._edisgo_grids[mv_grid_id] = None
                 logger.exception(
                     'MV grid {} failed: \n'.format(mv_grid_id)
                 )
             count += 1
-    
-    def _run_edisgo(self, mv_grid_id, apply_curtailment=True):
-        
+
+    def _run_edisgo(self, mv_grid_id, apply_curtailment=False):
         """
         Performs a single eDisGo run
-        
+
         Parameters
         ----------
         mv_grid_id : int
-            MV grid ID of the ding0 grid 
-            
+            MV grid ID of the ding0 grid
+
         Returns
         -------
         :class:`edisgo.grid.network.EDisGo`
             Returns the complete eDisGo container, also including results
-        """      
-    
-        logger.info('Calculating interface values')               
+        """
+
+        logger.info('Calculating interface values')
         bus_id = self._get_bus_id_from_mv_grid(mv_grid_id)
-        
+
         specs = get_etragospecs_direct(
-                self._session, 
-                bus_id, 
-                self._etrago_network,
-                self._scn_name)    
-                   
+            self._session,
+            bus_id,
+            self._etrago_network,
+            self._scn_name)
+
         ding0_filepath = (
-                self._ding0_files
-                + '/ding0_grids__' 
-                + str(mv_grid_id) 
-                + '.pkl')
-    
+            self._ding0_files
+            + '/ding0_grids__'
+            + str(mv_grid_id)
+            + '.pkl')
+
         if not os.path.isfile(ding0_filepath):
             msg = 'Not MV grid file for MV grid ID: ' + str(mv_grid_id)
             logger.error(msg)
             raise Exception(msg)
-                            
+
         logger.info('Initial MV grid reinforcement (worst-case anaylsis)')
         edisgo_grid = run_edisgo_basic(
-                ding0_filepath=ding0_filepath,
-                generator_scenario=None,
-                analysis='worst-case')[0] # only the edisgo_grid is returned
-        
-        logger.info('eTraGo feed-in case')        
+            ding0_filepath=ding0_filepath,
+            generator_scenario=None,
+            analysis='worst-case')[0]  # only the edisgo_grid is returned
+
+        logger.info('eTraGo feed-in case')
         edisgo_grid.network.results = Results()
-         
+
         if self._generator_scn:
             logger.info(
-                    'Importing generators for scenario {}'.format(
-                            self._scn_name)
-                    )
+                'Importing generators for scenario {}'.format(
+                    self._scn_name)
+            )
             edisgo_grid.import_generators(
-                    generator_scenario=self._generator_scn)
+                generator_scenario=self._generator_scn)
         else:
             logger.info(
-                    'No generators imported for scenario {}'.format(
-                            self._scn_name)
-                    )          
+                'No generators imported for scenario {}'.format(
+                    self._scn_name)
+            )
             edisgo_grid.network.pypsa = None
-            
-        logger.info('Updating eDisGo timeseries with eTraGo values')    
-        edisgo_grid.network.timeseries = TimeSeriesControl( 
-                network=edisgo_grid.network,
-                timeseries_generation_fluctuating=specs['potential'],
-                timeseries_generation_dispatchable=specs['conv_dispatch'],
-                timeseries_load='demandlib',
-                timeindex=specs['conv_dispatch'].index).timeseries
-          
-        if apply_curtailment:        
+
+        logger.info('Updating eDisGo timeseries with eTraGo values')
+        edisgo_grid.network.timeseries = TimeSeriesControl(
+            network=edisgo_grid.network,
+            timeseries_generation_fluctuating=specs['potential'],
+            timeseries_generation_dispatchable=specs['conv_dispatch'],
+            timeseries_load='demandlib',
+            timeindex=specs['conv_dispatch'].index).timeseries
+
+        if apply_curtailment:
             logger.info('Including Curtailment')
             gens_df = tools.get_gen_info(edisgo_grid.network)
             solar_wind_capacities = gens_df.groupby(
-                    by=['type', 'weather_cell_id']
-                    )['nominal_capacity'].sum()
-            
+                by=['type', 'weather_cell_id']
+            )['nominal_capacity'].sum()
+
             curt_abs = pd.DataFrame(columns=specs['curtailment'].columns)
             for col in curt_abs:
                 curt_abs[col] = (
-                        specs['curtailment'][col] 
-                        * solar_wind_capacities[col])
-            
+                    specs['curtailment'][col]
+                    * solar_wind_capacities[col])
+
             edisgo_grid.curtail(curtailment_methodology='curtail_all',
-                                timeseries_curtailment=curt_abs)            
+                                timeseries_curtailment=curt_abs)
     #             Think about the other curtailment functions!!!!
-                  
+
         edisgo_grid.analyze()
-        
-        edisgo_grid.reinforce() 
-    
-        return edisgo_grid 
-                   
+
+        edisgo_grid.reinforce()
+
+        return edisgo_grid
+
     def _get_mv_grid_from_bus_id(self, bus_id):
         """
         Queries the MV grid ID for a given eTraGo bus
-        
+
         Parameters
         ----------
         bus_id : int
             eTraGo bus ID
-            
+
         Returns
         -------
         int
             MV grid (ding0) ID
-        
+
         """
 
         if self._versioned is True:
@@ -378,21 +378,21 @@ class EDisGoNetworks:
             ).scalar()
 
         return subst_id
-            
+
     def _get_bus_id_from_mv_grid(self, subst_id):
         """
         Queries the eTraGo bus ID for given MV grid (ding0) ID
-        
+
         Parameters
         ----------
         subst_id : int
             MV grid (ding0) ID
-            
+
         Returns
         -------
         int
             eTraGo bus ID
-        
+
         """
         if self._versioned is True:
             ormclass_hvmv_subst = grid.__getattribute__(
