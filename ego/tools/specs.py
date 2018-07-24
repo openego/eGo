@@ -38,7 +38,9 @@ if not 'READTHEDOCS' in os.environ:
 #    from edisgo.grid.network import ETraGoSpecs
 
 import logging
-logger = logging.getLogger('ego')
+logger = logging.getLogger(__name__)
+
+
 
 
 # Functions

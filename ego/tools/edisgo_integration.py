@@ -44,14 +44,14 @@ if not 'READTHEDOCS' in os.environ:
     from ego.tools.mv_cluster import (
         analyze_attributes,
         cluster_mv_grids)
-
+    from tools.utilities import define_logging
+    
     import pandas as pd
     from sqlalchemy.orm import sessionmaker
 
 
 # Logging
-logging.basicConfig(format='%(asctime)s %(message)s', level=logging.INFO)
-logger = logging.getLogger('ego')
+logger = logging.getLogger(__name__)
 
 
 class EDisGoNetworks:

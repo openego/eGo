@@ -34,7 +34,7 @@ import os
 if not 'READTHEDOCS' in os.environ:
     from tools.io import eGo
     from tools.utilities import define_logging
-    logger = define_logging(log_name='ego.log')
+    logger = define_logging(name='ego')
 
 __copyright__ = ("Flensburg University of Applied Sciences, "
                  "Europa-Universität Flensburg, "
