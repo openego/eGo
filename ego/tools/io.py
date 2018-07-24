@@ -176,7 +176,7 @@ class eTraGoResults(egoBasic):
 
             if self.json_file['global'].get('csv_import') != False:
 
-                logger.info('Caution, import Desaggregation'
+                logger.info('Caution, import disaggregation '
                             'data of former Cluster')
 
                 # get folder
