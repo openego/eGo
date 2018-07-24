@@ -336,11 +336,13 @@ class EDisGoNetworks:
     #             Think about the other curtailment functions!!!!
 
         if 'battery_p_series' in specs:
+            logger.info('Integrating storages in MV grid.')
             edisgo_grid.integrate_storage(timeseries=specs['battery_p_series'],
                                           position='distribute_storages_mv',
                                           timeseries_reactive_power=None)
         
         edisgo_grid.analyze()
+        logger.info('Calculating grid expansion costs.')
         edisgo_grid.reinforce()
 
         return edisgo_grid
