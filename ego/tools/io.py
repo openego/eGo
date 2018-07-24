@@ -48,7 +48,8 @@ if not 'READTHEDOCS' in os.environ:
         etrago_grid_investment,
         edisgo_grid_investment,
         get_generator_investment)
-    from ego.tools.utilities import get_scenario_setting, get_time_steps
+    from ego.tools.utilities import (get_scenario_setting,
+                                     get_time_steps, fix_leading_separator)
     from ego.tools.edisgo_integration import EDisGoNetworks
     from egoio.db_tables.model_draft import RenpassGisParameterRegion
     from egoio.db_tables import model_draft, grid
@@ -191,6 +192,8 @@ class eTraGoResults(egoBasic):
                     self.etrago_network.import_from_csv_folder(path+folder)
 
                 except TypeError:
+                    file_path = "network.csv"
+                    fix_leading_separator(path+folder+file_path)
 
             else:
                 logger.info('Create eTraGo network')
