@@ -22,6 +22,7 @@ of eGo in order to build the eGo application container.
 """
 import sys
 import os
+import json
 import logging
 logger = logging.getLogger('ego')
 import pandas as pd
@@ -29,7 +30,7 @@ import numpy as np
 
 if not 'READTHEDOCS' in os.environ:
     import pyproj as proj
-    #import geopandas as gpd
+    # import geopandas as gpd
 
     from shapely.geometry import Polygon, Point, MultiPolygon
     from sqlalchemy import MetaData, create_engine,  and_, func
@@ -196,19 +197,19 @@ class eTraGoResults(egoBasic):
                     file_path = "network.csv"
                     fix_leading_separator(path+folder+"/"+file_path)
 
-                    args_name = "args.json"
-                    with open(path + folder+'/'+args_name) as f:
-                        etrago_args = json.load(f)
-
-                        for key in self.json_file['eTraGo'].keys():
-                            try:
-                                self.json_file['eTraGo'][key] = etrago_args[key]
-                            except KeyError:
-                                pass
-
                     self.etrago_network = pypsa.Network()
                     self.etrago_network.import_from_csv_folder(path+folder)
                     logger.info('Create eTraGo network from CSV result')
+
+                args_name = "args.json"
+                with open(path + folder+'/'+args_name) as f:
+                    etrago_args = json.load(f)
+
+                    for key in self.json_file['eTraGo'].keys():
+                        try:
+                            self.json_file['eTraGo'][key] = etrago_args[key]
+                        except KeyError:
+                            pass
 
             else:
                 logger.info('Create eTraGo network')
@@ -219,11 +220,11 @@ class eTraGoResults(egoBasic):
         self.etrago = pd.DataFrame()
         # self.etrago.storage_investment_costs = etrago_storages_investment(
         #    self.etrago_network, self.json_file)
-        self.etrago.storage_charges = etrago_storages(self.etrago_network)
-        self.etrago.operating_costs = etrago_operating_costs(
-            self.etrago_network)
-        self.etrago.generator = create_etrago_results(self.etrago_network,
-                                                      self.scn_name)
+        # self.etrago.storage_charges = etrago_storages(self.etrago_network)
+        # self.etrago.operating_costs = etrago_operating_costs(
+        #    self.etrago_network)
+        # self.etrago.generator = create_etrago_results(self.etrago_network,
+        #                                              self.scn_name)
         # self.etrago.grid_investment_costs = etrago_grid_investment(self.
         #                                                           etrago_network,
         #                                                           self.json_file)
@@ -388,7 +389,7 @@ class eGo(eDisGoResults):
         # super().__init__(eDisGo)
         self.total = pd.DataFrame()
         # add total results here
-        #self.total_investment_costs = pd.DataFrame()
+        # self.total_investment_costs = pd.DataFrame()
         # self.total_operation_costs = pd.DataFrame()  # TODO
 
     def total_investment_cost(self):
