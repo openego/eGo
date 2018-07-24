@@ -193,7 +193,7 @@ class eTraGoResults(egoBasic):
 
                 except TypeError:
                     file_path = "network.csv"
-                    fix_leading_separator(path+folder+file_path)
+                    fix_leading_separator(path+folder+"/"+file_path)
 
             else:
                 logger.info('Create eTraGo network')
