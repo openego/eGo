@@ -456,14 +456,20 @@ def get_etragospecs_direct(session,
     weather_dpdnt = ['wind', 'solar', 'wind_onshore', 'wind_offshore']
 
     # DF procesing
-    all_gens_df = etrago_network.generators[etrago_network.generators['bus'] == str(
-        bus_id)]
-    all_gens_df.reset_index(inplace=True)
-    all_gens_df = all_gens_df.rename(columns={'index': 'generator_id'})
-    all_gens_df = all_gens_df[['generator_id', 'p_nom', 'p_nom_opt', 'carrier']]
+    all_gens_df = etrago_network.generators[
+            etrago_network.generators['bus'] == str(bus_id)
+            ]
+    idx_name = all_gens_df.index.name
+    all_gens_df.reset_index(inplace=True)    
+    all_gens_df = all_gens_df.rename(columns={idx_name: 'generator_id'})
+    all_gens_df = all_gens_df[[
+            'generator_id', 
+            'p_nom', 
+            'p_nom_opt', 
+            'carrier']]
 
     all_gens_df = all_gens_df.rename(columns={"carrier": "name"})
-
+    
     all_gens_df = all_gens_df[all_gens_df['name'] != 'wind_offshore']
     logger.warning('Wind offshore is disregarded in the interface')
 
@@ -472,6 +478,7 @@ def get_etragospecs_direct(session,
         if name == 'wind_onshore':
             all_gens_df.at[index, 'name'] = 'wind'
             logger.warning('wind onshore is renamed to wind')
+            
 
 #    print(all_gens_df)
 #    names = []
@@ -495,6 +502,7 @@ def get_etragospecs_direct(session,
     performance.update({'Generator Data Processing': t1-t0})
 
     conv_df = all_gens_df[~all_gens_df.name.isin(weather_dpdnt)]
+    
     conv_cap = conv_df[['p_nom', 'name']].groupby('name').sum().T
 
     conv_dsptch_norm = pd.DataFrame(0.0,
@@ -517,8 +525,7 @@ def get_etragospecs_direct(session,
     performance.update({'Conventional Dispatch': t2-t1})
     # Capacities
     ren_df = all_gens_df[all_gens_df.name.isin(weather_dpdnt)]
-
-
+    
 #    w_ids = []
     for index, row in ren_df.iterrows():
         aggr_id = row['generator_id']
@@ -611,7 +618,7 @@ def get_etragospecs_direct(session,
 
 
 #    potential = dispatch + curtailment
-
+    
     new_columns = [
         (aggr_gens[aggr_gens.ren_id == col].name.iloc[0],
          aggr_gens[aggr_gens.ren_id == col].w_id.iloc[0])
@@ -668,7 +675,7 @@ def get_etragospecs_direct(session,
         ext_found = True
         
         stor_id = stor_df.index[0]
-        p_nom_opt = stor_df['p_nom_opt'].values[0]
+#        p_nom_opt = stor_df['p_nom_opt'].values[0]
         
               
     #    stor_df.reset_index(inplace=True)
@@ -748,7 +755,7 @@ def get_etragospecs_direct(session,
     if ext_found:
         specs['battery_p_series'] = stor_p_series_kW
     
-    print(specs['battery_p_series'])
+#    print(specs['battery_p_series'])
 #    specs = ETraGoSpecs(battery_capacity=battery_capacity,
 #                        battery_active_power=battery_active_power,
 #

@@ -337,9 +337,11 @@ class EDisGoNetworks:
 
         if 'battery_p_series' in specs:
             
-            specs['battery_p_series'] # hier ist alles
-            raise NotImplementedError
-        
+            print('Yeah')
+            print(specs['battery_p_series']) # hier ist alles
+#            raise NotImplementedError
+            
+        edisgo_grid.analyze()
         edisgo_grid.reinforce()
 
         return edisgo_grid

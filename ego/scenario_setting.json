@@ -1,12 +1,12 @@
 {
   "global": {
     "eTraGo": true,
-    "eDisGo": false,
+    "eDisGo": true,
     "db": "oedb",
     "recover": false,
-    "result_id": 26,
+    "result_id": null,
     "gridversion": "v0.4.2",
-    "csv_import": "/data/ehv_grids/nep_k100skip3_storagrid"
+    "csv_import": "/data/100_168h_storage"
   },
   "eTraGo": {
     "method": "lopf",
@@ -19,12 +19,12 @@
                       "crossover":0,
                       "BarConvTol":"1.e-5",
                       "FeasibilityTol":"1.e-5"},
-    "scn_name": "NEP 2035",
+    "scn_name": "eGo 100",
     "scn_extension": null,
     "scn_decommissioning": null,
     "add_Belgium_Norway": false,
     "lpfile":  false,
-    "results": "/home/dozeumbuw/ego_0.2.0/eGo/nep_k100skip3_storae_grid",
+    "results": false,
     "export": false,
     "extendable": "['network','storages']",
     "generator_noise": 789456,
@@ -43,9 +43,9 @@
     "comments": ""
   },
   "eDisGo": {
-     "ding0_files": "data/MV_grids/20180713110719",
+     "ding0_files": "data/MV_grids/20180719171328",
      "choice_mode": "manual",
-     "manual_grids": [1730],
+     "manual_grids": [3033],
      "no_grids": 2
   }
 }
