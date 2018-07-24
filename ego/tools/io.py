@@ -175,6 +175,10 @@ class eTraGoResults(egoBasic):
         if self.json_file['global']['eTraGo'] is True:
 
             if self.json_file['global'].get('csv_import') != False:
+
+                logger.info('Caution, import Desaggregation'
+                            'data of former Cluster')
+
                 # get folder
                 path = os.getcwd()
                 folder = self.json_file['global'].get('csv_import')
@@ -199,10 +203,9 @@ class eTraGoResults(egoBasic):
             self.etrago_network)
         self.etrago.generator = create_etrago_results(self.etrago_network,
                                                       self.scn_name)
-        self.etrago.grid_investment_costs = etrago_grid_investment(self.
-                                                                   etrago_network,
-                                                                   self.json_file)
-        #
+        # self.etrago.grid_investment_costs = etrago_grid_investment(self.
+        #                                                           etrago_network,
+        #                                                           self.json_file)
 
         # add functions direct
         # self.etrago_network.etrago_line_loading = etrago_line_loading
