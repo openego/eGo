@@ -1,11 +1,12 @@
 {
   "global": {
     "eTraGo": true,
-    "eDisGo": true,
+    "eDisGo": false,
     "db": "oedb",
-    "recover": true,
+    "recover": false,
     "result_id": 26,
-    "gridversion": "v0.4.2"
+    "gridversion": "v0.4.2",
+    "csv_import": "/data/ehv_grids/nep_k100skip3_storagrid"
   },
   "eTraGo": {
     "method": "lopf",
@@ -23,13 +24,13 @@
     "scn_decommissioning": null,
     "add_Belgium_Norway": false,
     "lpfile":  false,
-    "results": "/home/dozeumbuw/ego_0.2.0/eGo/nep_k100skip3_storagrid",
+    "results": "/home/dozeumbuw/ego_0.2.0/eGo/nep_k100skip3_storae_grid",
     "export": false,
     "extendable": "['network','storages']",
     "generator_noise": 789456,
     "reproduce_noise": false,
     "minimize_loading": false,
-    "network_clustering_kmeans": 100,
+    "network_clustering_kmeans": 10,
     "load_cluster": false,
     "network_clustering_ehv": false,
     "disaggregation": "uniform",
