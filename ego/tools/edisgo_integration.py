@@ -268,6 +268,7 @@ class EDisGoNetworks:
 
         logger.info('Calculating interface values')
         bus_id = self._get_bus_id_from_mv_grid(mv_grid_id)
+    
 
         specs = get_etragospecs_direct(
             self._session,
@@ -334,8 +335,11 @@ class EDisGoNetworks:
                                 timeseries_curtailment=curt_abs)
     #             Think about the other curtailment functions!!!!
 
-        edisgo_grid.analyze()
-
+        if 'battery_p_series' in specs:
+            
+            specs['battery_p_series'] # hier ist alles
+            raise NotImplementedError
+        
         edisgo_grid.reinforce()
 
         return edisgo_grid
