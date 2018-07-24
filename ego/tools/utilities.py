@@ -130,8 +130,9 @@ def fix_leading_separator(csv_file, **kwargs):
             raise Exception('File %s contained no data'%csv_file)
         first_line = next(lines)
         if first_line[0] == '':
-            tmp_file = 'tmp_' + csv_file
-            with open(tmp_file) as out:
+            path, fname =  os.path.split(csv_file)
+            tmp_file = os.path.join(path,'tmp_' + fname)
+            with open(tmp_file,'w+') as out:
                 writer = csv.writer(out, **kwargs)
                 writer.writerow(first_line[1:])
                 for line in lines:
