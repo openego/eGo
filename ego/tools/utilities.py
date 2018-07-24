@@ -23,6 +23,7 @@ import os
 import pandas as pd
 import json
 import logging
+import csv
 
 __copyright__ = ("Flensburg University of Applied Sciences, "
                  "Europa-Universität Flensburg, "
