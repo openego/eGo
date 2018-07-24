@@ -190,10 +190,25 @@ class eTraGoResults(egoBasic):
                     # create Network from csv
                     self.etrago_network = pypsa.Network()
                     self.etrago_network.import_from_csv_folder(path+folder)
+                    logger.info('Create eTraGo network from CSV result')
 
                 except TypeError:
                     file_path = "network.csv"
-                    fix_leading_separator(path+folder+file_path)
+                    fix_leading_separator(path+folder+"/"+file_path)
+
+                    args_name = "args.json"
+                    with open(path + folder+'/'+args_name) as f:
+                        etrago_args = json.load(f)
+
+                        for key in self.json_file['eTraGo'].keys():
+                            try:
+                                self.json_file['eTraGo'][key] = etrago_args[key]
+                            except KeyError:
+                                pass
+
+                    self.etrago_network = pypsa.Network()
+                    self.etrago_network.import_from_csv_folder(path+folder)
+                    logger.info('Create eTraGo network from CSV result')
 
             else:
                 logger.info('Create eTraGo network')
