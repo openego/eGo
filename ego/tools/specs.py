@@ -656,8 +656,9 @@ def get_etragospecs_direct(session,
     t3 = time.perf_counter()
     performance.update({'Renewable Dispatch and Curt.': t3-t2})
     # Capactiy
-    stor_df = etrago_network.storage_units[etrago_network.storage_units['bus'] == str(
-        bus_id)]
+    stor_df = etrago_network.storage_units[
+            etrago_network.storage_units['bus'] == str(bus_id)
+            ]
     stor_df.reset_index(inplace=True)
     stor_df = stor_df.rename(columns={'index': 'storage_id'})
     stor_df = stor_df[[
