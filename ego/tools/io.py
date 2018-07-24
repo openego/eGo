@@ -171,10 +171,23 @@ class eTraGoResults(egoBasic):
             logger.info('Create eTraGo network from oedb result')
             self.etrago_network = etrago_from_oedb(self.session, self.json_file)
 
-        # create eTraGo NetworkScenario network
+        # create eTraGo NetworkScenario
         if self.json_file['global']['eTraGo'] is True:
-            logger.info('Create eTraGo network')
-            self.etrago_network = etrago(self.json_file['eTraGo'])
+
+            if self.json_file['global'].get('csv_import') != False:
+                # get folder
+                path = os.getcwd()
+                folder = self.json_file['global'].get('csv_import')
+
+                # TODO clean network.csv from folder
+
+                # create Network from csv
+                self.etrago_network = pypsa.Network()
+                self.etrago_network.import_from_csv_folder(path+folder)
+
+            else:
+                logger.info('Create eTraGo network')
+                self.etrago_network = etrago(self.json_file['eTraGo'])
 
         # add selected results to Results container
 
