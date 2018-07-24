@@ -185,9 +185,12 @@ class eTraGoResults(egoBasic):
 
                 # TODO clean network.csv from folder
 
-                # create Network from csv
-                self.etrago_network = pypsa.Network()
-                self.etrago_network.import_from_csv_folder(path+folder)
+                try:
+                    # create Network from csv
+                    self.etrago_network = pypsa.Network()
+                    self.etrago_network.import_from_csv_folder(path+folder)
+
+                except TypeError:
 
             else:
                 logger.info('Create eTraGo network')
