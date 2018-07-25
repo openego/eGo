@@ -143,7 +143,7 @@ class EDisGoNetworks:
         """
         analyze_attributes(self._ding0_files)
 
-    def _cluster_mv_grids(self, no_grids):
+    def _cluster_mv_grids(self, no_grids, ext_storage=True):
         """
         Clusters the MV grids based on the attributes, for a given number
         of MV grids
@@ -165,8 +165,52 @@ class EDisGoNetworks:
             logger.info('Attributes file is missing')
             logger.info('Attributes will be calculated')
             self._analyze_cluster_attributes()
+            
+        df = pd.read_csv(self._ding0_files + '/attributes.csv')
+        df = df.set_index('id')
+        df.drop(['Unnamed: 0'], inplace=True, axis=1)
+        
+        if ext_storage is True:
+            storages = self._identify_extended_storages()
+            df = pd.concat([df, storages], axis=1)
+        
+        return cluster_mv_grids(
+                no_grids, 
+                cluster_base = df)  
 
-        return cluster_mv_grids(self._ding0_files, no_grids)
+    
+    def _identify_extended_storages(self):
+        
+        all_mv_grids = self._check_available_mv_grids()
+        
+        storages = pd.DataFrame(
+                index=all_mv_grids, 
+                columns=['storage_p_nom'])
+        
+        logger.info('Identifying extended storages for clustering')
+        for mv_grid in all_mv_grids:
+            bus_id = self._get_bus_id_from_mv_grid(mv_grid)
+            
+            stor_p_nom = self._etrago_network.storage_units.loc[
+                    (self._etrago_network.storage_units['bus'] == str(bus_id))
+                    & (self._etrago_network.storage_units[
+                            'p_nom_extendable'
+                            ] == True)
+                    & (self._etrago_network.storage_units['max_hours'] <= 20.)
+                    ]['p_nom_opt']
+                    
+            if len(stor_p_nom) == 1:
+                stor_p_nom = stor_p_nom.values[0]
+            elif len(stor_p_nom) == 0:
+                stor_p_nom = 0.
+            else:
+                raise IndexError
+                
+            storages.at[mv_grid, 'storage_p_nom'] = stor_p_nom
+            
+        return storages
+        
+        
 
     def _check_available_mv_grids(self):
         """
@@ -434,3 +478,4 @@ class EDisGoNetworks:
             ).scalar()
 
         return bus_id
+
