@@ -272,6 +272,8 @@ class EDisGoNetworks:
         """
 
         logger.info('Calculating interface values')
+        logger.info('Scenario: {}'.format(self._scn_name))
+        
         bus_id = self._get_bus_id_from_mv_grid(mv_grid_id)
     
 
