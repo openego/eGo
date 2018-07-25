@@ -418,7 +418,7 @@ def get_etragospecs_direct(session,
         Dataframes used as eDisGo inputs
 
     """
-
+    logger.info('Specs for bus {}'.format(bus_id))
     if pf_post_lopf:
         logger.info('Specs including reactive power')
         
