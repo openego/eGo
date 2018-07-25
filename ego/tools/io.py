@@ -195,13 +195,30 @@ class eTraGoResults(egoBasic):
                     self.etrago_network.import_from_csv_folder(path+folder)
                     logger.info('Create eTraGo network from CSV result')
 
+                    # get disaggregation
+                    self.etrago_disaggregated_network = pypsa.Network()
+                    self.etrago_disaggregated_network.\
+                        import_from_csv_folder(path+folder+'/disaggregated')
+                    logger.info('Create eTraGo disaggregated network '
+                                'from CSV result')
+
                 except TypeError:
+                    file_path = "disaggregated/network.csv"
+                    fix_leading_separator(path+folder+"/"+file_path)
+
                     file_path = "network.csv"
                     fix_leading_separator(path+folder+"/"+file_path)
 
                     self.etrago_network = pypsa.Network()
                     self.etrago_network.import_from_csv_folder(path+folder)
                     logger.info('Create eTraGo network from CSV result')
+
+                    # get disaggregation
+                    self.etrago_disaggregated_network = pypsa.Network()
+                    self.etrago_disaggregated_network.\
+                        import_from_csv_folder(path+folder+'/disaggregated')
+                    logger.info('Create eTraGo disaggregated network'
+                                'from CSV result')
 
                 args_name = "args.json"
                 with open(path + folder+'/'+args_name) as f:
@@ -217,8 +234,8 @@ class eTraGoResults(egoBasic):
             else:
                 logger.info('Create eTraGo network by eGo')
 
-                etrago_network, etrago_disaggregated_network = \
-                    etrago(self.json_file['eTraGo'])
+                etrago_network, etrago_disaggregated_network = etrago(
+                    self.json_file['eTraGo'])
 
                 self.etrago_network = etrago_network
                 self.etrago_disaggregated_network = etrago_disaggregated_network
@@ -226,16 +243,16 @@ class eTraGoResults(egoBasic):
         # add selected results to Results container
 
         self.etrago = pd.DataFrame()
-        self.etrago.storage_investment_costs = etrago_storages_investment(
-            self.etrago_network, self.json_file)
-        self.etrago.storage_charges = etrago_storages(self.etrago_network)
-        self.etrago.operating_costs = etrago_operating_costs(
-            self.etrago_network)
-        self.etrago.generator = create_etrago_results(self.etrago_network,
-                                                      self.scn_name)
-        self.etrago.grid_investment_costs = etrago_grid_investment(self.
-                                                                   etrago_network,
-                                                                   self.json_file)
+        # self.etrago.storage_investment_costs = etrago_storages_investment(
+        #    self.etrago_network, self.json_file)
+        # self.etrago.storage_charges = etrago_storages(self.etrago_network)
+        # self.etrago.operating_costs = etrago_operating_costs(
+        #    self.etrago_network)
+        # self.etrago.generator = create_etrago_results(self.etrago_network,
+        #                                              self.scn_name)
+        # self.etrago.grid_investment_costs = etrago_grid_investment(self.
+        #                                                           etrago_network,
+        #                                                           self.json_file)
 
         # add functions direct
         # self.etrago_network.etrago_line_loading = etrago_line_loading
