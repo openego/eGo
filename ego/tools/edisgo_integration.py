@@ -80,6 +80,11 @@ class EDisGoNetworks:
         # eTraGo args
         self._etrago_args = self._json_file['eTraGo']
         self._scn_name = self._etrago_args['scn_name']
+        
+        self._ext_storage = (
+                'storages' in self._etrago_args['extendable']
+                )
+        
 
         # eDisGo args
         self._edisgo_args = self._json_file['eDisGo']
@@ -143,7 +148,10 @@ class EDisGoNetworks:
         """
         analyze_attributes(self._ding0_files)
 
-    def _cluster_mv_grids(self, no_grids, ext_storage=True):
+    def _cluster_mv_grids(
+            self, 
+            no_grids, 
+            ext_storage=True):
         """
         Clusters the MV grids based on the attributes, for a given number
         of MV grids
@@ -240,7 +248,9 @@ class EDisGoNetworks:
         if self._choice_mode == 'cluster':
             no_grids = self._edisgo_args['no_grids']
             logger.info('Clustering to {} MV grids'.format(no_grids))
-            cluster = self._cluster_mv_grids(no_grids)
+            cluster = self._cluster_mv_grids(
+                    no_grids, 
+                    self._ext_storage)
 
         elif self._choice_mode == 'manual':
             man_grids = self._edisgo_args['manual_grids']
