@@ -6,7 +6,7 @@
     "recover": false,
     "result_id": null,
     "gridversion": "v0.4.2",
-    "csv_import": "/data/100_168h_storage"
+    "csv_import": "/data/PF_gesamt"
   },
   "eTraGo": {
     "method": "lopf",
