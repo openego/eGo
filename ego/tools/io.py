@@ -132,6 +132,7 @@ class eTraGoResults(egoBasic):
                                             *args, **kwargs)
 
         self.etrago_network = None
+        self.etrago_disaggregated_network = None
 
         logger.info('eTraGoResults startet')
 
@@ -212,8 +213,13 @@ class eTraGoResults(egoBasic):
                             pass
 
             else:
-                logger.info('Create eTraGo network')
-                self.etrago_network = etrago(self.json_file['eTraGo'])
+                logger.info('Create eTraGo network by eGo')
+
+                etrago_network, etrago_disaggregated_network = \
+                    etrago(self.json_file['eTraGo'])
+
+                self.etrago_network = etrago_network
+                self.etrago_disaggregated_network = etrago_disaggregated_network
 
         # add selected results to Results container
 
@@ -331,7 +337,7 @@ class eDisGoResults(eTraGoResults):
 
             self._edisgo_networks = EDisGoNetworks(
                 json_file=self.json_file,
-                etrago_network=self.etrago_network)
+                etrago_network=self.etrago_disaggregated_network)
 
             self._edisgo.grid_investment_costs = edisgo_grid_investment(
                 self._edisgo_networks,
