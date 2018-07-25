@@ -406,7 +406,7 @@ class EDisGoNetworks:
                         position='distribute_storages_mv',
                         timeseries_reactive_power=None)
         
-        edisgo_grid.analyze()
+#        edisgo_grid.analyze()
         logger.info('Calculating grid expansion costs.')
         edisgo_grid.reinforce()
 
