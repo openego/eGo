@@ -25,6 +25,8 @@ import pandas as pd
 import json
 import logging
 import csv
+import sys
+from time import localtime, strftime
 
 __copyright__ = ("Flensburg University of Applied Sciences, "
                  "Europa-Universität Flensburg, "
@@ -33,7 +35,7 @@ __license__ = "GNU Affero General Public License Version 3 (AGPL-3.0)"
 __author__ = "wolf_bunke"
 
 
-def define_logging(log_name='ego.log'):
+def define_logging(name):
     """Helpers to log your modeling process with eGo and defines all settings.
 
     Parameters
@@ -49,26 +51,34 @@ def define_logging(log_name='ego.log'):
 
     # ToDo: Logger should be set up more specific
     #       add pypsa and other logger INFO to ego.log
+    now = strftime("%Y-%m-%d_%H%M", localtime())
+    
+    log_dir = 'logs'
+    if not os.path.exists(log_dir):
+        os.makedirs(log_dir)
 
     # Logging
-    logging.basicConfig(format='%(asctime)s %(message)s',
+    logging.basicConfig(stream=sys.stdout,
+                        format='%(asctime)s %(message)s',
                         level=logging.INFO)
 
-    logger = logging.getLogger(__name__)
-    logger = logging.getLogger('ego')
+    logger = logging.getLogger(name)
+    
+    formatter = logging.Formatter(
+            '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+            )    
 
-    logger = logging.FileHandler(log_name, mode='w')
-
-    formatter = logging.Formatter('%(asctime)s - %(name)s - \
-                                   %(levelname)s - %(message)s')
-    logger.setFormatter(formatter)
-
-    # logger.addHandler(xy)
+#    logger = logging.FileHandler(log_name, mode='w')
+    fh = logging.FileHandler(
+            log_dir + '/' + name + '_' + now + '.log', mode='w')
+    fh.setLevel(logging.INFO)
+    fh.setFormatter(formatter)
+    logger.addHandler(fh)
 
     return logger
 
 
-logger = define_logging(log_name='ego.log')
+#logger = define_logging(name='ego')
 
 # import scenario settings **args
 
