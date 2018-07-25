@@ -202,28 +202,30 @@ class eTraGoResults(egoBasic):
                     self.etrago_network = pypsa.Network()
                     self.etrago_network.import_from_csv_folder(path+folder)
                     logger.info('Create eTraGo network from CSV result')
-<<<<<<< HEAD
 
-=======
-                    
->>>>>>> dev
+
+<< << << < HEAD
+
+== == == =
+
+>>>>>> > dev
                 args_name = "args.json"
                 with open(path + folder+'/'+args_name) as f:
                     etrago_args = json.load(f)
 
-<<<<<<< HEAD
-=======
+<< << << < HEAD
+== == == =
                     logger.info('Using argument file')
->>>>>>> dev
+>>>>>> > dev
                     for key in self.json_file['eTraGo'].keys():
                         try:
                             self.json_file['eTraGo'][key] = etrago_args[key]
                         except KeyError:
                             pass
-<<<<<<< HEAD
+<< << << < HEAD
 
-=======
->>>>>>> dev
+== == == =
+>>>>>> > dev
             else:
                 logger.info('Create eTraGo network by eGo')
 
