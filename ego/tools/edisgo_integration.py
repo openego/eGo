@@ -320,12 +320,23 @@ class EDisGoNetworks:
 
         ### Time Series from eTraGo
         logger.info('Updating eDisGo timeseries with eTraGo values')
-        edisgo_grid.network.timeseries = TimeSeriesControl(
-            network=edisgo_grid.network,
-            timeseries_generation_fluctuating=specs['ren_potential'],
-            timeseries_generation_dispatchable=specs['conv_dispatch'],
-            timeseries_load='demandlib',
-            timeindex=specs['conv_dispatch'].index).timeseries
+        if self._pf_post_lopf:
+            logger.info('(Including reactive power)')
+            edisgo_grid.network.timeseries = TimeSeriesControl(
+                network=edisgo_grid.network,
+                timeseries_generation_fluctuating=specs['ren_potential'],
+                timeseries_generation_dispatchable=specs['conv_dispatch'],
+                timeseries_generation_reactive_power=specs['reactive_power'],
+                timeseries_load='demandlib',
+                timeindex=specs['conv_dispatch'].index).timeseries
+        else:
+            logger.info('(Only active power)')
+            edisgo_grid.network.timeseries = TimeSeriesControl(
+                network=edisgo_grid.network,
+                timeseries_generation_fluctuating=specs['ren_potential'],
+                timeseries_generation_dispatchable=specs['conv_dispatch'],
+                timeseries_load='demandlib',
+                timeindex=specs['conv_dispatch'].index).timeseries
                 
         ### Curtailment
         if apply_curtailment:
@@ -344,7 +355,9 @@ class EDisGoNetworks:
             edisgo_grid.curtail(curtailment_methodology='curtail_all',
                                 timeseries_curtailment=curt_abs)
     #             Think about the other curtailment functions!!!!
-    
+        else:
+            logger.warning('No curtailment applied') 
+        
         ### Storage Integration
         if storage_integration:
             if 'battery_p_series' in specs:

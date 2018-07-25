@@ -6,7 +6,7 @@
     "recover": false,
     "result_id": null,
     "gridversion": "v0.4.2",
-    "csv_import": "/data/PF_gesamt"
+    "csv_import": "/data/PF_gesamt_PV"
   },
   "eTraGo": {
     "method": "lopf",
@@ -44,8 +44,8 @@
   },
   "eDisGo": {
      "ding0_files": "data/MV_grids/20180719171328",
-     "choice_mode": "manual",
-     "manual_grids": [3033],
-     "no_grids": 2
+     "choice_mode": "cluster",
+     "manual_grids": [],
+     "no_grids": 20
   }
 }

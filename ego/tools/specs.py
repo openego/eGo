@@ -502,6 +502,7 @@ def get_etragospecs_direct(session,
 #    all_gens_df['name'] = names
 
 #    all_gens_df = all_gens_df.drop(['carrier'], axis=1)
+            
 
     # Conventionals
     t1 = time.perf_counter()
@@ -535,7 +536,13 @@ def get_etragospecs_direct(session,
                     conv_reactive_power[source] 
                     + q_norm            )
 
-
+    if pf_post_lopf:
+        new_columns = [
+                (col, '') for col in conv_reactive_power.columns
+                ]
+        conv_reactive_power.columns = pd.MultiIndex.from_tuples(new_columns)
+        
+    
     # Renewables
     t2 = time.perf_counter()
     performance.update({'Conventional Dispatch': t2-t1})
@@ -670,6 +677,12 @@ def get_etragospecs_direct(session,
              aggr_gens[aggr_gens.ren_id == col].w_id.iloc[0])
             for col in reactive_power.columns]
         reactive_power.columns = pd.MultiIndex.from_tuples(new_columns)
+        
+        ### Reactive Power concat
+        all_reactive_power = pd.concat([
+                conv_reactive_power, 
+                reactive_power], axis=1)
+        
 
 #    new_columns = [
 #        (aggr_gens[aggr_gens.ren_id == col].name.iloc[0],
@@ -692,6 +705,8 @@ def get_etragospecs_direct(session,
 #    potential_abs = potential_abs * 1000 # Absolute amounts in kW
 #    dispatch_abs = dispatch_abs * 1000
 #    curtailment_abs = curtailment_abs * 1000
+        
+    
 
     # Storage
     t3 = time.perf_counter()
@@ -808,20 +823,19 @@ def get_etragospecs_direct(session,
         print(conv_cap)
         print('\nConventional dispatch: \n')
         print(conv_dsptch)
-        print('\nConventional dispatch reactive: \n')
-        print(conv_reactive_power)
         
         print('\nRenewable capacity: \n')
         print(aggr_gens)
         print('\nRenewable Potential: \n')
         print(potential)
-        print('\nRenewable Reactive Power: \n')
-        print(reactive_power)
+        
+        print('\nReactive Power: \n')
+        print(all_reactive_power)
         
 
     if pf_post_lopf:
-        specs['conv_dispatch_reactive'] = conv_reactive_power
-        specs['ren_dispatch_reactive'] = reactive_power
+        specs['reactive_power'] = all_reactive_power
+        
         
         
     t5 = time.perf_counter()
