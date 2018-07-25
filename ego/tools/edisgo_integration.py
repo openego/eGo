@@ -251,7 +251,11 @@ class EDisGoNetworks:
                 )
             count += 1
 
-    def _run_edisgo(self, mv_grid_id, apply_curtailment=False):
+    def _run_edisgo(
+            self, 
+            mv_grid_id, 
+            apply_curtailment=False,
+            storage_integration=False):
         """
         Performs a single eDisGo run
 
@@ -287,6 +291,7 @@ class EDisGoNetworks:
             logger.error(msg)
             raise Exception(msg)
 
+        ### Inital grid reinforcements
         logger.info('Initial MV grid reinforcement (worst-case anaylsis)')
         edisgo_grid = run_edisgo_basic(
             ding0_filepath=ding0_filepath,
@@ -296,6 +301,7 @@ class EDisGoNetworks:
         logger.info('eTraGo feed-in case')
         edisgo_grid.network.results = Results()
 
+        ### Generator import for NEP 2035 and eGo 100 scenarios
         if self._generator_scn:
             logger.info(
                 'Importing generators for scenario {}'.format(
@@ -310,6 +316,7 @@ class EDisGoNetworks:
             )
             edisgo_grid.network.pypsa = None
 
+        ### Time Series from eTraGo
         logger.info('Updating eDisGo timeseries with eTraGo values')
         edisgo_grid.network.timeseries = TimeSeriesControl(
             network=edisgo_grid.network,
@@ -317,7 +324,8 @@ class EDisGoNetworks:
             timeseries_generation_dispatchable=specs['conv_dispatch'],
             timeseries_load='demandlib',
             timeindex=specs['conv_dispatch'].index).timeseries
-
+                
+        ### Curtailment
         if apply_curtailment:
             logger.info('Including Curtailment')
             gens_df = tools.get_gen_info(edisgo_grid.network)
@@ -334,12 +342,15 @@ class EDisGoNetworks:
             edisgo_grid.curtail(curtailment_methodology='curtail_all',
                                 timeseries_curtailment=curt_abs)
     #             Think about the other curtailment functions!!!!
-
-        if 'battery_p_series' in specs:
-            logger.info('Integrating storages in MV grid.')
-            edisgo_grid.integrate_storage(timeseries=specs['battery_p_series'],
-                                          position='distribute_storages_mv',
-                                          timeseries_reactive_power=None)
+    
+        ### Storage Integration
+        if storage_integration:
+            if 'battery_p_series' in specs:
+                logger.info('Integrating storages in MV grid.')
+                edisgo_grid.integrate_storage(
+                        timeseries=specs['battery_p_series'],
+                        position='distribute_storages_mv',
+                        timeseries_reactive_power=None)
         
         edisgo_grid.analyze()
         logger.info('Calculating grid expansion costs.')
