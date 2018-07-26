@@ -418,7 +418,9 @@ def get_etragospecs_direct(session,
     """
     logger.info('Specs for bus {}'.format(bus_id))
     if pf_post_lopf:
-        logger.info('Specs including reactive power')
+        logger.info('Active and reactive power interface')
+    else:
+        logger.info('Only active power interface')
         
     specs_meta_data = {}
     performance = {}
@@ -463,9 +465,12 @@ def get_etragospecs_direct(session,
     all_gens_df = etrago_network.generators[
         etrago_network.generators['bus'] == str(bus_id)
     ]
-    #idx_name = all_gens_df.index.name
-    # all_gens_df.reset_index(inplace=True)
-    all_gens_df = all_gens_df.index.rename('generator_id', inplace=True)
+    idx_name = all_gens_df.index.name
+    
+    all_gens_df.reset_index(inplace=True)
+
+    all_gens_df = all_gens_df.rename(columns={idx_name: 'generator_id'})
+   
     all_gens_df = all_gens_df[[
         'generator_id',
         'p_nom',
@@ -827,8 +832,9 @@ def get_etragospecs_direct(session,
         print('\nRenewable Potential: \n')
         print(potential)
         
-        print('\nReactive Power: \n')
-        print(all_reactive_power)
+        if pf_post_lopf:
+            print('\nReactive Power: \n')
+            print(all_reactive_power)
         
 
     if pf_post_lopf:
