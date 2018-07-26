@@ -45,7 +45,7 @@
   "eDisGo": {
      "ding0_files": "data/MV_grids/20180719171328",
      "choice_mode": "manual",
-     "manual_grids": [1729],
+     "manual_grids": [],
      "no_grids": 20
   }
 }

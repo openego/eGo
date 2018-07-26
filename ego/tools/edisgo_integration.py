@@ -34,8 +34,10 @@ if not 'READTHEDOCS' in os.environ:
     from egoio.db_tables import model_draft, grid
     from egoio.tools import db
     from edisgo.grid.network import Results, TimeSeriesControl
+    from edisgo import EDisGo
     from edisgo.tools.edisgo_run import (
-        run_edisgo_basic
+        run_edisgo_basic,
+        run_edisgo_pool_flexible
     )
     from edisgo.grid import tools
     from ego.tools.specs import (
@@ -71,7 +73,7 @@ class EDisGoNetworks:
 
         conn = db.connection(section='oedb')
         Session = sessionmaker(bind=conn)
-        self._session = Session()
+#        self._session = Session()
 
         # Genral Json Inputs
         self._json_file = json_file
@@ -222,35 +224,58 @@ class EDisGoNetworks:
 
         self._grid_choice = cluster
 
-    def _run_edisgo_pool(self):
+    def _test_edisgo(self, mv_grid, test, test2):
+              
+        ding0_filepath = (
+                '/home/student/Git/eGo/ego/data/MV_grids/20180719171328/ding0_grids__'
+                + str(mv_grid)
+                + '.pkl')
+        
+        edisgo_grid = EDisGo(
+                ding0_grid=ding0_filepath,
+                worst_case_analysis='worst-case')
+        
+        return edisgo_grid
+    
+    def _run_edisgo_pool(self, parallelization=True):
         """
         Runs eDisGo for the chosen grids
 
         """
-        logger.warning('Parallelization not implemented yet')
-        no_grids = len(self._grid_choice)
-        count = 0
-        for idx, row in self._grid_choice.iterrows():
-            prog = '%.1f' % (count / no_grids * 100)
-            logger.info(
-                '{} % Calculated by eDisGo'.format(prog)
-            )
-
-            mv_grid_id = int(row['the_selected_network_id'])
-            logger.info(
-                'MV grid {}'.format(mv_grid_id)
-            )
-            try:
-                edisgo_grid = self._run_edisgo(mv_grid_id)
-                self._edisgo_grids[
-                    mv_grid_id
-                ] = edisgo_grid
-            except Exception:
-                self._edisgo_grids[mv_grid_id] = None
-                logger.exception(
-                    'MV grid {} failed: \n'.format(mv_grid_id)
+        
+        if parallelization is True:
+            test_grids = run_edisgo_pool_flexible(
+                    [525, 3040], 
+                    lambda *xs: xs[1]._test_edisgo(xs[0], xs[1], xs[2]),
+                    (self, 'test','test2'))
+            
+            return test_grids
+            
+        else:    
+            logger.warning('Parallelization not implemented yet')
+            no_grids = len(self._grid_choice)
+            count = 0
+            for idx, row in self._grid_choice.iterrows():
+                prog = '%.1f' % (count / no_grids * 100)
+                logger.info(
+                    '{} % Calculated by eDisGo'.format(prog)
                 )
-            count += 1
+    
+                mv_grid_id = int(row['the_selected_network_id'])
+                logger.info(
+                    'MV grid {}'.format(mv_grid_id)
+                )
+                try:
+                    edisgo_grid = self._run_edisgo(mv_grid_id)
+                    self._edisgo_grids[
+                        mv_grid_id
+                    ] = edisgo_grid
+                except Exception:
+                    self._edisgo_grids[mv_grid_id] = None
+                    logger.exception(
+                        'MV grid {} failed: \n'.format(mv_grid_id)
+                    )
+                count += 1
 
     def _run_edisgo(
             self, 
@@ -297,10 +322,10 @@ class EDisGoNetworks:
 
         ### Inital grid reinforcements
         logger.info('Initial MV grid reinforcement (worst-case anaylsis)')
-        edisgo_grid = run_edisgo_basic(
+        edisgo_grid, costs_before, issues_before = run_edisgo_basic(
             ding0_filepath=ding0_filepath,
             generator_scenario=None,
-            analysis='worst-case')[0]  # only the edisgo_grid is returned
+            analysis='worst-case')  # only the edisgo_grid is returned
 
         logger.info('eTraGo feed-in case')
         edisgo_grid.network.results = Results()
@@ -451,3 +476,30 @@ class EDisGoNetworks:
             ).scalar()
 
         return bus_id
+    
+    
+#def outer_test_edisgo(mv_grid, test, test2):
+#        
+#    # try except zum catchen
+#  
+##        if mv_grid == 525:
+##            raise Exception("525")
+#    print(mv_grid)
+#    print(test)
+#    print(test2)
+#    
+#    print('hallo')
+#    ding0_filepath = (
+#            '/home/student/Git/eGo/ego/data/MV_grids/20180719171328/ding0_grids__'
+#            + str(mv_grid)
+#            + '.pkl')
+#    edisgo_grid = EDisGo(
+#            ding0_grid=ding0_filepath,
+#            worst_case_analysis='worst-case')
+#    
+#    
+#    return edisgo_grid
+
+        
+        
+        
