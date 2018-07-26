@@ -6,7 +6,7 @@
     "recover": false,
     "result_id": null,
     "gridversion": "v0.4.2",
-    "csv_import": "/data/PF_qDist_pNom_2"
+    "csv_import": "/data/PF_NEP_Qpnom"
   },
   "eTraGo": {
     "method": "lopf",
@@ -19,7 +19,7 @@
                       "crossover":0,
                       "BarConvTol":"1.e-5",
                       "FeasibilityTol":"1.e-5"},
-    "scn_name": "eGo 100",
+    "scn_name": "blabla",
     "scn_extension": null,
     "scn_decommissioning": null,
     "add_Belgium_Norway": false,
@@ -44,8 +44,8 @@
   },
   "eDisGo": {
      "ding0_files": "data/MV_grids/20180719171328",
-     "choice_mode": "cluster",
-     "manual_grids": [],
+     "choice_mode": "manual",
+     "manual_grids": [1729],
      "no_grids": 20
   }
 }
