@@ -392,7 +392,8 @@ logger = logging.getLogger(__name__)
 def get_etragospecs_direct(session,
                            bus_id,
                            etrago_network,
-                           scn_name):
+                           scn_name,
+                           pf_post_lopf):
     """
     Reads eTraGo Results from Database and returns and returns
     the interface values as a dictionary of corresponding dataframes
@@ -415,7 +416,10 @@ def get_etragospecs_direct(session,
         Dataframes used as eDisGo inputs
 
     """
-
+    logger.info('Specs for bus {}'.format(bus_id))
+    if pf_post_lopf:
+        logger.info('Specs including reactive power')
+        
     specs_meta_data = {}
     performance = {}
 
@@ -496,6 +500,7 @@ def get_etragospecs_direct(session,
 #    all_gens_df['name'] = names
 
 #    all_gens_df = all_gens_df.drop(['carrier'], axis=1)
+            
 
     # Conventionals
     t1 = time.perf_counter()
@@ -505,21 +510,37 @@ def get_etragospecs_direct(session,
 
     conv_cap = conv_df[['p_nom', 'name']].groupby('name').sum().T
 
-    conv_dsptch_norm = pd.DataFrame(0.0,
+    conv_dsptch = pd.DataFrame(0.0,
                                     index=snap_idx,
                                     columns=list(set(conv_df['name'])))
-    conv_dsptch_abs = pd.DataFrame(0.0,
-                                   index=snap_idx,
-                                   columns=list(set(conv_df['name'])))
+    conv_reactive_power = pd.DataFrame(0.0,
+                                    index=snap_idx,
+                                    columns=list(set(conv_df['name'])))
+#    conv_dsptch_abs = pd.DataFrame(0.0,
+#                                   index=snap_idx,
+#                                   columns=list(set(conv_df['name'])))
 
     for index, row in conv_df.iterrows():
         generator_id = row['generator_id']
         source = row['name']
         p = etrago_network.generators_t.p[str(generator_id)]
         p_norm = p / conv_cap[source]['p_nom']
-        conv_dsptch_norm[source] = conv_dsptch_norm[source] + p_norm
-        conv_dsptch_abs[source] = conv_dsptch_abs[source] + p
+        conv_dsptch[source] = conv_dsptch[source] + p_norm
+#        conv_dsptch_abs[source] = conv_dsptch_abs[source] + p
+        if pf_post_lopf:
+            q = etrago_network.generators_t.q[str(generator_id)]
+            q_norm = q / conv_cap[source]['p_nom'] # q normalized with p_nom
+            conv_reactive_power[source] = (
+                    conv_reactive_power[source] 
+                    + q_norm            )
 
+    if pf_post_lopf:
+        new_columns = [
+                (col, '') for col in conv_reactive_power.columns
+                ]
+        conv_reactive_power.columns = pd.MultiIndex.from_tuples(new_columns)
+        
+    
     # Renewables
     t2 = time.perf_counter()
     performance.update({'Conventional Dispatch': t2-t1})
@@ -567,6 +588,10 @@ def get_etragospecs_direct(session,
     curtailment = pd.DataFrame(0.0,
                                index=snap_idx,
                                columns=aggr_gens['ren_id'])
+    if pf_post_lopf:
+        reactive_power = pd.DataFrame(0.0,
+                                   index=snap_idx,
+                                   columns=aggr_gens['ren_id'])
 
 #    potential_abs = pd.DataFrame(0.0,
 #                               index=snap_idx,
@@ -604,11 +629,18 @@ def get_etragospecs_direct(session,
         potential[ren_id] = potential[ren_id] + p_max_norm_tot_series
         dispatch[ren_id] = dispatch[ren_id] + p_norm_tot_series
 #        curtailment[ren_id] = curtailment[ren_id] + p_curt_norm_tot_series
-
-    potential = potential.round(3)
-    dispatch = dispatch.round(3)
-
-    logger.warning('Rounding normalized values')
+        
+        if pf_post_lopf:
+            q_series = etrago_network.generators_t.q[str(gen_id)] 
+            q_norm_tot_series = q_series / p_nom_aggr
+            reactive_power[ren_id] = (
+                    reactive_power[ren_id] 
+                    + q_norm_tot_series)
+            
+#    potential = potential.round(3)
+#    dispatch = dispatch.round(3)
+#
+#    logger.warning('Rounding normalized values')
     curtailment = potential.sub(dispatch)
 
 
@@ -637,6 +669,19 @@ def get_etragospecs_direct(session,
         for col in curtailment.columns]
     curtailment.columns = pd.MultiIndex.from_tuples(new_columns)
 
+    if pf_post_lopf:
+        new_columns = [
+            (aggr_gens[aggr_gens.ren_id == col].name.iloc[0],
+             aggr_gens[aggr_gens.ren_id == col].w_id.iloc[0])
+            for col in reactive_power.columns]
+        reactive_power.columns = pd.MultiIndex.from_tuples(new_columns)
+        
+        ### Reactive Power concat
+        all_reactive_power = pd.concat([
+                conv_reactive_power, 
+                reactive_power], axis=1)
+        
+
 #    new_columns = [
 #        (aggr_gens[aggr_gens.ren_id == col].name.iloc[0],
 #         aggr_gens[aggr_gens.ren_id == col].w_id.iloc[0])
@@ -658,6 +703,8 @@ def get_etragospecs_direct(session,
 #    potential_abs = potential_abs * 1000 # Absolute amounts in kW
 #    dispatch_abs = dispatch_abs * 1000
 #    curtailment_abs = curtailment_abs * 1000
+        
+    
 
     # Storage
     t3 = time.perf_counter()
@@ -729,29 +776,35 @@ def get_etragospecs_direct(session,
 #            battery_active_power = battery_active_power + stor_series_kW
 
         stor_p_series_kW = etrago_network.storage_units_t.p[
-            str(stor_id)] * 1000
-#        stor_p_series_kvar = etrago_network.storage_units_t.q[
-#                str(stor_id)] * 1000
 
+                str(stor_id)] * 1000
+          
+        if pf_post_lopf:
+            stor_q_series_kvar = etrago_network.storage_units_t.q[
+                    str(stor_id)] * 1000
+    
     t4 = time.perf_counter()
     performance.update({'Storage Data Processing and Dispatch': t4-t3})
 
     specs = {
-        #        'battery_capacity': battery_capacity,
-        #        'battery_p_series': stor_p_series_kW ,
-        'conv_dispatch': conv_dsptch_norm,
+#        'battery_capacity': battery_capacity,
+#        'battery_p_series': stor_p_series_kW ,
+        'conv_dispatch': conv_dsptch,
         #            'conv_dispatch_abs': conv_dsptch_abs,
         #            'renewables': aggr_gens,
-        'dispatch': dispatch,
+        'ren_dispatch': dispatch,
         #            'dispatch_abs': dispatch_abs,
-        'potential': potential,
+        'ren_potential': potential,
         #            'potential_abs': potential_abs,
-        'curtailment': curtailment  # ,
+        'ren_curtailment': curtailment  # ,
         #            'curtailment_abs': curtailment_abs
     }
 
     if ext_found:
         specs['battery_p_series'] = stor_p_series_kW
+
+        if pf_post_lopf:
+            specs['battery_q_series'] = stor_q_series_kvar
 
 #    print(specs['battery_p_series'])
 #    specs = ETraGoSpecs(battery_capacity=battery_capacity,
@@ -762,7 +815,27 @@ def get_etragospecs_direct(session,
 #                        renewables=aggr_gens,
 #                        ren_dispatch=dispatch,
 #                        ren_curtailment=curtailment)
+    test = True
+    if test == True:
+        print('\nConventional capacity: \n')
+        print(conv_cap)
+        print('\nConventional dispatch: \n')
+        print(conv_dsptch)
+        
+        print('\nRenewable capacity: \n')
+        print(aggr_gens)
+        print('\nRenewable Potential: \n')
+        print(potential)
+        
+        print('\nReactive Power: \n')
+        print(all_reactive_power)
+        
 
+    if pf_post_lopf:
+        specs['reactive_power'] = all_reactive_power
+        
+        
+        
     t5 = time.perf_counter()
     performance.update({'Overall time': t5-t0})
 
