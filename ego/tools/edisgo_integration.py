@@ -309,7 +309,7 @@ class EDisGoNetworks:
             self, 
             mv_grid_id, 
             apply_curtailment=False,
-            storage_integration=False):
+            storage_integration=True):
         """
         Performs a single eDisGo run
 
