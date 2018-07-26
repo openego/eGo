@@ -41,8 +41,6 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-
-
 # Functions
 
 # def get_etragospecs_from_db(session,
@@ -463,19 +461,19 @@ def get_etragospecs_direct(session,
 
     # DF procesing
     all_gens_df = etrago_network.generators[
-            etrago_network.generators['bus'] == str(bus_id)
-            ]
-    idx_name = all_gens_df.index.name
-    all_gens_df.reset_index(inplace=True)    
-    all_gens_df = all_gens_df.rename(columns={idx_name: 'generator_id'})
+        etrago_network.generators['bus'] == str(bus_id)
+    ]
+    #idx_name = all_gens_df.index.name
+    # all_gens_df.reset_index(inplace=True)
+    all_gens_df = all_gens_df.index.rename('generator_id', inplace=True)
     all_gens_df = all_gens_df[[
-            'generator_id', 
-            'p_nom', 
-            'p_nom_opt', 
-            'carrier']]
+        'generator_id',
+        'p_nom',
+        'p_nom_opt',
+        'carrier']]
 
     all_gens_df = all_gens_df.rename(columns={"carrier": "name"})
-    
+
     all_gens_df = all_gens_df[all_gens_df['name'] != 'wind_offshore']
     logger.warning('Wind offshore is disregarded in the interface')
 
@@ -484,7 +482,7 @@ def get_etragospecs_direct(session,
         if name == 'wind_onshore':
             all_gens_df.at[index, 'name'] = 'wind'
             logger.warning('wind onshore is renamed to wind')
-            
+
 
 #    print(all_gens_df)
 #    names = []
@@ -509,7 +507,7 @@ def get_etragospecs_direct(session,
     performance.update({'Generator Data Processing': t1-t0})
 
     conv_df = all_gens_df[~all_gens_df.name.isin(weather_dpdnt)]
-    
+
     conv_cap = conv_df[['p_nom', 'name']].groupby('name').sum().T
 
     conv_dsptch = pd.DataFrame(0.0,
@@ -548,7 +546,7 @@ def get_etragospecs_direct(session,
     performance.update({'Conventional Dispatch': t2-t1})
     # Capacities
     ren_df = all_gens_df[all_gens_df.name.isin(weather_dpdnt)]
-    
+
 #    w_ids = []
     for index, row in ren_df.iterrows():
         aggr_id = row['generator_id']
@@ -652,7 +650,7 @@ def get_etragospecs_direct(session,
 
 
 #    potential = dispatch + curtailment
-    
+
     new_columns = [
         (aggr_gens[aggr_gens.ren_id == col].name.iloc[0],
          aggr_gens[aggr_gens.ren_id == col].w_id.iloc[0])
@@ -713,26 +711,24 @@ def get_etragospecs_direct(session,
     performance.update({'Renewable Dispatch and Curt.': t3-t2})
     # Capactiy
     stor_df = etrago_network.storage_units.loc[
-            (etrago_network.storage_units['bus'] == str(bus_id))
-            & (etrago_network.storage_units['p_nom_extendable'] == True)
-            & (etrago_network.storage_units['p_nom_opt'] > 0.)
-            & (etrago_network.storage_units['max_hours'] <= 20.)] # Only batteries
+        (etrago_network.storage_units['bus'] == str(bus_id))
+        & (etrago_network.storage_units['p_nom_extendable'] == True)
+        & (etrago_network.storage_units['p_nom_opt'] > 0.)
+        & (etrago_network.storage_units['max_hours'] <= 20.)]  # Only batteries
 
     ext_found = False
     if len(stor_df) == 1:
         logger.info('Extendable storage unit found')
         ext_found = True
-        
+
         stor_id = stor_df.index[0]
 #        p_nom_opt = stor_df['p_nom_opt'].values[0]
-        
-              
+
     #    stor_df.reset_index(inplace=True)
     #    stor_df = stor_df.rename(columns={'index': 'storage_id'})
     #        stor_df = stor_df[[
     #            'p_nom_opt',
     #            'p_nom']]
-
 
 
 #    names = []
@@ -778,8 +774,9 @@ def get_etragospecs_direct(session,
 #            stor_series = etrago_network.storage_units_t.p[str(stor_id)]
 #            stor_series_kW = stor_series * 1000
 #            battery_active_power = battery_active_power + stor_series_kW
- 
+
         stor_p_series_kW = etrago_network.storage_units_t.p[
+
                 str(stor_id)] * 1000
           
         if pf_post_lopf:
@@ -805,9 +802,10 @@ def get_etragospecs_direct(session,
 
     if ext_found:
         specs['battery_p_series'] = stor_p_series_kW
+
         if pf_post_lopf:
             specs['battery_q_series'] = stor_q_series_kvar
-    
+
 #    print(specs['battery_p_series'])
 #    specs = ETraGoSpecs(battery_capacity=battery_capacity,
 #                        battery_active_power=battery_active_power,

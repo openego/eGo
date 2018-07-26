@@ -246,38 +246,42 @@ def etrago_grid_investment(network, json_file):
         # https://github.com/openego/eTraGo/blob/dev/etrago/tools/utilities.py#L651
         # Definition https://pypsa.org/doc/components.html#line
 
+        trafo = pd.DataFrame()
         # get costs of transfomers
-        trafos = network.transformers[['v_nom0', 'v_nom1', 'capital_cost',
-                                       's_nom_extendable', 's_nom',
-                                       's_nom_opt']]
-        trafos.columns.name = ""
-        trafos.index.name = ""
-        trafos.reset_index()
+        if json_file['eTraGo']['network_clustering_kmeans'] == False:
 
-        trafos['s_nom_extendable'] = trafos.s_nom_opt.subtract(
-            trafos.s_nom, axis='index')
-        trafos['capital_cost'] = trafos.s_nom_extendable.multiply(
-            trafos.capital_cost, axis='index')
-        trafos['number_of_expansion'] = trafos.s_nom_extendable > 0.0
-        trafos['time_step'] = get_time_steps(json_file)
+            trafos = network.transformers[['v_nom0', 'v_nom1', 'capital_cost',
+                                           's_nom_extendable', 's_nom',
+                                           's_nom_opt']]
 
-        # add v_level
-        trafos['voltage_level'] = 'unknown'
+            trafos.columns.name = ""
+            trafos.index.name = ""
+            trafos.reset_index()
 
-        # TODO check
-        ix_ehv = trafos[trafos['v_nom0'] >= 380].index
-        trafos.set_value(ix_ehv, 'voltage_level', 'ehv')
+            trafos['s_nom_extendable'] = trafos.s_nom_opt.subtract(
+                trafos.s_nom, axis='index')
 
-        ix_hv = trafos[(trafos['v_nom0'] <= 220) &
-                       (trafos['v_nom0'] >= 110)].index
-        trafos.set_value(ix_hv, 'voltage_level', 'hv')
+            trafos['capital_cost'] = trafos.s_nom_extendable.multiply(
+                trafos.capital_cost, axis='index')
+            trafos['number_of_expansion'] = trafos.s_nom_extendable > 0.0
+            trafos['time_step'] = get_time_steps(json_file)
+            # add v_level
+            trafos['voltage_level'] = 'unknown'
 
-        # aggregate lines and trafo
+            # TODO check
+            ix_ehv = trafos[trafos['v_nom0'] >= 380].index
+            trafos.set_value(ix_ehv, 'voltage_level', 'ehv')
+
+            ix_hv = trafos[(trafos['v_nom0'] <= 220) &
+                           (trafos['v_nom0'] >= 110)].index
+            trafos.set_value(ix_hv, 'voltage_level', 'hv')
+            # aggregate trafo
+            trafo = trafos[['voltage_level',
+                            'capital_cost']].groupby('voltage_level').sum().reset_index()
+
+        # aggregate lines
         line = lines[['voltage_level',
                       'capital_cost']].groupby('voltage_level').sum().reset_index()
-
-        trafo = trafos[['voltage_level',
-                        'capital_cost']].groupby('voltage_level').sum().reset_index()
 
         # merge trafos and line
         frames = [line, trafo]
