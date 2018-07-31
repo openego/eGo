@@ -327,7 +327,7 @@ def edisgo_grid_investment(edisgo_networks, json_file):
 
     for key, value in edisgo_networks.edisgo_grids.items():
 
-        if value is None:
+        if not hasattr(value, 'network'):
             logger.warning('No results available for grid {}'.format(key))
             continue
 

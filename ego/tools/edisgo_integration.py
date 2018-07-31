@@ -71,14 +71,10 @@ class EDisGoNetworks:
 
     def __init__(self, json_file, etrago_network):
 
-        conn = db.connection(section='oedb')
-        Session = sessionmaker(bind=conn)
-#        self._session = Session()
-
         # Genral Json Inputs
         self._json_file = json_file
         self._grid_version = self._json_file['global']['gridversion']
-
+        
         # eTraGo args
         self._etrago_args = self._json_file['eTraGo']
         self._scn_name = self._etrago_args['scn_name']
@@ -237,19 +233,25 @@ class EDisGoNetworks:
         
         return edisgo_grid
     
-    def _run_edisgo_pool(self, parallelization=True):
+    def _run_edisgo_pool(
+            self, 
+            parallelization=True,
+            apply_curtailment=False,
+            storage_integration=False):
         """
         Runs eDisGo for the chosen grids
 
         """
         
         if parallelization is True:
-            test_grids = run_edisgo_pool_flexible(
-                    [525, 3040], 
-                    lambda *xs: xs[1]._test_edisgo(xs[0], xs[1], xs[2]),
-                    (self, 'test','test2'))
+            logger.info('Run eDisGo parallel')
+            mv_grids = self._grid_choice['the_selected_network_id'].tolist()
             
-            return test_grids
+            self._edisgo_grids = run_edisgo_pool_flexible(
+                    mv_grids, 
+                    lambda *xs: xs[1]._run_edisgo(xs[0], xs[1], xs[2]),
+                    (self, apply_curtailment, storage_integration))
+                  
             
         else:    
             logger.warning('Parallelization not implemented yet')
@@ -266,7 +268,10 @@ class EDisGoNetworks:
                     'MV grid {}'.format(mv_grid_id)
                 )
                 try:
-                    edisgo_grid = self._run_edisgo(mv_grid_id)
+                    edisgo_grid = self._run_edisgo(
+                            mv_grid_id,
+                            apply_curtailment,
+                            storage_integration)
                     self._edisgo_grids[
                         mv_grid_id
                     ] = edisgo_grid
@@ -299,11 +304,17 @@ class EDisGoNetworks:
         logger.info('Calculating interface values')
         logger.info('Scenario: {}'.format(self._scn_name))
         
+        conn = db.connection(section=self._json_file['global']['db'])
+        Session = sessionmaker(bind=conn)
+        session = Session()
+        logger.info('New session created')
+
+        
         bus_id = self._get_bus_id_from_mv_grid(mv_grid_id)
     
 
         specs = get_etragospecs_direct(
-            self._session,
+            session,
             bus_id,
             self._etrago_network,
             self._scn_name,
@@ -415,12 +426,16 @@ class EDisGoNetworks:
             MV grid (ding0) ID
 
         """
-
+        conn = db.connection(section=self._json_file['global']['db'])
+        Session = sessionmaker(bind=conn)
+        session = Session()
+        logger.info('New session created')
+        
         if self._versioned is True:
             ormclass_hvmv_subst = grid.__getattribute__(
                 'EgoDpHvmvSubstation'
             )
-            subst_id = self._session.query(
+            subst_id = session.query(
                 ormclass_hvmv_subst.subst_id
             ).filter(
                 ormclass_hvmv_subst.otg_id == bus_id,
@@ -431,7 +446,7 @@ class EDisGoNetworks:
             ormclass_hvmv_subst = model_draft.__getattribute__(
                 'EgoGridHvmvSubstation'
             )
-            subst_id = self._session.query(
+            subst_id = session.query(
                 ormclass_hvmv_subst.subst_id
             ).filter(
                 ormclass_hvmv_subst.otg_id == bus_id
@@ -454,11 +469,16 @@ class EDisGoNetworks:
             eTraGo bus ID
 
         """
+        conn = db.connection(section=self._json_file['global']['db'])
+        Session = sessionmaker(bind=conn)
+        session = Session()
+        logger.info('New session created')
+        
         if self._versioned is True:
             ormclass_hvmv_subst = grid.__getattribute__(
                 'EgoDpHvmvSubstation'
             )
-            bus_id = self._session.query(
+            bus_id = session.query(
                 ormclass_hvmv_subst.otg_id
             ).filter(
                 ormclass_hvmv_subst.subst_id == subst_id,
@@ -469,7 +489,7 @@ class EDisGoNetworks:
             ormclass_hvmv_subst = model_draft.__getattribute__(
                 'EgoGridHvmvSubstation'
             )
-            bus_id = self._session.query(
+            bus_id = session.query(
                 ormclass_hvmv_subst.otg_id
             ).filter(
                 ormclass_hvmv_subst.subst_id == subst_id
