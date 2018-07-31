@@ -488,7 +488,7 @@ def get_etragospecs_direct(session,
             all_gens_df.at[index, 'name'] = 'wind'
             logger.warning('wind onshore is renamed to wind')
 
-
+#    print(all_gens_df)
 #    print(all_gens_df)
 #    names = []
 #    for index, row in all_gens_df.iterrows():
@@ -570,7 +570,7 @@ def get_etragospecs_direct(session,
 #    ren_df = ren_df.assign(w_id=pd.Series(w_ids, index=ren_df.index))
 #    # This should be unnecessary (and I think it isnt)
     ren_df.dropna(inplace=True)
-    print(ren_df)
+#    print(ren_df)
 
     aggr_gens = ren_df.groupby([
         'name',
@@ -813,6 +813,9 @@ def get_etragospecs_direct(session,
 
         if pf_post_lopf:
             specs['battery_q_series'] = stor_q_series_kvar
+            
+    else:
+        specs['battery_p_series'] = specs['battery_q_series'] = None
 
 #    print(specs['battery_p_series'])
 #    specs = ETraGoSpecs(battery_capacity=battery_capacity,

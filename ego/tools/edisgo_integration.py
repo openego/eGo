@@ -414,12 +414,16 @@ class EDisGoNetworks:
         
         ### Storage Integration
         if storage_integration:
-            if 'battery_p_series' in specs:
-                logger.info('Integrating storages in MV grid.')
-                edisgo_grid.integrate_storage(
-                        timeseries=specs['battery_p_series'],
-                        position='distribute_storages_mv',
-                        timeseries_reactive_power=None)
+            if self._ext_storage:
+                if specs['battery_p_series']:
+                    logger.info('Integrating storages in MV grid')
+                    edisgo_grid.integrate_storage(
+                            timeseries=specs['battery_p_series'],
+                            position='distribute_storages_mv',
+                            timeseries_reactive_power=specs[
+                                    'battery_p_series'
+                                    ]) # None if no pf_post_lopf
+
         
 #        edisgo_grid.analyze()
         logger.info('Calculating grid expansion costs.')
