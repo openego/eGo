@@ -6,7 +6,7 @@
     "recover": false,
     "result_id": null,
     "gridversion": "v0.4.2",
-    "csv_import": "/data/PF_NEP_Qpnom"
+    "csv_import": "/data/100_168h_storage"
   },
   "eTraGo": {
     "method": "lopf",
@@ -45,7 +45,7 @@
   "eDisGo": {
      "ding0_files": "data/MV_grids/20180719171328",
      "choice_mode": "manual",
-     "manual_grids": [],
+     "manual_grids": [121],
      "no_grids": 5
   }
 }

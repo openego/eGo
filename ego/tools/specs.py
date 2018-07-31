@@ -570,7 +570,7 @@ def get_etragospecs_direct(session,
 #    ren_df = ren_df.assign(w_id=pd.Series(w_ids, index=ren_df.index))
 #    # This should be unnecessary (and I think it isnt)
     ren_df.dropna(inplace=True)
-#    print(ren_df)
+    print(ren_df)
 
     aggr_gens = ren_df.groupby([
         'name',
