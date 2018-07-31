@@ -80,11 +80,10 @@ class EDisGoNetworks:
         # eTraGo args
         self._etrago_args = self._json_file['eTraGo']
         self._scn_name = self._etrago_args['scn_name']
-        
         self._ext_storage = (
                 'storages' in self._etrago_args['extendable']
                 )
-        
+        self._pf_post_lopf = self._etrago_args['pf_post_lopf']
 
         # eDisGo args
         self._edisgo_args = self._json_file['eDisGo']
@@ -325,6 +324,8 @@ class EDisGoNetworks:
         """
 
         logger.info('Calculating interface values')
+        logger.info('Scenario: {}'.format(self._scn_name))
+        
         bus_id = self._get_bus_id_from_mv_grid(mv_grid_id)
     
 
@@ -332,7 +333,8 @@ class EDisGoNetworks:
             self._session,
             bus_id,
             self._etrago_network,
-            self._scn_name)
+            self._scn_name,
+            self._pf_post_lopf)
 
         ding0_filepath = (
             self._ding0_files
@@ -372,12 +374,23 @@ class EDisGoNetworks:
 
         ### Time Series from eTraGo
         logger.info('Updating eDisGo timeseries with eTraGo values')
-        edisgo_grid.network.timeseries = TimeSeriesControl(
-            network=edisgo_grid.network,
-            timeseries_generation_fluctuating=specs['potential'],
-            timeseries_generation_dispatchable=specs['conv_dispatch'],
-            timeseries_load='demandlib',
-            timeindex=specs['conv_dispatch'].index).timeseries
+        if self._pf_post_lopf:
+            logger.info('(Including reactive power)')
+            edisgo_grid.network.timeseries = TimeSeriesControl(
+                network=edisgo_grid.network,
+                timeseries_generation_fluctuating=specs['ren_potential'],
+                timeseries_generation_dispatchable=specs['conv_dispatch'],
+                timeseries_generation_reactive_power=specs['reactive_power'],
+                timeseries_load='demandlib',
+                timeindex=specs['conv_dispatch'].index).timeseries
+        else:
+            logger.info('(Only active power)')
+            edisgo_grid.network.timeseries = TimeSeriesControl(
+                network=edisgo_grid.network,
+                timeseries_generation_fluctuating=specs['ren_potential'],
+                timeseries_generation_dispatchable=specs['conv_dispatch'],
+                timeseries_load='demandlib',
+                timeindex=specs['conv_dispatch'].index).timeseries
                 
         ### Curtailment
         if apply_curtailment:
@@ -387,16 +400,18 @@ class EDisGoNetworks:
                 by=['type', 'weather_cell_id']
             )['nominal_capacity'].sum()
 
-            curt_abs = pd.DataFrame(columns=specs['curtailment'].columns)
+            curt_abs = pd.DataFrame(columns=specs['ren_curtailment'].columns)
             for col in curt_abs:
                 curt_abs[col] = (
-                    specs['curtailment'][col]
+                    specs['ren_curtailment'][col]
                     * solar_wind_capacities[col])
 
             edisgo_grid.curtail(curtailment_methodology='curtail_all',
                                 timeseries_curtailment=curt_abs)
     #             Think about the other curtailment functions!!!!
-    
+        else:
+            logger.warning('No curtailment applied') 
+        
         ### Storage Integration
         if storage_integration:
             if 'battery_p_series' in specs:
