@@ -6,7 +6,7 @@
     "recover": false,
     "result_id": null,
     "gridversion": "v0.4.2",
-    "csv_import": "/data/PF_NEP_Qpnom"
+    "csv_import": false
   },
   "eTraGo": {
     "method": "lopf",
@@ -19,15 +19,15 @@
                       "crossover":0,
                       "BarConvTol":"1.e-5",
                       "FeasibilityTol":"1.e-5"},
-    "scn_name": "blabla",
+    "scn_name": "NEP 2035",
     "scn_extension": null,
     "scn_decommissioning": null,
     "add_Belgium_Norway": false,
     "lpfile":  false,
     "results": false,
     "export": false,
-    "extendable": "['network','storages']",
-    "generator_noise": 789456,
+    "extendable": "[]",
+    "generator_noise": true,
     "reproduce_noise": false,
     "minimize_loading": false,
     "network_clustering_kmeans": 10,
