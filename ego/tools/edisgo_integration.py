@@ -34,7 +34,6 @@ if not 'READTHEDOCS' in os.environ:
     from egoio.db_tables import model_draft, grid
     from egoio.tools import db
     from edisgo.grid.network import Results, TimeSeriesControl
-    from edisgo import EDisGo
     from edisgo.tools.edisgo_run import (
         run_edisgo_basic,
         run_edisgo_pool_flexible
@@ -46,7 +45,6 @@ if not 'READTHEDOCS' in os.environ:
     from ego.tools.mv_cluster import (
         analyze_attributes,
         cluster_mv_grids)
-    from tools.utilities import define_logging
     
     import pandas as pd
     from sqlalchemy.orm import sessionmaker
@@ -88,7 +86,14 @@ class EDisGoNetworks:
         self._ding0_files = self._edisgo_args['ding0_files']
         self._choice_mode = self._edisgo_args['choice_mode']
         self._parallelization = self._edisgo_args['parallelization']
-
+        self._storage_distribution = self._edisgo_args['storage_distribution']
+        self._apply_curtailment = self._edisgo_args['apply_curtailment']
+        self._cluster_attributes = self._edisgo_args['cluster_attributes']
+        
+        if (self._storage_distribution is True) & (self._ext_storage is False):
+            logger.warning('Storage distribution (MV grids) is active, '
+                           'but eTraGo dataset has no extendable storages')
+        
         # Scenario translation
         if self._scn_name == 'Status Quo':
             self._generator_scn = None
@@ -111,8 +116,7 @@ class EDisGoNetworks:
 
         # Execute Functions
         self._set_grid_choice()
-        self._run_edisgo_pool(
-                parallelization=self._parallelization)
+        self._run_edisgo_pool()
 
     @property
     def edisgo_grids(self):
@@ -144,13 +148,14 @@ class EDisGoNetworks:
         """
         Analyses the attributes wind and solar capacity and farthest node
         for clustering.
+        These are considered the "standard" attributes for the MV grid 
+        clustering. 
         """
         analyze_attributes(self._ding0_files)
 
     def _cluster_mv_grids(
             self, 
-            no_grids, 
-            ext_storage=True):
+            no_grids):
         """
         Clusters the MV grids based on the attributes, for a given number
         of MV grids
@@ -166,6 +171,10 @@ class EDisGoNetworks:
             Dataframe containing the clustered MV grids and their weightings
 
         """
+        
+        #TODO: This first dataframe contains the standard attributes...
+        # ...Create an Interface in order to use attributes more flexibly.
+        # Make this function more generic.
         attributes_path = self._ding0_files + '/attributes.csv'
 
         if not os.path.isfile(attributes_path):
@@ -176,11 +185,43 @@ class EDisGoNetworks:
         df = pd.read_csv(self._ding0_files + '/attributes.csv')
         df = df.set_index('id')
         df.drop(['Unnamed: 0'], inplace=True, axis=1)
-        
-        if ext_storage is True:
+        df.rename(
+                columns={
+                        "Solar_cumulative_capacity": "solar_cap", 
+                        "Wind_cumulative_capacity": "wind_cap",
+                        "The_Farthest_node": "farthest_node"}, 
+                        inplace=True)       
+
+        if self._ext_storage is True:
             storages = self._identify_extended_storages()
             df = pd.concat([df, storages], axis=1)
+            df.rename(
+                    columns={"storage_p_nom": "extended_storage"}, 
+                    inplace=True)
+            
+        found_atts = [
+                i for i in self._cluster_attributes if i in df.columns
+                ]
+        missing_atts = [
+                i for i in self._cluster_attributes if i not in df.columns
+                ]
         
+        logger.info(
+                    'Available attributes are: {}'.format(df.columns.tolist())
+                    )
+        logger.info(
+                    'Chosen/found attributes are: {}'.format(found_atts)
+                    )
+             
+        if len(missing_atts) > 0:
+            logger.warning(
+                    'Missing attributes: {}'.format(missing_atts)
+                    )
+            if 'extended_storage' in missing_atts:
+                logger.info('Hint: eTraGo dataset must contain '
+                            'extendable storages in order to include '
+                            'storage extension in MV grid clustering.')
+                  
         return cluster_mv_grids(
                 no_grids, 
                 cluster_base = df)  
@@ -188,15 +229,19 @@ class EDisGoNetworks:
     
     def _identify_extended_storages(self):
         
+        conn = db.connection(section=self._json_file['global']['db'])
+        Session = sessionmaker(bind=conn)
+        session = Session()
+        
         all_mv_grids = self._check_available_mv_grids()
         
         storages = pd.DataFrame(
                 index=all_mv_grids, 
                 columns=['storage_p_nom'])
         
-        logger.info('Identifying extended storages for clustering')
+        logger.info('Identifying extended storages')
         for mv_grid in all_mv_grids:
-            bus_id = self._get_bus_id_from_mv_grid(mv_grid)
+            bus_id = self._get_bus_id_from_mv_grid(session, mv_grid)
             
             stor_p_nom = self._etrago_network.storage_units.loc[
                     (self._etrago_network.storage_units['bus'] == str(bus_id))
@@ -248,8 +293,7 @@ class EDisGoNetworks:
             no_grids = self._edisgo_args['no_grids']
             logger.info('Clustering to {} MV grids'.format(no_grids))
             cluster = self._cluster_mv_grids(
-                    no_grids, 
-                    self._ext_storage)
+                    no_grids)
 
         elif self._choice_mode == 'manual':
             man_grids = self._edisgo_args['manual_grids']
@@ -274,15 +318,12 @@ class EDisGoNetworks:
 
         self._grid_choice = cluster
     
-    def _run_edisgo_pool(
-            self, 
-            parallelization=True,
-            apply_curtailment=False,
-            storage_integration=False):
+    def _run_edisgo_pool(self):
         """
         Runs eDisGo for the chosen grids
 
         """
+        parallelization = self._parallelization
         
         if parallelization is True:
             logger.info('Run eDisGo parallel')
@@ -290,12 +331,12 @@ class EDisGoNetworks:
             
             self._edisgo_grids = run_edisgo_pool_flexible(
                     mv_grids, 
-                    lambda *xs: xs[1]._run_edisgo(xs[0], xs[1], xs[2]),
-                    (self, apply_curtailment, storage_integration))
+                    lambda *xs: xs[1]._run_edisgo(xs[0]),
+                    (self,))
                   
             
         else:    
-            logger.warning('Run eDisGo sequencial')
+            logger.info('Run eDisGo sequencial')
             no_grids = len(self._grid_choice)
             count = 0
             for idx, row in self._grid_choice.iterrows():
@@ -309,10 +350,7 @@ class EDisGoNetworks:
                     'MV grid {}'.format(mv_grid_id)
                 )
                 try:
-                    edisgo_grid = self._run_edisgo(
-                            mv_grid_id,
-                            apply_curtailment,
-                            storage_integration)
+                    edisgo_grid = self._run_edisgo(mv_grid_id)
                     self._edisgo_grids[
                         mv_grid_id
                     ] = edisgo_grid
@@ -325,9 +363,7 @@ class EDisGoNetworks:
 
     def _run_edisgo(
             self, 
-            mv_grid_id, 
-            apply_curtailment=False,
-            storage_integration=True):
+            mv_grid_id):
         """
         Performs a single eDisGo run
 
@@ -341,19 +377,18 @@ class EDisGoNetworks:
         :class:`edisgo.grid.network.EDisGo`
             Returns the complete eDisGo container, also including results
         """
-
+        storage_integration = self._storage_distribution
+        apply_curtailment = self._apply_curtailment
+        
         logger.info('Calculating interface values')
         logger.info('Scenario: {}'.format(self._scn_name))
         
         conn = db.connection(section=self._json_file['global']['db'])
         Session = sessionmaker(bind=conn)
         session = Session()
-        logger.info('New session created')
-
-        
-        bus_id = self._get_bus_id_from_mv_grid(mv_grid_id)
+       
+        bus_id = self._get_bus_id_from_mv_grid(session, mv_grid_id)
     
-
         specs = get_etragospecs_direct(
             session,
             bus_id,
@@ -446,7 +481,7 @@ class EDisGoNetworks:
                             timeseries=specs['battery_p_series'],
                             position='distribute_storages_mv',
                             timeseries_reactive_power=specs[
-                                    'battery_p_series'
+                                    'battery_q_series'
                                     ]) # None if no pf_post_lopf
 
         
@@ -456,7 +491,7 @@ class EDisGoNetworks:
 
         return edisgo_grid
 
-    def _get_mv_grid_from_bus_id(self, bus_id):
+    def _get_mv_grid_from_bus_id(self, session, bus_id):
         """
         Queries the MV grid ID for a given eTraGo bus
 
@@ -471,10 +506,6 @@ class EDisGoNetworks:
             MV grid (ding0) ID
 
         """
-        conn = db.connection(section=self._json_file['global']['db'])
-        Session = sessionmaker(bind=conn)
-        session = Session()
-        logger.info('New session created')
         
         if self._versioned is True:
             ormclass_hvmv_subst = grid.__getattribute__(
@@ -499,7 +530,7 @@ class EDisGoNetworks:
 
         return subst_id
 
-    def _get_bus_id_from_mv_grid(self, subst_id):
+    def _get_bus_id_from_mv_grid(self, session, subst_id):
         """
         Queries the eTraGo bus ID for given MV grid (ding0) ID
 
@@ -514,10 +545,6 @@ class EDisGoNetworks:
             eTraGo bus ID
 
         """
-        conn = db.connection(section=self._json_file['global']['db'])
-        Session = sessionmaker(bind=conn)
-        session = Session()
-        logger.info('New session created')
         
         if self._versioned is True:
             ormclass_hvmv_subst = grid.__getattribute__(
