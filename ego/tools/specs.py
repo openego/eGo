@@ -465,11 +465,11 @@ def get_etragospecs_direct(session,
     all_gens_df = etrago_network.generators[
         etrago_network.generators['bus'] == str(bus_id)
     ]
-    idx_name = all_gens_df.index.name
+    all_gens_df.index.name = 'generator_id'
     
     all_gens_df.reset_index(inplace=True)
 
-    all_gens_df = all_gens_df.rename(columns={idx_name: 'generator_id'})
+#    all_gens_df = all_gens_df.rename(columns={idx_name: 'generator_id'})
    
     all_gens_df = all_gens_df[[
         'generator_id',
