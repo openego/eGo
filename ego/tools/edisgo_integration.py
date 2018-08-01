@@ -459,8 +459,13 @@ class EDisGoNetworks:
             solar_wind_capacities = gens_df.groupby(
                 by=['type', 'weather_cell_id']
             )['nominal_capacity'].sum()
+            
+            curt_cols = [
+                    i for i in specs['ren_curtailment'].columns 
+                    if i in solar_wind_capacities.index
+                    ] # Only the carriers and w_ids, that are found in the grid
 
-            curt_abs = pd.DataFrame(columns=specs['ren_curtailment'].columns)
+            curt_abs = pd.DataFrame(columns=curt_cols)
             for col in curt_abs:
                 curt_abs[col] = (
                     specs['ren_curtailment'][col]
