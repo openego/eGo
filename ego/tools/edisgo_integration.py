@@ -84,6 +84,7 @@ class EDisGoNetworks:
         self._edisgo_args = self._json_file['eDisGo']
         self._ding0_files = self._edisgo_args['ding0_files']
         self._choice_mode = self._edisgo_args['choice_mode']
+        self._parallelization = self._edisgo_args['parallelization']
 
         # Scenario translation
         if self._scn_name == 'Status Quo':
@@ -107,7 +108,8 @@ class EDisGoNetworks:
 
         # Execute Functions
         self._set_grid_choice()
-        self._run_edisgo_pool()
+        self._run_edisgo_pool(
+                parallelization=self._parallelization)
 
     @property
     def edisgo_grids(self):
@@ -219,19 +221,6 @@ class EDisGoNetworks:
             )
 
         self._grid_choice = cluster
-
-    def _test_edisgo(self, mv_grid, test, test2):
-              
-        ding0_filepath = (
-                '/home/student/Git/eGo/ego/data/MV_grids/20180719171328/ding0_grids__'
-                + str(mv_grid)
-                + '.pkl')
-        
-        edisgo_grid = EDisGo(
-                ding0_grid=ding0_filepath,
-                worst_case_analysis='worst-case')
-        
-        return edisgo_grid
     
     def _run_edisgo_pool(
             self, 
@@ -254,7 +243,7 @@ class EDisGoNetworks:
                   
             
         else:    
-            logger.warning('Parallelization not implemented yet')
+            logger.warning('Run eDisGo sequencial')
             no_grids = len(self._grid_choice)
             count = 0
             for idx, row in self._grid_choice.iterrows():
