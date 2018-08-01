@@ -48,7 +48,7 @@
      "choice_mode": "cluster",
      "cluster_attributes":["farthest_node", "wind_cap", "solar_cap", "extended_storage"],
      "manual_grids": [1718],
-     "no_grids": 2,
+     "no_grids": 3,
      "parallelization":true,
      "apply_curtailment":true,
      "storage_distribution":false

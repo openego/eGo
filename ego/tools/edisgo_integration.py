@@ -107,6 +107,9 @@ class EDisGoNetworks:
             self._versioned = True
         else:
             self._versioned = False
+            
+        # Program information
+        self._run_finished = False
 
         # eTraGo Results (Input)
         self._etrago_network = etrago_network
@@ -143,7 +146,41 @@ class EDisGoNetworks:
 
         """
         return self._grid_choice
+    
+    @property
+    def successfull_grids(self):
+        """
+        Relative number of successfully calculated MV grids
+        (Includes clustering weighting)
 
+        Returns
+        -------
+        int
+            Relative number of grids
+
+        """
+        return self._successfull_grids()
+    
+    def _successfull_grids(self):
+        """
+        Calculates the relative number of successfully calculated grids,
+        including the cluster weightings
+        """
+
+        total, success, fail = 0, 0, 0
+        for key, value in self._edisgo_grids.items(): 
+            
+            weight = self._grid_choice.loc[
+                    self._grid_choice['the_selected_network_id'] == key
+                    ]['no_of_points_per_cluster'].values[0]
+            
+            total += weight
+            if hasattr(value, 'network'):
+                success += weight
+            else:
+                fail += weight
+        return success/total
+           
     def _analyze_cluster_attributes(self):
         """
         Analyses the attributes wind and solar capacity and farthest node
@@ -360,6 +397,8 @@ class EDisGoNetworks:
                         'MV grid {} failed: \n'.format(mv_grid_id)
                     )
                 count += 1
+                
+        self._run_finished = True
 
     def _run_edisgo(
             self, 

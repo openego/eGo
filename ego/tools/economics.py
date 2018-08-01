@@ -375,6 +375,18 @@ def edisgo_grid_investment(edisgo_networks, json_file):
             aggr_capital_costs['capital_cost']
             * 1000)  # In eDisGo all costs are in kEuro, however
         # eGo only takes Euro
+        successfull_grids = edisgo_networks.successfull_grids
+        if successfull_grids < 1:
+            logger.warning(
+                    'Only {} % of the grids were calculated.\n'.format(
+                            successfull_grids * 100
+                            ) + 'Costs are extrapolated...')
+            
+            aggr_capital_costs['capital_cost'] = (
+                    aggr_capital_costs['capital_cost'] 
+                    / successfull_grids)
+        
+        print(aggr_capital_costs)
 
         return aggr_capital_costs
 
