@@ -6,7 +6,8 @@
     "recover": false,
     "result_id": null,
     "gridversion": "v0.4.2",
-    "csv_import": false
+    "csv_import": "data/PF_NEP_Qpnom"
+
   },
   "eTraGo": {
     "method": "lopf",
@@ -44,9 +45,12 @@
   },
   "eDisGo": {
      "ding0_files": "data/MV_grids/20180719171328",
-     "choice_mode": "manual",
-     "manual_grids": [1729, 1730],
-     "no_grids": 20,
-     "parallelization":true
+     "choice_mode": "cluster",
+     "cluster_attributes":["farthest_node", "wind_cap", "solar_cap", "extended_storage"],
+     "manual_grids": [121, 581],
+     "no_grids": 2,
+     "parallelization":true,
+     "apply_curtailment":true,
+     "storage_distribution":false
   }
 }
