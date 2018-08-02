@@ -87,6 +87,59 @@ def carriers_colore():
     return colors
 
 
+def ego_colore():
+    """
+    """
+    colors = {'egoblue1': '#1F567D',
+              'egoblue2': '#84A2B8',
+              'egoblue3': '#A3B9C9',
+              'egoblue4': '#C7D5DE'
+              }
+
+    return colors
+
+
+def grid_storage_investment(df):
+    """
+    """
+    colors = ego_colore()
+
+    n_levels = len(ego.ehv_grid_costs.capital_cost)
+
+    means_grid = ego.ehv_grid_costs.capital_cost
+
+    means_storage = (25, 32, 34, 20)
+    std_storage = (3, 5, 2, 3)
+
+    fig, ax = plt.subplots()
+
+    index = np.arange(n_levels)
+    bar_width = 0.35
+
+    opacity = 0.4
+    error_config = {'ecolor': '0.3'}
+
+    rects1 = ax.bar(index, means_grid, bar_width,
+                    alpha=opacity, color=colors['egoblue1'],
+                    yerr=std_grid, error_kw=error_config,
+                    label='Grid costs')
+
+    rects2 = ax.bar(index + bar_width, means_storage, bar_width,
+                    alpha=opacity, color=colors['egoblue4'],
+                    yerr=std_storage, error_kw=error_config,
+                    label='Storage Costs')
+
+    ax.set_xlabel('voltage level')
+    ax.set_ylabel('Annualized costs per time step')
+    ax.set_title('Annualized costs per time step and component')
+    ax.set_xticks(index + bar_width / 2)
+    ax.set_xticklabels(('ehv', 'hv', 'mv', 'lv'))
+    ax.legend()
+
+    fig.tight_layout()
+    plt.show()
+
+
 def make_all_plots(network):
     """ Test function which run all ploting functions.
 

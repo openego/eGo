@@ -35,7 +35,7 @@ __license__ = "GNU Affero General Public License Version 3 (AGPL-3.0)"
 __author__ = "wolf_bunke,maltesc"
 
 
-def total_storage_charges(network):
+def etrago_storages(network):
     """Sum up the pysical storage values of the total scenario based on
     eTraGo results.
 
@@ -96,28 +96,6 @@ def total_storage_charges(network):
     return results
 
 
-def etrago_storages(network):
-    """Using function ``total_storage_charges`` for storage and grid expantion
-    costs of eTraGo.
-
-    Parameters
-    ----------
-    network : :class:`etrago.tools.io.NetworkScenario`
-        eTraGo ``NetworkScenario`` based on PyPSA Network. See also
-        `pypsa.network <https://pypsa.org/doc/components.html#network>`_
-
-    Returns
-    -------
-    storages : :pandas:`pandas.DataFrame<dataframe>`
-        DataFrame with cumulated results of storages
-
-    """
-    # Charge / discharge (MWh) and installed capacity MW
-    storages = total_storage_charges(network=network)
-
-    return storages
-
-
 def etrago_storages_investment(network, json_file):
     """Calculate storage investment costs of eTraGo
 
@@ -146,10 +124,10 @@ def etrago_storages_investment(network, json_file):
         _bus.reset_index(level=0, inplace=True)
 
         _storage = network.storage_units[network.storage_units.p_nom_opt != 0]
-
+        _storage.reset_index(level=0, inplace=True)
         # provide storage installation costs per voltage level
         installed_storages = \
-            pd.merge(_storage, _bus, left_on='bus', right_on='index')
+            pd.merge(_storage, _bus, left_on='bus', right_on='name')
 
         installed_storages['investment_costs'] = (installed_storages.
                                                   capital_cost *

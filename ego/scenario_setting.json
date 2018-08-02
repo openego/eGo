@@ -6,8 +6,7 @@
     "recover": false,
     "result_id": null,
     "gridversion": "v0.4.2",
-    "csv_import": "data/PF_NEP_Qpnom"
-
+    "csv_import": "/data/ehv_grids/etrago_k10_t1"
   },
   "eTraGo": {
     "method": "lopf",
@@ -27,8 +26,8 @@
     "lpfile":  false,
     "results": false,
     "export": false,
-    "extendable": "[]",
-    "generator_noise": true,
+    "extendable": "['network','storages']",
+    "generator_noise": 789456,
     "reproduce_noise": false,
     "minimize_loading": false,
     "network_clustering_kmeans": 10,
