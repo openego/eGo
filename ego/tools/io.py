@@ -145,9 +145,9 @@ class eTraGoResults(egoBasic):
             try:
                 self.json_file['global']['eTraGo'] = False
 
-                for i in self.json_file['eTraGo'].keys():
+                for key in self.json_file['eTraGo'].keys():
 
-                    self.json_file['eTraGo'][i] = 'removed by recover'
+                    self.json_file['eTraGo'][key] = 'removed by recover'
 
                 # ToDo add scenario_setting for results
                 self.json_file['eTraGo']['db'] = self.json_file['global']['db']
@@ -177,7 +177,11 @@ class eTraGoResults(egoBasic):
 
             logger.info('Create eTraGo network from oedb result')
             self.etrago_network = etrago_from_oedb(self.session, self.json_file)
-            # self.etrago_disaggregated_network ...
+
+            if self.json_file['eTraGo']['disaggregation'] != False:
+                self.etrago_disaggregated_network = self.etrago_network
+            else:
+                self.etrago_disaggregated_network = None
 
         # create eTraGo NetworkScenario
         if self.json_file['global']['eTraGo'] is True:
@@ -251,11 +255,12 @@ class eTraGoResults(egoBasic):
                     self.etrago_network = etrago(self.json_file['eTraGo'])
                     self.etrago_disaggregated_network = None
 
-        # add selected results to Results container
+        # Add selected results to results container
+        # -----------------------------------------
 
         self.etrago = pd.DataFrame()
-        # self.etrago.storage_investment_costs = etrago_storages_investment(
-        #    self.etrago_network, self.json_file)
+        self.etrago.storage_investment_costs = etrago_storages_investment(
+            self.etrago_network, self.json_file)
         #self.etrago.storage_charges = etrago_storages(self.etrago_network)
         # self.etrago.operating_costs = etrago_operating_costs(
         #    self.etrago_network)
