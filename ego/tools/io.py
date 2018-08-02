@@ -177,6 +177,7 @@ class eTraGoResults(egoBasic):
 
             logger.info('Create eTraGo network from oedb result')
             self.etrago_network = etrago_from_oedb(self.session, self.json_file)
+            # self.etrago_disaggregated_network ...
 
         # create eTraGo NetworkScenario
         if self.json_file['global']['eTraGo'] is True:
