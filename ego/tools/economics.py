@@ -163,6 +163,7 @@ def etrago_operating_costs(network):
     etg.buses_t.marginal_price
     etg.buses_t['p'].sum().sum()
 
+    # TODO add Grid and Transform Costs
     # active power x nodel price /
     etg.lines_t['p0'].sum().sum()
     etg.lines_t['p1'].sum().sum()
@@ -395,6 +396,7 @@ def edisgo_grid_investment(edisgo_networks, json_file):
                     / successfull_grids)
             
         return aggr_costs
+
 
 
 def get_generator_investment(network, scn_name):

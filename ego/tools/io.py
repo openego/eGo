@@ -145,9 +145,9 @@ class eTraGoResults(egoBasic):
             try:
                 self.json_file['global']['eTraGo'] = False
 
-                for i in self.json_file['eTraGo'].keys():
+                for key in self.json_file['eTraGo'].keys():
 
-                    self.json_file['eTraGo'][i] = 'removed by recover'
+                    self.json_file['eTraGo'][key] = 'removed by recover'
 
                 # ToDo add scenario_setting for results
                 self.json_file['eTraGo']['db'] = self.json_file['global']['db']
@@ -169,11 +169,19 @@ class eTraGoResults(egoBasic):
                                                        self.json_file['global']
                                                        ['result_id'])
 
+                # add etrago_disaggregated_network from DB
+                print(self.json_file['eTraGo']['network_clustering_kmeans'])
+
             except KeyError:
                 pass
 
             logger.info('Create eTraGo network from oedb result')
             self.etrago_network = etrago_from_oedb(self.session, self.json_file)
+
+            if self.json_file['eTraGo']['disaggregation'] != False:
+                self.etrago_disaggregated_network = self.etrago_network
+            else:
+                self.etrago_disaggregated_network = None
 
         # create eTraGo NetworkScenario
         if self.json_file['global']['eTraGo'] is True:
@@ -232,27 +240,36 @@ class eTraGoResults(egoBasic):
                             pass
 
             else:
-                logger.info('Create eTraGo network by eGo')
+                logger.info('Create eTraGo network calcualted by eGo')
 
-                etrago_network, etrago_disaggregated_network = etrago(
-                    self.json_file['eTraGo'])
+                if self.json_file['eTraGo']['disaggregation'] != False:
 
-                self.etrago_network = etrago_network
-                self.etrago_disaggregated_network = etrago_disaggregated_network
+                    etrago_network, etrago_disaggregated_network = etrago(
+                        self.json_file['eTraGo'])
 
-        # add selected results to Results container
+                    self.etrago_network = etrago_network
+                    self.etrago_disaggregated_network = (
+                        etrago_disaggregated_network)
+                else:
+                    print("only one network is used")
+                    self.etrago_network = etrago(self.json_file['eTraGo'])
+                    self.etrago_disaggregated_network = None
+
+        # Add selected results to results container
+        # -----------------------------------------
 
         self.etrago = pd.DataFrame()
-        # self.etrago.storage_investment_costs = etrago_storages_investment(
-        #    self.etrago_network, self.json_file)
-        # self.etrago.storage_charges = etrago_storages(self.etrago_network)
-        # self.etrago.operating_costs = etrago_operating_costs(
-        #    self.etrago_network)
-        # self.etrago.generator = create_etrago_results(self.etrago_network,
-        #                                              self.scn_name)
-        # self.etrago.grid_investment_costs = etrago_grid_investment(self.
-        #                                                           etrago_network,
-        #                                                           self.json_file)
+        self.etrago.storage_investment_costs = etrago_storages_investment(
+            self.etrago_network, self.json_file)
+        self.etrago.storage_charges = etrago_storages(self.etrago_network)
+
+        self.etrago.operating_costs = etrago_operating_costs(
+            self.etrago_network)
+        self.etrago.generator = create_etrago_results(self.etrago_network,
+                                                      self.scn_name)
+        self.etrago.grid_investment_costs = etrago_grid_investment(self.
+                                                                   etrago_network,
+                                                                   self.json_file)
 
         # add functions direct
         # self.etrago_network.etrago_line_loading = etrago_line_loading
@@ -411,13 +428,15 @@ class eGo(eDisGoResults):
         super(eGo, self).__init__(self, jsonpath,
                                   *args, **kwargs)
 
-        # super().__init__(eDisGo)
-        self.total = pd.DataFrame()
         # add total results here
-        # self.total_investment_costs = pd.DataFrame()
-        # self.total_operation_costs = pd.DataFrame()  # TODO
+        self.total_investment_costs = None
+        self.total_operation_costs = None  # TODO
+        self.storage_costs = None
+        self.ehv_grid_costs = None
+        self.mv_grid_costs = None
 
-    def total_investment_cost(self):
+    @property
+    def get_investment_cost(self):
         """ Get total investment costs of all voltage level for storages
         and grid expansion
         """
@@ -427,47 +446,43 @@ class eGo(eDisGoResults):
                                                      'capital_cost'])
         _grid_ehv = None
         if 'network' in self.json_file['eTraGo']['extendable']:
-            _grid_ehv = self.etrago.grid_investment_costs  # .capital_cost.sum()
+            _grid_ehv = self.etrago.grid_investment_costs
+            _grid_ehv['component'] = 'ehv/hv grid'
 
             self._total_inv_cost = self._total_inv_cost.\
-                append({'component': ' EHV HV grid',
-                        'voltage_level': 'voltage_level',
-                        'capital_cost': _grid_ehv.capital_cost.sum()},
-                       ignore_index=True)
+                append(_grid_ehv, ignore_index=True)
 
         _storage = None
         if 'storages' in self.json_file['eTraGo']['extendable']:
-            _storage = self.etrago.grid_investment_costs  # .capital_cost.sum()
+            _storage = self.etrago.storage_investment_costs
+            _storage['component'] = 'ehv/hv storage'
 
             self._total_inv_cost = self._total_inv_cost.\
-                append({'component': 'storage',
-                        'voltage_level': 'ehv hv grid',
-                        'capital_cost': _storage.capital_cost.sum()},
-                       ignore_index=True)
+                append(_storage, ignore_index=True)
 
         _grid_mv_lv = None
         if self.json_file['global']['eDisGo'] is True:
 
-            _grid_mv_lv = self.edisgo.grid_investment_costs  # .capital_cost.sum()
+            _grid_mv_lv = self.edisgo.grid_investment_costs
+            _grid_mv_lv['component'] = 'mv/lv grid'
 
             self._total_inv_cost = self._total_inv_cost.\
-                append({'component': 'mv-lv grid',
-                        'voltage_level': 'mv lv grid',
-                        'capital_cost': _grid_mv_lv.capital_cost.sum()},
-                       ignore_index=True)
+                append(_grid_mv_lv, ignore_index=True)
 
         self.total_investment_costs = self._total_inv_cost
         self.storage_costs = _storage
         self.ehv_grid_costs = _grid_ehv
         self.mv_grid_costs = _grid_mv_lv
 
+    @property
     def plot_total_investment_costs(self):
         """ Plot total investment costs
         """
-        self.total_investment_cost()
+        # initiate total_investment_costs
+        self.get_investment_cost
 
-        return self.total_investment_cost.plot.bar(x='voltage_level',
-                                                   y='capital_cost', rot=1)
+        return self.total_investment_costs.plot.bar(x='component',
+                                                    y='capital_cost', rot=1)
 
     # write_results_to_db():
     logging.info('Initialisation of eGo Results')
