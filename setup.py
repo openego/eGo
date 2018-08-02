@@ -38,7 +38,8 @@ setup(name='eGo',
                         'Rtree==0.8.3',
                         'plotly==2.2.3',
                         'Pyomo==5.5.0',
-                        'oedialect'
+                        'oedialect',
+                        'multiprocess'
                         ],
       dependency_links=[('git+https://git@github.com/openego/PyPSA.git'
                          '@dev#egg=pypsa-0.11.0fork')

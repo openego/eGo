@@ -48,6 +48,7 @@ if not 'READTHEDOCS' in os.environ:
     
     import pandas as pd
     from sqlalchemy.orm import sessionmaker
+    import multiprocess as mp2
 
 
 # Logging
@@ -89,6 +90,7 @@ class EDisGoNetworks:
         self._storage_distribution = self._edisgo_args['storage_distribution']
         self._apply_curtailment = self._edisgo_args['apply_curtailment']
         self._cluster_attributes = self._edisgo_args['cluster_attributes']
+        self._max_workers = self._edisgo_args['max_workers']
         
         if (self._storage_distribution is True) & (self._ext_storage is False):
             logger.warning('Storage distribution (MV grids) is active, '
@@ -328,11 +330,19 @@ class EDisGoNetworks:
         if parallelization is True:
             logger.info('Run eDisGo parallel')
             mv_grids = self._grid_choice['the_selected_network_id'].tolist()
+            no_cpu = mp2.cpu_count()
+            if no_cpu > self._max_workers:
+                no_cpu = self._max_workers
+                logger.info(
+                        'Number of workers limited to {} by user'.format(
+                                self._max_workers
+                                ))          
             
             self._edisgo_grids = run_edisgo_pool_flexible(
                     mv_grids, 
                     lambda *xs: xs[1]._run_edisgo(xs[0]),
-                    (self,))
+                    (self,),
+                    workers=no_cpu)
                   
             
         else:    
@@ -386,7 +396,6 @@ class EDisGoNetworks:
         conn = db.connection(section=self._json_file['global']['db'])
         Session = sessionmaker(bind=conn)
         session = Session()
-        b=v
        
         bus_id = self._get_bus_id_from_mv_grid(session, mv_grid_id)
     

@@ -50,6 +50,7 @@
      "manual_grids": [1718],
      "no_grids": 20,
      "parallelization":true,
+     "max_workers":2,
      "apply_curtailment":true,
      "storage_distribution":false
   }
