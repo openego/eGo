@@ -354,8 +354,8 @@ class EDisGoNetworks:
                     self._edisgo_grids[
                         mv_grid_id
                     ] = edisgo_grid
-                except Exception:
-                    self._edisgo_grids[mv_grid_id] = None
+                except Exception as e:
+                    self._edisgo_grids[mv_grid_id] = e
                     logger.exception(
                         'MV grid {} failed: \n'.format(mv_grid_id)
                     )
@@ -386,6 +386,7 @@ class EDisGoNetworks:
         conn = db.connection(section=self._json_file['global']['db'])
         Session = sessionmaker(bind=conn)
         session = Session()
+        b=v
        
         bus_id = self._get_bus_id_from_mv_grid(session, mv_grid_id)
     
