@@ -6,7 +6,7 @@
     "recover": false,
     "result_id": null,
     "gridversion": "v0.4.2",
-    "csv_import": "data/PF_NEP_Qpnom"
+    "csv_import": false
   },
   "eTraGo": {
     "method": "lopf",
