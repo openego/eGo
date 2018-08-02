@@ -481,7 +481,7 @@ class eGo(eDisGoResults):
         # initiate total_investment_costs
         self.get_investment_cost
 
-        return self.total_investment_costs.plot.bar(x='voltage_level',
+        return self.total_investment_costs.plot.bar(x='component',
                                                     y='capital_cost', rot=1)
 
     # write_results_to_db():
