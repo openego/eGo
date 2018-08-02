@@ -35,6 +35,7 @@ if not 'READTHEDOCS' in os.environ:
     #    from sqlalchemy import distinct
     # This gives me the specific ORM classes.
     from egoio.db_tables import model_draft
+    from egoio.db_tables import supply
 #    from edisgo.grid.network import ETraGoSpecs
 
 import logging
@@ -393,6 +394,7 @@ def get_etragospecs_direct(session,
                            bus_id,
                            etrago_network,
                            scn_name,
+                           grid_version,
                            pf_post_lopf):
     """
     Reads eTraGo Results from Database and returns and returns
@@ -428,8 +430,17 @@ def get_etragospecs_direct(session,
     specs_meta_data.update({'TG Bus ID': bus_id})
 
 #    ormclass_result_meta = model_draft.__getattribute__('EgoGridPfHvResultMeta')
-    ormclass_gen_single = model_draft.__getattribute__(
-        'EgoSupplyPfGeneratorSingle')
+    
+    if grid_version is None:
+        logger.warning('Weather_id taken from model_draft (not tested)')
+        
+        ormclass_gen_single = model_draft.__getattribute__(
+            'EgoSupplyPfGeneratorSingle')
+    else:    
+        ormclass_aggr_w = supply.__getattribute__(
+            'EgoAggrWeather')
+        
+       
 #    ormclass_aggr_w = model_draft.t_ego_supply_aggr_weather_mview
 
 #    __getattribute__(
@@ -555,14 +566,22 @@ def get_etragospecs_direct(session,
 #    w_ids = []
     for index, row in ren_df.iterrows():
         aggr_id = row['generator_id']
-        w_id = session.query(
-            ormclass_gen_single.w_id
-        ).filter(
-            ormclass_gen_single.aggr_id == aggr_id,
-            ormclass_gen_single.scn_name == scn_name
-        ).limit(1).scalar(
-        )
-
+        if grid_version is None:
+            w_id = session.query(
+                ormclass_gen_single.w_id
+            ).filter(
+                ormclass_gen_single.aggr_id == aggr_id,
+                ormclass_gen_single.scn_name == scn_name
+            ).limit(1).scalar()
+        else:
+            w_id = session.query(
+                ormclass_aggr_w.w_id
+            ).filter(
+                ormclass_aggr_w.aggr_id == aggr_id,
+                ormclass_aggr_w.scn_name == scn_name,
+                ormclass_aggr_w.version == grid_version  
+            ).limit(1).scalar()
+            
         ren_df.at[index, 'w_id'] = w_id
 
 #        w_ids.append(w_id)

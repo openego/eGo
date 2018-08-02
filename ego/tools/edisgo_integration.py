@@ -442,6 +442,7 @@ class EDisGoNetworks:
             bus_id,
             self._etrago_network,
             self._scn_name,
+            self._grid_version,
             self._pf_post_lopf)
 
         ding0_filepath = (

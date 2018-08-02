@@ -49,7 +49,7 @@
      "cluster_attributes":["farthest_node", "wind_cap", "solar_cap", "extended_storage"],
      "manual_grids": [1718],
      "no_grids": 3,
-     "parallelization":true,
+     "parallelization":false,
      "max_workers":4,
      "apply_curtailment":true,
      "storage_distribution":false
