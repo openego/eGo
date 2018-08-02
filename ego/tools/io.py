@@ -249,6 +249,7 @@ class eTraGoResults(egoBasic):
                 else:
                     print("only one network is used")
                     self.etrago_network = etrago(self.json_file['eTraGo'])
+                    self.etrago_disaggregated_network = None
 
         # add selected results to Results container
 
