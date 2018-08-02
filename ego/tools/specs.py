@@ -465,11 +465,11 @@ def get_etragospecs_direct(session,
     all_gens_df = etrago_network.generators[
         etrago_network.generators['bus'] == str(bus_id)
     ]
-    idx_name = all_gens_df.index.name
+    all_gens_df.index.name = 'generator_id'
     
     all_gens_df.reset_index(inplace=True)
 
-    all_gens_df = all_gens_df.rename(columns={idx_name: 'generator_id'})
+#    all_gens_df = all_gens_df.rename(columns={idx_name: 'generator_id'})
    
     all_gens_df = all_gens_df[[
         'generator_id',
@@ -488,7 +488,7 @@ def get_etragospecs_direct(session,
             all_gens_df.at[index, 'name'] = 'wind'
             logger.warning('wind onshore is renamed to wind')
 
-
+#    print(all_gens_df)
 #    print(all_gens_df)
 #    names = []
 #    for index, row in all_gens_df.iterrows():
@@ -715,12 +715,15 @@ def get_etragospecs_direct(session,
     t3 = time.perf_counter()
     performance.update({'Renewable Dispatch and Curt.': t3-t2})
     # Capactiy
+    min_extended = 0.3
     stor_df = etrago_network.storage_units.loc[
-        (etrago_network.storage_units['bus'] == str(bus_id))
-        & (etrago_network.storage_units['p_nom_extendable'] == True)
-        & (etrago_network.storage_units['p_nom_opt'] > 0.)
-        & (etrago_network.storage_units['max_hours'] <= 20.)]  # Only batteries
+            (etrago_network.storage_units['bus'] == str(bus_id))
+            & (etrago_network.storage_units['p_nom_extendable'] == True)
+            & (etrago_network.storage_units['p_nom_opt'] > min_extended)
+            & (etrago_network.storage_units['max_hours'] <= 20.)] # Only batteries
 
+    logger.warning('Minimum storage of {} MW'.format(min_extended))
+    
     ext_found = False
     if len(stor_df) == 1:
         logger.info('Extendable storage unit found')
@@ -781,12 +784,12 @@ def get_etragospecs_direct(session,
 #            battery_active_power = battery_active_power + stor_series_kW
 
         stor_p_series_kW = etrago_network.storage_units_t.p[
-
                 str(stor_id)] * 1000
-          
+
         if pf_post_lopf:
             stor_q_series_kvar = etrago_network.storage_units_t.q[
                     str(stor_id)] * 1000
+
     
     t4 = time.perf_counter()
     performance.update({'Storage Data Processing and Dispatch': t4-t3})
@@ -810,6 +813,9 @@ def get_etragospecs_direct(session,
 
         if pf_post_lopf:
             specs['battery_q_series'] = stor_q_series_kvar
+            
+    else:
+        specs['battery_p_series'] = specs['battery_q_series'] = None
 
 #    print(specs['battery_p_series'])
 #    specs = ETraGoSpecs(battery_capacity=battery_capacity,

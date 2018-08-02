@@ -185,7 +185,7 @@ class eTraGoResults(egoBasic):
 
                 # get folder
                 path = os.getcwd()
-                folder = self.json_file['global'].get('csv_import')
+                folder = '/' + self.json_file['global'].get('csv_import')
 
                 # TODO clean network.csv from folder
 

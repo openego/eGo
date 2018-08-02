@@ -29,6 +29,8 @@ __author__ = "wolf_bunke, maltesc"
 # Import
 #from __future__ import print_function
 import os
+import logging
+
 if not 'READTHEDOCS' in os.environ:
     import pickle
     
@@ -41,6 +43,7 @@ if not 'READTHEDOCS' in os.environ:
     #from mpl_toolkits.mplot3d import Axes3D
     #import matplotlib.cm as cm
 
+logger = logging.getLogger(__name__)
 
 def analyze_attributes(ding0_files):
     """
@@ -211,7 +214,9 @@ def analyze_attributes(ding0_files):
     # plt.show()
 
 
-def cluster_mv_grids(ding0_files, no_grids):
+def cluster_mv_grids(      
+        no_grids,
+        cluster_base):
     """
     Clusters the MV grids based on the attributes, for a given number
     of MV grids
@@ -230,31 +235,64 @@ def cluster_mv_grids(ding0_files, no_grids):
 
     """
     # import CSV data file that exported from Networks_analysis_solar_wind_farthest-node.py and assign it to a data frame
-    df = pd.read_csv(ding0_files + '/attributes.csv')
 
-    # extract each column to a variable
-    x = df.Solar_cumulative_capacity  # Solar capacity in MV and LV
-    y = df.Wind_cumulative_capacity  # Wind capacity in MV and LV
-    # The farthest node (the length between HV/MV substation to the farthest node in LV networks)
-    z = df.The_Farthest_node
-    id_ = df.id  # Network id
-
-    # Addressing the max value of each column
-    max_solar = max(x)
-    max_wind = max(y)
-    max_farthest = max(z)
-
-    # Converting data to perunit scale
-    solar_pu = x / max_solar
-    wind_pu = y / max_wind
-    distances_pu = z / max_farthest
-
-    # Converting from vectors to coordinates array
+#    attributes = cluster_base.columns
+    cluster_base_pu = pd.DataFrame()
+#    no_attributes = len(cluster_base.columns)
+    
+    for attribute in cluster_base:
+        attribute_max = cluster_base[attribute].max()
+        cluster_base_pu[attribute] = cluster_base[attribute] / attribute_max
+          
+    id_ = []
     m = []
-    for r, s, t in zip(solar_pu, wind_pu, distances_pu):
-        f = [r, s, t]
+    for idx, row in cluster_base_pu.iterrows():
+        id_.append(idx)
+        f = []
+        for attribute in row:
+            f.append(attribute)
+            
         m.append(f)
+        
     X = np.array(m)
+    
+    logger.info(
+            'Used Clustering Attributes: \n {}'.format(
+                    list(cluster_base.columns)))
+        
+#    # Converting from vectors to coordinates array
+#    m = []
+#    for r, s, t in zip(solar_pu, wind_pu, distances_pu):
+#        f = [r, s, t]
+#        m.append(f)
+#    X = np.array(m)        
+#    
+#    
+##    print(attributes)
+#
+#    # extract each column to a variable
+#    x = df.Solar_cumulative_capacity  # Solar capacity in MV and LV
+#    y = df.Wind_cumulative_capacity  # Wind capacity in MV and LV
+#    # The farthest node (the length between HV/MV substation to the farthest node in LV networks)
+#    z = df.The_Farthest_node
+#    id_ = df.id  # Network id
+#
+#    # Addressing the max value of each column
+#    max_solar = max(x)
+#    max_wind = max(y)
+#    max_farthest = max(z)
+#
+#    # Converting data to perunit scale
+#    solar_pu = x / max_solar
+#    wind_pu = y / max_wind
+#    distances_pu = z / max_farthest
+#
+#    # Converting from vectors to coordinates array
+#    m = []
+#    for r, s, t in zip(solar_pu, wind_pu, distances_pu):
+#        f = [r, s, t]
+#        m.append(f)
+#    X = np.array(m)
 
     # Initialize KMeans clustering by Sklearn pkg
     no_clusters = no_grids  # no. of clusters
