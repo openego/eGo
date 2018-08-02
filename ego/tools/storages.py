@@ -35,7 +35,7 @@ __license__ = "GNU Affero General Public License Version 3 (AGPL-3.0)"
 __author__ = "wolf_bunke,maltesc"
 
 
-def total_storage_charges(network):
+def etrago_storages(network):
     """Sum up the pysical storage values of the total scenario based on
     eTraGo results.
 
@@ -94,28 +94,6 @@ def total_storage_charges(network):
                          .rename('extension'), ], axis=1, join='outer')
 
     return results
-
-
-def etrago_storages(network):
-    """Using function ``total_storage_charges`` for storage and grid expantion
-    costs of eTraGo.
-
-    Parameters
-    ----------
-    network : :class:`etrago.tools.io.NetworkScenario`
-        eTraGo ``NetworkScenario`` based on PyPSA Network. See also
-        `pypsa.network <https://pypsa.org/doc/components.html#network>`_
-
-    Returns
-    -------
-    storages : :pandas:`pandas.DataFrame<dataframe>`
-        DataFrame with cumulated results of storages
-
-    """
-    # Charge / discharge (MWh) and installed capacity MW
-    storages = total_storage_charges(network=network)
-
-    return storages
 
 
 def etrago_storages_investment(network, json_file):
