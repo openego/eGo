@@ -52,6 +52,7 @@
      "parallelization":false,
      "max_workers":4,
      "apply_curtailment":true,
-     "storage_distribution":false
+     "storage_distribution":false,
+     "max_cos_phi_renewable": 0.9
   }
 }

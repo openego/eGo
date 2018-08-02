@@ -91,6 +91,8 @@ class EDisGoNetworks:
         self._apply_curtailment = self._edisgo_args['apply_curtailment']
         self._cluster_attributes = self._edisgo_args['cluster_attributes']
         self._max_workers = self._edisgo_args['max_workers']
+        self._max_cos_phi_renewable = self._edisgo_args[
+                'max_cos_phi_renewable']
         
         if (self._storage_distribution is True) & (self._ext_storage is False):
             logger.warning('Storage distribution (MV grids) is active, '
@@ -443,7 +445,8 @@ class EDisGoNetworks:
             self._etrago_network,
             self._scn_name,
             self._grid_version,
-            self._pf_post_lopf)
+            self._pf_post_lopf,
+            self._max_cos_phi_renewable)
 
         ding0_filepath = (
             self._ding0_files
