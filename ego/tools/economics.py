@@ -359,11 +359,10 @@ def edisgo_grid_investment(edisgo_networks, json_file):
             'no_of_points_per_cluster'
         ].values[0]
 
-        costs_single['capital_cost'] = (
-            costs_single['capital_cost'] * weighting)
-        costs_single['overnight_costs'] = (
-            costs_single['overnight_costs'] * weighting)
-        
+        costs_single[['capital_cost', 'overnight_costs']] = (
+                costs_single[['capital_cost', 'overnight_costs']] 
+                * weighting)
+                
         ## Append costs of this grid 
         costs = costs.append(
                 costs_single[[
@@ -378,16 +377,12 @@ def edisgo_grid_investment(edisgo_networks, json_file):
     else:
         aggr_costs = costs.groupby(
             ['voltage_level']).sum().reset_index()
-
-        aggr_costs['capital_cost'] = (
-            aggr_costs['capital_cost']
-            * 1000)  
-        aggr_costs['overnight_costs'] = (
-            aggr_costs['overnight_costs']
-            * 1000)
         
-        # In eDisGo all costs are in kEuro, however
-        # eGo only takes Euro
+        ## In eDisGo all costs are in kEuro (eGo only takes Euro)
+        aggr_costs[['capital_cost', 'overnight_costs']] = (
+                aggr_costs[['capital_cost', 'overnight_costs']]
+                * 1000)
+        
         successfull_grids = edisgo_networks.successfull_grids
         if successfull_grids < 1:
             logger.warning(
@@ -395,12 +390,10 @@ def edisgo_grid_investment(edisgo_networks, json_file):
                             successfull_grids * 100
                             ) + 'Costs are extrapolated...')
             
-            aggr_capital_costs['capital_cost'] = (
-                    aggr_capital_costs['capital_cost'] 
+            aggr_costs[['capital_cost', 'overnight_costs']] = (
+                    aggr_costs[['capital_cost', 'overnight_costs']]
                     / successfull_grids)
-        
-        print(aggr_capital_costs)
-
+            
         return aggr_costs
 
 
