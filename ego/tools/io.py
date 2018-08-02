@@ -169,6 +169,9 @@ class eTraGoResults(egoBasic):
                                                        self.json_file['global']
                                                        ['result_id'])
 
+                # add etrago_disaggregated_network from DB
+                print(self.json_file['eTraGo']['network_clustering_kmeans'])
+
             except KeyError:
                 pass
 
