@@ -236,13 +236,19 @@ class eTraGoResults(egoBasic):
                             pass
 
             else:
-                logger.info('Create eTraGo network by eGo')
+                logger.info('Create eTraGo network calcualted by eGo')
 
-                etrago_network, etrago_disaggregated_network = etrago(
-                    self.json_file['eTraGo'])
+                if self.json_file['eTraGo']['disaggregation'] != False:
 
-                self.etrago_network = etrago_network
-                self.etrago_disaggregated_network = etrago_disaggregated_network
+                    etrago_network, etrago_disaggregated_network = etrago(
+                        self.json_file['eTraGo'])
+
+                    self.etrago_network = etrago_network
+                    self.etrago_disaggregated_network = (
+                        etrago_disaggregated_network)
+                else:
+                    print("only one network is used")
+                    self.etrago_network = etrago(self.json_file['eTraGo'])
 
         # add selected results to Results container
 
