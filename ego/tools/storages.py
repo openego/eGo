@@ -146,10 +146,10 @@ def etrago_storages_investment(network, json_file):
         _bus.reset_index(level=0, inplace=True)
 
         _storage = network.storage_units[network.storage_units.p_nom_opt != 0]
-
+        _storage.reset_index(level=0, inplace=True)
         # provide storage installation costs per voltage level
         installed_storages = \
-            pd.merge(_storage, _bus, left_on='bus', right_on='index')
+            pd.merge(_storage, _bus, left_on='bus', right_on='name')
 
         installed_storages['investment_costs'] = (installed_storages.
                                                   capital_cost *
