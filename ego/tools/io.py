@@ -428,12 +428,14 @@ class eGo(eDisGoResults):
         super(eGo, self).__init__(self, jsonpath,
                                   *args, **kwargs)
 
-        # super().__init__(eDisGo)
-        self.total = pd.DataFrame()
         # add total results here
-        # self.total_investment_costs = pd.DataFrame()
-        # self.total_operation_costs = pd.DataFrame()  # TODO
+        self.total_investment_costs = None
+        self.total_operation_costs = None  # TODO
+        self.storage_costs = None
+        self.ehv_grid_costs = None
+        self.mv_grid_costs = None
 
+    @property
     def total_investment_cost(self):
         """ Get total investment costs of all voltage level for storages
         and grid expansion
@@ -478,13 +480,13 @@ class eGo(eDisGoResults):
         self.ehv_grid_costs = _grid_ehv
         self.mv_grid_costs = _grid_mv_lv
 
+    @property
     def plot_total_investment_costs(self):
         """ Plot total investment costs
         """
-        self.total_investment_cost()
 
-        return self.total_investment_cost.plot.bar(x='voltage_level',
-                                                   y='capital_cost', rot=1)
+        return self.total_investment_costs.plot.bar(x='voltage_level',
+                                                    y='capital_cost', rot=1)
 
     # write_results_to_db():
     logging.info('Initialisation of eGo Results')
