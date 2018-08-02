@@ -261,7 +261,7 @@ class eTraGoResults(egoBasic):
         self.etrago = pd.DataFrame()
         self.etrago.storage_investment_costs = etrago_storages_investment(
             self.etrago_network, self.json_file)
-        self.etrago.storage_charges = etrago_storages(self.etrago_network)
+#        self.etrago.storage_charges = etrago_storages(self.etrago_network)
 
         self.etrago.operating_costs = etrago_operating_costs(
             self.etrago_network)

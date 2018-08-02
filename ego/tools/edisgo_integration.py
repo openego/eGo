@@ -48,6 +48,7 @@ if not 'READTHEDOCS' in os.environ:
     
     import pandas as pd
     from sqlalchemy.orm import sessionmaker
+    import multiprocess as mp2
 
 
 # Logging
@@ -89,6 +90,9 @@ class EDisGoNetworks:
         self._storage_distribution = self._edisgo_args['storage_distribution']
         self._apply_curtailment = self._edisgo_args['apply_curtailment']
         self._cluster_attributes = self._edisgo_args['cluster_attributes']
+        self._max_workers = self._edisgo_args['max_workers']
+        self._max_cos_phi_renewable = self._edisgo_args[
+                'max_cos_phi_renewable']
         
         if (self._storage_distribution is True) & (self._ext_storage is False):
             logger.warning('Storage distribution (MV grids) is active, '
@@ -365,13 +369,20 @@ class EDisGoNetworks:
         if parallelization is True:
             logger.info('Run eDisGo parallel')
             mv_grids = self._grid_choice['the_selected_network_id'].tolist()
+            no_cpu = mp2.cpu_count()
+            if no_cpu > self._max_workers:
+                no_cpu = self._max_workers
+                logger.info(
+                        'Number of workers limited to {} by user'.format(
+                                self._max_workers
+                                ))          
             
             self._edisgo_grids = run_edisgo_pool_flexible(
                     mv_grids, 
                     lambda *xs: xs[1]._run_edisgo(xs[0]),
-                    (self,))
-                  
-            
+                    (self,),
+                    workers=no_cpu)
+                              
         else:    
             logger.info('Run eDisGo sequencial')
             no_grids = len(self._grid_choice)
@@ -391,8 +402,8 @@ class EDisGoNetworks:
                     self._edisgo_grids[
                         mv_grid_id
                     ] = edisgo_grid
-                except Exception:
-                    self._edisgo_grids[mv_grid_id] = None
+                except Exception as e:
+                    self._edisgo_grids[mv_grid_id] = e
                     logger.exception(
                         'MV grid {} failed: \n'.format(mv_grid_id)
                     )
@@ -433,7 +444,9 @@ class EDisGoNetworks:
             bus_id,
             self._etrago_network,
             self._scn_name,
-            self._pf_post_lopf)
+            self._grid_version,
+            self._pf_post_lopf,
+            self._max_cos_phi_renewable)
 
         ding0_filepath = (
             self._ding0_files

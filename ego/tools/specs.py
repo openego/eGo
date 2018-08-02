@@ -35,6 +35,8 @@ if not 'READTHEDOCS' in os.environ:
     #    from sqlalchemy import distinct
     # This gives me the specific ORM classes.
     from egoio.db_tables import model_draft
+    from egoio.db_tables import supply
+    import math
 #    from edisgo.grid.network import ETraGoSpecs
 
 import logging
@@ -393,7 +395,9 @@ def get_etragospecs_direct(session,
                            bus_id,
                            etrago_network,
                            scn_name,
-                           pf_post_lopf):
+                           grid_version,
+                           pf_post_lopf,
+                           max_cos_phi_renewable):
     """
     Reads eTraGo Results from Database and returns and returns
     the interface values as a dictionary of corresponding dataframes
@@ -428,8 +432,17 @@ def get_etragospecs_direct(session,
     specs_meta_data.update({'TG Bus ID': bus_id})
 
 #    ormclass_result_meta = model_draft.__getattribute__('EgoGridPfHvResultMeta')
-    ormclass_gen_single = model_draft.__getattribute__(
-        'EgoSupplyPfGeneratorSingle')
+    
+    if grid_version is None:
+        logger.warning('Weather_id taken from model_draft (not tested)')
+        
+        ormclass_gen_single = model_draft.__getattribute__(
+            'EgoSupplyPfGeneratorSingle')
+    else:    
+        ormclass_aggr_w = supply.__getattribute__(
+            'EgoAggrWeather')
+        
+       
 #    ormclass_aggr_w = model_draft.t_ego_supply_aggr_weather_mview
 
 #    __getattribute__(
@@ -555,14 +568,22 @@ def get_etragospecs_direct(session,
 #    w_ids = []
     for index, row in ren_df.iterrows():
         aggr_id = row['generator_id']
-        w_id = session.query(
-            ormclass_gen_single.w_id
-        ).filter(
-            ormclass_gen_single.aggr_id == aggr_id,
-            ormclass_gen_single.scn_name == scn_name
-        ).limit(1).scalar(
-        )
-
+        if grid_version is None:
+            w_id = session.query(
+                ormclass_gen_single.w_id
+            ).filter(
+                ormclass_gen_single.aggr_id == aggr_id,
+                ormclass_gen_single.scn_name == scn_name
+            ).limit(1).scalar()
+        else:
+            w_id = session.query(
+                ormclass_aggr_w.w_id
+            ).filter(
+                ormclass_aggr_w.aggr_id == aggr_id,
+                ormclass_aggr_w.scn_name == scn_name,
+                ormclass_aggr_w.version == grid_version     
+            ).limit(1).scalar()
+            
         ren_df.at[index, 'w_id'] = w_id
 
 #        w_ids.append(w_id)
@@ -681,6 +702,34 @@ def get_etragospecs_direct(session,
             for col in reactive_power.columns]
         reactive_power.columns = pd.MultiIndex.from_tuples(new_columns)
         
+        ## Apparent power dataframe
+#        apparent_power = (reactive_power**2 + dispatch**2).applymap(
+#                lambda x: math.sqrt(x))
+        
+        ## Q limit calculation
+        if max_cos_phi_renewable:
+            logger.info('Applying Q limit (max cos(phi)={})'.format(
+                    max_cos_phi_renewable))
+            
+            phi = math.acos(max_cos_phi_renewable)
+            
+            for col in reactive_power:
+                for idx in reactive_power.index:
+                    p = dispatch.loc[idx][col]
+                    q = reactive_power.loc[idx][col]
+                    
+                    q_max, q_min = p * math.tan(phi), -p * math.tan(phi) 
+                    
+                    if q > q_max:
+                        q = q_max
+                        logger.info('q_max exceeded, q set to q_max')
+                    elif q < q_min:
+                        q = q_min
+                        logger.info('q_min exceeded, q set to q_min')
+                        
+                    reactive_power.at[idx, col] = q
+                
+                
         ### Reactive Power concat
         all_reactive_power = pd.concat([
                 conv_reactive_power, 
