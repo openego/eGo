@@ -418,8 +418,10 @@ def get_etragospecs_direct(session,
     """
     logger.info('Specs for bus {}'.format(bus_id))
     if pf_post_lopf:
-        logger.info('Specs including reactive power')
-
+        logger.info('Active and reactive power interface')
+    else:
+        logger.info('Only active power interface')
+        
     specs_meta_data = {}
     performance = {}
 
@@ -463,9 +465,12 @@ def get_etragospecs_direct(session,
     all_gens_df = etrago_network.generators[
         etrago_network.generators['bus'] == str(bus_id)
     ]
-    idx_name = all_gens_df.index.name
+    all_gens_df.index.name = 'generator_id'
+    
     all_gens_df.reset_index(inplace=True)
-    all_gens_df = all_gens_df.rename(columns={idx_name: 'generator_id'})
+
+#    all_gens_df = all_gens_df.rename(columns={idx_name: 'generator_id'})
+   
     all_gens_df = all_gens_df[[
         'generator_id',
         'p_nom',
@@ -483,7 +488,7 @@ def get_etragospecs_direct(session,
             all_gens_df.at[index, 'name'] = 'wind'
             logger.warning('wind onshore is renamed to wind')
 
-
+#    print(all_gens_df)
 #    print(all_gens_df)
 #    names = []
 #    for index, row in all_gens_df.iterrows():
@@ -500,6 +505,7 @@ def get_etragospecs_direct(session,
 #    all_gens_df['name'] = names
 
 #    all_gens_df = all_gens_df.drop(['carrier'], axis=1)
+            
 
     # Conventionals
     t1 = time.perf_counter()
@@ -510,11 +516,11 @@ def get_etragospecs_direct(session,
     conv_cap = conv_df[['p_nom', 'name']].groupby('name').sum().T
 
     conv_dsptch = pd.DataFrame(0.0,
-                               index=snap_idx,
-                               columns=list(set(conv_df['name'])))
+                                    index=snap_idx,
+                                    columns=list(set(conv_df['name'])))
     conv_reactive_power = pd.DataFrame(0.0,
-                                       index=snap_idx,
-                                       columns=list(set(conv_df['name'])))
+                                    index=snap_idx,
+                                    columns=list(set(conv_df['name'])))
 #    conv_dsptch_abs = pd.DataFrame(0.0,
 #                                   index=snap_idx,
 #                                   columns=list(set(conv_df['name'])))
@@ -528,17 +534,18 @@ def get_etragospecs_direct(session,
 #        conv_dsptch_abs[source] = conv_dsptch_abs[source] + p
         if pf_post_lopf:
             q = etrago_network.generators_t.q[str(generator_id)]
-            q_norm = q / conv_cap[source]['p_nom']  # q normalized with p_nom
+            q_norm = q / conv_cap[source]['p_nom'] # q normalized with p_nom
             conv_reactive_power[source] = (
-                conv_reactive_power[source]
-                + q_norm)
+                    conv_reactive_power[source] 
+                    + q_norm            )
 
     if pf_post_lopf:
         new_columns = [
-            (col, '') for col in conv_reactive_power.columns
-        ]
+                (col, '') for col in conv_reactive_power.columns
+                ]
         conv_reactive_power.columns = pd.MultiIndex.from_tuples(new_columns)
-
+        
+    
     # Renewables
     t2 = time.perf_counter()
     performance.update({'Conventional Dispatch': t2-t1})
@@ -588,8 +595,8 @@ def get_etragospecs_direct(session,
                                columns=aggr_gens['ren_id'])
     if pf_post_lopf:
         reactive_power = pd.DataFrame(0.0,
-                                      index=snap_idx,
-                                      columns=aggr_gens['ren_id'])
+                                   index=snap_idx,
+                                   columns=aggr_gens['ren_id'])
 
 #    potential_abs = pd.DataFrame(0.0,
 #                               index=snap_idx,
@@ -627,14 +634,14 @@ def get_etragospecs_direct(session,
         potential[ren_id] = potential[ren_id] + p_max_norm_tot_series
         dispatch[ren_id] = dispatch[ren_id] + p_norm_tot_series
 #        curtailment[ren_id] = curtailment[ren_id] + p_curt_norm_tot_series
-
+        
         if pf_post_lopf:
-            q_series = etrago_network.generators_t.q[str(gen_id)]
+            q_series = etrago_network.generators_t.q[str(gen_id)] 
             q_norm_tot_series = q_series / p_nom_aggr
             reactive_power[ren_id] = (
-                reactive_power[ren_id]
-                + q_norm_tot_series)
-
+                    reactive_power[ren_id] 
+                    + q_norm_tot_series)
+            
 #    potential = potential.round(3)
 #    dispatch = dispatch.round(3)
 #
@@ -673,12 +680,12 @@ def get_etragospecs_direct(session,
              aggr_gens[aggr_gens.ren_id == col].w_id.iloc[0])
             for col in reactive_power.columns]
         reactive_power.columns = pd.MultiIndex.from_tuples(new_columns)
-
-        # Reactive Power concat
+        
+        ### Reactive Power concat
         all_reactive_power = pd.concat([
-            conv_reactive_power,
-            reactive_power], axis=1)
-
+                conv_reactive_power, 
+                reactive_power], axis=1)
+        
 
 #    new_columns = [
 #        (aggr_gens[aggr_gens.ren_id == col].name.iloc[0],
@@ -701,17 +708,22 @@ def get_etragospecs_direct(session,
 #    potential_abs = potential_abs * 1000 # Absolute amounts in kW
 #    dispatch_abs = dispatch_abs * 1000
 #    curtailment_abs = curtailment_abs * 1000
+        
+    
 
     # Storage
     t3 = time.perf_counter()
     performance.update({'Renewable Dispatch and Curt.': t3-t2})
     # Capactiy
+    min_extended = 0.3
     stor_df = etrago_network.storage_units.loc[
-        (etrago_network.storage_units['bus'] == str(bus_id))
-        & (etrago_network.storage_units['p_nom_extendable'] == True)
-        & (etrago_network.storage_units['p_nom_opt'] > 0.)
-        & (etrago_network.storage_units['max_hours'] <= 20.)]  # Only batteries
+            (etrago_network.storage_units['bus'] == str(bus_id))
+            & (etrago_network.storage_units['p_nom_extendable'] == True)
+            & (etrago_network.storage_units['p_nom_opt'] > min_extended)
+            & (etrago_network.storage_units['max_hours'] <= 20.)] # Only batteries
 
+    logger.warning('Minimum storage of {} MW'.format(min_extended))
+    
     ext_found = False
     if len(stor_df) == 1:
         logger.info('Extendable storage unit found')
@@ -772,19 +784,19 @@ def get_etragospecs_direct(session,
 #            battery_active_power = battery_active_power + stor_series_kW
 
         stor_p_series_kW = etrago_network.storage_units_t.p[
-
-            str(stor_id)] * 1000
+                str(stor_id)] * 1000
 
         if pf_post_lopf:
             stor_q_series_kvar = etrago_network.storage_units_t.q[
-                str(stor_id)] * 1000
+                    str(stor_id)] * 1000
 
+    
     t4 = time.perf_counter()
     performance.update({'Storage Data Processing and Dispatch': t4-t3})
 
     specs = {
-        #        'battery_capacity': battery_capacity,
-        #        'battery_p_series': stor_p_series_kW ,
+#        'battery_capacity': battery_capacity,
+#        'battery_p_series': stor_p_series_kW ,
         'conv_dispatch': conv_dsptch,
         #            'conv_dispatch_abs': conv_dsptch_abs,
         #            'renewables': aggr_gens,
@@ -801,6 +813,9 @@ def get_etragospecs_direct(session,
 
         if pf_post_lopf:
             specs['battery_q_series'] = stor_q_series_kvar
+            
+    else:
+        specs['battery_p_series'] = specs['battery_q_series'] = None
 
 #    print(specs['battery_p_series'])
 #    specs = ETraGoSpecs(battery_capacity=battery_capacity,
@@ -817,18 +832,22 @@ def get_etragospecs_direct(session,
         print(conv_cap)
         print('\nConventional dispatch: \n')
         print(conv_dsptch)
-
+        
         print('\nRenewable capacity: \n')
         print(aggr_gens)
         print('\nRenewable Potential: \n')
         print(potential)
-
-        print('\nReactive Power: \n')
-        print(all_reactive_power)
+        
+        if pf_post_lopf:
+            print('\nReactive Power: \n')
+            print(all_reactive_power)
+        
 
     if pf_post_lopf:
         specs['reactive_power'] = all_reactive_power
-
+        
+        
+        
     t5 = time.perf_counter()
     performance.update({'Overall time': t5-t0})
 
