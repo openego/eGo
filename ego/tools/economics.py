@@ -163,6 +163,7 @@ def etrago_operating_costs(network):
     etg.buses_t.marginal_price
     etg.buses_t['p'].sum().sum()
 
+    # TODO add Grid and Transform Costs
     # active power x nodel price /
     etg.lines_t['p0'].sum().sum()
     etg.lines_t['p1'].sum().sum()
@@ -378,14 +379,14 @@ def edisgo_grid_investment(edisgo_networks, json_file):
         successfull_grids = edisgo_networks.successfull_grids
         if successfull_grids < 1:
             logger.warning(
-                    'Only {} % of the grids were calculated.\n'.format(
-                            successfull_grids * 100
-                            ) + 'Costs are extrapolated...')
-            
+                'Only {} % of the grids were calculated.\n'.format(
+                    successfull_grids * 100
+                ) + 'Costs are extrapolated...')
+
             aggr_capital_costs['capital_cost'] = (
-                    aggr_capital_costs['capital_cost'] 
-                    / successfull_grids)
-        
+                aggr_capital_costs['capital_cost']
+                / successfull_grids)
+
         print(aggr_capital_costs)
 
         return aggr_capital_costs
