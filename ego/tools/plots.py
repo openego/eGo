@@ -99,15 +99,14 @@ def ego_colore():
     return colors
 
 
-def grid_storage_invstment():
+def grid_storage_investment(df):
     """
     """
     colors = ego_colore()
 
-    n_levels = 4
+    n_levels = len(ego.ehv_grid_costs.capital_cost)
 
-    means_grid = (20, 35, 30, 35)
-    std_grid = (2, 3, 4, 1)
+    means_grid = ego.ehv_grid_costs.capital_cost
 
     means_storage = (25, 32, 34, 20)
     std_storage = (3, 5, 2, 3)
