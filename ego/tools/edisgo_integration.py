@@ -343,8 +343,7 @@ class EDisGoNetworks:
                     lambda *xs: xs[1]._run_edisgo(xs[0]),
                     (self,),
                     workers=no_cpu)
-                  
-            
+                              
         else:    
             logger.info('Run eDisGo sequencial')
             no_grids = len(self._grid_choice)
