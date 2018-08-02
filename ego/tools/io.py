@@ -436,7 +436,7 @@ class eGo(eDisGoResults):
         self.mv_grid_costs = None
 
     @property
-    def total_investment_cost(self):
+    def get_investment_cost(self):
         """ Get total investment costs of all voltage level for storages
         and grid expansion
         """
@@ -478,6 +478,8 @@ class eGo(eDisGoResults):
     def plot_total_investment_costs(self):
         """ Plot total investment costs
         """
+        # initiate total_investment_costs
+        self.get_investment_cost
 
         return self.total_investment_costs.plot.bar(x='voltage_level',
                                                     y='capital_cost', rot=1)
