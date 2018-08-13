@@ -886,6 +886,8 @@ def get_etragospecs_direct(session,
         print(aggr_gens)
         print('\nRenewable Potential: \n')
         print(potential)
+        print('\nRenewable Curtailment: \n')
+        print(curtailment)
         
         if pf_post_lopf:
             print('\nReactive Power: \n')

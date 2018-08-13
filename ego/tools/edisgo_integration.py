@@ -98,6 +98,9 @@ class EDisGoNetworks:
             logger.warning('Storage distribution (MV grids) is active, '
                            'but eTraGo dataset has no extendable storages')
         
+#        self._etrago_network = ETraGoData(etrago_network)
+        self._etrago_network = etrago_network
+        
         # Scenario translation
         if self._scn_name == 'Status Quo':
             self._generator_scn = None
@@ -114,9 +117,6 @@ class EDisGoNetworks:
             
         # Program information
         self._run_finished = False
-
-        # eTraGo Results (Input)
-        self._etrago_network = etrago_network
 
         # eDisGo Results
         self._edisgo_grids = {}
@@ -527,6 +527,9 @@ class EDisGoNetworks:
                 curt_abs[col] = (
                     specs['ren_curtailment'][col]
                     * solar_wind_capacities[col])
+              
+            print("Absolute curtailment: \n")    
+            print(curt_abs)
 
             edisgo_grid.curtail(curtailment_methodology='curtail_all',
                                 timeseries_curtailment=curt_abs)
@@ -631,3 +634,22 @@ class EDisGoNetworks:
 
         return bus_id
 
+
+class ETraGoData:
+    """
+    Container for minimal eTraGo network
+
+    """
+
+    def __init__(self, etrago_network):
+        
+        self.snapshots = getattr(
+                etrago_network, "snapshots")
+        self.storage_units = getattr(
+                etrago_network, "storage_units")
+        self.storage_units_t = getattr(
+                etrago_network, "storage_units_t")
+        self.generators = getattr(
+                etrago_network, "generators")
+        self.generators_t = getattr(
+                etrago_network, "generators_t")        
