@@ -235,11 +235,16 @@ class EDisGoNetworks:
 
         if self._ext_storage is True:
             storages = self._identify_extended_storages()
-            df = pd.concat([df, storages], axis=1)
-            df.rename(
-                    columns={"storage_p_nom": "extended_storage"}, 
-                    inplace=True)
-            
+            if not (storages.max().values[0] == 0.):
+                df = pd.concat([df, storages], axis=1)
+                df.rename(
+                        columns={"storage_p_nom": "extended_storage"}, 
+                        inplace=True)
+            else:
+                logger.warning('Extended storages all 0. \
+                               Therefore, extended storages \
+                               are excluded from clustering')
+                
         found_atts = [
                 i for i in self._cluster_attributes if i in df.columns
                 ]
@@ -262,10 +267,10 @@ class EDisGoNetworks:
                 logger.info('Hint: eTraGo dataset must contain '
                             'extendable storages in order to include '
                             'storage extension in MV grid clustering.')
-                  
+        
         return cluster_mv_grids(
                 no_grids, 
-                cluster_base = df)  
+                cluster_base=df)  
 
     
     def _identify_extended_storages(self):
