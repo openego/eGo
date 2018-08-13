@@ -232,14 +232,21 @@ class EDisGoNetworks:
                         "Wind_cumulative_capacity": "wind_cap",
                         "The_Farthest_node": "farthest_node"}, 
                         inplace=True)       
-
+        # Clustering Attributes cannot be all zero.
+        # The standard attributes are unlikely to be zero, however a
+        # checkup should be considered!
         if self._ext_storage is True:
             storages = self._identify_extended_storages()
-            df = pd.concat([df, storages], axis=1)
-            df.rename(
-                    columns={"storage_p_nom": "extended_storage"}, 
-                    inplace=True)
-            
+            if not (storages.max().values[0] == 0.):
+                df = pd.concat([df, storages], axis=1)
+                df.rename(
+                        columns={"storage_p_nom": "extended_storage"}, 
+                        inplace=True)
+            else:
+                logger.warning('Extended storages all 0. \
+                               Therefore, extended storages \
+                               are excluded from clustering')
+                
         found_atts = [
                 i for i in self._cluster_attributes if i in df.columns
                 ]
@@ -262,10 +269,10 @@ class EDisGoNetworks:
                 logger.info('Hint: eTraGo dataset must contain '
                             'extendable storages in order to include '
                             'storage extension in MV grid clustering.')
-                  
+        
         return cluster_mv_grids(
                 no_grids, 
-                cluster_base = df)  
+                cluster_base=df)  
 
     
     def _identify_extended_storages(self):
@@ -291,6 +298,9 @@ class EDisGoNetworks:
                             ] == True)
                     & (self._etrago_network.storage_units['max_hours'] <= 20.)
                     ]['p_nom_opt']
+                    
+            print('Storage p_nom of at bus {}:'.format(bus_id))
+            print(bus_id)
                     
             if len(stor_p_nom) == 1:
                 stor_p_nom = stor_p_nom.values[0]
