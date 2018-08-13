@@ -232,9 +232,7 @@ class EDisGoNetworks:
                         "Wind_cumulative_capacity": "wind_cap",
                         "The_Farthest_node": "farthest_node"}, 
                         inplace=True)       
-        # Clustering Attributes cannot be all zero.
-        # The standard attributes are unlikely to be zero, however a
-        # checkup should be considered!
+
         if self._ext_storage is True:
             storages = self._identify_extended_storages()
             if not (storages.max().values[0] == 0.):
@@ -298,9 +296,6 @@ class EDisGoNetworks:
                             ] == True)
                     & (self._etrago_network.storage_units['max_hours'] <= 20.)
                     ]['p_nom_opt']
-                    
-            print('Storage p_nom of at bus {}:'.format(bus_id))
-            print(bus_id)
                     
             if len(stor_p_nom) == 1:
                 stor_p_nom = stor_p_nom.values[0]
