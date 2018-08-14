@@ -1,12 +1,12 @@
 {
   "global": {
     "eTraGo": true,
-    "eDisGo": true,
+    "eDisGo": false,
     "db": "oedb",
     "recover": false,
     "result_id": null,
     "gridversion": "v0.4.3",
-    "csv_import":  false
+    "csv_import":  "data/ehv_grids/etrago_k10_t1_nep"
   },
   "eTraGo": {
     "method": "lopf",
@@ -45,10 +45,10 @@
   "eDisGo": {
      "ding0_files": "data/MV_grids/20180719171328",
      "choice_mode": "cluster",
-     "cluster_attributes":["farthest_node", "wind_cap", "solar_cap", "extended_storage"],
-     "manual_grids": [],
+     "cluster_attributes":["farthest_node", "wind_cap", "solar_cap"],
+     "manual_grids": [2155],
      "no_grids": 20,
-     "parallelization":true,
+     "parallelization":false,
      "max_workers":8,
      "apply_curtailment":true,
      "storage_distribution":false,
