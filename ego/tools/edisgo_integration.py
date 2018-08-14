@@ -33,7 +33,7 @@ import logging
 if not 'READTHEDOCS' in os.environ:
     from egoio.db_tables import model_draft, grid
     from egoio.tools import db
-    from edisgo.grid.network import Results, TimeSeriesControl
+    from edisgo.grid.network import Results, TimeSeriesControl, EDisGo
     from edisgo.tools.edisgo_run import (
         run_edisgo_basic,
         run_edisgo_pool_flexible
@@ -87,6 +87,8 @@ class EDisGoNetworks:
         self._ding0_files = self._edisgo_args['ding0_files']
         self._choice_mode = self._edisgo_args['choice_mode']
         self._parallelization = self._edisgo_args['parallelization']
+        self._initial_reinforcement = self._edisgo_args[
+                'initial_reinforcement']
         self._storage_distribution = self._edisgo_args['storage_distribution']
         self._apply_curtailment = self._edisgo_args['apply_curtailment']
         self._cluster_attributes = self._edisgo_args['cluster_attributes']
@@ -98,8 +100,9 @@ class EDisGoNetworks:
             logger.warning('Storage distribution (MV grids) is active, '
                            'but eTraGo dataset has no extendable storages')
         
-#        self._etrago_network = ETraGoData(etrago_network)
-        self._etrago_network = etrago_network
+        self._etrago_network = ETraGoData(etrago_network)
+        del etrago_network
+#        self._etrago_network = etrago_network
         
         # Scenario translation
         if self._scn_name == 'Status Quo':
@@ -435,8 +438,8 @@ class EDisGoNetworks:
         storage_integration = self._storage_distribution
         apply_curtailment = self._apply_curtailment
         
-        logger.info('Calculating interface values')
-        logger.info('Scenario: {}'.format(self._scn_name))
+        logger.info(
+                'MV grid {}: Calculating interface values'.format(mv_grid_id))
         
         conn = db.connection(section=self._json_file['global']['db'])
         Session = sessionmaker(bind=conn)
@@ -460,20 +463,37 @@ class EDisGoNetworks:
             + '.pkl')
 
         if not os.path.isfile(ding0_filepath):
-            msg = 'Not MV grid file for MV grid ID: ' + str(mv_grid_id)
+            msg = 'No MV grid file for MV grid {}'.format(mv_grid_id)
             logger.error(msg)
             raise Exception(msg)
 
         ### Inital grid reinforcements
-        logger.info('Initial MV grid reinforcement (worst-case anaylsis)')
-        edisgo_grid, costs_before, issues_before = run_edisgo_basic(
-            ding0_filepath=ding0_filepath,
-            generator_scenario=None,
-            analysis='worst-case')  # only the edisgo_grid is returned
+        if self._initial_reinforcement:
+            logger.info('Initial MV grid reinforcement (worst-case anaylsis)')
+            edisgo_grid, costs_before, issues_before = run_edisgo_basic(
+                ding0_filepath=ding0_filepath,
+                generator_scenario=None,
+                analysis='worst-case')  # only the edisgo_grid is returned
 
+            total_costs_before_EUR = costs_before['total_costs'].sum() * 1000
+            logger.info(
+                    ("MV grid {}: Costs for initial "
+                    + "reinforcement: EUR {}").format(
+                            mv_grid_id,
+                            "{0:,.2f}".format(total_costs_before_EUR)))
+                      
+            edisgo_grid.network.results = Results(edisgo_grid.network)
+        
+        else:
+            NotImplementedError
+    
+        no_gens_before_import = len(edisgo_grid.network.mv_grid.generators)
+        logger.info(
+                'Number of generators before generator import: {}'.format(
+                        no_gens_before_import))
+        
         logger.info('eTraGo feed-in case')
-        edisgo_grid.network.results = Results()
-
+               
         ### Generator import for NEP 2035 and eGo 100 scenarios
         if self._generator_scn:
             logger.info(
@@ -489,6 +509,16 @@ class EDisGoNetworks:
             )
             edisgo_grid.network.pypsa = None
 
+        no_gens_after_import = len(edisgo_grid.network.mv_grid.generators)
+        if no_gens_after_import == 0:
+            raise ImportError(
+                    ("MV grid {}: This grid has no generators " + 
+                    "after import").format(mv_grid_id))
+            
+        logger.info(
+                'Number of generators after generator import: {}'.format(
+                        no_gens_after_import))
+     
         ### Time Series from eTraGo
         logger.info('Updating eDisGo timeseries with eTraGo values')
         if self._pf_post_lopf:
@@ -508,21 +538,25 @@ class EDisGoNetworks:
                 timeseries_generation_dispatchable=specs['conv_dispatch'],
                 timeseries_load='demandlib',
                 timeindex=specs['conv_dispatch'].index).timeseries
-                
+               
         ### Curtailment
         if apply_curtailment:
             logger.info('Including Curtailment')
+            
             gens_df = tools.get_gen_info(edisgo_grid.network)
             solar_wind_capacities = gens_df.groupby(
                 by=['type', 'weather_cell_id']
             )['nominal_capacity'].sum()
+                    
             
             curt_cols = [
                     i for i in specs['ren_curtailment'].columns 
                     if i in solar_wind_capacities.index
-                    ] # Only the carriers and w_ids, that are found in the grid
-
-            curt_abs = pd.DataFrame(columns=curt_cols)
+                    ] 
+            
+            curt_abs = pd.DataFrame(
+                    columns=pd.MultiIndex.from_tuples(curt_cols))
+            
             for col in curt_abs:
                 curt_abs[col] = (
                     specs['ren_curtailment'][col]
@@ -531,11 +565,12 @@ class EDisGoNetworks:
             print("Absolute curtailment: \n")    
             print(curt_abs)
 
-            edisgo_grid.curtail(curtailment_methodology='curtail_all',
-                                timeseries_curtailment=curt_abs)
-    #             Think about the other curtailment functions!!!!
+            edisgo_grid.curtail(
+                    curtailment_timeseries=curt_abs,
+                    methodology='voltage-based',
+                    solver='gurobi')
         else:
-            logger.warning('No curtailment applied') 
+            logger.info('No curtailment applied') 
         
         ### Storage Integration
         if storage_integration:
@@ -549,9 +584,11 @@ class EDisGoNetworks:
                                     'battery_q_series'
                                     ]) # None if no pf_post_lopf
 
+        else:
+            logger.info('No storage integration') 
+            
+        logger.info('Calculating grid expansion costs')
         
-#        edisgo_grid.analyze()
-        logger.info('Calculating grid expansion costs.')
         edisgo_grid.reinforce()
 
         return edisgo_grid

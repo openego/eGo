@@ -447,7 +447,7 @@ def get_etragospecs_direct(session,
 
 #    __getattribute__(
 #        'ego_supply_aggr_weather_mview')
-    logger.warning('Weather table taken from model_draft')
+#    logger.warning('Weather table taken from model_draft')
 #    ormclass_source = model_draft.__getattribute__('EgoGridPfHvSource')
 #    logger.warning('Source table taken from model_draft')
 
