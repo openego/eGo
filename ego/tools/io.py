@@ -191,8 +191,7 @@ class eTraGoResults(egoBasic):
                 logger.info('Caution, import disaggregation '
                             'data of former Cluster')
 
-                # get folder
-                path = os.getcwd()
+                # get pathway
                 pathway = self.json_file['global'].get('csv_import')
 
                 # TODO clean network.csv from folder
