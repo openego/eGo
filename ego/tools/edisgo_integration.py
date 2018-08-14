@@ -48,6 +48,8 @@ if not 'READTHEDOCS' in os.environ:
     
     import pandas as pd
     from sqlalchemy.orm import sessionmaker
+    from sqlalchemy.orm import scoped_session
+    
     import multiprocess as mp2
 
 
@@ -89,12 +91,17 @@ class EDisGoNetworks:
         self._parallelization = self._edisgo_args['parallelization']
         self._initial_reinforcement = self._edisgo_args[
                 'initial_reinforcement']
+        if not self._initial_reinforcement:
+            raise NotImplementedError
+            
         self._storage_distribution = self._edisgo_args['storage_distribution']
         self._apply_curtailment = self._edisgo_args['apply_curtailment']
         self._cluster_attributes = self._edisgo_args['cluster_attributes']
         self._max_workers = self._edisgo_args['max_workers']
         self._max_cos_phi_renewable = self._edisgo_args[
                 'max_cos_phi_renewable']
+        self._results = self._edisgo_args['results']
+        self._csv_import = self._edisgo_args['csv_import']
         
         if (self._storage_distribution is True) & (self._ext_storage is False):
             logger.warning('Storage distribution (MV grids) is active, '
@@ -124,9 +131,15 @@ class EDisGoNetworks:
         # eDisGo Results
         self._edisgo_grids = {}
 
-        # Execute Functions
-        self._set_grid_choice()
-        self._run_edisgo_pool()
+        if self._csv_import:
+            raise NotImplementedError
+#            self._grid_choice_from_import()
+        else:
+            # Execute Functions
+            self._set_grid_choice()
+            self._run_edisgo_pool()
+            if self._results:
+                self._grid_choice.to_csv(self._results + '/grid_choice.csv')
 
     @property
     def edisgo_grids(self):
@@ -279,7 +292,8 @@ class EDisGoNetworks:
     def _identify_extended_storages(self):
         
         conn = db.connection(section=self._json_file['global']['db'])
-        Session = sessionmaker(bind=conn)
+        session_factory = sessionmaker(bind=conn)
+        Session = scoped_session(session_factory)
         session = Session()
         
         all_mv_grids = self._check_available_mv_grids()
@@ -309,6 +323,8 @@ class EDisGoNetworks:
                 
             storages.at[mv_grid, 'storage_p_nom'] = stor_p_nom
             
+        Session.remove()
+            
         return storages
         
         
@@ -333,6 +349,15 @@ class EDisGoNetworks:
 
         return mv_grids
 
+    def _grid_choice_from_import(self):
+        self._grid_choice = pd.read_csv(
+                self._csv_import + '/grid_choice.csv',
+                index_col=0)
+        
+    def _recover_from_csv(self):
+        raise NotImplementedError
+        
+    
     def _set_grid_choice(self):
         """
         Sets the grid choice based on the settings file
@@ -442,7 +467,8 @@ class EDisGoNetworks:
                 'MV grid {}: Calculating interface values'.format(mv_grid_id))
         
         conn = db.connection(section=self._json_file['global']['db'])
-        Session = sessionmaker(bind=conn)
+        session_factory = sessionmaker(bind=conn)
+        Session = scoped_session(session_factory)
         session = Session()
        
         bus_id = self._get_bus_id_from_mv_grid(session, mv_grid_id)
@@ -455,7 +481,9 @@ class EDisGoNetworks:
             self._grid_version,
             self._pf_post_lopf,
             self._max_cos_phi_renewable)
-
+        
+        Session.remove()
+        
         ding0_filepath = (
             self._ding0_files
             + '/ding0_grids__'
@@ -468,25 +496,21 @@ class EDisGoNetworks:
             raise Exception(msg)
 
         ### Inital grid reinforcements
-        if self._initial_reinforcement:
-            logger.info('Initial MV grid reinforcement (worst-case anaylsis)')
-            edisgo_grid, costs_before, issues_before = run_edisgo_basic(
-                ding0_filepath=ding0_filepath,
-                generator_scenario=None,
-                analysis='worst-case')  # only the edisgo_grid is returned
+        logger.info('Initial MV grid reinforcement (worst-case anaylsis)')
+        edisgo_grid, costs_before, issues_before = run_edisgo_basic(
+            ding0_filepath=ding0_filepath,
+            generator_scenario=None,
+            analysis='worst-case')  # only the edisgo_grid is returned
 
-            total_costs_before_EUR = costs_before['total_costs'].sum() * 1000
-            logger.info(
-                    ("MV grid {}: Costs for initial "
-                    + "reinforcement: EUR {}").format(
-                            mv_grid_id,
-                            "{0:,.2f}".format(total_costs_before_EUR)))
-                      
-            edisgo_grid.network.results = Results(edisgo_grid.network)
-        
-        else:
-            NotImplementedError
-    
+        total_costs_before_EUR = costs_before['total_costs'].sum() * 1000
+        logger.info(
+                ("MV grid {}: Costs for initial "
+                + "reinforcement: EUR {}").format(
+                        mv_grid_id,
+                        "{0:,.2f}".format(total_costs_before_EUR)))
+                  
+        edisgo_grid.network.results = Results(edisgo_grid.network)
+      
         no_gens_before_import = len(edisgo_grid.network.mv_grid.generators)
         logger.info(
                 'Number of generators before generator import: {}'.format(
@@ -590,9 +614,19 @@ class EDisGoNetworks:
         logger.info('Calculating grid expansion costs')
         
         edisgo_grid.reinforce()
+        
+        if self._results:
+            self._save_edisgo_grid_results(edisgo_grid, mv_grid_id)
 
         return edisgo_grid
 
+    def _save_edisgo_grid_results(self, edisgo_grid, mv_grid_id):
+        
+        result_folder = self._results + '/' + str(mv_grid_id)
+        edisgo_grid.network.results.save(result_folder)
+        
+    
+        
     def _get_mv_grid_from_bus_id(self, session, bus_id):
         """
         Queries the MV grid ID for a given eTraGo bus

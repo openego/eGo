@@ -722,10 +722,10 @@ def get_etragospecs_direct(session,
                     
                     if q > q_max:
                         q = q_max
-                        logger.info('q_max exceeded, q set to q_max')
+#                        logger.info('q_max exceeded, q set to q_max')
                     elif q < q_min:
                         q = q_min
-                        logger.info('q_min exceeded, q set to q_min')
+#                        logger.info('q_min exceeded, q set to q_min')
                         
                     reactive_power.at[idx, col] = q
                 
