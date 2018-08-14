@@ -193,43 +193,43 @@ class eTraGoResults(egoBasic):
 
                 # get folder
                 path = os.getcwd()
-                folder = '/' + self.json_file['global'].get('csv_import')
+                pathway = self.json_file['global'].get('csv_import')
 
                 # TODO clean network.csv from folder
 
                 try:
                     # create Network from csv
                     self.etrago_network = pypsa.Network()
-                    self.etrago_network.import_from_csv_folder(path+folder)
+                    self.etrago_network.import_from_csv_folder(pathway)
                     logger.info('Create eTraGo network from CSV result')
 
                     # get disaggregation
                     self.etrago_disaggregated_network = pypsa.Network()
                     self.etrago_disaggregated_network.\
-                        import_from_csv_folder(path+folder+'/disaggregated')
+                        import_from_csv_folder(pathway+'/disaggregated')
                     logger.info('Create eTraGo disaggregated network '
                                 'from CSV result')
 
                 except TypeError:
                     file_path = "disaggregated/network.csv"
-                    fix_leading_separator(path+folder+"/"+file_path)
+                    fix_leading_separator(pathway+"/"+file_path)
 
                     file_path = "network.csv"
-                    fix_leading_separator(path+folder+"/"+file_path)
+                    fix_leading_separator(pathway+"/"+file_path)
 
                     self.etrago_network = pypsa.Network()
-                    self.etrago_network.import_from_csv_folder(path+folder)
+                    self.etrago_network.import_from_csv_folder(pathway)
                     logger.info('Create eTraGo network from CSV result')
 
                     # get disaggregation
                     self.etrago_disaggregated_network = pypsa.Network()
                     self.etrago_disaggregated_network.\
-                        import_from_csv_folder(path+folder+'/disaggregated')
+                        import_from_csv_folder(pathway+'/disaggregated')
                     logger.info('Create eTraGo disaggregated network'
                                 'from CSV result')
 
                 args_name = "args.json"
-                with open(path + folder+'/'+args_name) as f:
+                with open(pathway+'/'+args_name) as f:
                     etrago_args = json.load(f)
                     logger.info('Using argument file')
 
