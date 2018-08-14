@@ -6,7 +6,7 @@
     "recover": false,
     "result_id": null,
     "gridversion": "v0.4.3",
-    "csv_import": "data/test5"
+    "csv_import":  false
   },
   "eTraGo": {
     "method": "lopf",
@@ -26,11 +26,11 @@
     "lpfile":  false,
     "results": false,
     "export": false,
-    "extendable": [],
+    "extendable": ["storages", "network"],
     "generator_noise": 789456,
     "reproduce_noise": false,
     "minimize_loading": false,
-    "network_clustering_kmeans": false,
+    "network_clustering_kmeans": 10,
     "load_cluster": false,
     "network_clustering_ehv": false,
     "disaggregation": "uniform",
@@ -55,4 +55,3 @@
      "max_cos_phi_renewable": 0.9
   }
 }
-
