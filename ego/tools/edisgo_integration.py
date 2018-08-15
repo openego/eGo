@@ -33,7 +33,7 @@ import logging
 if not 'READTHEDOCS' in os.environ:
     from egoio.db_tables import model_draft, grid
     from egoio.tools import db
-    from edisgo.grid.network import Results, TimeSeriesControl, EDisGo
+    from edisgo.grid.network import Results, TimeSeriesControl
     from edisgo.tools.edisgo_run import (
         run_edisgo_basic,
         run_edisgo_pool_flexible
@@ -47,6 +47,7 @@ if not 'READTHEDOCS' in os.environ:
         cluster_mv_grids)
     
     import pandas as pd
+    import json
     from sqlalchemy.orm import sessionmaker
     from sqlalchemy.orm import scoped_session
     
@@ -75,6 +76,7 @@ class EDisGoNetworks:
         # Genral Json Inputs
         self._json_file = json_file
         self._grid_version = self._json_file['global']['gridversion']
+        self._csv_import = self._json_file['global']['csv_import_eDisGo']
         
         # eTraGo args
         self._etrago_args = self._json_file['eTraGo']
@@ -84,16 +86,34 @@ class EDisGoNetworks:
                 )
         self._pf_post_lopf = self._etrago_args['pf_post_lopf']
 
-        # eDisGo args
+        # eDisGo args import    
+        if self._csv_import:
+#            raise NotImplementedError
+            
+            with open(os.path.join(
+                    self._csv_import, 
+                    'edisgo_args.json')) as f:
+                edisgo_args = json.load(f)
+            
+            self._json_file['eDisGo'] = edisgo_args 
+            logger.info("All eDisGo settings are taken from CSV folder"
+                        + "(scenario settings are ignored)")
+            # This overwrites the original object...
+#            raise NotImplementedError("CSV import is not yet implemented")
+            
+            
+        ## Imported or directly from the Settings
         self._edisgo_args = self._json_file['eDisGo']
+        
         self._ding0_files = self._edisgo_args['ding0_files']
         self._choice_mode = self._edisgo_args['choice_mode']
         self._parallelization = self._edisgo_args['parallelization']
         self._initial_reinforcement = self._edisgo_args[
                 'initial_reinforcement']
         if not self._initial_reinforcement:
-            raise NotImplementedError
-            
+            raise NotImplementedError(
+                    "Skipping the initial reinforcement is not yet implemented"
+                    )
         self._storage_distribution = self._edisgo_args['storage_distribution']
         self._apply_curtailment = self._edisgo_args['apply_curtailment']
         self._cluster_attributes = self._edisgo_args['cluster_attributes']
@@ -101,15 +121,14 @@ class EDisGoNetworks:
         self._max_cos_phi_renewable = self._edisgo_args[
                 'max_cos_phi_renewable']
         self._results = self._edisgo_args['results']
-        self._csv_import = self._edisgo_args['csv_import']
+        
         
         if (self._storage_distribution is True) & (self._ext_storage is False):
-            logger.warning('Storage distribution (MV grids) is active, '
-                           'but eTraGo dataset has no extendable storages')
+            logger.warning("Storage distribution (MV grids) is active, " 
+                           + "but eTraGo dataset has no extendable storages")
         
-        self._etrago_network = ETraGoData(etrago_network)
+        self._etrago_network = _ETraGoData(etrago_network)
         del etrago_network
-#        self._etrago_network = etrago_network
         
         # Scenario translation
         if self._scn_name == 'Status Quo':
@@ -130,16 +149,17 @@ class EDisGoNetworks:
 
         # eDisGo Results
         self._edisgo_grids = {}
-
+        
         if self._csv_import:
-            raise NotImplementedError
-#            self._grid_choice_from_import()
+            self._laod_edisgo_results()
+            
         else:
             # Execute Functions
             self._set_grid_choice()
             self._run_edisgo_pool()
             if self._results:
-                self._grid_choice.to_csv(self._results + '/grid_choice.csv')
+                self._save_edisgo_results()
+                
 
     @property
     def edisgo_grids(self):
@@ -348,16 +368,7 @@ class EDisGoNetworks:
                     ).replace('.pkl', '')))
 
         return mv_grids
-
-    def _grid_choice_from_import(self):
-        self._grid_choice = pd.read_csv(
-                self._csv_import + '/grid_choice.csv',
-                index_col=0)
         
-    def _recover_from_csv(self):
-        raise NotImplementedError
-        
-    
     def _set_grid_choice(self):
         """
         Sets the grid choice based on the settings file
@@ -572,12 +583,15 @@ class EDisGoNetworks:
                 by=['type', 'weather_cell_id']
             )['nominal_capacity'].sum()
                     
-            
             curt_cols = [
                     i for i in specs['ren_curtailment'].columns 
                     if i in solar_wind_capacities.index
                     ] 
             
+            if not curt_cols:
+                raise ImportError(
+                        ("MV grid {}: Data doesn't match").format(mv_grid_id))
+        
             curt_abs = pd.DataFrame(
                     columns=pd.MultiIndex.from_tuples(curt_cols))
             
@@ -614,18 +628,67 @@ class EDisGoNetworks:
         logger.info('Calculating grid expansion costs')
         
         edisgo_grid.reinforce()
-        
-        if self._results:
-            self._save_edisgo_grid_results(edisgo_grid, mv_grid_id)
 
         return edisgo_grid
 
-    def _save_edisgo_grid_results(self, edisgo_grid, mv_grid_id):
+    def _save_edisgo_results(self):
         
-        result_folder = self._results + '/' + str(mv_grid_id)
-        edisgo_grid.network.results.save(result_folder)
-        
+        if not os.path.exists(self._results):
+            os.makedirs(self._results)
     
+        with open(
+                os.path.join(self._results, 'edisgo_args.json'), 
+                'w') as fp:
+            json.dump(self._edisgo_args, fp)
+            
+        self._grid_choice.to_csv(self._results + '/grid_choice.csv') 
+        
+        for mv_grid_id in self._edisgo_grids:
+            print(mv_grid_id)
+        
+            grid_result = os.path.join(
+                    self._results, 
+                    str(mv_grid_id))
+            
+            try:
+                self._edisgo_grids[
+                        mv_grid_id
+                        ].network.results.save(grid_result)
+            except:
+                logger.warning(
+                        "MV grid {} could not be saved".format(mv_grid_id))
+        
+        
+    def _laod_edisgo_results(self):
+        
+        ## Load the grid choice form CSV
+        self._grid_choice = pd.read_csv(
+                os.path.join(self._csv_import,'grid_choice.csv'),
+                index_col=0)     
+        
+        for idx, row in self._grid_choice.iterrows():
+            mv_grid_id = row['the_selected_network_id']
+            try:
+            
+                file_path = os.path.join(
+                        self._csv_import,
+                        str(mv_grid_id),
+                        'grid_expansion_results',
+                        'grid_expansion_costs.csv')
+                
+                grid_expansion_costs = pd.read_csv(
+                    file_path,
+                    index_col=0)
+                
+                edisgo_grid = _EDisGoImported(grid_expansion_costs)
+                     
+                self._edisgo_grids[
+                            mv_grid_id
+                        ] = edisgo_grid
+            except:
+                logger.warning(
+                        "MV grid {} could not be loaded".format(mv_grid_id))
+                
         
     def _get_mv_grid_from_bus_id(self, session, bus_id):
         """
@@ -706,9 +769,10 @@ class EDisGoNetworks:
         return bus_id
 
 
-class ETraGoData:
+class _ETraGoData:
     """
-    Container for minimal eTraGo network
+    Container for minimal eTraGo network. This minimal network is required
+    for the parallelization of eDisGo.
 
     """
 
@@ -724,3 +788,42 @@ class ETraGoData:
                 etrago_network, "generators")
         self.generators_t = getattr(
                 etrago_network, "generators_t")        
+
+class _EDisGoImported:
+    """
+    Imported (reduced) eDisGo class. 
+    This class allows the import reduction to only the attributes used in eGo
+    """
+    
+    def __init__(
+            self, 
+            grid_expansion_costs):
+        
+        self.network = _NetworkImported(
+                grid_expansion_costs)
+        
+class _NetworkImported:
+    """
+    Reduced eDisG network class, used of eGo's reimport
+    """
+    
+    def __init__(
+            self, 
+            grid_expansion_costs):
+        
+        self.results = _ResultsImported(
+                grid_expansion_costs)
+        
+class _ResultsImported:
+    """
+    Reduced eDisG results class, used of eGo's reimport
+    """
+    
+    def __init__(
+            self, 
+            grid_expansion_costs):
+        
+        self.grid_expansion_costs = grid_expansion_costs
+        
+        
+        
