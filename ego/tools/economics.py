@@ -322,7 +322,7 @@ def edisgo_grid_investment(edisgo_networks, json_file):
 
     t = 40
     p = 0.05
-    logger.warning('For all components T={} and p={} is used'.format(t, p))
+    logger.info('For all components T={} and p={} is used'.format(t, p))
 
     costs = pd.DataFrame(
             columns=['voltage_level', 'annuity_costs', 'overnight_costs'])

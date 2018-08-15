@@ -447,7 +447,7 @@ def get_etragospecs_direct(session,
 
 #    __getattribute__(
 #        'ego_supply_aggr_weather_mview')
-    logger.warning('Weather table taken from model_draft')
+#    logger.warning('Weather table taken from model_draft')
 #    ormclass_source = model_draft.__getattribute__('EgoGridPfHvSource')
 #    logger.warning('Source table taken from model_draft')
 
@@ -722,10 +722,10 @@ def get_etragospecs_direct(session,
                     
                     if q > q_max:
                         q = q_max
-                        logger.info('q_max exceeded, q set to q_max')
+#                        logger.info('q_max exceeded, q set to q_max')
                     elif q < q_min:
                         q = q_min
-                        logger.info('q_min exceeded, q set to q_min')
+#                        logger.info('q_min exceeded, q set to q_min')
                         
                     reactive_power.at[idx, col] = q
                 
@@ -886,6 +886,8 @@ def get_etragospecs_direct(session,
         print(aggr_gens)
         print('\nRenewable Potential: \n')
         print(potential)
+        print('\nRenewable Curtailment: \n')
+        print(curtailment)
         
         if pf_post_lopf:
             print('\nReactive Power: \n')

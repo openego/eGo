@@ -6,7 +6,8 @@
     "recover": false,
     "result_id": null,
     "gridversion": "v0.4.3",
-    "csv_import":  false
+    "csv_import": false,
+    "csv_import_eDisGo": false
   },
   "eTraGo": {
     "method": "lopf",
@@ -19,7 +20,7 @@
                       "crossover":1,
                       "BarConvTol":"1.e-5",
                       "FeasibilityTol":"1.e-5"},
-    "scn_name": "eGo 100",
+    "scn_name": "Status Quo",
     "scn_extension": null,
     "scn_decommissioning": null,
     "add_Belgium_Norway": false,
@@ -46,12 +47,14 @@
      "ding0_files": "data/MV_grids/20180719171328",
      "choice_mode": "cluster",
      "cluster_attributes":["farthest_node", "wind_cap", "solar_cap", "extended_storage"],
-     "manual_grids": [],
-     "no_grids": 20,
+     "manual_grids": [1718],
+     "no_grids": 3,
      "parallelization":true,
      "max_workers":8,
+     "initial_reinforcement":true,
      "apply_curtailment":true,
      "storage_distribution":false,
-     "max_cos_phi_renewable": 0.9
+     "max_cos_phi_renewable": 0.9,
+     "results": "data/test5eDisGo"
   }
 }
