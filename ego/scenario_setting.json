@@ -6,7 +6,7 @@
     "recover": false,
     "result_id": null,
     "gridversion": "v0.4.3",
-    "csv_import": false,
+    "csv_import_eTraGo": "data/export_test_eTraGo",
     "csv_import_eDisGo": false
   },
   "eTraGo": {
@@ -25,7 +25,7 @@
     "scn_decommissioning": null,
     "add_Belgium_Norway": false,
     "lpfile":  false,
-    "results": false,
+    "results": "data/export_test_eTraGo",
     "export": false,
     "extendable": ["storages", "network"],
     "generator_noise": 789456,
@@ -45,16 +45,16 @@
   },
   "eDisGo": {
      "ding0_files": "data/MV_grids/20180719171328",
-     "choice_mode": "cluster",
+     "choice_mode": "manual",
      "cluster_attributes":["farthest_node", "wind_cap", "solar_cap", "extended_storage"],
-     "manual_grids": [1718],
+     "manual_grids": [1729],
      "no_grids": 3,
-     "parallelization":true,
+     "parallelization":false,
      "max_workers":8,
      "initial_reinforcement":true,
      "apply_curtailment":true,
      "storage_distribution":false,
      "max_cos_phi_renewable": 0.9,
-     "results": "data/test5eDisGo"
+     "results": "data/export_test_eDisGo"
   }
 }

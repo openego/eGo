@@ -114,8 +114,9 @@ def etrago_storages_investment(network, json_file):
     """
     # check settings for extendable
     if 'storages' not in json_file['eTraGo']['extendable']:
-        print("The optimizition was not using parameter 'extendable': storages")
-        print("No storages expantion costs from etrago")
+        logger.info("The optimizition was not using parameter "
+                    " 'extendable': storages"
+                    "No storages expantion costs from etrago")
 
     if 'storages' in json_file['eTraGo']['extendable']:
 

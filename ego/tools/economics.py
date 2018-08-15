@@ -219,8 +219,9 @@ def etrago_grid_investment(network, json_file):
 
     # check settings for extendable
     if 'network' not in json_file['eTraGo']['extendable']:
-        print("The optimizition was not using parameter 'extendable': network")
-        print("No grid expantion costs from etrago")
+        logger.info("The optimizition was not using parameter"
+                    " 'extendable': network \n"
+                    "No grid expantion costs from etrago")
 
     if 'network' in json_file['eTraGo']['extendable']:
 
@@ -325,7 +326,7 @@ def edisgo_grid_investment(edisgo_networks, json_file):
     logger.info('For all components T={} and p={} is used'.format(t, p))
 
     costs = pd.DataFrame(
-            columns=['voltage_level', 'annuity_costs', 'overnight_costs'])
+        columns=['voltage_level', 'annuity_costs', 'overnight_costs'])
 
     # Loop through all calculated eDisGo grids
     for key, value in edisgo_networks.edisgo_grids.items():
@@ -334,25 +335,25 @@ def edisgo_grid_investment(edisgo_networks, json_file):
             logger.warning('No results available for grid {}'.format(key))
             continue
 
-        ## eDisGo results (overnight costs) for this grid
+        # eDisGo results (overnight costs) for this grid
         costs_single = value.network.results.grid_expansion_costs
         costs_single.rename(
-                columns={'total_costs': 'overnight_costs'},
-                inplace=True)
+            columns={'total_costs': 'overnight_costs'},
+            inplace=True)
 
-        ## continue if this grid was not reinforced
+        # continue if this grid was not reinforced
         if (costs_single['overnight_costs'].sum() == 0.):
             logger.info('No expansion costs for grid {}'.format(key))
             continue
 
-        ## Overnight cost translated in annuity costs
+        # Overnight cost translated in annuity costs
         costs_single['capital_cost'] = edisgo_convert_capital_costs(
             costs_single['overnight_costs'],
             t=t,
             p=p,
             json_file=json_file)
-               
-        ## Weighting (retrieves the singe (absolute) weighting for this grid)
+
+        # Weighting (retrieves the singe (absolute) weighting for this grid)
         choice = edisgo_networks.grid_choice
         weighting = choice.loc[
             choice['the_selected_network_id'] == key
@@ -361,15 +362,15 @@ def edisgo_grid_investment(edisgo_networks, json_file):
         ].values[0]
 
         costs_single[['capital_cost', 'overnight_costs']] = (
-                costs_single[['capital_cost', 'overnight_costs']] 
-                * weighting)
-                
-        ## Append costs of this grid 
+            costs_single[['capital_cost', 'overnight_costs']]
+            * weighting)
+
+        # Append costs of this grid
         costs = costs.append(
-                costs_single[[
-                        'voltage_level',
-                        'capital_cost',
-                        'overnight_costs']], ignore_index=True)
+            costs_single[[
+                'voltage_level',
+                'capital_cost',
+                'overnight_costs']], ignore_index=True)
 
     if len(costs) == 0:
         logger.info('No expansion costs in any MV grid')
@@ -378,25 +379,24 @@ def edisgo_grid_investment(edisgo_networks, json_file):
     else:
         aggr_costs = costs.groupby(
             ['voltage_level']).sum().reset_index()
-        
-        ## In eDisGo all costs are in kEuro (eGo only takes Euro)
+
+        # In eDisGo all costs are in kEuro (eGo only takes Euro)
         aggr_costs[['capital_cost', 'overnight_costs']] = (
-                aggr_costs[['capital_cost', 'overnight_costs']]
-                * 1000)
-        
+            aggr_costs[['capital_cost', 'overnight_costs']]
+            * 1000)
+
         successfull_grids = edisgo_networks.successfull_grids
         if successfull_grids < 1:
             logger.warning(
-                    'Only {} % of the grids were calculated.\n'.format(
-                            successfull_grids * 100
-                            ) + 'Costs are extrapolated...')
-            
-            aggr_costs[['capital_cost', 'overnight_costs']] = (
-                    aggr_costs[['capital_cost', 'overnight_costs']]
-                    / successfull_grids)
-            
-        return aggr_costs
+                'Only {} % of the grids were calculated.\n'.format(
+                    successfull_grids * 100
+                ) + 'Costs are extrapolated...')
 
+            aggr_costs[['capital_cost', 'overnight_costs']] = (
+                aggr_costs[['capital_cost', 'overnight_costs']]
+                / successfull_grids)
+
+        return aggr_costs
 
 
 def get_generator_investment(network, scn_name):

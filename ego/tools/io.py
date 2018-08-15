@@ -135,7 +135,7 @@ class eTraGoResults(egoBasic):
         self.etrago_network = None
         self.etrago_disaggregated_network = None
 
-        logger.info('eTraGoResults startet')
+        logger.info('eTraGo section started')
 
         if self.json_file['global']['recover'] is True:
 
@@ -170,7 +170,9 @@ class eTraGoResults(egoBasic):
                                                        ['result_id'])
 
                 # add etrago_disaggregated_network from DB
-                print(self.json_file['eTraGo']['network_clustering_kmeans'])
+                logger.info(
+                    "Recovered eTraGo network uses kmeans: {}".format(
+                        self.json_file['eTraGo']['network_clustering_kmeans']))
 
             except KeyError:
                 pass
@@ -186,13 +188,13 @@ class eTraGoResults(egoBasic):
         # create eTraGo NetworkScenario
         if self.json_file['global']['eTraGo'] is True:
 
-            if self.json_file['global'].get('csv_import') != False:
+            if self.json_file['global'].get('csv_import_eTraGo') != False:
 
                 logger.info('Caution, import disaggregation '
                             'data of former Cluster')
 
                 # get pathway
-                pathway = self.json_file['global'].get('csv_import')
+                pathway = self.json_file['global'].get('csv_import_eTraGo')
 
                 # TODO clean network.csv from folder
 
@@ -250,7 +252,7 @@ class eTraGoResults(egoBasic):
                     self.etrago_disaggregated_network = (
                         etrago_disaggregated_network)
                 else:
-                    print("only one network is used")
+                    logger.warning("Only one network is used.")
                     self.etrago_network = etrago(self.json_file['eTraGo'])
                     self.etrago_disaggregated_network = None
 
@@ -604,7 +606,7 @@ def etrago_from_oedb(session, json_file):
             _mapped[name] = getattr(_pkg, _prefix + name)
 
         except AttributeError:
-            print('Warning: Relation %s does not exist.' % name)
+            logger.warning('Relation %s does not exist.' % name)
 
         return _mapped
 
@@ -689,7 +691,7 @@ def etrago_from_oedb(session, json_file):
             assert not df.empty
             df.index = timeindex
         except AssertionError:
-            print("No data for %s in column %s." % (name, column))
+            logger.warning("No data for %s in column %s." % (name, column))
 
         return df
 
@@ -819,10 +821,9 @@ def etrago_from_oedb(session, json_file):
                             col)
 
                     except (ValueError, AttributeError):
-                        print("Series %s of component %s could not be "
-                              "imported" % (col, pypsa_comp_name))
+                        logger.warning("Series %s of component %s could not be"
+                                       " imported" % (col, pypsa_comp_name))
 
-    print('Done')
     logger.info('Imported eTraGo results of id = %s ', result_id)
     return network
 

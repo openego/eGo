@@ -23,9 +23,11 @@ import csv
 import os
 import pandas as pd
 import json
-import logging
 import csv
 import sys
+import logging
+logger = logging.getLogger(__name__)
+
 from time import localtime, strftime
 
 __copyright__ = ("Flensburg University of Applied Sciences, "
@@ -52,7 +54,7 @@ def define_logging(name):
     # ToDo: Logger should be set up more specific
     #       add pypsa and other logger INFO to ego.log
     now = strftime("%Y-%m-%d_%H%M", localtime())
-    
+
     log_dir = 'logs'
     if not os.path.exists(log_dir):
         os.makedirs(log_dir)
@@ -63,14 +65,14 @@ def define_logging(name):
                         level=logging.INFO)
 
     logger = logging.getLogger(name)
-    
+
     formatter = logging.Formatter(
-            '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-            )    
+        '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    )
 
 #    logger = logging.FileHandler(log_name, mode='w')
     fh = logging.FileHandler(
-            log_dir + '/' + name + '_' + now + '.log', mode='w')
+        log_dir + '/' + name + '_' + now + '.log', mode='w')
     fh.setLevel(logging.INFO)
     fh.setFormatter(formatter)
     logger.addHandler(fh)
@@ -102,14 +104,14 @@ def get_scenario_setting(jsonpath='scenario_setting.json'):
     """
     path = os.getcwd()
     # add try ego/
-    print("Your path is:\n", path)
+    logger.info("Your path is: {}".format(path))
 
     with open(path + '/'+jsonpath) as f:
         json_file = json.load(f)
 
     if json_file['global'].get('eTraGo') == True:
 
-        print('Using and importing eTraGo settings')
+        logger.info('Using and importing eTraGo settings')
 
         # special case of SH and model_draft
         # ToDo: check and maybe remove this part
@@ -124,7 +126,7 @@ def get_scenario_setting(jsonpath='scenario_setting.json'):
         {'gridversion': json_file['global'].get('gridversion')})
 
     if json_file['global'].get('eDisGo') == True:
-        print('Use eDisGo settings')
+        logger.info('Using and importing eDisGo settings')
 
     return json_file
 
