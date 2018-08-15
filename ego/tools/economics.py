@@ -389,7 +389,7 @@ def edisgo_grid_investment(edisgo_networks, json_file):
         if successfull_grids < 1:
             logger.warning(
                 'Only {} % of the grids were calculated.\n'.format(
-                    successfull_grids * 100
+                    "{0:,.2f}".format(successfull_grids * 100)
                 ) + 'Costs are extrapolated...')
 
             aggr_costs[['capital_cost', 'overnight_costs']] = (
