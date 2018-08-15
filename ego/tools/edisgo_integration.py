@@ -513,13 +513,17 @@ class EDisGoNetworks:
             generator_scenario=None,
             analysis='worst-case')  # only the edisgo_grid is returned
 
-        total_costs_before_EUR = costs_before['total_costs'].sum() * 1000
-        logger.info(
-                ("MV grid {}: Costs for initial "
-                + "reinforcement: EUR {}").format(
-                        mv_grid_id,
-                        "{0:,.2f}".format(total_costs_before_EUR)))
-                  
+        try:
+            total_costs_before_EUR = costs_before['total_costs'].sum() * 1000
+            logger.info(
+                    ("MV grid {}: Costs for initial "
+                    + "reinforcement: EUR {}").format(
+                            mv_grid_id,
+                            "{0:,.2f}".format(total_costs_before_EUR)))
+        except:
+            logger.warning("Costs for initial reinforcement could not "
+                           "be calculated")
+            
         edisgo_grid.network.results = Results(edisgo_grid.network)
       
         no_gens_before_import = len(edisgo_grid.network.mv_grid.generators)
