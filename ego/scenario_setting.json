@@ -6,13 +6,13 @@
     "recover": false,
     "result_id": null,
     "gridversion": "v0.4.3",
-    "csv_import":  "data/ehv_grids/etrago_k10_t1_nep"
+    "csv_import": false
   },
   "eTraGo": {
     "method": "lopf",
-    "pf_post_lopf": false,
-    "start_snapshot": 720,
-    "end_snapshot" : 721,
+    "pf_post_lopf": true,
+    "start_snapshot": 710,
+    "end_snapshot" : 719,
     "solver": "gurobi",
     "solver_options":{"threads":4,
                       "method":2,
@@ -24,7 +24,7 @@
     "scn_decommissioning": null,
     "add_Belgium_Norway": false,
     "lpfile":  false,
-    "results": false,
+    "results": "data/ehv_grids/ego_100_pf_2",
     "export": false,
     "extendable": ["storages", "network"],
     "generator_noise": 789456,
