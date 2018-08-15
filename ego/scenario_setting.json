@@ -27,7 +27,7 @@
     "lpfile":  false,
     "results": false,
     "export": false,
-    "extendable": [],
+    "extendable": ["storages", "network"],
     "generator_noise": 789456,
     "reproduce_noise": false,
     "minimize_loading": false,
@@ -58,4 +58,3 @@
      "results": "data/test5eDisGo"
   }
 }
-
