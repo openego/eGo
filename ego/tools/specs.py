@@ -836,8 +836,15 @@ def get_etragospecs_direct(session,
                 str(stor_id)] * 1000
 
         if pf_post_lopf:
-            stor_q_series_kvar = etrago_network.storage_units_t.q[
-                    str(stor_id)] * 1000
+            try:
+                stor_q_series_kvar = etrago_network.storage_units_t.q[
+                        str(stor_id)] * 1000
+            except: 
+                logger.warning("No Q series found for storage unit {}".format(
+                        stor_id))
+                stor_q_series_kvar = etrago_network.storage_units_t.p[
+                str(stor_id)] * 0
+                
 
     
     t4 = time.perf_counter()
@@ -875,7 +882,7 @@ def get_etragospecs_direct(session,
 #                        renewables=aggr_gens,
 #                        ren_dispatch=dispatch,
 #                        ren_curtailment=curtailment)
-    test = True
+    test = False
     if test == True:
         print('\nConventional capacity: \n')
         print(conv_cap)

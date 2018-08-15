@@ -76,6 +76,7 @@ class EDisGoNetworks:
         # Genral Json Inputs
         self._json_file = json_file
         self._grid_version = self._json_file['global']['gridversion']
+        logger.info("grid_version = {}".format(self._grid_version))
         self._csv_import = self._json_file['global']['csv_import_eDisGo']
         
         # eTraGo args
@@ -84,6 +85,9 @@ class EDisGoNetworks:
         self._ext_storage = (
                 'storages' in self._etrago_args['extendable']
                 )
+        if self._ext_storage:
+            logger.info("eTraGo Dataset used extendable storages")
+            
         self._pf_post_lopf = self._etrago_args['pf_post_lopf']
 
         # eDisGo args import    
@@ -604,8 +608,8 @@ class EDisGoNetworks:
                     specs['ren_curtailment'][col]
                     * solar_wind_capacities[col])
               
-            print("Absolute curtailment: \n")    
-            print(curt_abs)
+#            print("Absolute curtailment: \n")    
+#            print(curt_abs)
 
             edisgo_grid.curtail(
                     curtailment_timeseries=curt_abs,
@@ -618,7 +622,7 @@ class EDisGoNetworks:
         ### Storage Integration
         if storage_integration:
             if self._ext_storage:
-                if specs['battery_p_series']:
+                if not specs['battery_p_series'] is None:
                     logger.info('Integrating storages in MV grid')
                     edisgo_grid.integrate_storage(
                             timeseries=specs['battery_p_series'],
