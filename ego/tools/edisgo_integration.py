@@ -671,9 +671,9 @@ class EDisGoNetworks:
                 index_col=0)     
         
         for idx, row in self._grid_choice.iterrows():
-            mv_grid_id = row['the_selected_network_id']
-            try:
+            mv_grid_id = int(row['the_selected_network_id'])
             
+            try:
                 file_path = os.path.join(
                         self._csv_import,
                         str(mv_grid_id),
@@ -689,7 +689,13 @@ class EDisGoNetworks:
                 self._edisgo_grids[
                             mv_grid_id
                         ] = edisgo_grid
+                        
+                logger.info("Imported MV grid {}".format(mv_grid_id))
             except:
+                self._edisgo_grids[
+                            mv_grid_id
+                        ] = "This grid failed"
+                        
                 logger.warning(
                         "MV grid {} could not be loaded".format(mv_grid_id))
                 
