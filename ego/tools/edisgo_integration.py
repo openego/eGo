@@ -610,7 +610,8 @@ class EDisGoNetworks:
             edisgo_grid.curtail(
                     curtailment_timeseries=curt_abs,
                     methodology='voltage-based',
-                    solver='gurobi')
+                    solver='gurobi',
+                    voltage_threshold=1.05)
         else:
             logger.info('No curtailment applied') 
         
