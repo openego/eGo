@@ -137,7 +137,7 @@ class eTraGoResults(egoBasic):
 
         logger.info('eTraGo section started')
 
-        if self.json_file['eGo']['recover'] is True:
+        if self.json_file['eGo']['result_id'] != None:
 
             # Delete arguments from scenario_setting
             logger.info('Remove given eTraGo settings from scenario_setting')
@@ -147,7 +147,7 @@ class eTraGoResults(egoBasic):
 
                 for key in self.json_file['eTraGo'].keys():
 
-                    self.json_file['eTraGo'][key] = 'removed by recover'
+                    self.json_file['eTraGo'][key] = 'removed by DB recover'
 
                 # ToDo add scenario_setting for results
                 self.json_file['eTraGo']['db'] = self.json_file['eGo']['db']
@@ -183,6 +183,7 @@ class eTraGoResults(egoBasic):
             if self.json_file['eTraGo']['disaggregation'] != False:
                 self.etrago_disaggregated_network = self.etrago_network
             else:
+                logger.warning('No disaggregated network found in DB')
                 self.etrago_disaggregated_network = None
 
         # create eTraGo NetworkScenario
@@ -583,8 +584,8 @@ def results_to_excel(ego):
 
 
 def etrago_from_oedb(session, json_file):
-    """Function which import eTraGo results for the Database by
-    ``result_id`` and if ``recover`` is set to ``true``.
+    """Function which import eTraGo results for the Database by the
+    ``result_id`` number.
 
     Parameters
     ----------
