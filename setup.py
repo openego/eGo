@@ -13,7 +13,7 @@ def read(fname):
 
 
 setup(name='eGo',
-      version='0.2.0',
+      version='0.3.0dev',
       author='wolfbunke, maltesc',
       author_email='',
       description=("A python package for distribution and transmission"
@@ -25,9 +25,9 @@ setup(name='eGo',
       packages=find_packages(),
       package_dir={'ego': 'ego'},
       include_package_data=True,
-      install_requires=['egoio==0.4.1',
-                        #'eDisGo==0.0.6',
-                        #'eTraGo==0.6.1',
+      install_requires=['egoio==0.4.0',
+                        'eDisGo==0.0.6dev',
+                        'eTraGo==0.6.1',
                         'pandas==0.20.3',
                         'pypsa==0.11.0fork',
                         'sqlalchemy<=1.1.4,>=1.0.15',
@@ -42,7 +42,13 @@ setup(name='eGo',
                         'multiprocess'
                         ],
       dependency_links=[('git+https://git@github.com/openego/PyPSA.git'
-                         '@dev#egg=pypsa-0.11.0fork')
+                         '@dev#egg=pypsa-0.11.0fork'),
+                        ('git+https://git@github.com/openego/eDisGo.git'
+                         '@dev#egg=0.0.6dev'),
+                        ('git+https://git@github.com/openego/eTraGo.git'
+                         '@dev#egg=0.6.1'),
+                        ('git+https://git@github.com/openego/ego.io.git'
+                         '@dev#egg=0.4.0')
                         ],
       extras_require={
           'doc': [
@@ -56,3 +62,6 @@ setup(name='eGo',
           'ego.data': ['*.csv']
       },
       )
+      
+      
+git@github.com:openego/eDisGo.git
