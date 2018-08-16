@@ -1,19 +1,19 @@
 {
-  "global": {
+  "eGo": {
     "eTraGo": true,
-    "eDisGo": true,
+    "eDisGo": false,
     "db": "oedb",
     "recover": false,
     "result_id": null,
-    "gridversion": "v0.4.4",
-    "csv_import_eTraGo": "results/sq_10_t3_storage",
+    "gridversion": "v0.4.3",
+    "csv_import_eTraGo": false,
     "csv_import_eDisGo": false
   },
   "eTraGo": {
     "method": "lopf",
     "pf_post_lopf": true,
     "start_snapshot": 720,
-    "end_snapshot" : 724,
+    "end_snapshot" : 721,
     "solver": "gurobi",
     "solver_options":{},
     "scn_name": "Status Quo",
@@ -21,7 +21,7 @@
     "scn_decommissioning": null,
     "add_Belgium_Norway": false,
     "lpfile":  false,
-    "results": "results/test1_eTraGo",
+    "results": false,
     "export": false,
     "extendable": ["storages", "network"],
     "generator_noise": 789456,
@@ -30,7 +30,7 @@
     "network_clustering_kmeans": 10,
     "load_cluster": false,
     "network_clustering_ehv": false,
-    "disaggregation": "uniform",
+    "disaggregation": false,
     "snapshot_clustering": false,
     "parallelisation": false,
     "skip_snapshots": false,
@@ -49,9 +49,8 @@
      "max_workers":8,
      "initial_reinforcement":true,
      "apply_curtailment":true,
-     "storage_distribution":true,
+     "storage_distribution":false,
      "max_cos_phi_renewable": 0.9,
      "results": "results/test_storage_eDisGo"
   }
 }
-

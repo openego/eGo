@@ -99,7 +99,7 @@ class egoBasic(object):
 
         # Database connection from json_file
         try:
-            conn = db.connection(section=self.json_file['global']['db'])
+            conn = db.connection(section=self.json_file['eGo']['db'])
             Session = sessionmaker(bind=conn)
             self.session = Session()
             logger.info('Connected to Database')
@@ -137,20 +137,20 @@ class eTraGoResults(egoBasic):
 
         logger.info('eTraGo section started')
 
-        if self.json_file['global']['recover'] is True:
+        if self.json_file['eGo']['recover'] is True:
 
             # Delete arguments from scenario_setting
             logger.info('Remove given eTraGo settings from scenario_setting')
 
             try:
-                self.json_file['global']['eTraGo'] = False
+                self.json_file['eGo']['eTraGo'] = False
 
                 for key in self.json_file['eTraGo'].keys():
 
                     self.json_file['eTraGo'][key] = 'removed by recover'
 
                 # ToDo add scenario_setting for results
-                self.json_file['eTraGo']['db'] = self.json_file['global']['db']
+                self.json_file['eTraGo']['db'] = self.json_file['eGo']['db']
                 logger.info(
                     'Add eTraGo scenario_setting from oedb result')
                 # To do ....
@@ -160,13 +160,13 @@ class eTraGoResults(egoBasic):
                 _pkg = import_module(packagename + '.' + schema)
 
                 # get metadata
-                # version = json_file['global']['gridversion']
+                # version = json_file['eGo']['gridversion']
 
                 orm_meta = getattr(_pkg, _prefix + 'Meta')
                 self.jsonpath = recover_resultsettings(self.session,
                                                        self.json_file,
                                                        orm_meta,
-                                                       self.json_file['global']
+                                                       self.json_file['eGo']
                                                        ['result_id'])
 
                 # add etrago_disaggregated_network from DB
@@ -186,15 +186,15 @@ class eTraGoResults(egoBasic):
                 self.etrago_disaggregated_network = None
 
         # create eTraGo NetworkScenario
-        if self.json_file['global']['eTraGo'] is True:
+        if self.json_file['eGo']['eTraGo'] is True:
 
-            if self.json_file['global'].get('csv_import_eTraGo') != False:
+            if self.json_file['eGo'].get('csv_import_eTraGo') != False:
 
                 logger.info('Caution, import disaggregation '
                             'data of former Cluster')
 
                 # get pathway
-                pathway = self.json_file['global'].get('csv_import_eTraGo')
+                pathway = self.json_file['eGo'].get('csv_import_eTraGo')
 
                 # TODO clean network.csv from folder
 
@@ -367,7 +367,7 @@ class eDisGoResults(eTraGoResults):
         self._edisgo = None
         self._edisgo_networks = None
 
-        if self.json_file['global']['eDisGo'] is True:
+        if self.json_file['eGo']['eDisGo'] is True:
             logger.info('Create eDisGo networks')
 
             self._edisgo = pd.DataFrame()
@@ -462,7 +462,7 @@ class eGo(eDisGoResults):
                 append(_storage, ignore_index=True)
 
         _grid_mv_lv = None
-        if self.json_file['global']['eDisGo'] is True:
+        if self.json_file['eGo']['eDisGo'] is True:
 
             _grid_mv_lv = self.edisgo.grid_investment_costs
             _grid_mv_lv['component'] = 'mv/lv grid'
@@ -595,7 +595,7 @@ def etrago_from_oedb(session, json_file):
 
     """
 
-    result_id = json_file['global']['result_id']
+    result_id = json_file['eGo']['result_id']
 
     # functions
     def map_ormclass(name):
@@ -710,7 +710,7 @@ def etrago_from_oedb(session, json_file):
     _mapped = {}
 
     # get metadata
-    # version = json_file['global']['gridversion']
+    # version = json_file['eGo']['gridversion']
 
     orm_meta = getattr(_pkg, _prefix + 'Meta')
 

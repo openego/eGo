@@ -87,7 +87,7 @@ def define_logging(name):
 
 def get_scenario_setting(jsonpath='scenario_setting.json'):
     """Get and open json file with scenaio settings of eGo.
-    The settings incluede global, eTraGo and eDisGo specific
+    The settings incluede eGo, eTraGo and eDisGo specific
     settings of arguments and parameters for a reproducible
     calculation.
 
@@ -109,7 +109,7 @@ def get_scenario_setting(jsonpath='scenario_setting.json'):
     with open(path + '/'+jsonpath) as f:
         json_file = json.load(f)
 
-    if json_file['global'].get('eTraGo') == True:
+    if json_file['eGo'].get('eTraGo') == True:
 
         logger.info('Using and importing eTraGo settings')
 
@@ -120,12 +120,12 @@ def get_scenario_setting(jsonpath='scenario_setting.json'):
                 get('gridversion') == "v0.4.2":
             json_file['eTraGo']['gridversion'] = None
 
-    # add global parameter to eTraGo scn_set
-    json_file['eTraGo'].update({'db': json_file['global'].get('db')})
+    # add eGo parameter to eTraGo scn_set
+    json_file['eTraGo'].update({'db': json_file['eGo'].get('db')})
     json_file['eTraGo'].update(
-        {'gridversion': json_file['global'].get('gridversion')})
+        {'gridversion': json_file['eGo'].get('gridversion')})
 
-    if json_file['global'].get('eDisGo') == True:
+    if json_file['eGo'].get('eDisGo') == True:
         logger.info('Using and importing eDisGo settings')
 
     return json_file
