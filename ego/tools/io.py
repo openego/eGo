@@ -253,8 +253,13 @@ class eTraGoResults(egoBasic):
                         etrago_disaggregated_network)
                 else:
                     logger.warning("Only one network is used.")
-                    self.etrago_network = etrago(self.json_file['eTraGo'])
-                    self.etrago_disaggregated_network = None
+
+                    etrago_network, etrago_disaggregated_network = etrago(
+                        self.json_file['eTraGo'])
+
+                    self.etrago_network = etrago_network
+                    self.etrago_disaggregated_network = (
+                        etrago_disaggregated_network)
 
         # Add selected results to results container
         # -----------------------------------------
