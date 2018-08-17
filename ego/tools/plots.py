@@ -344,7 +344,7 @@ def grid_storage_investment(ego):
 
 def power_price_plot(ego):
     """
-    plot power price of calculated scenario of timesteps and carrier
+    Plot power price of calculated scenario of timesteps and carrier
 
     Parameters
     ----------
@@ -354,7 +354,6 @@ def power_price_plot(ego):
     -------
     plot :obj:`matplotlib.pyplot.show`
             https://matplotlib.org/api/pyplot_api.html#matplotlib.pyplot.show
-
     """
     plt.rcdefaults()
     colors = ego_colore()
@@ -379,20 +378,33 @@ def power_price_plot(ego):
     return plt.show()
 
 
-def plot_storage_use(storages):
-    """
-    Intput ego.storages
-    """
+def plot_storage_use(ego):
+    """Plot storage use by charge and discharge values
 
-    ax = storages[['charge', 'discharge']].plot(kind='bar',
-                                                title="Storage usage",
-                                                stacked=True,
-                                                # table=True,
-                                                figsize=(
-                                                    15, 10),
-                                                legend=True,
-                                                fontsize=12)
+    Parameters
+    ----------
+    ego :class:`ego.io.eGo`
+
+    Returns
+    -------
+    plot :obj:`matplotlib.pyplot.show`
+            https://matplotlib.org/api/pyplot_api.html#matplotlib.pyplot.show
+    """
+    colors = ego_colore()
+
+    ax = ego.etrago.\
+        storage_charges[['charge', 'discharge']].plot(kind='bar',
+                                                      title="Storage usage",
+                                                      stacked=True,
+                                                      color=([colors.get(key)
+                                                              for key in
+                                                              ['egoblue1',
+                                                               'egoblue2']]),
+                                                      figsize=(
+                                                          15, 10),
+                                                      legend=True,
+                                                      fontsize=12)
     ax.set_xlabel("Kind of Storage", fontsize=12)
     ax.set_ylabel("Charge and Discharge in MWh", fontsize=12)
-    plt.show()
-    return
+
+    return plt.show()
