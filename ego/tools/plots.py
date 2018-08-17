@@ -40,7 +40,7 @@ if not 'READTHEDOCS' in os.environ:
     import webbrowser
     from egoio.db_tables.model_draft import EgoGridMvGriddistrict
     from egoio.db_tables.grid import EgoDpMvGriddistrict
-    from ego.tools.io import eGo
+    #from ego.tools.io import eGo
     import matplotlib.pyplot as plt
 
 import logging
@@ -99,17 +99,16 @@ def ego_colore():
     return colors
 
 
-def grid_storage_investment(df):
+def grid_storage_investment(ego):
     """
     """
     colors = ego_colore()
 
-    n_levels = len(ego.ehv_grid_costs.capital_cost)
+    n_levels = len(ego._ehv_grid_costs.capital_cost)
 
-    means_grid = ego.ehv_grid_costs.capital_cost
+    means_grid = ego._ehv_grid_costs.capital_cost
 
-    means_storage = (25, 32, 34, 20)
-    std_storage = (3, 5, 2, 3)
+    means_storage = ego._storage_costs.capital_cost
 
     fig, ax = plt.subplots()
 
@@ -121,19 +120,19 @@ def grid_storage_investment(df):
 
     rects1 = ax.bar(index, means_grid, bar_width,
                     alpha=opacity, color=colors['egoblue1'],
-                    yerr=std_grid, error_kw=error_config,
-                    label='Grid costs')
+                    error_kw=error_config,
+                    label='Grid expansion costs per annuity')
 
     rects2 = ax.bar(index + bar_width, means_storage, bar_width,
                     alpha=opacity, color=colors['egoblue4'],
-                    yerr=std_storage, error_kw=error_config,
-                    label='Storage Costs')
+                    error_kw=error_config,
+                    label='Storage expansion costs per annuity')
 
-    ax.set_xlabel('voltage level')
+    ax.set_xlabel('Voltage level')
     ax.set_ylabel('Annualized costs per time step')
     ax.set_title('Annualized costs per time step and component')
     ax.set_xticks(index + bar_width / 2)
-    ax.set_xticklabels(('ehv', 'hv', 'mv', 'lv'))
+    ax.set_xticklabels(list(ego._ehv_grid_costs.voltage_level))
     ax.legend()
 
     fig.tight_layout()
@@ -399,7 +398,7 @@ def total_power_costs_plot(etrago_network):
     fig, ax = plt.subplots()
 
     # plot power_price
-    a = eGo(eTraGo=eTraGo)
+    # a = eGo(eTraGo=eTraGo) # TODO change import
     prc = a.create_total_results()
 
     prc = prc.etrago['power_price']

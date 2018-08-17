@@ -64,6 +64,7 @@ if not 'READTHEDOCS' in os.environ:
     from importlib import import_module
     import pypsa
     import re
+    from tools.plots import (grid_storage_investment)
 
 __copyright__ = ("Europa-Universität Flensburg, "
                  "Centre for Sustainable Energy Systems")
@@ -524,8 +525,7 @@ class eGo(eDisGoResults):
         # initiate total_investment_costs
         self.get_investment_cost
 
-        return self.total_investment_costs.plot.bar(x='component',
-                                                    y='capital_cost', rot=1)
+        return grid_storage_investment(self)
 
     # write_results_to_db():
     logging.info('Initialisation of eGo Results')
