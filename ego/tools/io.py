@@ -285,6 +285,7 @@ class eTraGoResults(egoBasic):
 
     if not 'READTHEDOCS' in os.environ:
         # include eTraGo functions and methods
+        @property
         def etrago_line_loading(self, **kwargs):
             """
             Integrate and use function from eTraGo.
@@ -293,6 +294,7 @@ class eTraGoResults(egoBasic):
             # add if time_step <1  -> plot
             return plot_line_loading(network=self.etrago_network, **kwargs)
 
+        @property
         def etrago_stacked_gen(self, **kwargs):
             """
             Integrate function from eTraGo.
@@ -300,6 +302,7 @@ class eTraGoResults(egoBasic):
             """
             return plot_stacked_gen(network=self.etrago_network, **kwargs)
 
+        @property
         def etrago_curtailment(self, **kwargs):
             """
             Integrate function from eTraGo.
@@ -307,6 +310,7 @@ class eTraGoResults(egoBasic):
             """
             return curtailment(network=self.etrago_network, **kwargs)
 
+        @property
         def etrago_gen_dist(self, **kwargs):
             """
             Integrate function from eTraGo.
@@ -314,6 +318,7 @@ class eTraGoResults(egoBasic):
             """
             return gen_dist(network=self.etrago_network, **kwargs)
 
+        @property
         def etrago_storage_distribution(self, **kwargs):
             """
             Integrate function from eTraGo.
@@ -321,6 +326,7 @@ class eTraGoResults(egoBasic):
             """
             return storage_distribution(network=self.etrago_network, **kwargs)
 
+        @property
         def etrago_voltage(self, **kwargs):
             """
             Integrate function from eTraGo.
@@ -328,6 +334,7 @@ class eTraGoResults(egoBasic):
             """
             return plot_voltage(network=self.etrago_network, **kwargs)
 
+        @property
         def etrago_residual_load(self, **kwargs):
             """
             Integrate function from eTraGo.
@@ -335,6 +342,7 @@ class eTraGoResults(egoBasic):
             """
             return plot_residual_load(network=self.etrago_network, **kwargs)
 
+        @property
         def etrago_line_loading_diff(self, networkB, **kwargs):
             """
             Integrate function from eTraGo.
@@ -343,6 +351,7 @@ class eTraGoResults(egoBasic):
             return plot_line_loading_diff(networkA=self.etrago_network,
                                           networkB=networkB, **kwargs)
 
+        @property
         def etrago_extension_overlay_network(self, **kwargs):
             """
             Integrate function from eTraGo.
@@ -351,6 +360,7 @@ class eTraGoResults(egoBasic):
             return extension_overlay_network(network=self.etrago_network,
                                              **kwargs)
 
+        @property
         def etrago_full_load_hours(self, **kwargs):
             """
             Integrate function from eTraGo.
@@ -436,11 +446,11 @@ class eGo(eDisGoResults):
                                   *args, **kwargs)
 
         # add total results here
-        self.total_investment_costs = None
-        self.total_operation_costs = None  # TODO
-        self.storage_costs = None
-        self.ehv_grid_costs = None
-        self.mv_grid_costs = None
+        self._total_investment_costs = None
+        self._total_operation_costs = None  # TODO
+        self._storage_costs = None
+        self._ehv_grid_costs = None
+        self._mv_grid_costs = None
 
     @property
     def get_investment_cost(self):
@@ -476,10 +486,36 @@ class eGo(eDisGoResults):
             self._total_inv_cost = self._total_inv_cost.\
                 append(_grid_mv_lv, ignore_index=True)
 
-        self.total_investment_costs = self._total_inv_cost
-        self.storage_costs = _storage
-        self.ehv_grid_costs = _grid_ehv
-        self.mv_grid_costs = _grid_mv_lv
+        self._total_investment_costs = self._total_inv_cost
+        self._storage_costs = _storage
+        self._ehv_grid_costs = _grid_ehv
+        self._mv_grid_costs = _grid_mv_lv
+
+    @property
+    def total_investment_costs(self):
+        """
+        Contains all investment informations about eGo
+
+        Returns
+        -------
+        :pandas:`pandas.DataFrame<dataframe>`
+
+        """
+        self.get_investment_cost
+
+        return self._total_investment_costs
+
+    @property
+    def total_operation_costs(self):
+        """
+        Contains all operation costs information about eGo
+
+        Returns
+        -------
+        :pandas:`pandas.DataFrame<dataframe>`
+
+        """
+        return self._total_operation_costs
 
     @property
     def plot_total_investment_costs(self):
