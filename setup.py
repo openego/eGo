@@ -33,13 +33,14 @@ setup(name='eGo',
                         'sqlalchemy<=1.1.4,>=1.0.15',
                         'geoalchemy2>= 0.3.0, <=0.4.0',
                         'pyproj==1.9.5.1',
-                        'geopandas==0.3.0',
+                        'geopandas',
                         'matplotlib>= 1.5.3, <=1.5.3',
                         'Rtree==0.8.3',
                         'plotly==2.2.3',
                         'Pyomo==5.5.0',
                         'oedialect',
-                        'multiprocess'
+                        'multiprocess',
+                        'folium'
                         ],
       dependency_links=[('git+https://git@github.com/openego/PyPSA.git'
                          '@dev#egg=pypsa-0.11.0fork'),

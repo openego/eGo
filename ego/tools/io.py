@@ -65,7 +65,7 @@ if not 'READTHEDOCS' in os.environ:
     import pypsa
     import re
     from tools.plots import (grid_storage_investment,
-                             power_price_plot, plot_storage_use)
+                             power_price_plot, plot_storage_use, igeoplot)
 
 __copyright__ = ("Europa-Universität Flensburg, "
                  "Centre for Sustainable Energy Systems")
@@ -539,6 +539,12 @@ class eGo(eDisGoResults):
         """ Plot storage usage by charge and discharge
         """
         return plot_storage_use(self)
+
+    @property
+    def iplot(self):
+        """ Get iplot of results as html
+        """
+        return igeoplot(self)
 
     # write_results_to_db():
     logging.info('Initialisation of eGo Results')
