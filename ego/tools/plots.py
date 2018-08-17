@@ -139,38 +139,6 @@ def grid_storage_investment(ego):
     plt.show()
 
 
-def make_all_plots(network):
-    """ Test function which run all ploting functions.
-
-    Parameters
-    ----------
-    network_etrago: :class:`etrago.tools.io.NetworkScenario`
-        eTraGo network object compiled by :meth:`etrago.appl.etrago`
-
-    Returns
-    -------
-    plots : :meth:`matplotlib.pyplot`
-        Returns plots
-    """
-    # make a line loading plot
-    plot_line_loading(network)
-
-    # plot stacked sum of nominal power for each generator type and timestep
-    plot_stacked_gen(network, resolution="MW")
-
-    # plot to show extendable storages
-    storage_distribution(network)
-
-    # plot_residual_load(network)
-
-    plot_voltage(network)
-
-    # curtailment(network)
-
-    gen_dist(network)
-
-    return
-
 #
 # def igeoplot(network, session, tiles=None, geoloc=None, args=None):
 #     """Plot function in order to display eGo results on leaflet OSM map.
