@@ -379,29 +379,6 @@ def power_price_plot(ego):
     return plt.show()
 
 
-def plot_etrago_production(ego):
-    """
-    input eGo
-    Bar plot all etrago costs
-    """
-
-    # fig = plt.figure(figsize=(18,10), dpi=1600)
-    # plt.pie(ego.etrago['p'],autopct='%.1f')
-    # plt.title('Procentage of power production')
-
-    # max(ego.etrago['investment_costs'])/(1000*1000*1000) # T€/kW->M€/KW ->GW/MW
-
-    # Chare of investment costs get volume
-    # ego.etrago['investment_costs'].sum()/(1000*1000*1000)
-
-    ego.etrago['p'].plot(kind="pie",
-                         subplots=True,
-                         figsize=(10, 10),
-                         autopct='%.1f')
-
-    plt.show()
-
-
 def plotting_invest(result):
     """
     Dataframe input of eGo
