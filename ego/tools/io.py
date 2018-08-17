@@ -64,7 +64,7 @@ if not 'READTHEDOCS' in os.environ:
     from importlib import import_module
     import pypsa
     import re
-    from tools.plots import (grid_storage_investment)
+    from tools.plots import (grid_storage_investment, power_price_plot)
 
 __copyright__ = ("Europa-Universität Flensburg, "
                  "Centre for Sustainable Energy Systems")
@@ -526,6 +526,12 @@ class eGo(eDisGoResults):
         self.get_investment_cost
 
         return grid_storage_investment(self)
+
+    @property
+    def plot_power_price(self):
+        """ Plot power prices per carrier of calculation
+        """
+        return power_price_plot(self)
 
     # write_results_to_db():
     logging.info('Initialisation of eGo Results')

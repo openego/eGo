@@ -40,7 +40,6 @@ if not 'READTHEDOCS' in os.environ:
     import webbrowser
     from egoio.db_tables.model_draft import EgoGridMvGriddistrict
     from egoio.db_tables.grid import EgoDpMvGriddistrict
-    #from ego.tools.io import eGo
     import matplotlib.pyplot as plt
 
 import logging
@@ -343,45 +342,38 @@ def grid_storage_investment(ego):
 #     return region
 
 
-def total_power_costs_plot(etrago_network):
+def power_price_plot(ego):
     """
-    plot power price of eTraGo
+    plot power price of calculated scenario of timesteps and carrier
 
     Parameters
     ----------
-    eTraGo :class:`etrago.io.NetworkScenario`
+    ego :class:`ego.io.eGo`
 
     Returns
     -------
     plot :obj:`matplotlib.pyplot.show`
             https://matplotlib.org/api/pyplot_api.html#matplotlib.pyplot.show
 
-
     """
-    # import matplotlib.pyplot as plt
     plt.rcdefaults()
-    # import numpy as np
-    # import matplotlib.pyplot as plt
-
+    colors = ego_colore()
     fig, ax = plt.subplots()
 
     # plot power_price
-    # a = eGo(eTraGo=eTraGo) # TODO change import
-    prc = a.create_total_results()
-
-    prc = prc.etrago['power_price']
+    prc = ego.etrago.generator['power_price']
     bar_width = 0.35
     opacity = 0.4
 
     ind = np.arange(len(prc.index))    # the x locations for the groups
     width = 0.35       # the width of the bars: can also be len(x) sequence
 
-    ax.barh(ind, prc, align='center', color='green')
+    ax.barh(ind, prc, align='center', color=colors['egoblue1'])
     ax.set_yticks(ind)
     ax.set_yticklabels(prc.index)
     ax.invert_yaxis()
 
-    ax.set_xlabel('Costs')
+    ax.set_xlabel('Power price in €/MWh')
     ax.set_title('Power Costs per Carrier')
 
     return plt.show()
