@@ -379,21 +379,6 @@ def power_price_plot(ego):
     return plt.show()
 
 
-def plotting_invest(result):
-    """
-    Dataframe input of eGo
-    """
-    fig, ax = plt.subplots()
-
-    ax.set_ylabel('Costs in €')
-    ax.set_title('Investment Cost')
-    ax.set_xlabel('Investments')
-
-    result.plot(kind='bar', ax=ax)
-
-    return
-
-
 def plot_storage_use(storages):
     """
     Intput ego.storages
