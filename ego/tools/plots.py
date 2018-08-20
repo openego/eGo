@@ -214,11 +214,13 @@ def prepareGD(session, subst_id=None, version=None):
 
         query = session.query(EgoDpMvGriddistrict.subst_id,
                               EgoDpMvGriddistrict.geom)
-
-        Regions = [(subst_id, shape.to_shape(geom)) for subst_id, geom in
-                   query.filter(EgoDpMvGriddistrict.version == version
-                                # ,EgoDpMvGriddistrict.subst_id.in_(subst_id)
-                                ).all()]
+        if subst_id:
+            Regions = [(subst_id, shape.to_shape(geom)) for subst_id, geom in
+                       query.filter(EgoDpMvGriddistrict.version == version,
+                                    EgoDpMvGriddistrict.subst_id.in_(subst_id)).all()]
+        else:
+            Regions = [(subst_id, shape.to_shape(geom)) for subst_id, geom in
+                       query.filter(EgoDpMvGriddistrict.version == version).all()]
     # toDo add values of sub_id etc. to popup
     else:
         # from model_draft
@@ -276,6 +278,7 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
                     control_scale=True, zoom_start=6)
 
     # add Nasa light background
+    # http://nbviewer.jupyter.org/github/ocefpaf/folium_notebooks/blob/master/test_add_tile_layer.ipynb
     if tiles == 'Nasa':
         tiles = 'https://map1.vis.earthdata.nasa.gov/wmts-webmerc/VIIRS_CityLights_2012/default/GoogleMapsCompatible_Level8/{z}/{y}/{x}.jpg'
         attr = ('&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="http://cartodb.com/attributions">CartoDB</a>')
@@ -286,7 +289,7 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
     # 'Stamen Toner'  OpenStreetMap
 
     # Legend name
-    bus_group = folium.FeatureGroup(name='Buses')
+    bus_group = folium.FeatureGroup(name='Buses full informations')
     # add buses
 
     # get scenario name from args
@@ -296,16 +299,16 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
     for name, row in network.buses.iterrows():
         # get information of buses
         popup = """ <b> Bus: </b> {} <br>
-     					carrier: {} <br>
-     					control: {} <br>
+     					Scenario: {} <br>
+                        Carrier: {} <br>
+     					Control: {} <br>
      					type: {} <br>
      					v_nom: {} <br>
      					v_mag_pu_set: {} <br>
      					v_mag_pu_min: {} <br>
      					v_mag_pu_max: {} <br>
      					sub_network: {} <br>
-     					Scenario: {} <br>
-     					version: {} <br>
+     					Version: {} <br>
      				""".format(row.name, scn_name, row['carrier'],
                     row['control'], row['type'], row['v_nom'], row['v_mag_pu_set'],
                     row['v_mag_pu_min'], row['v_mag_pu_max'], row['sub_network'], version)
@@ -329,7 +332,7 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
         return '#' + red + green + blue
 
     # Prepare lines
-    line_group = folium.FeatureGroup(name='Lines')
+    line_group = folium.FeatureGroup(name='Lines full informations')
 
     # get line Coordinates
     x0 = network.lines.bus0.map(network.buses.x)
@@ -339,74 +342,162 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
     y1 = network.lines.bus1.map(network.buses.y)
 
     # get content
-    text = network.lines
+    lines = network.lines
 
     # color map lines
     colormap = cm.linear.YlOrRd_09.scale(
-        text.s_nom.min(), text.s_nom.max()).to_step(6)
+        lines.s_nom.min(), lines.s_nom.max()).to_step(6)
 
-    # TODO add more parameter
+    # add parameter
     for line in network.lines.index:
-        popup = """ <b>Line:</b> {} <br>
-     					version: {} <br>
-     					v_nom: {} <br>
-     					s_nom: {} <br>
-     					capital_cost: {} <br>
-     					g: {} <br>
-     					g_pu: {} <br>
-     					terrain_factor: {} <br>
-     				""".format(line, version, text.v_nom[line],
-                    text.s_nom[line], text.capital_cost[line],
-                    text.g[line], text.g_pu[line],
-                    text.terrain_factor[line]
-                    )
-
-        def colormaper():
-            """ Colore Map for lines
-            """
-            # TODO Update and correct mapper
-            l_color = []
-            if colormap.index[6] >= text.s_nom[line] > colormap.index[5]:
-                l_color = colormap.colors[5]
-            elif colormap.index[5] >= text.s_nom[line] > colormap.index[4]:
-                l_color = colormap.colors[4]
-            elif colormap.index[4] >= text.s_nom[line] > colormap.index[3]:
-                l_color = colormap.colors[3]
-            elif colormap.index[3] >= text.s_nom[line] > colormap.index[2]:
-                l_color = colormap.colors[2]
-            elif colormap.index[2] >= text.s_nom[line] > colormap.index[1]:
-                l_color = colormap.colors[1]
-            elif colormap.index[1] >= text.s_nom[line] >= colormap.index[0]:
-                l_color = colormap.colors[0]
-            else:
-                l_color = (0., 0., 0., 1.)
-            return l_color
+        popup = """<b>Line:</b> {} <br>
+            version: {} <br>
+            angle_diff: {} <br>
+            b: {} <br>
+            b_pu: {} <br>
+            bus0: {} <br>
+            bus1: {} <br>
+            capital_cost: {} <br>
+            g: {} <br>
+            g_pu: {} <br>
+            length: {} <br>
+            num_parallel: {} <br>
+            r: {} <br>
+            r_pu: {} <br>
+            s_nom: {} <br>
+            s_nom_extendable: {} <br>
+            s_nom_max: {} <br>
+            s_nom_min: {} <br>
+            s_nom_opt: {} <br>
+            sub_network: {} <br>
+            terrain_factor: {} <br>
+            type: {} <br>
+            v_ang_max: {} <br>
+            v_ang_min: {} <br>
+            v_nom: {} <br>
+            x: {} <br>
+            x_pu: {} <br>
+            """.format(line, version,
+                       lines.angle_diff[line],
+                       lines.b[line],
+                       lines.b_pu[line],
+                       lines.bus0[line],
+                       lines.bus1[line],
+                       lines.capital_cost[line],
+                       lines.g[line],
+                       lines.g_pu[line],
+                       lines.length[line],
+                       lines.num_parallel[line],
+                       lines.r[line],
+                       lines.r_pu[line],
+                       lines.s_nom[line],
+                       lines.s_nom_extendable[line],
+                       lines.s_nom_max[line],
+                       lines.s_nom_min[line],
+                       lines.s_nom_opt[line],
+                       lines.sub_network[line],
+                       lines.terrain_factor[line],
+                       lines.type[line],
+                       lines.v_ang_max[line],
+                       lines.v_ang_min[line],
+                       lines.v_nom[line],
+                       lines.x[line],
+                       lines.x_pu[line])
 
         # change colore function
-        l_color = colormaper()
+        l_color = colormapper_lines(
+            colormap, lines, line, column="s_nom")
         # ToDo make it more generic
         folium.PolyLine(([y0[line], x0[line]], [y1[line], x1[line]]),
                         popup=popup, color=convert_to_hex(l_color)).\
             add_to(line_group)
 
+    # Add results
+    # add expansion costs per line
+    lines = network.lines
+    if 'network' in ego.json_file['eTraGo']['extendable']:
+        lines['s_nom_expansion'] = lines.s_nom_opt.subtract(
+            lines.s_nom, axis='index')
+        lines['capital_investment'] = lines.s_nom_expansion.multiply(
+            lines.capital_cost, axis='index')
+    else:
+        lines['s_nom_expansion'] = 'No expansion calculated'
+        lines['capital_investment'] = 'No investment calculated'
+
+    # Prepare lines
+    line_results_group = folium.FeatureGroup(name='Lines specific results')
+
+    # color map lines
+    colormap2 = cm.linear.YlOrRd_09.scale(
+        lines.s_nom_expansion.min(), lines.s_nom_expansion.max()).to_step(6)
+
+    # add parameter
+    for line in network.lines.index:
+        popup = """<b>Line:</b> {} <br>
+            version: {} <br>
+            capital_cost: {} <br>
+            s_nom expansion: {} <br>
+            investment: {} <br>
+            length: {} <br>
+            s_nom: {} <br>
+            s_nom_extendable: {} <br>
+            s_nom_max: {} <br>
+            s_nom_min: {} <br>
+            s_nom_opt: {} <br>
+            type: {} <br>
+            v_nom: {} <br>
+            """.format(line, version,
+                       lines.capital_cost[line],
+                       lines.s_nom_expansion[line],
+                       lines.capital_investment[line],
+                       lines.length[line],
+                       lines.s_nom[line],
+                       lines.s_nom_extendable[line],
+                       lines.s_nom_max[line],
+                       lines.s_nom_min[line],
+                       lines.s_nom_opt[line],
+                       lines.type[line],
+                       lines.v_nom[line])
+
+        # change colore function
+        lr_color = colormapper_lines(
+            colormap2, lines, line, column="s_nom_expansion")
+        # ToDo make it more generic
+        folium.PolyLine(([y0[line], x0[line]], [y1[line], x1[line]]),
+                        popup=popup, color=convert_to_hex(lr_color)).add_to(line_results_group)
+
     # add grid districs
 
     grid_group = folium.FeatureGroup(name='Grid district')
     # list(network.buses.index) # change to selected grids
-    subst_id = list([1718, 1729])
-    district = prepareGD(session, subst_id, version)
 
+    #
+    subst_id = list(ego.edisgo_networks.grid_choice.the_selected_network_id)
+    district = prepareGD(session, subst_id, version)
+    print(district)
     # todo does not work with k-mean Cluster
-    folium.GeoJson(district).add_to(grid_group)
+    # Add for loop
+    #crs = {'init': 'epsg:4326'}
+
+    # for name, row in district.iterrows():
+    pop = """<b>Grid district:</b> {} <br>
+            """.format('12121212')
+
+    #date = gpd.GeoDataFrame(row, columns=['subst_id', 'geometry'], crs=crs)
+
+    folium.GeoJson(district).add_to(grid_group).add_child(folium.Popup(pop))
 
     # add layers and others
     colormap.caption = 'Colormap of Lines s_nom'
+    colormap2.caption = 'Colormap of Lines investment'
     mp.add_child(colormap)
+    mp.add_child(colormap2)
 
     # Add layer groups
     bus_group.add_to(mp)
     line_group.add_to(mp)
     grid_group.add_to(mp)
+    line_results_group.add_to(mp)
     folium.LayerControl().add_to(mp)
 
     plugins.Fullscreen(
@@ -425,3 +516,25 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
     path = os.getcwd()
     url = "results/html/iplot_map.html"
     webbrowser.open(url, new=new)
+
+
+def colormapper_lines(colormap, lines, line, column="s_nom"):
+    """ Colore Map for lines
+    """
+    # TODO Update and correct mapper
+    l_color = []
+    if colormap.index[6] >= lines[column][line] > colormap.index[5]:
+        l_color = colormap.colors[5]
+    elif colormap.index[5] >= lines[column][line] > colormap.index[4]:
+        l_color = colormap.colors[4]
+    elif colormap.index[4] >= lines[column][line] > colormap.index[3]:
+        l_color = colormap.colors[3]
+    elif colormap.index[3] >= lines[column][line] > colormap.index[2]:
+        l_color = colormap.colors[2]
+    elif colormap.index[2] >= lines[column][line] > colormap.index[1]:
+        l_color = colormap.colors[1]
+    elif colormap.index[1] >= lines[column][line] >= colormap.index[0]:
+        l_color = colormap.colors[0]
+    else:
+        l_color = (0., 0., 0., 1.)
+    return l_color
