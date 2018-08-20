@@ -1,11 +1,11 @@
 {
   "eGo": {
     "eTraGo": true,
-    "eDisGo": false,
+    "eDisGo": true,
     "db": "oedb",
     "result_id": null,
-    "gridversion": "v0.4.3",
-    "csv_import_eTraGo": false,
+    "gridversion": "v0.4.4",
+    "csv_import_eTraGo": "results/k500_eTraGo_t20",
     "csv_import_eDisGo": false
   },
   "eTraGo": {
@@ -29,7 +29,7 @@
     "network_clustering_kmeans": 10,
     "load_cluster": false,
     "network_clustering_ehv": false,
-    "disaggregation": false,
+    "disaggregation": "uniform",
     "snapshot_clustering": false,
     "parallelisation": false,
     "skip_snapshots": false,
@@ -40,7 +40,7 @@
   },
   "eDisGo": {
      "ding0_files": "data/MV_grids/20180719171328",
-     "choice_mode": "manual",
+     "choice_mode": "cluster",
      "cluster_attributes":["farthest_node", "wind_cap", "solar_cap", "extended_storage"],
      "manual_grids": [1718],
      "no_grids": 10,
