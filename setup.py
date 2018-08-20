@@ -30,7 +30,6 @@ setup(name='eGo',
                         'eTraGo==0.6.1',
                         'pandas==0.20.3',
                         'pypsa==0.11.0fork',
-                        'sqlalchemy<=1.1.4,>=1.0.15',
                         'geoalchemy2>= 0.3.0, <=0.4.0',
                         'pyproj==1.9.5.1',
                         'geopandas',
@@ -63,6 +62,3 @@ setup(name='eGo',
           'ego.data': ['*.csv']
       },
       )
-      
-      
-git@github.com:openego/eDisGo.git
