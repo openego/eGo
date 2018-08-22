@@ -32,7 +32,7 @@ if not 'READTHEDOCS' in os.environ:
     import pyproj as proj
     from shapely.geometry import Polygon, Point, MultiPolygon
     from geoalchemy2 import *
-    import geopandas as gpd
+    #import geopandas as gpd
     import folium
     from folium import plugins
     import branca.colormap as cm
