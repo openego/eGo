@@ -33,10 +33,10 @@ if not 'READTHEDOCS' in os.environ:
     from shapely.geometry import Polygon, Point, MultiPolygon
     from geoalchemy2 import *
     #import geopandas as gpd
-    import folium
-    from folium import plugins
-    import branca.colormap as cm
-    import webbrowser
+    #import folium
+    #from folium import plugins
+    #import branca.colormap as cm
+    #import webbrowser
     from egoio.db_tables.model_draft import EgoGridMvGriddistrict
     from egoio.db_tables.grid import EgoDpMvGriddistrict
     import matplotlib.pyplot as plt
