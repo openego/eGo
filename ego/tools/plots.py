@@ -97,7 +97,8 @@ def ego_colore():
     return colors
 
 
-def grid_storage_investment(ego):
+def grid_storage_investment(ego, filename="results/figs/"
+                            + "grid_storage_investment.pdf"):
     """
     """
     colors = ego_colore()
@@ -134,10 +135,16 @@ def grid_storage_investment(ego):
     ax.legend()
 
     fig.tight_layout()
-    plt.show()
+
+    if filename is None:
+        plt.show()
+    else:
+        plt.savefig(filename)
+        plt.close()
 
 
-def power_price_plot(ego):
+def power_price_plot(ego, filename="results/figs/"
+                     + "power_price_plot.pdf"):
     """
     Plot power price of calculated scenario of timesteps and carrier
 
@@ -170,10 +177,15 @@ def power_price_plot(ego):
     ax.set_xlabel('Power price in €/MWh')
     ax.set_title('Power Costs per Carrier')
 
-    return plt.show()
+    if filename is None:
+        plt.show()
+    else:
+        plt.savefig(filename)
+        plt.close()
 
 
-def plot_storage_use(ego):
+def plot_storage_use(ego, filename="results/figs/"
+                     + "plot_storage_use.pdf"):
     """Plot storage use by charge and discharge values
 
     Parameters
@@ -202,7 +214,11 @@ def plot_storage_use(ego):
     ax.set_xlabel("Kind of Storage", fontsize=12)
     ax.set_ylabel("Charge and Discharge in MWh", fontsize=12)
 
-    return plt.show()
+    if filename is None:
+        plt.show()
+    else:
+        plt.savefig(filename)
+        plt.close()
 
 
 def prepareGD(session, subst_id=None, version=None):
@@ -477,13 +493,13 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
     print(district)
     # todo does not work with k-mean Cluster
     # Add for loop
-    #crs = {'init': 'epsg:4326'}
+    # crs = {'init': 'epsg:4326'}
 
     # for name, row in district.iterrows():
     pop = """<b>Grid district:</b> {} <br>
             """.format('12121212')
 
-    #date = gpd.GeoDataFrame(row, columns=['subst_id', 'geometry'], crs=crs)
+    # date = gpd.GeoDataFrame(row, columns=['subst_id', 'geometry'], crs=crs)
 
     folium.GeoJson(district).add_to(grid_group).add_child(folium.Popup(pop))
 
