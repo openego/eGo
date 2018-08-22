@@ -64,34 +64,38 @@ def etrago_storages(network):
     p_nom_o_sum: numeric
         Sum of optimal installed power capacity
     """
+    if len(network.storage_units_t.inflow.sum()) > 0:
+        charge = network.storage_units_t.\
+            p[network.storage_units_t.p[network.
+                                        storage_units[network.storage_units.
+                                                      p_nom_opt > 0].index].
+              values > 0.].groupby(network.storage_units.
+                                   carrier, axis=1).sum().sum()
 
-    charge = network.storage_units_t.\
-        p[network.storage_units_t.p[network.
-                                    storage_units[network.storage_units.
-                                                  p_nom_opt > 0].index].
-          values > 0.].groupby(network.storage_units.
-                               carrier, axis=1).sum().sum()
+        discharge = network.storage_units_t.p[network.storage_units_t.
+                                              p[network.
+                                                storage_units[network.storage_units.
+                                                              p_nom_opt > 0].
+                                                index].values < 0.].\
+            groupby(network.storage_units.carrier, axis=1).sum().sum()
 
-    discharge = network.storage_units_t.p[network.storage_units_t.
-                                          p[network.
-                                            storage_units[network.storage_units.
-                                                          p_nom_opt > 0].
-                                            index].values < 0.].\
-        groupby(network.storage_units.carrier, axis=1).sum().sum()
+        count = network.storage_units.bus[network.storage_units.p_nom_opt > 0].\
+            groupby(network.storage_units.carrier, axis=0).count()
 
-    count = network.storage_units.bus[network.storage_units.p_nom_opt > 0].\
-        groupby(network.storage_units.carrier, axis=0).count()
+        p_nom_sum = network.storage_units.p_nom.groupby(network.storage_units.
+                                                        carrier, axis=0).sum()
 
-    p_nom_sum = network.storage_units.p_nom.groupby(network.storage_units.
-                                                    carrier, axis=0).sum()
+        p_nom_o_sum = network.storage_units.p_nom_opt.groupby(network.storage_units.
+                                                              carrier, axis=0).sum()
+        p_nom_o = p_nom_sum - p_nom_o_sum  # Zubau
 
-    p_nom_o_sum = network.storage_units.p_nom_opt.groupby(network.storage_units.
-                                                          carrier, axis=0).sum()
-    p_nom_o = p_nom_sum - p_nom_o_sum  # Zubau
+        results = pd.concat([charge.rename('charge'), discharge.rename('discharge'),
+                             p_nom_sum, count.rename('total_units'), p_nom_o
+                             .rename('extension'), ], axis=1, join='outer')
 
-    results = pd.concat([charge.rename('charge'), discharge.rename('discharge'),
-                         p_nom_sum, count.rename('total_units'), p_nom_o
-                         .rename('extension'), ], axis=1, join='outer')
+    else:
+        logger.info("No timeseries p for storages!")
+        results = None
 
     return results
 
