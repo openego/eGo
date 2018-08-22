@@ -20,7 +20,6 @@
 """Module which collects useful functions for plotting eTraGo, eDisGo and
 eGo results.
 """
-# TODO  - Implement plotly for iplot
 
 import numpy as np
 import pandas as pd
@@ -33,14 +32,13 @@ if not 'READTHEDOCS' in os.environ:
     import pyproj as proj
     from shapely.geometry import Polygon, Point, MultiPolygon
     from geoalchemy2 import *
-    # import geopandas as gpd
+    import geopandas as gpd
     import folium
     from folium import plugins
     import branca.colormap as cm
     import webbrowser
     from egoio.db_tables.model_draft import EgoGridMvGriddistrict
     from egoio.db_tables.grid import EgoDpMvGriddistrict
-    from ego.tools.io import eGo
     import matplotlib.pyplot as plt
 
 import logging
@@ -50,6 +48,12 @@ __copyright__ = "Flensburg University of Applied Sciences, Europa-Universität"\
     "Flensburg, Centre for Sustainable Energy Systems"
 __license__ = "GNU Affero General Public License Version 3 (AGPL-3.0)"
 __author__ = "wolfbunke"
+
+
+# check folder for plots
+fig_dir = 'results/figs'
+if not os.path.exists(fig_dir):
+    os.makedirs(fig_dir)
 
 
 # plot colore of Carriers
@@ -99,17 +103,17 @@ def ego_colore():
     return colors
 
 
-def grid_storage_investment(df):
+def grid_storage_investment(ego, filename="results/"
+                            + "grid_storage_investment.pdf"):
     """
     """
     colors = ego_colore()
 
-    n_levels = len(ego.ehv_grid_costs.capital_cost)
+    n_levels = len(ego._ehv_grid_costs.capital_cost)
 
-    means_grid = ego.ehv_grid_costs.capital_cost
+    means_grid = ego._ehv_grid_costs.capital_cost
 
-    means_storage = (25, 32, 34, 20)
-    std_storage = (3, 5, 2, 3)
+    means_storage = ego._storage_costs.capital_cost
 
     fig, ax = plt.subplots()
 
@@ -121,357 +125,438 @@ def grid_storage_investment(df):
 
     rects1 = ax.bar(index, means_grid, bar_width,
                     alpha=opacity, color=colors['egoblue1'],
-                    yerr=std_grid, error_kw=error_config,
-                    label='Grid costs')
+                    error_kw=error_config,
+                    label='Grid expansion costs per annuity')
 
     rects2 = ax.bar(index + bar_width, means_storage, bar_width,
                     alpha=opacity, color=colors['egoblue4'],
-                    yerr=std_storage, error_kw=error_config,
-                    label='Storage Costs')
+                    error_kw=error_config,
+                    label='Storage expansion costs per annuity')
 
-    ax.set_xlabel('voltage level')
+    ax.set_xlabel('Voltage level')
     ax.set_ylabel('Annualized costs per time step')
     ax.set_title('Annualized costs per time step and component')
     ax.set_xticks(index + bar_width / 2)
-    ax.set_xticklabels(('ehv', 'hv', 'mv', 'lv'))
+    ax.set_xticklabels(list(ego._ehv_grid_costs.voltage_level))
     ax.legend()
 
     fig.tight_layout()
-    plt.show()
+
+    if filename is None:
+        plt.show()
+    else:
+        plt.savefig(filename)
+        plt.close()
 
 
-def make_all_plots(network):
-    """ Test function which run all ploting functions.
+def power_price_plot(ego, filename="results/"
+                     + "power_price_plot.pdf"):
+    """
+    Plot power price of calculated scenario of timesteps and carrier
 
     Parameters
     ----------
-    network_etrago: :class:`etrago.tools.io.NetworkScenario`
-        eTraGo network object compiled by :meth:`etrago.appl.etrago`
-
-    Returns
-    -------
-    plots : :meth:`matplotlib.pyplot`
-        Returns plots
-    """
-    # make a line loading plot
-    plot_line_loading(network)
-
-    # plot stacked sum of nominal power for each generator type and timestep
-    plot_stacked_gen(network, resolution="MW")
-
-    # plot to show extendable storages
-    storage_distribution(network)
-
-    # plot_residual_load(network)
-
-    plot_voltage(network)
-
-    # curtailment(network)
-
-    gen_dist(network)
-
-    return
-
-#
-# def igeoplot(network, session, tiles=None, geoloc=None, args=None):
-#     """Plot function in order to display eGo results on leaflet OSM map.
-#     This function will open the results in your main Webbrowser
-#
-#     Parameters
-#     ----------
-#
-#     network_etrago:: class: `etrago.tools.io.NetworkScenario`
-#         eTraGo network object compiled by: meth: `etrago.appl.etrago`
-#     tiles: str
-#             Folium background map style `None` as OSM or `Nasa`
-#     geoloc: : obj: `list`
-#         List which define center of map as (lon, lat)
-#
-#     Returns
-#     -------
-#     plot: html
-#         HTML file with .js plot
-#     """
-#     # TODO
-#     # - implement eDisGo Polygons
-#     # - fix version problems of data
-#     # - use  grid.ego_dp_hvmv_substation subst_id and otg_id
-#     # - use cluster or boxes to limit data volumn
-#     # - add Legend
-#     # - Map see: http://nbviewer.jupyter.org/gist/BibMartin/f153aa957ddc5fadc64929abdee9ff2e
-#     # - test cluster
-#
-#     if geoloc is None:
-#         geoloc = [network.buses.y.mean(), network.buses.x.mean()]
-#
-#     mp = folium.Map(tiles=None, location=geoloc,
-#                     control_scale=True, zoom_start=6)
-#
-#     # add Nasa light background
-#     if tiles == 'Nasa':
-#         tiles = 'https://map1.vis.earthdata.nasa.gov/wmts-webmerc/VIIRS_CityLights_2012/default/GoogleMapsCompatible_Level8/{z}/{y}/{x}.jpg'
-#         attr = ('&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="http://cartodb.com/attributions">CartoDB</a>')
-#
-#         folium.raster_layers.TileLayer(tiles=tiles, attr=attr).add_to(mp)
-#     else:
-#         folium.raster_layers.TileLayer('OpenStreetMap').add_to(mp)
-#         # 'Stamen Toner'  OpenStreetMap
-#
-#     # Legend name
-#     bus_group = folium.FeatureGroup(name='Buses')
-#     # add buses
-#
-#     # get scenario name from args
-#     scn_name = args['eTraGo']['scn_name']
-#     version = args['eTraGo']['gridversion']
-#
-#     for name, row in network.buses.iterrows():
-#         popup = """ < b > Bus: < /b > {} < br >
-# 					carrier: {} < br >
-# 					control: {} < br >
-# 					type: {} < br >
-# 					v_nom: {} < br >
-# 					v_mag_pu_set: {} < br >
-# 					v_mag_pu_min: {} < br >
-# 					v_mag_pu_max: {} < br >
-# 					sub_network: {} < br >
-# 					Scenario: {} < br >
-# 					version: {} < br >
-# 				""".format(row.name, scn_name, row['carrier'],
-#                row['control'], row['type'], row['v_nom'], row['v_mag_pu_set'],
-#                row['v_mag_pu_min'], row['v_mag_pu_max'], row['sub_network'], version)  # add Popup values use HTML for formating
-#         folium.Marker([row["y"], row["x"]], popup=popup).add_to(bus_group)
-#
-#     # Prepare lines
-#     line_group = folium.FeatureGroup(name='Lines')
-#
-#     # get line Coordinates
-#     x0 = network.lines.bus0.map(network.buses.x)
-#     x1 = network.lines.bus1.map(network.buses.x)
-#
-#     y0 = network.lines.bus0.map(network.buses.y)
-#     y1 = network.lines.bus1.map(network.buses.y)
-#
-#     # get content
-#     text = network.lines
-#
-#     # color map lines
-#     colormap = cm.linear.Set1.scale(
-#         text.s_nom.min(), text.s_nom.max()).to_step(6)
-#
-#     def convert_to_hex(rgba_color):
-#         """
-#         convert rgba colors to hex
-#         """
-#         red = str(hex(int(rgba_color[0]*255)))[2:].capitalize()
-#         green = str(hex(int(rgba_color[1]*255)))[2:].capitalize()
-#         blue = str(hex(int(rgba_color[2]*255)))[2:].capitalize()
-#
-#         if blue == '0':
-#             blue = '00'
-#         if red == '0':
-#             red = '00'
-#         if green == '0':
-#             green = '00'
-#
-#         return '#' + red + green + blue
-#
-#     # toDo add more parameter
-#     for line in network.lines.index:
-#         popup = """ <b>Line:</b> {} <br>
-# 					version: {} <br>
-# 					v_nom: {} <br>
-# 					s_nom: {} <br>
-# 					capital_cost: {} <br>
-# 					g: {} <br>
-# 					g_pu: {} <br>
-# 					terrain_factor: {} <br>
-# 				""".format(line, version, text.v_nom[line],
-#                text.s_nom[line], text.capital_cost[line],
-#                text.g[line], text.g_pu[line],
-#                text.terrain_factor[line]
-#                )
-#         # ToDo make it more generic
-#
-#         def colormaper():
-#             l_color = []
-#             if colormap.index[6] >= text.s_nom[line] > colormap.index[5]:
-#                 l_color = colormap.colors[5]
-#             elif colormap.index[5] >= text.s_nom[line] > colormap.index[4]:
-#                 l_color = colormap.colors[4]
-#             elif colormap.index[4] >= text.s_nom[line] > colormap.index[3]:
-#                 l_color = colormap.colors[3]
-#             elif colormap.index[3] >= text.s_nom[line] > colormap.index[2]:
-#                 l_color = colormap.colors[2]
-#             elif colormap.index[2] >= text.s_nom[line] > colormap.index[1]:
-#                 l_color = colormap.colors[1]
-#             elif colormap.index[1] >= text.s_nom[line] >= colormap.index[0]:
-#                 l_color = colormap.colors[0]
-#             else:
-#                 l_color = (0., 0., 0., 1.)
-#             return l_color
-#
-#         l_color = colormaper()
-#
-#         folium.PolyLine(([y0[line], x0[line]], [y1[line], x1[line]]),
-#                         popup=popup, color=convert_to_hex(l_color)).\
-#             add_to(line_group)
-#
-#     # add grod districs
-#     grid_group = folium.FeatureGroup(name='Grid district')
-#     subst_id = list(network.buses.index)
-#     district = prepareGD(session, subst_id, version)
-#     # todo does not work with k-mean Cluster
-#     # folium.GeoJson(district).add_to(grid_group)
-#
-#     # add layers and others
-#     colormap.caption = 'Colormap of Lines s_nom'
-#     mp.add_child(colormap)
-#
-#     # Add layer groups
-#     bus_group.add_to(mp)
-#     line_group.add_to(mp)
-#     grid_group.add_to(mp)
-#     folium.LayerControl().add_to(mp)
-#
-#     plugins.Fullscreen(
-#         position='topright',
-#         title='Fullscreen',
-#         title_cancel='Exit me',
-#         force_separate_button=True).add_to(mp)
-#
-#     # Save Map
-#     mp.save('map.html')
-#
-#     # Display htm result from consol
-#     new = 2  # open in a new tab, if possible
-#     # open a public URL, in this case, the webbrowser docs
-#     path = os.getcwd()
-#     url = path+"/map.html"
-#     webbrowser.open(url, new=new)
-
-# def prepareGD(session, subst_id=None, version=None):
-#     """
-#     """
-#
-#     if version == 'v0.2.11':
-#         query = session.query(EgoDpMvGriddistrict.subst_id,
-#                               EgoDpMvGriddistrict.geom)
-#
-#         Regions = [(subst_id, shape.to_shape(geom)) for subst_id, geom in
-#                    query.filter(EgoDpMvGriddistrict.version == version,
-#                                 EgoDpMvGriddistrict.subst_id.in_(subst_id)).all()]
-#     # toDo add values of sub_id etc. to popup
-#     else:
-#         query = session.query(EgoGridMvGriddistrict.subst_id,
-#                               EgoGridMvGriddistrict.geom)
-#         Regions = [(subst_id, shape.to_shape(geom)) for subst_id, geom in
-#                    query.all()]
-#
-#     region = pd.DataFrame(Regions, columns=['subst_id', 'geometry'])
-#     crs = {'init': 'epsg:3035'}
-#     region = gpd.GeoDataFrame(
-#         Regions, columns=['subst_id', 'geometry'], crs=crs)
-#
-#     return region
-
-
-def total_power_costs_plot(etrago_network):
-    """
-    plot power price of eTraGo
-
-    Parameters
-    ----------
-    eTraGo :class:`etrago.io.NetworkScenario`
+    ego :class:`ego.io.eGo`
 
     Returns
     -------
     plot :obj:`matplotlib.pyplot.show`
             https://matplotlib.org/api/pyplot_api.html#matplotlib.pyplot.show
-
-
     """
-    # import matplotlib.pyplot as plt
     plt.rcdefaults()
-    # import numpy as np
-    # import matplotlib.pyplot as plt
-
+    colors = ego_colore()
     fig, ax = plt.subplots()
 
     # plot power_price
-    a = eGo(eTraGo=eTraGo)
-    prc = a.create_total_results()
-
-    prc = prc.etrago['power_price']
+    prc = ego.etrago.generator['power_price']
     bar_width = 0.35
     opacity = 0.4
 
     ind = np.arange(len(prc.index))    # the x locations for the groups
     width = 0.35       # the width of the bars: can also be len(x) sequence
 
-    ax.barh(ind, prc, align='center', color='green')
+    ax.barh(ind, prc, align='center', color=colors['egoblue1'])
     ax.set_yticks(ind)
     ax.set_yticklabels(prc.index)
     ax.invert_yaxis()
 
-    ax.set_xlabel('Costs')
+    ax.set_xlabel('Power price in €/MWh')
     ax.set_title('Power Costs per Carrier')
 
-    return plt.show()
+    if filename is None:
+        plt.show()
+    else:
+        plt.savefig(filename)
+        plt.close()
 
 
-def plot_etrago_production(ego):
+def plot_storage_use(ego, filename="results/"
+                     + "plot_storage_use.pdf"):
+    """Plot storage use by charge and discharge values
+
+    Parameters
+    ----------
+    ego :class:`ego.io.eGo`
+
+    Returns
+    -------
+    plot :obj:`matplotlib.pyplot.show`
+            https://matplotlib.org/api/pyplot_api.html#matplotlib.pyplot.show
     """
-    input eGo
-    Bar plot all etrago costs
-    """
+    colors = ego_colore()
 
-    # fig = plt.figure(figsize=(18,10), dpi=1600)
-    # plt.pie(ego.etrago['p'],autopct='%.1f')
-    # plt.title('Procentage of power production')
-
-    # max(ego.etrago['investment_costs'])/(1000*1000*1000) # T€/kW->M€/KW ->GW/MW
-
-    # Chare of investment costs get volume
-    # ego.etrago['investment_costs'].sum()/(1000*1000*1000)
-
-    ego.etrago['p'].plot(kind="pie",
-                         subplots=True,
-                         figsize=(10, 10),
-                         autopct='%.1f')
-
-    plt.show()
-
-
-def plotting_invest(result):
-    """
-    Dataframe input of eGo
-    """
-    fig, ax = plt.subplots()
-
-    ax.set_ylabel('Costs in €')
-    ax.set_title('Investment Cost')
-    ax.set_xlabel('Investments')
-
-    result.plot(kind='bar', ax=ax)
-
-    return
-
-
-def plot_storage_use(storages):
-    """
-    Intput ego.storages
-    """
-
-    ax = storages[['charge', 'discharge']].plot(kind='bar',
-                                                title="Storage usage",
-                                                stacked=True,
-                                                # table=True,
-                                                figsize=(
-                                                    15, 10),
-                                                legend=True,
-                                                fontsize=12)
+    ax = ego.etrago.\
+        storage_charges[['charge', 'discharge']].plot(kind='bar',
+                                                      title="Storage usage",
+                                                      stacked=True,
+                                                      color=([colors.get(key)
+                                                              for key in
+                                                              ['egoblue1',
+                                                               'egoblue2']]),
+                                                      figsize=(
+                                                          15, 10),
+                                                      legend=True,
+                                                      fontsize=12)
     ax.set_xlabel("Kind of Storage", fontsize=12)
     ax.set_ylabel("Charge and Discharge in MWh", fontsize=12)
-    plt.show()
-    return
+
+    if filename is None:
+        plt.show()
+    else:
+        plt.savefig(filename)
+        plt.close()
+
+
+def prepareGD(session, subst_id=None, version=None):
+    """ Get MV grid districts for plotting
+
+    """
+
+    if version:
+
+        query = session.query(EgoDpMvGriddistrict.subst_id,
+                              EgoDpMvGriddistrict.geom)
+        if subst_id:
+            Regions = [(subst_id, shape.to_shape(geom)) for subst_id, geom in
+                       query.filter(EgoDpMvGriddistrict.version == version,
+                                    EgoDpMvGriddistrict.subst_id.in_(subst_id)).all()]
+        else:
+            Regions = [(subst_id, shape.to_shape(geom)) for subst_id, geom in
+                       query.filter(EgoDpMvGriddistrict.version == version).all()]
+    # toDo add values of sub_id etc. to popup
+    else:
+        # from model_draft
+
+        query = session.query(EgoGridMvGriddistrict.subst_id,
+                              EgoGridMvGriddistrict.geom)
+        Regions = [(subst_id, shape.to_shape(geom)) for subst_id, geom in
+                   query.filter(EgoGridMvGriddistrict.subst_id.in_(subst_id)).all()]
+
+    region = pd.DataFrame(Regions, columns=['subst_id', 'geometry'])
+    crs = {'init': 'epsg:3035'}
+    region = gpd.GeoDataFrame(
+        Regions, columns=['subst_id', 'geometry'], crs=crs)
+    region.to_crs({'init': 'epsg:4326'})
+    return region
+
+
+def igeoplot(ego, tiles=None, geoloc=None, args=None):
+    """Plot function in order to display eGo results on leaflet OSM map.
+    This function will open the results in your main Webbrowser
+
+    Parameters
+    ----------
+
+    network_etrago:: class: `etrago.tools.io.NetworkScenario`
+      eTraGo network object compiled by: meth: `etrago.appl.etrago`
+    tiles: str
+      Folium background map style `None` as OSM or `Nasa`
+    geoloc: : obj: `list`
+      Listwhich define center of map as (lon, lat)
+
+    Returns
+    -------
+    plot: html
+      HTML file with .js plot
+     """
+
+    #     # TODO
+    #     # - implement eDisGo Polygons
+    #     # - fix version problems of data
+    #     # - use  grid.ego_dp_hvmv_substation subst_id and otg_id
+    #     # - use cluster or boxes to limit data volumn
+    #     # - add Legend
+    #     # - Map see: http://nbviewer.jupyter.org/gist/BibMartin/f153aa957ddc5fadc64929abdee9ff2e
+    #     # - test cluster
+    #     # - add logger
+
+    network = ego.etrago_network
+    session = ego.session
+
+    if geoloc is None:
+        geoloc = [network.buses.y.mean(), network.buses.x.mean()]
+
+    mp = folium.Map(tiles=None, location=geoloc,
+                    control_scale=True, zoom_start=6)
+
+    # add Nasa light background
+    # http://nbviewer.jupyter.org/github/ocefpaf/folium_notebooks/blob/master/test_add_tile_layer.ipynb
+    if tiles == 'Nasa':
+        tiles = 'https://map1.vis.earthdata.nasa.gov/wmts-webmerc/VIIRS_CityLights_2012/default/GoogleMapsCompatible_Level8/{z}/{y}/{x}.jpg'
+        attr = ('&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="http://cartodb.com/attributions">CartoDB</a>')
+
+        folium.raster_layers.TileLayer(tiles=tiles, attr=attr).add_to(mp)
+    else:
+        folium.raster_layers.TileLayer('OpenStreetMap').add_to(mp)
+    # 'Stamen Toner'  OpenStreetMap
+
+    # Legend name
+    bus_group = folium.FeatureGroup(name='Buses full informations')
+    # add buses
+
+    # get scenario name from args
+    scn_name = ego.json_file['eTraGo']['scn_name']
+    version = ego.json_file['eTraGo']['gridversion']
+
+    for name, row in network.buses.iterrows():
+        # get information of buses
+        popup = """ <b> Bus: </b> {} <br>
+     					Scenario: {} <br>
+                        Carrier: {} <br>
+     					Control: {} <br>
+     					type: {} <br>
+     					v_nom: {} <br>
+     					v_mag_pu_set: {} <br>
+     					v_mag_pu_min: {} <br>
+     					v_mag_pu_max: {} <br>
+     					sub_network: {} <br>
+     					Version: {} <br>
+     				""".format(row.name, scn_name, row['carrier'],
+                    row['control'], row['type'], row['v_nom'], row['v_mag_pu_set'],
+                    row['v_mag_pu_min'], row['v_mag_pu_max'], row['sub_network'], version)
+        # add Popup values use HTML for formating
+        folium.Marker([row["y"], row["x"]], popup=popup).add_to(bus_group)
+
+    def convert_to_hex(rgba_color):
+        """Convert rgba colors to hex
+        """
+        red = str(hex(int(rgba_color[0]*255)))[2:].capitalize()
+        green = str(hex(int(rgba_color[1]*255)))[2:].capitalize()
+        blue = str(hex(int(rgba_color[2]*255)))[2:].capitalize()
+
+        if blue == '0':
+            blue = '00'
+        if red == '0':
+            red = '00'
+        if green == '0':
+            green = '00'
+
+        return '#' + red + green + blue
+
+    # Prepare lines
+    line_group = folium.FeatureGroup(name='Lines full informations')
+
+    # get line Coordinates
+    x0 = network.lines.bus0.map(network.buses.x)
+    x1 = network.lines.bus1.map(network.buses.x)
+
+    y0 = network.lines.bus0.map(network.buses.y)
+    y1 = network.lines.bus1.map(network.buses.y)
+
+    # get content
+    lines = network.lines
+
+    # color map lines
+    colormap = cm.linear.YlOrRd_09.scale(
+        lines.s_nom.min(), lines.s_nom.max()).to_step(6)
+
+    # add parameter
+    for line in network.lines.index:
+        popup = """<b>Line:</b> {} <br>
+            version: {} <br>
+            angle_diff: {} <br>
+            b: {} <br>
+            b_pu: {} <br>
+            bus0: {} <br>
+            bus1: {} <br>
+            capital_cost: {} <br>
+            g: {} <br>
+            g_pu: {} <br>
+            length: {} <br>
+            num_parallel: {} <br>
+            r: {} <br>
+            r_pu: {} <br>
+            s_nom: {} <br>
+            s_nom_extendable: {} <br>
+            s_nom_max: {} <br>
+            s_nom_min: {} <br>
+            s_nom_opt: {} <br>
+            sub_network: {} <br>
+            terrain_factor: {} <br>
+            type: {} <br>
+            v_ang_max: {} <br>
+            v_ang_min: {} <br>
+            v_nom: {} <br>
+            x: {} <br>
+            x_pu: {} <br>
+            """.format(line, version,
+                       lines.angle_diff[line],
+                       lines.b[line],
+                       lines.b_pu[line],
+                       lines.bus0[line],
+                       lines.bus1[line],
+                       lines.capital_cost[line],
+                       lines.g[line],
+                       lines.g_pu[line],
+                       lines.length[line],
+                       lines.num_parallel[line],
+                       lines.r[line],
+                       lines.r_pu[line],
+                       lines.s_nom[line],
+                       lines.s_nom_extendable[line],
+                       lines.s_nom_max[line],
+                       lines.s_nom_min[line],
+                       lines.s_nom_opt[line],
+                       lines.sub_network[line],
+                       lines.terrain_factor[line],
+                       lines.type[line],
+                       lines.v_ang_max[line],
+                       lines.v_ang_min[line],
+                       lines.v_nom[line],
+                       lines.x[line],
+                       lines.x_pu[line])
+
+        # change colore function
+        l_color = colormapper_lines(
+            colormap, lines, line, column="s_nom")
+        # ToDo make it more generic
+        folium.PolyLine(([y0[line], x0[line]], [y1[line], x1[line]]),
+                        popup=popup, color=convert_to_hex(l_color)).\
+            add_to(line_group)
+
+    # Add results
+    # add expansion costs per line
+    lines = network.lines
+    if 'network' in ego.json_file['eTraGo']['extendable']:
+        lines['s_nom_expansion'] = lines.s_nom_opt.subtract(
+            lines.s_nom, axis='index')
+        lines['capital_investment'] = lines.s_nom_expansion.multiply(
+            lines.capital_cost, axis='index')
+    else:
+        lines['s_nom_expansion'] = 'No expansion calculated'
+        lines['capital_investment'] = 'No investment calculated'
+
+    # Prepare lines
+    line_results_group = folium.FeatureGroup(name='Lines specific results')
+
+    # color map lines
+    colormap2 = cm.linear.YlOrRd_09.scale(
+        lines.s_nom_expansion.min(), lines.s_nom_expansion.max()).to_step(6)
+
+    # add parameter
+    for line in network.lines.index:
+        popup = """<b>Line:</b> {} <br>
+            version: {} <br>
+            capital_cost: {} <br>
+            s_nom expansion: {} <br>
+            investment: {} <br>
+            length: {} <br>
+            s_nom: {} <br>
+            s_nom_extendable: {} <br>
+            s_nom_max: {} <br>
+            s_nom_min: {} <br>
+            s_nom_opt: {} <br>
+            type: {} <br>
+            v_nom: {} <br>
+            """.format(line, version,
+                       lines.capital_cost[line],
+                       lines.s_nom_expansion[line],
+                       lines.capital_investment[line],
+                       lines.length[line],
+                       lines.s_nom[line],
+                       lines.s_nom_extendable[line],
+                       lines.s_nom_max[line],
+                       lines.s_nom_min[line],
+                       lines.s_nom_opt[line],
+                       lines.type[line],
+                       lines.v_nom[line])
+
+        # change colore function
+        lr_color = colormapper_lines(
+            colormap2, lines, line, column="s_nom_expansion")
+        # ToDo make it more generic
+        folium.PolyLine(([y0[line], x0[line]], [y1[line], x1[line]]),
+                        popup=popup, color=convert_to_hex(lr_color)).add_to(line_results_group)
+
+    # add grid districs
+
+    grid_group = folium.FeatureGroup(name='Grid district')
+    # list(network.buses.index) # change to selected grids
+
+    #
+    subst_id = list(ego.edisgo_networks.grid_choice.the_selected_network_id)
+    district = prepareGD(session, subst_id, version)
+    print(district)
+    # todo does not work with k-mean Cluster
+    # Add for loop
+    # crs = {'init': 'epsg:4326'}
+
+    # for name, row in district.iterrows():
+    pop = """<b>Grid district:</b> {} <br>
+            """.format('12121212')
+
+    # date = gpd.GeoDataFrame(row, columns=['subst_id', 'geometry'], crs=crs)
+
+    folium.GeoJson(district).add_to(grid_group).add_child(folium.Popup(pop))
+
+    # add layers and others
+    colormap.caption = 'Colormap of Lines s_nom'
+    colormap2.caption = 'Colormap of Lines investment'
+    mp.add_child(colormap)
+    mp.add_child(colormap2)
+
+    # Add layer groups
+    bus_group.add_to(mp)
+    line_group.add_to(mp)
+    grid_group.add_to(mp)
+    line_results_group.add_to(mp)
+    folium.LayerControl().add_to(mp)
+
+    plugins.Fullscreen(
+        position='topright',
+        title='Fullscreen',
+        title_cancel='Exit me',
+        force_separate_button=True).add_to(mp)
+
+    # Save Map
+    mp.save("results/html/iplot_map.html")
+
+    # Display htm result from consol
+    # TODO add var inoder to control browser Display
+    new = 2  # open in a new tab, if possible
+    # open a public URL, in this case, the webbrowser docs
+    path = os.getcwd()
+    url = "results/html/iplot_map.html"
+    webbrowser.open(url, new=new)
+
+
+def colormapper_lines(colormap, lines, line, column="s_nom"):
+    """ Colore Map for lines
+    """
+    # TODO Update and correct mapper
+    l_color = []
+    if colormap.index[6] >= lines[column][line] > colormap.index[5]:
+        l_color = colormap.colors[5]
+    elif colormap.index[5] >= lines[column][line] > colormap.index[4]:
+        l_color = colormap.colors[4]
+    elif colormap.index[4] >= lines[column][line] > colormap.index[3]:
+        l_color = colormap.colors[3]
+    elif colormap.index[3] >= lines[column][line] > colormap.index[2]:
+        l_color = colormap.colors[2]
+    elif colormap.index[2] >= lines[column][line] > colormap.index[1]:
+        l_color = colormap.colors[1]
+    elif colormap.index[1] >= lines[column][line] >= colormap.index[0]:
+        l_color = colormap.colors[0]
+    else:
+        l_color = (0., 0., 0., 1.)
+    return l_color
