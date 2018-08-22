@@ -1,11 +1,11 @@
 {
   "eGo": {
     "eTraGo": true,
-    "eDisGo": true,
+    "eDisGo": false,
     "db": "oedb",
     "result_id": null,
     "gridversion": "v0.4.5",
-    "csv_import_eTraGo":false,
+    "csv_import_eTraGo": "results/k30_eTraGo_t5_v5",
     "csv_import_eDisGo": false
   },
   "eTraGo": {
@@ -26,7 +26,7 @@
     "generator_noise": 789456,
     "reproduce_noise": false,
     "minimize_loading": false,
-    "network_clustering_kmeans": 30,
+    "network_clustering_kmeans": 10,
     "load_cluster": false,
     "network_clustering_ehv": false,
     "disaggregation": "uniform",
@@ -40,7 +40,7 @@
   },
   "eDisGo": {
      "ding0_files": "data/MV_grids/20180821165042",
-     "choice_mode": "cluster",
+     "choice_mode": "manual",
      "cluster_attributes":["farthest_node", "wind_cap", "solar_cap", "extended_storage"],
      "manual_grids": [927],
      "no_grids": 10,
@@ -50,6 +50,6 @@
      "apply_curtailment":true,
      "storage_distribution":false,
      "max_cos_phi_renewable": 0.9,
-     "results": "results/eDisGo_n10_v4_2"
+     "results": "results/eDisGo_n10_v4_5"
   }
 }
