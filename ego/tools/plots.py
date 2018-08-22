@@ -50,6 +50,12 @@ __license__ = "GNU Affero General Public License Version 3 (AGPL-3.0)"
 __author__ = "wolfbunke"
 
 
+# check folder for plots
+fig_dir = 'results/figs'
+if not os.path.exists(fig_dir):
+    os.makedirs(fig_dir)
+
+
 # plot colore of Carriers
 def carriers_colore():
     """ Return matplotlib colore set per carrier (technologies of
@@ -97,7 +103,7 @@ def ego_colore():
     return colors
 
 
-def grid_storage_investment(ego, filename="results/figs/"
+def grid_storage_investment(ego, filename="results/"
                             + "grid_storage_investment.pdf"):
     """
     """
@@ -143,7 +149,7 @@ def grid_storage_investment(ego, filename="results/figs/"
         plt.close()
 
 
-def power_price_plot(ego, filename="results/figs/"
+def power_price_plot(ego, filename="results/"
                      + "power_price_plot.pdf"):
     """
     Plot power price of calculated scenario of timesteps and carrier
@@ -184,7 +190,7 @@ def power_price_plot(ego, filename="results/figs/"
         plt.close()
 
 
-def plot_storage_use(ego, filename="results/figs/"
+def plot_storage_use(ego, filename="results/"
                      + "plot_storage_use.pdf"):
     """Plot storage use by charge and discharge values
 
