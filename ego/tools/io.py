@@ -93,10 +93,14 @@ class egoBasic(object):
 
     """
 
-    def __init__(self,
-                 jsonpath, *args, **kwargs):
+    def __init__(self, jsonpath, *args, **kwargs):
 
         self.jsonpath = 'scenario_setting.json'
+        #self.jsonpath = jsonpath
+        self.json_file = None
+        self.session = None
+        self.scn_name = None
+
         self.json_file = get_scenario_setting(self.jsonpath)
 
         # Database connection from json_file
@@ -110,10 +114,6 @@ class egoBasic(object):
 
         # get scn_name
         self.scn_name = self.json_file['eTraGo']['scn_name']
-
-        pass
-
-    pass
 
 
 class eTraGoResults(egoBasic):
@@ -519,26 +519,35 @@ class eGo(eDisGoResults):
         """
         return self._total_operation_costs
 
-    @property
-    def plot_total_investment_costs(self):
+    def plot_total_investment_costs(self, filename=None, display=False):
         """ Plot total investment costs
         """
         # initiate total_investment_costs
         self.get_investment_cost
 
-        return grid_storage_investment(self)
+        if filename is None:
+            filename = "results/plot_total_investment_costs.pdf"
+            display = True
 
-    @property
-    def plot_power_price(self):
+        return grid_storage_investment(self, filename=filename, display=display)
+
+    def plot_power_price(self, filename=None, display=False):
         """ Plot power prices per carrier of calculation
         """
-        return power_price_plot(self)
+        if filename is None:
+            filename = "results/plot_power_price.pdf"
+            display = True
 
-    @property
-    def plot_storage_usage(self):
+        return power_price_plot(self, filename=filename, display=display)
+
+    def plot_storage_usage(self, filename=None, display=False):
         """ Plot storage usage by charge and discharge
         """
-        return plot_storage_use(self)
+        if filename is None:
+            filename = "results/plot_storage_usage.pdf"
+            display = True
+
+        return plot_storage_use(self, filename=filename, display=display)
 
     @property
     def iplot(self):

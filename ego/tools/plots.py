@@ -50,12 +50,6 @@ __license__ = "GNU Affero General Public License Version 3 (AGPL-3.0)"
 __author__ = "wolfbunke"
 
 
-# check folder for plots
-fig_dir = 'results/figs'
-if not os.path.exists(fig_dir):
-    os.makedirs(fig_dir)
-
-
 # plot colore of Carriers
 def carriers_colore():
     """ Return matplotlib colore set per carrier (technologies of
@@ -103,8 +97,7 @@ def ego_colore():
     return colors
 
 
-def grid_storage_investment(ego, filename="results/"
-                            + "grid_storage_investment.pdf"):
+def grid_storage_investment(ego, filename, display):
     """
     """
     colors = ego_colore()
@@ -139,18 +132,18 @@ def grid_storage_investment(ego, filename="results/"
     ax.set_xticks(index + bar_width / 2)
     ax.set_xticklabels(list(ego._ehv_grid_costs.voltage_level))
     ax.legend()
+    ax.autoscale()
 
     fig.tight_layout()
 
-    if filename is None:
+    if display is True:
         plt.show()
     else:
         plt.savefig(filename)
         plt.close()
 
 
-def power_price_plot(ego, filename="results/"
-                     + "power_price_plot.pdf"):
+def power_price_plot(ego, filename, display):
     """
     Plot power price of calculated scenario of timesteps and carrier
 
@@ -183,15 +176,17 @@ def power_price_plot(ego, filename="results/"
     ax.set_xlabel('Power price in €/MWh')
     ax.set_title('Power Costs per Carrier')
 
-    if filename is None:
+    plt.ylabel('Carrier')
+    ax.autoscale(tight=True)
+
+    if display is True:
         plt.show()
     else:
         plt.savefig(filename)
         plt.close()
 
 
-def plot_storage_use(ego, filename="results/"
-                     + "plot_storage_use.pdf"):
+def plot_storage_use(ego, filename, display):
     """Plot storage use by charge and discharge values
 
     Parameters
@@ -219,8 +214,9 @@ def plot_storage_use(ego, filename="results/"
                                                       fontsize=12)
     ax.set_xlabel("Kind of Storage", fontsize=12)
     ax.set_ylabel("Charge and Discharge in MWh", fontsize=12)
+    ax.autoscale(tight=True)
 
-    if filename is None:
+    if display is True:
         plt.show()
     else:
         plt.savefig(filename)
