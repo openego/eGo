@@ -32,11 +32,11 @@ if not 'READTHEDOCS' in os.environ:
     import pyproj as proj
     from shapely.geometry import Polygon, Point, MultiPolygon
     from geoalchemy2 import *
-    #import geopandas as gpd
-    #import folium
-    #from folium import plugins
-    #import branca.colormap as cm
-    #import webbrowser
+    import geopandas as gpd
+    import folium
+    from folium import plugins
+    import branca.colormap as cm
+    import webbrowser
     from egoio.db_tables.model_draft import EgoGridMvGriddistrict
     from egoio.db_tables.grid import EgoDpMvGriddistrict
     import matplotlib.pyplot as plt
@@ -102,44 +102,39 @@ def grid_storage_investment(ego, filename, display):
     """
     colors = ego_colore()
 
-    n_levels = len(ego._ehv_grid_costs.capital_cost)
+    tic = ego.total_investment_costs[['component',
+                                      'capital_cost', 'voltage_level']]
 
-    means_grid = ego._ehv_grid_costs.capital_cost
+    tic.set_index(['voltage_level', 'component'], inplace=True)
 
-    means_storage = ego._storage_costs.capital_cost
-
-    fig, ax = plt.subplots()
-
-    index = np.arange(n_levels)
     bar_width = 0.35
-
     opacity = 0.4
-    error_config = {'ecolor': '0.3'}
 
-    rects1 = ax.bar(index, means_grid, bar_width,
-                    alpha=opacity, color=colors['egoblue1'],
-                    error_kw=error_config,
-                    label='Grid expansion costs per annuity')
+    ax = tic.unstack().plot(kind='bar',
+                            rot=0,
+                            color=([colors.get(key)
+                                    for key in
+                                    ['egoblue1',
+                                     'egoblue2']]),
+                            legend=False
 
-    rects2 = ax.bar(index + bar_width, means_storage, bar_width,
-                    alpha=opacity, color=colors['egoblue4'],
-                    error_kw=error_config,
-                    label='Storage expansion costs per annuity')
+                            )
 
-    ax.set_xlabel('Voltage level')
-    ax.set_ylabel('Annualized costs per time step')
-    ax.set_title('Annualized costs per time step and component')
-    ax.set_xticks(index + bar_width / 2)
-    ax.set_xticklabels(list(ego._ehv_grid_costs.voltage_level))
-    ax.legend()
+    ax.set_xlabel('Voltage level and component')
+    ax.set_ylabel("Annualized costs per simulation periods")
+    ax.set_yscale("log")
+    ax.set_title("Annualized costs per simulation periods, "
+                 "voltage level and component", y=1.08)
+    ax.legend(('Grid', 'Storage'))
+
     ax.autoscale()
-
-    fig.tight_layout()
 
     if display is True:
         plt.show()
     else:
-        plt.savefig(filename)
+        fig = ax.get_figure()
+        fig.set_size_inches(10, 8, forward=True)
+        fig.savefig(filename,  dpi=100)
         plt.close()
 
 

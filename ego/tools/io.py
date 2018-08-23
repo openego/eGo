@@ -94,9 +94,11 @@ class egoBasic(object):
     """
 
     def __init__(self, jsonpath, *args, **kwargs):
+        """
+        """
+        self.jsonpath = kwargs.get(jsonpath, 'scenario_setting.json')
+        logger.info("Using scenario setting: {}".format(self.jsonpath))
 
-        self.jsonpath = 'scenario_setting.json'
-        #self.jsonpath = jsonpath
         self.json_file = None
         self.session = None
         self.scn_name = None
@@ -466,7 +468,7 @@ class eGo(eDisGoResults):
         _grid_ehv = None
         if 'network' in self.json_file['eTraGo']['extendable']:
             _grid_ehv = self.etrago.grid_investment_costs
-            _grid_ehv['component'] = 'ehv/hv grid'
+            _grid_ehv['component'] = 'grid'
 
             self._total_inv_cost = self._total_inv_cost.\
                 append(_grid_ehv, ignore_index=True)
@@ -474,7 +476,7 @@ class eGo(eDisGoResults):
         _storage = None
         if 'storages' in self.json_file['eTraGo']['extendable']:
             _storage = self.etrago.storage_investment_costs
-            _storage['component'] = 'ehv/hv storage'
+            _storage['component'] = 'storage'
 
             self._total_inv_cost = self._total_inv_cost.\
                 append(_storage, ignore_index=True)
@@ -483,7 +485,7 @@ class eGo(eDisGoResults):
         if self.json_file['eGo']['eDisGo'] is True:
 
             _grid_mv_lv = self.edisgo.grid_investment_costs
-            _grid_mv_lv['component'] = 'mv/lv grid'
+            _grid_mv_lv['component'] = 'grid'
 
             self._total_inv_cost = self._total_inv_cost.\
                 append(_grid_mv_lv, ignore_index=True)
