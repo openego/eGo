@@ -94,9 +94,11 @@ class egoBasic(object):
     """
 
     def __init__(self, jsonpath, *args, **kwargs):
+        """
+        """
+        self.jsonpath = kwargs.get(jsonpath, 'scenario_setting.json')
+        logger.info("Using scenario setting: {}".format(self.jsonpath))
 
-        self.jsonpath = 'scenario_setting.json'
-        #self.jsonpath = jsonpath
         self.json_file = None
         self.session = None
         self.scn_name = None
