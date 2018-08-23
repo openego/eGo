@@ -110,21 +110,31 @@ def grid_storage_investment(ego, filename, display):
     bar_width = 0.35
     opacity = 0.4
 
-    tic.plot.bar(rot=0, color=colors['egoblue1'],
-                 label='Grid and Storage expansion costs per annuity')
+    ax = tic.unstack().plot(kind='bar',
+                            rot=0,
+                            color=([colors.get(key)
+                                    for key in
+                                    ['egoblue1',
+                                     'egoblue2']]),
+                            legend=False
+
+                            )
 
     ax.set_xlabel('Voltage level and component')
-    ax.set_ylabel('Annualized costs per time step')
-    ax.set_title('Annualized costs per time step and component')
-    ax.legend()
-    ax.autoscale()
+    ax.set_ylabel("Annualized costs per simulation periods")
+    ax.set_yscale("log")
+    ax.set_title("Annualized costs per simulation periods, "
+                 "voltage level and component", y=1.08)
+    ax.legend(('Grid', 'Storage'))
 
-    fig.tight_layout()
+    ax.autoscale()
 
     if display is True:
         plt.show()
     else:
-        plt.savefig(filename)
+        fig = ax.get_figure()
+        fig.set_size_inches(10, 8, forward=True)
+        fig.savefig(filename,  dpi=100)
         plt.close()
 
 
