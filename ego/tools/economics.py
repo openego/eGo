@@ -75,7 +75,7 @@ def edisgo_convert_capital_costs(overnight_cost, t, p, json_file):
         End point of calculation from ``scenario_setting.json`` file
     _p : numeric
         interest rate of investment
-    _T : int
+    _t : int
         lifetime of investment
 
     Returns
@@ -88,7 +88,7 @@ def edisgo_convert_capital_costs(overnight_cost, t, p, json_file):
     --------
     .. math::
 
-        PVA =   (1 / p) - (1 / (p*(1 + p)^T))
+        PVA =   (1 / p) - (1 / (p*(1 + p)^t))
 
     """
     # Based on eTraGo calculation in
@@ -106,6 +106,54 @@ def edisgo_convert_capital_costs(overnight_cost, t, p, json_file):
     annuity_cost = (overnight_cost / (PVA * (year/(period+1))))
 
     return annuity_cost
+
+
+def etrago_convert_overnight_cost(annuity_cost, json_file, t=40, p=0.05):
+    """ Get annuity cost of simulation and calculation total
+    ``overnight_costs`` by given capital costs and lifetime.
+
+    Parameters
+    ----------
+    json_file : :obj:dict
+        Dictionary of the ``scenario_setting.json`` file
+    _start_snapshot : int
+        Start point of calculation from ``scenario_setting.json`` file
+    _end_snapshot : int
+        End point of calculation from ``scenario_setting.json`` file
+    _p : numeric
+        interest rate of investment
+    _T : int
+        lifetime of investment
+
+    Returns
+    -------
+    overnight_cost : numeric
+        Scenario and calculation total ``overnight_costs`` by given
+        annuity capital costs and lifetime.
+
+    Examples
+    --------
+    .. math::
+
+        PVA =   (1 / p) - (1 / (p*(1 + p)^t))
+        K_{ON} = K_a*PVA*((t/(period+1))
+
+    """
+    # Based on eTraGo calculation in
+    # https://github.com/openego/eTraGo/blob/dev/etrago/tools/utilities.py#L651
+
+    # Calculate present value of an annuity (PVA)
+    PVA = (1 / p) - (1 / (p*(1 + p) ** t))
+
+    year = 8760
+    # get period of calculation
+    period = (json_file['eTraGo']['start_snapshot']
+              - json_file['eTraGo']['start_snapshot'])
+
+    # calculation of overnight_cost
+    overnight_cost = annuity_cost*(PVA * (year/(period+1)))
+
+    return overnight_cost
 
 
 def etrago_operating_costs(network):

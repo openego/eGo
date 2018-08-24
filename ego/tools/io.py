@@ -49,7 +49,8 @@ if not 'READTHEDOCS' in os.environ:
         etrago_operating_costs,
         etrago_grid_investment,
         edisgo_grid_investment,
-        get_generator_investment)
+        get_generator_investment,
+        etrago_convert_overnight_cost)
     from ego.tools.utilities import (get_scenario_setting,
                                      get_time_steps, fix_leading_separator)
     from ego.tools.edisgo_integration import EDisGoNetworks
@@ -465,7 +466,8 @@ class eGo(eDisGoResults):
 
         self._total_inv_cost = pd.DataFrame(columns=['component',
                                                      'voltage_level',
-                                                     'capital_cost'])
+                                                     'capital_cost'
+                                                     ])
         _grid_ehv = None
         if 'network' in self.json_file['eTraGo']['extendable']:
             _grid_ehv = self.etrago.grid_investment_costs
@@ -491,7 +493,13 @@ class eGo(eDisGoResults):
             self._total_inv_cost = self._total_inv_cost.\
                 append(_grid_mv_lv, ignore_index=True)
 
+        # add overnight costs
+
         self._total_investment_costs = self._total_inv_cost
+        self._total_investment_costs[
+            'overnight_costs'] = etrago_convert_overnight_cost(
+            self._total_investment_costs['capital_cost'], self.json_file)
+
         self._storage_costs = _storage
         self._ehv_grid_costs = _grid_ehv
         self._mv_grid_costs = _grid_mv_lv
@@ -522,7 +530,8 @@ class eGo(eDisGoResults):
         """
         return self._total_operation_costs
 
-    def plot_total_investment_costs(self, filename=None, display=False):
+    def plot_total_investment_costs(self, filename=None,
+                                    display=False, **kwargs):
         """ Plot total investment costs
         """
         # initiate total_investment_costs
@@ -532,7 +541,8 @@ class eGo(eDisGoResults):
             filename = "results/plot_total_investment_costs.pdf"
             display = True
 
-        return grid_storage_investment(self, filename=filename, display=display)
+        return grid_storage_investment(self, filename=filename,
+                                       display=display, **kwargs)
 
     def plot_power_price(self, filename=None, display=False):
         """ Plot power prices per carrier of calculation
