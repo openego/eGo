@@ -37,7 +37,8 @@ if not 'READTHEDOCS' in os.environ:
     from folium import plugins
     import branca.colormap as cm
     import webbrowser
-    from egoio.db_tables.model_draft import EgoGridMvGriddistrict
+    from egoio.db_tables.model_draft import (
+        EgoGridMvGriddistrict, RenpassGisParameterRegion)
     from egoio.db_tables.grid import EgoDpMvGriddistrict
     import matplotlib.pyplot as plt
 
@@ -171,14 +172,15 @@ def power_price_plot(ego, filename, display):
     ax.set_xlabel('Power price in €/MWh')
     ax.set_title('Power Costs per Carrier')
 
-    plt.ylabel('Carrier')
+    ax.ylabel('Carrier')
     ax.autoscale(tight=True)
 
     if display is True:
         plt.show()
     else:
-        plt.savefig(filename)
-        plt.close()
+        fig = ax.get_figure()
+        fig.set_size_inches(10, 8, forward=True)
+        fig.savefig(filename,  dpi=100)
 
 
 def plot_storage_use(ego, filename, display):
@@ -209,18 +211,51 @@ def plot_storage_use(ego, filename, display):
                                                       fontsize=12)
     ax.set_xlabel("Kind of Storage", fontsize=12)
     ax.set_ylabel("Charge and Discharge in MWh", fontsize=12)
-    ax.autoscale(tight=True)
+    ax.autoscale(tight=False)
 
     if display is True:
         plt.show()
     else:
-        plt.savefig(filename)
-        plt.close()
+        fig = ax.get_figure()
+        fig.set_size_inches(10, 8, forward=True)
+        fig.subplots_adjust(bottom=0.25)
+        fig.savefig(filename,  dpi=100)
+
+
+def get_country(session, region=None):
+    """Get Geometries of scenario Countries
+    """
+
+    if region is None:
+        # Define regions 'FR',
+        region = ['DE', 'DK',  'BE', 'LU',
+                  'NO', 'PL', 'CH', 'CZ', 'SE', 'NL']
+    else:
+        region
+    # get database tabel
+    query = session.query(RenpassGisParameterRegion.gid,
+                          RenpassGisParameterRegion.stat_level,
+                          RenpassGisParameterRegion.u_region_id,
+                          RenpassGisParameterRegion.geom,
+                          RenpassGisParameterRegion.geom_point)
+    # get regions by query and filter
+    Regions = [(gid, u_region_id, stat_level,
+                shape.to_shape(geom),
+                shape.to_shape(geom_point)) for gid, u_region_id, stat_level,
+               geom, geom_point in query.filter(RenpassGisParameterRegion.u_region_id.
+                                                in_(region)).all()]
+    # define SRID
+    crs = {'init': 'epsg:4326'}
+
+    country = gpd.GeoDataFrame(
+        Regions,  columns=['gid', 'stat_level', 'u_region_id',
+                           'geometry', 'point_geom'], crs=crs)
+
+    return country
 
 
 def prepareGD(session, subst_id=None, version=None):
     """ Get MV grid districts for plotting
-
     """
 
     if version:
@@ -243,12 +278,61 @@ def prepareGD(session, subst_id=None, version=None):
         Regions = [(subst_id, shape.to_shape(geom)) for subst_id, geom in
                    query.filter(EgoGridMvGriddistrict.subst_id.in_(subst_id)).all()]
 
-    region = pd.DataFrame(Regions, columns=['subst_id', 'geometry'])
     crs = {'init': 'epsg:3035'}
     region = gpd.GeoDataFrame(
         Regions, columns=['subst_id', 'geometry'], crs=crs)
-    region.to_crs({'init': 'epsg:4326'})
+    region = region.to_crs({'init': 'epsg:4326'})
     return region
+
+
+def plot_edisgo_cluster(ego, filename, region=['DE'], display=False):
+    """Plot the Clustering of selected Dingo networks
+
+    Parameters
+    ----------
+    ego :class:`ego.io.eGo`
+        self class object of eGo()
+    filename: str
+        file name for plot ``cluster_plot.pdf``
+    region: list
+        List of background countries e.g. ['DE', 'DK']
+    display: boolean
+        True show plot false print plot as ``filename``
+
+    Returns
+    -------
+    plot :obj:`matplotlib.pyplot.show`
+            https://matplotlib.org/api/pyplot_api.html#matplotlib.pyplot.show
+
+    """
+    session = ego.session
+    version = ego.json_file['eTraGo']['gridversion']
+    # get cluster
+    cluster = ego.edisgo_networks.grid_choice
+    cluster = cluster.rename(columns={"the_selected_network_id": "subst_id"})
+    subst_id = list(cluster.subst_id)
+
+    # get country Polygon
+    cnty = get_country(session, region=region)
+    # get grid districts
+    griddis = prepareGD(session, subst_id, version)
+    griddis = griddis.merge(cluster, on='subst_id')
+
+    # start plotting
+    ax = cnty.plot(color='white', alpha=0.5)
+    ax = griddis.plot(ax=ax, column='cluster_percentage',
+                      cmap='OrRd', legend=True)
+
+    ax.set_title('Grid district Clustering by weighting (%)')
+
+    ax.autoscale(tight=True)
+
+    if display is True:
+        plt.show()
+    else:
+        fig = ax.get_figure()
+        fig.set_size_inches(10, 8, forward=True)
+        fig.savefig(filename,  dpi=100)
 
 
 def igeoplot(ego, tiles=None, geoloc=None, args=None):
