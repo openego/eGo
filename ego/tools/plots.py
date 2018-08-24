@@ -171,14 +171,15 @@ def power_price_plot(ego, filename, display):
     ax.set_xlabel('Power price in €/MWh')
     ax.set_title('Power Costs per Carrier')
 
-    plt.ylabel('Carrier')
+    ax.ylabel('Carrier')
     ax.autoscale(tight=True)
 
     if display is True:
         plt.show()
     else:
-        plt.savefig(filename, dpi=100)
-        plt.close()
+        fig = ax.get_figure()
+        fig.set_size_inches(10, 8, forward=True)
+        fig.savefig(filename,  dpi=100)
 
 
 def plot_storage_use(ego, filename, display):
@@ -209,13 +210,15 @@ def plot_storage_use(ego, filename, display):
                                                       fontsize=12)
     ax.set_xlabel("Kind of Storage", fontsize=12)
     ax.set_ylabel("Charge and Discharge in MWh", fontsize=12)
-    ax.autoscale(tight=True)
+    ax.autoscale(tight=False)
 
     if display is True:
         plt.show()
     else:
-        plt.savefig(filename)
-        plt.close()
+        fig = ax.get_figure()
+        fig.set_size_inches(10, 8, forward=True)
+        fig.subplots_adjust(bottom=0.25)
+        fig.savefig(filename,  dpi=100)
 
 
 def prepareGD(session, subst_id=None, version=None):
