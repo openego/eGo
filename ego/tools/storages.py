@@ -64,7 +64,7 @@ def etrago_storages(network):
     p_nom_o_sum: numeric
         Sum of optimal installed power capacity
     """
-    if len(network.storage_units_t.inflow.sum()) > 0:
+    if len(network.storage_units_t.p.sum()) > 0:
         charge = network.storage_units_t.\
             p[network.storage_units_t.p[network.
                                         storage_units[network.storage_units.

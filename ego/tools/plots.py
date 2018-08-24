@@ -177,7 +177,7 @@ def power_price_plot(ego, filename, display):
     if display is True:
         plt.show()
     else:
-        plt.savefig(filename)
+        plt.savefig(filename, dpi=100)
         plt.close()
 
 
