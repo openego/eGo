@@ -285,6 +285,56 @@ def prepareGD(session, subst_id=None, version=None):
     return region
 
 
+def plot_edisgo_cluster(ego, filename, region=['DE'], display=False):
+    """Plot the Clustering of selected Dingo networks
+
+    Parameters
+    ----------
+    ego :class:`ego.io.eGo`
+        self class object of eGo()
+    filename: str
+        file name for plot ``cluster_plot.pdf``
+    region: list
+        List of background countries e.g. ['DE', 'DK']
+    display: boolean
+        True show plot false print plot as ``filename``
+
+    Returns
+    -------
+    plot :obj:`matplotlib.pyplot.show`
+            https://matplotlib.org/api/pyplot_api.html#matplotlib.pyplot.show
+
+    """
+    session = ego.session
+    version = ego.json_file['eTraGo']['gridversion']
+    # get cluster
+    cluster = ego.edisgo_networks.grid_choice
+    cluster = cluster.rename(columns={"the_selected_network_id": "subst_id"})
+    subst_id = list(cluster.subst_id)
+
+    # get country Polygon
+    cnty = get_country(session, region=region)
+    # get grid districts
+    griddis = prepareGD(session, subst_id, version)
+    griddis = griddis.merge(cluster, on='subst_id')
+
+    # start plotting
+    ax = cnty.plot(color='white', alpha=0.5)
+    ax = griddis.plot(ax=ax, column='cluster_percentage',
+                      cmap='OrRd', legend=True)
+
+    ax.set_title('Grid district Clustering by weighting (%)')
+
+    ax.autoscale(tight=True)
+
+    if display is True:
+        plt.show()
+    else:
+        fig = ax.get_figure()
+        fig.set_size_inches(10, 8, forward=True)
+        fig.savefig(filename,  dpi=100)
+
+
 def igeoplot(ego, tiles=None, geoloc=None, args=None):
     """Plot function in order to display eGo results on leaflet OSM map.
     This function will open the results in your main Webbrowser

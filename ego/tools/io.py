@@ -65,7 +65,8 @@ if not 'READTHEDOCS' in os.environ:
     import pypsa
     import re
     from tools.plots import (grid_storage_investment,
-                             power_price_plot, plot_storage_use, igeoplot)
+                             power_price_plot, plot_storage_use, igeoplot,
+                             plot_edisgo_cluster)
 
 __copyright__ = ("Europa-Universität Flensburg, "
                  "Centre for Sustainable Energy Systems")
@@ -550,6 +551,15 @@ class eGo(eDisGoResults):
             display = True
 
         return plot_storage_use(self, filename=filename, display=display)
+
+    def plot_edisgo_cluster(self, filename=None, display=False, **kwargs):
+        """ Plot the Clustering of selected Dingo networks
+        """
+        if filename is None:
+            filename = "results/plot_edisgo_cluster.pdf"
+            display = True
+
+        return plot_edisgo_cluster(self, filename=filename, display=display, **kwargs)
 
     @property
     def iplot(self):
