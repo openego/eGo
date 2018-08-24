@@ -530,7 +530,8 @@ class eGo(eDisGoResults):
         """
         return self._total_operation_costs
 
-    def plot_total_investment_costs(self, filename=None, display=False):
+    def plot_total_investment_costs(self, filename=None,
+                                    display=False, **kwargs):
         """ Plot total investment costs
         """
         # initiate total_investment_costs
@@ -540,7 +541,8 @@ class eGo(eDisGoResults):
             filename = "results/plot_total_investment_costs.pdf"
             display = True
 
-        return grid_storage_investment(self, filename=filename, display=display)
+        return grid_storage_investment(self, filename=filename,
+                                       display=display, **kwargs)
 
     def plot_power_price(self, filename=None, display=False):
         """ Plot power prices per carrier of calculation

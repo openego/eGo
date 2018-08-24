@@ -98,36 +98,46 @@ def ego_colore():
     return colors
 
 
-def grid_storage_investment(ego, filename, display):
+def grid_storage_investment(ego, filename, display, var=None):
     """
     """
     colors = ego_colore()
-
-    tic = ego.total_investment_costs[['component',
-                                      'capital_cost', 'voltage_level']]
-
-    tic.set_index(['voltage_level', 'component'], inplace=True)
-
     bar_width = 0.35
     opacity = 0.4
 
-    ax = tic.unstack().plot(kind='bar',
-                            rot=0,
-                            color=([colors.get(key)
-                                    for key in
-                                    ['egoblue1',
-                                     'egoblue2']]),
-                            legend=False
+    if var == 'overnight_cost':
+        tic = ego.total_investment_costs[['component',
+                                          'overnight_costs', 'voltage_level']]
+        tic.set_index(['voltage_level', 'component'], inplace=True)
+        ax = tic.unstack().plot(kind='bar',
+                                rot=0,
+                                color=([colors.get(key)
+                                        for key in
+                                        ['egoblue1',
+                                         'egoblue2']]),
+                                legend=False)
+        ax.set_ylabel("Overnight costs of simulation")
+        ax.set_title("Total costs of simulation, "
+                     "voltage level and component", y=1.08)
 
-                            )
+    else:
+        tic = ego.total_investment_costs[['component',
+                                          'capital_cost', 'voltage_level']]
+        tic.set_index(['voltage_level', 'component'], inplace=True)
+        ax = tic.unstack().plot(kind='bar',
+                                rot=0,
+                                color=([colors.get(key)
+                                        for key in
+                                        ['egoblue1',
+                                         'egoblue2']]),
+                                legend=False)
+        ax.set_ylabel("Annualized costs per simulation periods")
+        ax.set_title("Annualized costs per simulation periods, "
+                     "voltage level and component", y=1.08)
 
     ax.set_xlabel('Voltage level and component')
-    ax.set_ylabel("Annualized costs per simulation periods")
     ax.set_yscale("log")
-    ax.set_title("Annualized costs per simulation periods, "
-                 "voltage level and component", y=1.08)
     ax.legend(('Grid', 'Storage'))
-
     ax.autoscale()
 
     if display is True:
