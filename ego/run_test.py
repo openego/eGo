@@ -41,13 +41,14 @@ def main():
         etg_gic = pd.DataFrame(ego.etrago.grid_investment_costs)
         etg_gic.to_csv(file_prefix + '__etrago_grid_costs.csv')
 
-        # test eTraGo plot and functions
-        try:
-            a = ego.etrago_line_loading()
-            a.savefig(file_prefix + "etrago_line_loading.pdf",
-                      bbox_inches='tight')
-        except:
-            pass
+        ego.plot_storage_usage(filename='results/plot_storage_usage.pdf')
+
+        ego.plot_total_investment_costs(
+            filename="results/overnight_cost_investment.pdf", var='overnight_cost')
+        ego.plot_total_investment_costs(
+            filename="results/annuity_investment.pdf")
+
+        ego.plot_power_price(filename='results/powerprice.pdf')
 
         # eGo Results
         # ego.total_investment_costs
