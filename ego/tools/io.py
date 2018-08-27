@@ -291,11 +291,21 @@ class eTraGoResults(egoBasic):
 
         # add functions direct
         # self._etrago_network.etrago_line_loading = etrago_line_loading
+        self.etrago.plot_line_loading = self._line_loading
+        self.etrago.plot_stacked_gen = self._stacked_gen
+        self.etrago.plot_curtailment = self._curtailment
+        self.etrago.plot_gen_dist = self._gen_dist
+        self.etrago.plot_storage_distribution = self._storage_distribution
+        self.etrago.plot_line_loading_diff = self._line_loading_diff
+        self.etrago.plot_plot_residual_load = self._residual_load
+        self.etrago.plot_voltage = self._voltage
+        self.etrago.plot_extension_overlay_network = \
+            self._extension_overlay_network
+        self.etrago.plot_full_load_hours = self._full_load_hours
 
     if not 'READTHEDOCS' in os.environ:
         # include eTraGo functions and methods
-        @property
-        def etrago_line_loading(self, **kwargs):
+        def _line_loading(self, **kwargs):
             """
             Integrate and use function from eTraGo.
             For more information see:
@@ -303,56 +313,49 @@ class eTraGoResults(egoBasic):
             # add if time_step <1  -> plot
             return plot_line_loading(network=self._etrago_network, **kwargs)
 
-        @property
-        def etrago_stacked_gen(self, **kwargs):
+        def _stacked_gen(self, **kwargs):
             """
             Integrate function from eTraGo.
             For more information see:
             """
             return plot_stacked_gen(network=self._etrago_network, **kwargs)
 
-        @property
-        def etrago_curtailment(self, **kwargs):
+        def _curtailment(self, **kwargs):
             """
             Integrate function from eTraGo.
             For more information see:
             """
             return curtailment(network=self._etrago_network, **kwargs)
 
-        @property
-        def etrago_gen_dist(self, **kwargs):
+        def _gen_dist(self, **kwargs):
             """
             Integrate function from eTraGo.
             For more information see:
             """
             return gen_dist(network=self._etrago_network, **kwargs)
 
-        @property
-        def etrago_storage_distribution(self, **kwargs):
+        def _storage_distribution(self, **kwargs):
             """
             Integrate function from eTraGo.
             For more information see:
             """
             return storage_distribution(network=self._etrago_network, **kwargs)
 
-        @property
-        def etrago_voltage(self, **kwargs):
+        def _voltage(self, **kwargs):
             """
             Integrate function from eTraGo.
             For more information see:
             """
             return plot_voltage(network=self._etrago_network, **kwargs)
 
-        @property
-        def etrago_residual_load(self, **kwargs):
+        def _residual_load(self, **kwargs):
             """
             Integrate function from eTraGo.
             For more information see:
             """
             return plot_residual_load(network=self._etrago_network, **kwargs)
 
-        @property
-        def etrago_line_loading_diff(self, networkB, **kwargs):
+        def _line_loading_diff(self, networkB, **kwargs):
             """
             Integrate function from eTraGo.
             For more information see:
@@ -360,8 +363,7 @@ class eTraGoResults(egoBasic):
             return plot_line_loading_diff(networkA=self._etrago_network,
                                           networkB=networkB, **kwargs)
 
-        @property
-        def etrago_extension_overlay_network(self, **kwargs):
+        def _extension_overlay_network(self, **kwargs):
             """
             Integrate function from eTraGo.
             For more information see:
@@ -369,15 +371,14 @@ class eTraGoResults(egoBasic):
             return extension_overlay_network(network=self._etrago_network,
                                              **kwargs)
 
-        @property
-        def etrago_full_load_hours(self, **kwargs):
+        def _full_load_hours(self, **kwargs):
             """
             Integrate function from eTraGo.
             For more information see:
             """
             return full_load_hours(network=self._etrago_network, **kwargs)
 
-    # add other methods from eTraGo here
+        # add other methods from eTraGo here
 
 
 class eDisGoResults(eTraGoResults):
