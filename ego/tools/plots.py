@@ -182,7 +182,6 @@ def power_price_plot(ego, filename, display):
     ax.set_xlabel('Power price in €/MWh')
     ax.set_title('Power Costs per Carrier')
 
-    ax.ylabel('Carrier')
     ax.autoscale(tight=True)
 
     if display is True:
