@@ -406,6 +406,7 @@ class eDisGoResults(eTraGoResults):
                 self._edisgo_networks,
                 self.json_file
             )
+            self.edisgo.network = self.edisgo_networks.edisgo_grids
 
     @property
     def edisgo_networks(self):
