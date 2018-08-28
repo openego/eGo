@@ -493,13 +493,13 @@ def get_etragospecs_direct(session,
     all_gens_df = all_gens_df.rename(columns={"carrier": "name"})
 
     all_gens_df = all_gens_df[all_gens_df['name'] != 'wind_offshore']
-    logger.warning('Wind offshore is disregarded in the interface')
+#    logger.warning('Wind offshore is disregarded in the interface')
 
     for index, row in all_gens_df.iterrows():
         name = row['name']
         if name == 'wind_onshore':
             all_gens_df.at[index, 'name'] = 'wind'
-            logger.warning('wind onshore is renamed to wind')
+#            logger.warning('wind onshore is renamed to wind')
 
 #    print(all_gens_df)
 #    print(all_gens_df)
@@ -524,44 +524,52 @@ def get_etragospecs_direct(session,
     performance.update({'Generator Data Processing': t1-t0})
 
     conv_df = all_gens_df[~all_gens_df.name.isin(weather_dpdnt)]
-
-    conv_cap = conv_df[['p_nom', 'name']].groupby('name').sum().T
-
+    
     conv_dsptch = pd.DataFrame(0.0,
                                index=snap_idx,
-                               columns=list(set(conv_df['name'])))
+                               columns=list(set(conv_df['name'])))    
     conv_reactive_power = pd.DataFrame(0.0,
-                                       index=snap_idx,
-                                       columns=list(set(conv_df['name'])))
-#    conv_dsptch_abs = pd.DataFrame(0.0,
-#                                   index=snap_idx,
-#                                   columns=list(set(conv_df['name'])))
+                                   index=snap_idx,
+                                   columns=list(set(conv_df['name'])))
+            
+    if not conv_df.empty:    
+        conventionals = True
+        conv_cap = conv_df[['p_nom', 'name']].groupby('name').sum().T
 
-    for index, row in conv_df.iterrows():
-        generator_id = row['generator_id']
-        source = row['name']
-        p = etrago_network.generators_t.p[str(generator_id)]
-        p_norm = p / conv_cap[source]['p_nom']
-        conv_dsptch[source] = conv_dsptch[source] + p_norm
-#        conv_dsptch_abs[source] = conv_dsptch_abs[source] + p
+        for index, row in conv_df.iterrows():
+            generator_id = row['generator_id']
+            source = row['name']
+            p = etrago_network.generators_t.p[str(generator_id)]
+            p_norm = p / conv_cap[source]['p_nom']
+            conv_dsptch[source] = conv_dsptch[source] + p_norm
+    #        conv_dsptch_abs[source] = conv_dsptch_abs[source] + p
+            if pf_post_lopf:
+                q = etrago_network.generators_t.q[str(generator_id)]
+                q_norm = q / conv_cap[source]['p_nom']  # q normalized with p_nom
+                conv_reactive_power[source] = (
+                    conv_reactive_power[source]
+                    + q_norm)
+    
         if pf_post_lopf:
-            q = etrago_network.generators_t.q[str(generator_id)]
-            q_norm = q / conv_cap[source]['p_nom']  # q normalized with p_nom
-            conv_reactive_power[source] = (
-                conv_reactive_power[source]
-                + q_norm)
+            new_columns = [
+                (col, '') for col in conv_reactive_power.columns
+            ]
+            conv_reactive_power.columns = pd.MultiIndex.from_tuples(
+                    new_columns)
 
-    if pf_post_lopf:
-        new_columns = [
-            (col, '') for col in conv_reactive_power.columns
-        ]
-        conv_reactive_power.columns = pd.MultiIndex.from_tuples(new_columns)
+    else:
+        conventionals = False
+        logger.warning('No conventional generators at bus {}'.format(bus_id))
 
+        
     # Renewables
     t2 = time.perf_counter()
     performance.update({'Conventional Dispatch': t2-t1})
     # Capacities
     ren_df = all_gens_df[all_gens_df.name.isin(weather_dpdnt)]
+    if ren_df.empty:
+        logger.warning('No renewable generators at bus {}'.format(bus_id))
+        
 
 #    w_ids = []
     for index, row in ren_df.iterrows():
@@ -728,10 +736,12 @@ def get_etragospecs_direct(session,
                     reactive_power.at[idx, col] = q
 
         # Reactive Power concat
-        all_reactive_power = pd.concat([
-            conv_reactive_power,
-            reactive_power], axis=1)
-
+        if conventionals:
+            all_reactive_power = pd.concat([
+                conv_reactive_power,
+                reactive_power], axis=1)
+        else:
+            all_reactive_power = reactive_power
 
 #    new_columns = [
 #        (aggr_gens[aggr_gens.ren_id == col].name.iloc[0],
