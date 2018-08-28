@@ -374,7 +374,7 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
     #     # - test cluster
     #     # - add logger
 
-    network = ego.etrago_network
+    network = ego.etrago.network
     session = ego.session
 
     if geoloc is None:
