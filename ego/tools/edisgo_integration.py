@@ -630,7 +630,7 @@ class EDisGoNetworks:
 
         logger.info('Calculating grid expansion costs')
 
-        edisgo_grid.reinforce()
+        edisgo_grid.reinforce(timesteps_pfa='snapshot_analysis')
 
         return edisgo_grid
 
