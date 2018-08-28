@@ -405,34 +405,58 @@ class EDisGoNetworks:
         Sets the grid choice based on the settings file
 
         """
+        
+        choice_df = pd.DataFrame(
+                columns=[
+                'no_of_points_per_cluster',
+                'the_selected_network_id',
+                'represented_grids'])
+        
         if self._choice_mode == 'cluster':
             no_grids = self._edisgo_args['no_grids']
             logger.info('Clustering to {} MV grids'.format(no_grids))
-            cluster = self._cluster_mv_grids(
-                no_grids)
+            
+            cluster_df = self._cluster_mv_grids(no_grids)
+            choice_df[
+                    'the_selected_network_id'
+                    ] = cluster_df['the_selected_network_id']
+            choice_df[
+                    'no_of_points_per_cluster'
+                    ] = cluster_df['no_of_points_per_cluster']
+            choice_df[
+                    'represented_grids'
+                    ] = cluster_df['represented_grids'] 
 
         elif self._choice_mode == 'manual':
             man_grids = self._edisgo_args['manual_grids']
-            cluster = pd.DataFrame(
-                man_grids,
-                columns=['the_selected_network_id'])
-            cluster['no_of_points_per_cluster'] = 1
+
+            choice_df['the_selected_network_id'] = man_grids
+            choice_df['no_of_points_per_cluster'] = 1
+            choice_df['represented_grids'] = [
+                    [mv_grid_id] 
+                    for mv_grid_id 
+                    in choice_df['the_selected_network_id']]
+                
             logger.info(
                 'Calculating manually chosen MV grids {}'.format(man_grids)
             )
 
         elif self._choice_mode == 'all':
             mv_grids = self._check_available_mv_grids()
-            cluster = pd.DataFrame(
-                mv_grids,
-                columns=['the_selected_network_id'])
-            cluster['no_of_points_per_cluster'] = 1
+            
+            choice_df['the_selected_network_id'] = mv_grids
+            choice_df['no_of_points_per_cluster'] = 1
+            choice_df['represented_grids'] = [
+                    [mv_grid_id] 
+                    for mv_grid_id 
+                    in choice_df['the_selected_network_id']]            
+            
             no_grids = len(mv_grids)
             logger.info(
                 'Calculating all available {} MV grids'.format(no_grids)
             )
 
-        self._grid_choice = cluster
+        self._grid_choice = choice_df
 
     def _run_edisgo_pool(self):
         """
@@ -504,6 +528,8 @@ class EDisGoNetworks:
         """
         storage_integration = self._storage_distribution
         apply_curtailment = self._apply_curtailment
+        
+        raise Exception
 
         logger.info(
             'MV grid {}: Calculating interface values'.format(mv_grid_id))
