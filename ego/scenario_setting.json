@@ -37,17 +37,19 @@
     "comments": ""
   },
   "eDisGo": {
-     "ding0_files": "/home/dozeumbuw/ego_v03/eGo/ego/data/MV_grids/20180821165042",
-     "choice_mode": "manual",
-     "cluster_attributes":["farthest_node", "wind_cap", "solar_cap", "extended_storage"],
-     "manual_grids": [33],
-     "no_grids": 1,
-     "parallelization":true,
-     "max_workers":8,
-     "initial_reinforcement":true,
-     "apply_curtailment":true,
-     "storage_distribution":true,
-     "max_cos_phi_renewable": 0.9,
-     "results": "results/eDisGo_n1_ego100v4_5_ma"
+    "db": "oedb",
+    "gridversion": "v0.4.5",
+    "ding0_files": "/home/dozeumbuw/ego_v03/eGo/ego/data/MV_grids/20180821165042",
+    "choice_mode": "manual",
+    "cluster_attributes":["farthest_node", "wind_cap", "solar_cap", "extended_storage"],
+    "manual_grids": [33],
+    "no_grids": 1,
+    "parallelization":true,
+    "max_workers":8,
+    "initial_reinforcement":true,
+    "apply_curtailment":true,
+    "storage_distribution":true,
+    "max_cos_phi_renewable": 0.9,
+    "results": "results/eDisGo_n1_ego100v4_5_ma"
   }
 }
