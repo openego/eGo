@@ -528,8 +528,6 @@ class EDisGoNetworks:
         """
         storage_integration = self._storage_distribution
         apply_curtailment = self._apply_curtailment
-        
-        raise Exception
 
         logger.info(
             'MV grid {}: Calculating interface values'.format(mv_grid_id))
@@ -565,6 +563,16 @@ class EDisGoNetworks:
 
         # Inital grid reinforcements
         logger.info('Initial MV grid reinforcement (worst-case anaylsis)')
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
         edisgo_grid, costs_before, issues_before = run_edisgo_basic(
             ding0_filepath=ding0_filepath,
             generator_scenario=None,
