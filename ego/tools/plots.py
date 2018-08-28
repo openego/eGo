@@ -343,7 +343,7 @@ def plot_edisgo_cluster(ego, filename, region=['DE'], display=False):
     fig, ax = plt.subplots(1, 1, figsize=(figsize))
 
     cnty.plot(ax=ax, color='white', alpha=0.5)
-    mvgrids.plot(ax=ax, color='white', alpha=0.1)
+    mvgrids.plot(ax=ax, color='white', alpha=0.1,  linewidth=0.5)
     gridcluster.plot(ax=ax, column='cluster_percentage',
                      cmap='OrRd', legend=True)
 
