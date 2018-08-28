@@ -271,11 +271,18 @@ def prepareGD(session, subst_id=None, version=None):
 
         query = session.query(EgoDpMvGriddistrict.subst_id,
                               EgoDpMvGriddistrict.geom)
-        if subst_id:
+
+        if isinstance(subst_id, list):
             Regions = [(subst_id, shape.to_shape(geom)) for subst_id, geom in
                        query.filter(EgoDpMvGriddistrict.version == version,
                                     EgoDpMvGriddistrict.subst_id.in_(subst_id)).all()]
+
+        elif subst_id == "all":
+
+            Regions = [(subst_id, shape.to_shape(geom)) for subst_id, geom in
+                       query.filter(EgoDpMvGriddistrict.version == version).all()]
         else:
+            # ToDo query doesn't looks stable
             Regions = [(subst_id, shape.to_shape(geom)) for subst_id, geom in
                        query.filter(EgoDpMvGriddistrict.version == version).all()]
     # toDo add values of sub_id etc. to popup
@@ -319,18 +326,26 @@ def plot_edisgo_cluster(ego, filename, region=['DE'], display=False):
     # get cluster
     cluster = ego.edisgo_networks.grid_choice
     cluster = cluster.rename(columns={"the_selected_network_id": "subst_id"})
-    subst_id = list(cluster.subst_id)
+    cluster_id = list(cluster.subst_id)
 
     # get country Polygon
     cnty = get_country(session, region=region)
     # get grid districts
-    griddis = prepareGD(session, subst_id, version)
-    griddis = griddis.merge(cluster, on='subst_id')
+    gridcluster = prepareGD(session, cluster_id, version)
+    gridcluster = gridcluster.merge(cluster, on='subst_id')
+
+    # get all MV grids
+    bus_id = "all"
+    mvgrids = prepareGD(session, bus_id, version)
 
     # start plotting
-    ax = cnty.plot(color='white', alpha=0.5)
-    ax = griddis.plot(ax=ax, column='cluster_percentage',
-                      cmap='OrRd', legend=True)
+    figsize = 5, 5
+    fig, ax = plt.subplots(1, 1, figsize=(figsize))
+
+    cnty.plot(ax=ax, color='white', alpha=0.5)
+    mvgrids.plot(ax=ax, color='white', alpha=0.4)
+    gridcluster.plot(ax=ax, column='cluster_percentage',
+                     cmap='OrRd', legend=True)
 
     ax.set_title('Grid district Clustering by weighting (%)')
 
