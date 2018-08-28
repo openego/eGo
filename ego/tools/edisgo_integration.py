@@ -529,8 +529,6 @@ class EDisGoNetworks:
         storage_integration = self._storage_distribution
         apply_curtailment = self._apply_curtailment
 
-        raise Exception
-
         logger.info(
             'MV grid {}: Calculating interface values'.format(mv_grid_id))
 
