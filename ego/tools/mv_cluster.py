@@ -328,10 +328,18 @@ def cluster_mv_grids(
         # three results are appended to a dictionary (cluster's id, point's (MVGD) id and distance from that point to cluster's center)
         id_clus_dist.setdefault(clus, []).append({id_[i]: dist})
 
-    cluster_id = []
-    cluster_points = []
-    clus_percentage = []
-    closest_point = []
+#    cluster_id = []
+#    cluster_points = []
+#    clus_percentage = []
+#    closest_point = []
+    
+    cluster_df = pd.DataFrame(
+            columns=[
+            'no_of_points_per_cluster',
+            'cluster_percentage',
+            'the_selected_network_id',
+            'represented_grids'])
+    cluster_df.index.name = 'cluster_id'
 
     # Iterating through the clusters dictionary (key represents cluster's id , value represents another disctionary with network's id and distance of that point to cluster's center)
     for key, value in id_clus_dist.items():
@@ -349,28 +357,35 @@ def cluster_mv_grids(
         short_dist_net_id_dist = min(id_dist.items(), key=lambda x: x[1])
 
         # Exporting CSV sheet for every cluster that contains the assigned points (networks) and siatance from each to cluster's center
-        daf = pd.DataFrame()
-        daf['Network_id'] = id_dist.keys()
-        daf['Distance_to_cluster_center'] = id_dist.values()
+#        daf = pd.DataFrame()
+#        daf['Network_id'] = id_dist.keys()
+#        daf['Distance_to_cluster_center'] = id_dist.values()
 #        daf.to_csv('Cluster_No_{}.csv'.format(key), sep=',')
 
         # export to lists
-        cluster_id.append(key)  # cluster id
-        cluster_points.append(no_points_clus)  # No of points / cluster
+#        cluster_id.append(key)  # cluster id
+#        cluster_points.append(no_points_clus)  # No of points / cluster
         # Percentage of points per cluster, # round(), two digits after comma
-        clus_percentage.append(round(clus_perc, 2))
+#        clus_percentage.append(round(clus_perc, 2))
 
         # the nearest point to cluster center (represented network), there is [0] because it is a tuple
-        closest_point.append(short_dist_net_id_dist[0])
+#        closest_point.append(short_dist_net_id_dist[0])
+        
+        cluster_df.loc[key] = [
+                no_points_clus,
+                round(clus_perc, 2),
+                short_dist_net_id_dist[0],
+                list(id_dist.keys())]
+        
 
     # exporting results to CSV file that contains cluster's id, the no. of assigned points (networks) and the selected network
-    d = {'CLuster_id': cluster_id, 'no_of_points_per_cluster': cluster_points,
-         'cluster_percentage': clus_percentage,
-         'the_selected_network_id': closest_point}
-    df = pd.DataFrame(d)
+#    d = {'CLuster_id': cluster_id, 'no_of_points_per_cluster': cluster_points,
+#         'cluster_percentage': clus_percentage,
+#         'the_selected_network_id': closest_point}
+#    df = pd.DataFrame(d)
 #    df.to_csv('Selected_networks_{}_clusters_dec.csv'.format(no_clusters), sep=',')
-
-    return df
+   
+    return cluster_df
 
 #    # Initiation of 3d graph for scattering plot
 #    fig = plt.figure()

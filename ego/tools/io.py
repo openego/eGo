@@ -48,7 +48,6 @@ if not 'READTHEDOCS' in os.environ:
     from ego.tools.economics import (
         etrago_operating_costs,
         etrago_grid_investment,
-        edisgo_grid_investment,
         get_generator_investment,
         etrago_convert_overnight_cost)
     from ego.tools.utilities import (get_scenario_setting,
@@ -381,6 +380,7 @@ class eTraGoResults(egoBasic):
         # add other methods from eTraGo here
 
 
+
 class eDisGoResults(eTraGoResults):
     """The ``eDisGoResults`` class create and contains all results
     of eDisGo and its network containers.
@@ -390,37 +390,15 @@ class eDisGoResults(eTraGoResults):
     def __init__(self, jsonpath, *args, **kwargs):
         super(eDisGoResults, self).__init__(self, jsonpath, *args, **kwargs)
 
-        self._edisgo = None
-        self._edisgo_networks = None
-
         if self.json_file['eGo']['eDisGo'] is True:
-            logger.info('Create eDisGo networks')
+            logger.info('Create eDisGo network')
 
-            self._edisgo = pd.DataFrame()
-
-            self._edisgo_networks = EDisGoNetworks(
+            self._edisgo = EDisGoNetworks(
                 json_file=self.json_file,
-                etrago_network=self._etrago_disaggregated_network)
-
-            self._edisgo.grid_investment_costs = edisgo_grid_investment(
-                self._edisgo_networks,
-                self.json_file
-            )
-            # add networks
-            self.edisgo.networks = self.edisgo_networks.edisgo_grids
-
-    @property
-    def edisgo_networks(self):
-        """
-        Container for eDisGo grids, including all results
-
-        Returns
-        -------
-        :obj:`dict` of :class:`edisgo.grid.network.EDisGo`
-            Dictionary of eDisGo objects, keyed by MV grid ID
-
-        """
-        return self._edisgo_networks
+                etrago_network=self.etrago.disaggregated_network)
+        else:
+            self._edisgo = None
+            logger.info('No eDisGo network')
 
     @property
     def edisgo(self):
