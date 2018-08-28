@@ -76,13 +76,13 @@ class EDisGoNetworks:
     def __init__(self, json_file, etrago_network):
 
         # Genral Json Inputs
-        self._json_file = json_file      
+        self._json_file = json_file
         self._set_scenario_settings()
 
         # Create reduced eTraGo network
         self._etrago_network = _ETraGoData(etrago_network)
         del etrago_network
-        
+
         # eDisGo specific naming
         self._edisgo_scenario_translation()
 
@@ -101,14 +101,14 @@ class EDisGoNetworks:
             self._run_edisgo_pool()
             if self._results:
                 self._save_edisgo_results()
-          
-        self._successfull_grids = self._successfull_grids()    
-        # Calculate grid investment costs    
-        
+
+        self._successfull_grids = self._successfull_grids()
+        # Calculate grid investment costs
+
         self._grid_investment_costs = edisgo_grid_investment(
-                self,
-                self._json_file
-            )
+            self,
+            self._json_file
+        )
 
     @property
     def network(self):
@@ -164,8 +164,8 @@ class EDisGoNetworks:
         return self._grid_investment_costs
 
     def _set_scenario_settings(self):
-            
-        self._grid_version = self._json_file['eGo']['gridversion']
+
+        self._grid_version = self._json_file['eDisGo']['gridversion']
         logger.info("grid_version = {}".format(self._grid_version))
         self._csv_import = self._json_file['eGo']['csv_import_eDisGo']
 
@@ -218,15 +218,15 @@ class EDisGoNetworks:
         if (self._storage_distribution is True) & (self._ext_storage is False):
             logger.warning("Storage distribution (MV grids) is active, "
                            + "but eTraGo dataset has no extendable storages")
- 
+
         # Versioning
         if self._grid_version is not None:
             self._versioned = True
         else:
             self._versioned = False
-            
+
     def _edisgo_scenario_translation(self):
-    
+
         # Scenario translation
         if self._scn_name == 'Status Quo':
             self._generator_scn = None
@@ -234,7 +234,7 @@ class EDisGoNetworks:
             self._generator_scn = 'nep2035'
         elif self._scn_name == 'eGo 100':
             self._generator_scn = 'ego100'
-            
+
     def _successfull_grids(self):
         """
         Calculates the relative number of successfully calculated grids,
@@ -344,7 +344,7 @@ class EDisGoNetworks:
 
     def _identify_extended_storages(self):
 
-        conn = db.connection(section=self._json_file['eGo']['db'])
+        conn = db.connection(section=self._json_file['eDisGo']['db'])
         session_factory = sessionmaker(bind=conn)
         Session = scoped_session(session_factory)
         session = Session()
@@ -405,27 +405,27 @@ class EDisGoNetworks:
         Sets the grid choice based on the settings file
 
         """
-        
+
         choice_df = pd.DataFrame(
-                columns=[
+            columns=[
                 'no_of_points_per_cluster',
                 'the_selected_network_id',
                 'represented_grids'])
-        
+
         if self._choice_mode == 'cluster':
             no_grids = self._edisgo_args['no_grids']
             logger.info('Clustering to {} MV grids'.format(no_grids))
-            
+
             cluster_df = self._cluster_mv_grids(no_grids)
             choice_df[
-                    'the_selected_network_id'
-                    ] = cluster_df['the_selected_network_id']
+                'the_selected_network_id'
+            ] = cluster_df['the_selected_network_id']
             choice_df[
-                    'no_of_points_per_cluster'
-                    ] = cluster_df['no_of_points_per_cluster']
+                'no_of_points_per_cluster'
+            ] = cluster_df['no_of_points_per_cluster']
             choice_df[
-                    'represented_grids'
-                    ] = cluster_df['represented_grids'] 
+                'represented_grids'
+            ] = cluster_df['represented_grids']
 
         elif self._choice_mode == 'manual':
             man_grids = self._edisgo_args['manual_grids']
@@ -433,24 +433,24 @@ class EDisGoNetworks:
             choice_df['the_selected_network_id'] = man_grids
             choice_df['no_of_points_per_cluster'] = 1
             choice_df['represented_grids'] = [
-                    [mv_grid_id] 
-                    for mv_grid_id 
-                    in choice_df['the_selected_network_id']]
-                
+                [mv_grid_id]
+                for mv_grid_id
+                in choice_df['the_selected_network_id']]
+
             logger.info(
                 'Calculating manually chosen MV grids {}'.format(man_grids)
             )
 
         elif self._choice_mode == 'all':
             mv_grids = self._check_available_mv_grids()
-            
+
             choice_df['the_selected_network_id'] = mv_grids
             choice_df['no_of_points_per_cluster'] = 1
             choice_df['represented_grids'] = [
-                    [mv_grid_id] 
-                    for mv_grid_id 
-                    in choice_df['the_selected_network_id']]            
-            
+                [mv_grid_id]
+                for mv_grid_id
+                in choice_df['the_selected_network_id']]
+
             no_grids = len(mv_grids)
             logger.info(
                 'Calculating all available {} MV grids'.format(no_grids)
@@ -532,7 +532,7 @@ class EDisGoNetworks:
         logger.info(
             'MV grid {}: Calculating interface values'.format(mv_grid_id))
 
-        conn = db.connection(section=self._json_file['eGo']['db'])
+        conn = db.connection(section=self._json_file['eDisGo']['db'])
         session_factory = sessionmaker(bind=conn)
         Session = scoped_session(session_factory)
         session = Session()
