@@ -388,6 +388,7 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
     #     # - Map see: http://nbviewer.jupyter.org/gist/BibMartin/f153aa957ddc5fadc64929abdee9ff2e
     #     # - test cluster
     #     # - add logger
+    #     # - add html folder to results folder
 
     network = ego.etrago.network
     session = ego.session
