@@ -121,9 +121,9 @@ def get_scenario_setting(jsonpath='scenario_setting.json'):
             json_file['eTraGo']['gridversion'] = None
 
     # add eGo parameter to eTraGo scn_set
-    json_file['eTraGo'].update({'db': json_file['eGo'].get('db')})
-    json_file['eTraGo'].update(
-        {'gridversion': json_file['eGo'].get('gridversion')})
+    #json_file['eTraGo'].update({'db': json_file['eGo'].get('db')})
+    # json_file['eTraGo'].update(
+    #    {'gridversion': json_file['eGo'].get('gridversion')})
 
     if json_file['eGo'].get('eDisGo') == True:
         logger.info('Using and importing eDisGo settings')

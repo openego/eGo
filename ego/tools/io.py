@@ -108,7 +108,7 @@ class egoBasic(object):
 
         # Database connection from json_file
         try:
-            conn = db.connection(section=self.json_file['eGo']['db'])
+            conn = db.connection(section=self.json_file['eTraGo']['db'])
             Session = sessionmaker(bind=conn)
             self.session = Session()
             logger.info('Connected to Database')
@@ -155,7 +155,7 @@ class eTraGoResults(egoBasic):
                     self.json_file['eTraGo'][key] = 'removed by DB recover'
 
                 # ToDo add scenario_setting for results
-                self.json_file['eTraGo']['db'] = self.json_file['eGo']['db']
+                self.json_file['eTraGo']['db'] = self.json_file['eTraGo']['db']
                 logger.info(
                     'Add eTraGo scenario_setting from oedb result')
                 # To do ....
@@ -165,8 +165,6 @@ class eTraGoResults(egoBasic):
                 _pkg = import_module(packagename + '.' + schema)
 
                 # get metadata
-                # version = json_file['eGo']['gridversion']
-
                 orm_meta = getattr(_pkg, _prefix + 'Meta')
                 self.jsonpath = recover_resultsettings(self.session,
                                                        self.json_file,
@@ -718,7 +716,6 @@ def etrago_from_oedb(session, json_file):
     _mapped = {}
 
     # get metadata
-    # version = json_file['eGo']['gridversion']
 
     orm_meta = getattr(_pkg, _prefix + 'Meta')
 
