@@ -324,7 +324,7 @@ def plot_edisgo_cluster(ego, filename, region=['DE'], display=False):
     session = ego.session
     version = ego.json_file['eTraGo']['gridversion']
     # get cluster
-    cluster = ego.edisgo_networks.grid_choice
+    cluster = ego.edisgo.grid_choice
     cluster = cluster.rename(columns={"the_selected_network_id": "subst_id"})
     cluster_id = list(cluster.subst_id)
 
@@ -593,7 +593,7 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
     # list(network.buses.index) # change to selected grids
 
     #
-    subst_id = list(ego.edisgo_networks.grid_choice.the_selected_network_id)
+    subst_id = list(ego.edisgo.grid_choice.the_selected_network_id)
     district = prepareGD(session, subst_id, version)
     print(district)
     # todo does not work with k-mean Cluster

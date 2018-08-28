@@ -331,7 +331,7 @@ class eTraGoResults(egoBasic):
             Integrate function from eTraGo.
             For more information see:
             """
-            return gen_dist(network=self..etrago.network, **kwargs)
+            return gen_dist(network=self.etrago.network, **kwargs)
 
         def _storage_distribution(self, **kwargs):
             """
