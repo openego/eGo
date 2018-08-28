@@ -45,6 +45,8 @@ if not 'READTHEDOCS' in os.environ:
     from ego.tools.mv_cluster import (
         analyze_attributes,
         cluster_mv_grids)
+    from ego.tools.economics import (
+        edisgo_grid_investment)
 
     import pandas as pd
     import json
@@ -74,7 +76,95 @@ class EDisGoNetworks:
     def __init__(self, json_file, etrago_network):
 
         # Genral Json Inputs
-        self._json_file = json_file
+        self._json_file = json_file      
+        self._set_scenario_settings()
+
+        # Create reduced eTraGo network
+        self._etrago_network = _ETraGoData(etrago_network)
+        del etrago_network
+        
+        # eDisGo specific naming
+        self._edisgo_scenario_translation()
+
+        # Program information
+        self._run_finished = False
+
+        # eDisGo Result grids
+        self._edisgo_grids = {}
+
+        if self._csv_import:
+            self._laod_edisgo_results()
+
+        else:
+            # Execute Functions
+            self._set_grid_choice()
+            self._run_edisgo_pool()
+            if self._results:
+                self._save_edisgo_results()
+          
+        self._successfull_grids = self._successfull_grids()    
+        # Calculate grid investment costs    
+        
+        self._grid_investment_costs = edisgo_grid_investment(
+                self,
+                self._json_file
+            )
+
+    @property
+    def network(self):
+        """
+        Container for eDisGo grids, including all results
+
+        Returns
+        -------
+        :obj:`dict` of :class:`edisgo.grid.network.EDisGo`
+            Dictionary of eDisGo objects, keyed by MV grid ID
+
+        """
+        return self._edisgo_grids
+
+    @property
+    def grid_choice(self):
+        """
+        Container for the choice of MV grids, including their weighting
+
+        Returns
+        -------
+        :pandas:`pandas.DataFrame<dataframe>`
+            Dataframe containing the chosen grids and their weightings
+
+        """
+        return self._grid_choice
+
+    @property
+    def successfull_grids(self):
+        """
+        Relative number of successfully calculated MV grids
+        (Includes clustering weighting)
+
+        Returns
+        -------
+        int
+            Relative number of grids
+
+        """
+        return self._successfull_grids
+
+    @property
+    def grid_investment_costs(self):
+        """
+        Grid investment costs
+
+        Returns
+        -------
+        None or :pandas:`pandas.DataFrame<dataframe>`
+            Dataframe containing annuity costs per voltage level
+
+        """
+        return self._grid_investment_costs
+
+    def _set_scenario_settings(self):
+            
         self._grid_version = self._json_file['eGo']['gridversion']
         logger.info("grid_version = {}".format(self._grid_version))
         self._csv_import = self._json_file['eGo']['csv_import_eDisGo']
@@ -128,10 +218,15 @@ class EDisGoNetworks:
         if (self._storage_distribution is True) & (self._ext_storage is False):
             logger.warning("Storage distribution (MV grids) is active, "
                            + "but eTraGo dataset has no extendable storages")
-
-        self._etrago_network = _ETraGoData(etrago_network)
-        del etrago_network
-
+ 
+        # Versioning
+        if self._grid_version is not None:
+            self._versioned = True
+        else:
+            self._versioned = False
+            
+    def _edisgo_scenario_translation(self):
+    
         # Scenario translation
         if self._scn_name == 'Status Quo':
             self._generator_scn = None
@@ -139,69 +234,7 @@ class EDisGoNetworks:
             self._generator_scn = 'nep2035'
         elif self._scn_name == 'eGo 100':
             self._generator_scn = 'ego100'
-
-        # Versioning
-        if self._grid_version is not None:
-            self._versioned = True
-        else:
-            self._versioned = False
-
-        # Program information
-        self._run_finished = False
-
-        # eDisGo Results
-        self._edisgo_grids = {}
-
-        if self._csv_import:
-            self._laod_edisgo_results()
-
-        else:
-            # Execute Functions
-            self._set_grid_choice()
-            self._run_edisgo_pool()
-            if self._results:
-                self._save_edisgo_results()
-
-    @property
-    def edisgo_grids(self):
-        """
-        Container for eDisGo grids, including all results
-
-        Returns
-        -------
-        :obj:`dict` of :class:`edisgo.grid.network.EDisGo`
-            Dictionary of eDisGo objects, keyed by MV grid ID
-
-        """
-        return self._edisgo_grids
-
-    @property
-    def grid_choice(self):
-        """
-        Container for the choice of MV grids, including their weighting
-
-        Returns
-        -------
-        :pandas:`pandas.DataFrame<dataframe>`
-            Dataframe containing the chosen grids and their weightings
-
-        """
-        return self._grid_choice
-
-    @property
-    def successfull_grids(self):
-        """
-        Relative number of successfully calculated MV grids
-        (Includes clustering weighting)
-
-        Returns
-        -------
-        int
-            Relative number of grids
-
-        """
-        return self._successfull_grids()
-
+            
     def _successfull_grids(self):
         """
         Calculates the relative number of successfully calculated grids,
@@ -372,34 +405,58 @@ class EDisGoNetworks:
         Sets the grid choice based on the settings file
 
         """
+        
+        choice_df = pd.DataFrame(
+                columns=[
+                'no_of_points_per_cluster',
+                'the_selected_network_id',
+                'represented_grids'])
+        
         if self._choice_mode == 'cluster':
             no_grids = self._edisgo_args['no_grids']
             logger.info('Clustering to {} MV grids'.format(no_grids))
-            cluster = self._cluster_mv_grids(
-                no_grids)
+            
+            cluster_df = self._cluster_mv_grids(no_grids)
+            choice_df[
+                    'the_selected_network_id'
+                    ] = cluster_df['the_selected_network_id']
+            choice_df[
+                    'no_of_points_per_cluster'
+                    ] = cluster_df['no_of_points_per_cluster']
+            choice_df[
+                    'represented_grids'
+                    ] = cluster_df['represented_grids'] 
 
         elif self._choice_mode == 'manual':
             man_grids = self._edisgo_args['manual_grids']
-            cluster = pd.DataFrame(
-                man_grids,
-                columns=['the_selected_network_id'])
-            cluster['no_of_points_per_cluster'] = 1
+
+            choice_df['the_selected_network_id'] = man_grids
+            choice_df['no_of_points_per_cluster'] = 1
+            choice_df['represented_grids'] = [
+                    [mv_grid_id] 
+                    for mv_grid_id 
+                    in choice_df['the_selected_network_id']]
+                
             logger.info(
                 'Calculating manually chosen MV grids {}'.format(man_grids)
             )
 
         elif self._choice_mode == 'all':
             mv_grids = self._check_available_mv_grids()
-            cluster = pd.DataFrame(
-                mv_grids,
-                columns=['the_selected_network_id'])
-            cluster['no_of_points_per_cluster'] = 1
+            
+            choice_df['the_selected_network_id'] = mv_grids
+            choice_df['no_of_points_per_cluster'] = 1
+            choice_df['represented_grids'] = [
+                    [mv_grid_id] 
+                    for mv_grid_id 
+                    in choice_df['the_selected_network_id']]            
+            
             no_grids = len(mv_grids)
             logger.info(
                 'Calculating all available {} MV grids'.format(no_grids)
             )
 
-        self._grid_choice = cluster
+        self._grid_choice = choice_df
 
     def _run_edisgo_pool(self):
         """
@@ -471,6 +528,8 @@ class EDisGoNetworks:
         """
         storage_integration = self._storage_distribution
         apply_curtailment = self._apply_curtailment
+        
+        raise Exception
 
         logger.info(
             'MV grid {}: Calculating interface values'.format(mv_grid_id))
