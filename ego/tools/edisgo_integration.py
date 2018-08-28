@@ -687,8 +687,7 @@ class EDisGoNetworks:
         else:
             logger.info('No storage integration')
 
-        logger.info('Calculating grid expansion costs')
-
+        logger.info("MV grid {}: eDisGo grid analysis").format(mv_grid_id)
         edisgo_grid.reinforce()
 
         return edisgo_grid
