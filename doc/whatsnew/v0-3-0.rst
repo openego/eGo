@@ -1,0 +1,17 @@
+Release v0.3.0 (August 17, 2018)
+++++++++++++++++++++++++++++++++
+
+Power Flow and Clustering. xxx
+
+
+Added features
+--------------
+
+* Update of dependencies
+* Implemting of Ding0 grid parallelization 
+* Adding the Power Flow of eTraGo
+* Testing new Dataprocessing Version "v0.4.3"
+* make eGo installable from pip 
+* ....
+
+
