@@ -782,7 +782,8 @@ class EDisGoNetworks:
             logger.info('No storage integration')
 
         logger.info("MV grid {}: eDisGo grid analysis".format(mv_grid_id))
-        edisgo_grid.reinforce()
+
+        edisgo_grid.reinforce(timesteps_pfa='snapshot_analysis')
 
         return edisgo_grid
 
