@@ -52,6 +52,7 @@
     "storage_distribution":false,
     "max_cos_phi_renewable": 0.9,
     "results": "results/eDisGo_redesign_test",
-    "solver": "gurobi"
+    "solver": "gurobi",
+    "timesteps_pfa": "snapshot_analysis"
   }
 }
