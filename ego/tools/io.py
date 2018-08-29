@@ -48,7 +48,6 @@ if not 'READTHEDOCS' in os.environ:
     from ego.tools.economics import (
         etrago_operating_costs,
         etrago_grid_investment,
-        edisgo_grid_investment,
         get_generator_investment,
         etrago_convert_overnight_cost)
     from ego.tools.utilities import (get_scenario_setting,
@@ -109,7 +108,7 @@ class egoBasic(object):
 
         # Database connection from json_file
         try:
-            conn = db.connection(section=self.json_file['eGo']['db'])
+            conn = db.connection(section=self.json_file['eTraGo']['db'])
             Session = sessionmaker(bind=conn)
             self.session = Session()
             logger.info('Connected to Database')
@@ -156,7 +155,7 @@ class eTraGoResults(egoBasic):
                     self.json_file['eTraGo'][key] = 'removed by DB recover'
 
                 # ToDo add scenario_setting for results
-                self.json_file['eTraGo']['db'] = self.json_file['eGo']['db']
+                self.json_file['eTraGo']['db'] = self.json_file['eTraGo']['db']
                 logger.info(
                     'Add eTraGo scenario_setting from oedb result')
                 # To do ....
@@ -166,8 +165,6 @@ class eTraGoResults(egoBasic):
                 _pkg = import_module(packagename + '.' + schema)
 
                 # get metadata
-                # version = json_file['eGo']['gridversion']
-
                 orm_meta = getattr(_pkg, _prefix + 'Meta')
                 self.jsonpath = recover_resultsettings(self.session,
                                                        self.json_file,
@@ -278,15 +275,15 @@ class eTraGoResults(egoBasic):
 
         # Add function
         self.etrago.storage_investment_costs = etrago_storages_investment(
-            self._etrago_network, self.json_file)
-        self.etrago.storage_charges = etrago_storages(self._etrago_network)
+            self.etrago.network, self.json_file)
+        self.etrago.storage_charges = etrago_storages(self.etrago.network)
 
         self.etrago.operating_costs = etrago_operating_costs(
-            self._etrago_network)
-        self.etrago.generator = create_etrago_results(self._etrago_network,
+            self.etrago.network)
+        self.etrago.generator = create_etrago_results(self.etrago.network,
                                                       self.scn_name)
         self.etrago.grid_investment_costs = \
-            etrago_grid_investment(self._etrago_network,
+            etrago_grid_investment(self.etrago.network,
                                    self.json_file)
 
         # add functions direct
@@ -311,56 +308,56 @@ class eTraGoResults(egoBasic):
             For more information see:
             """
             # add if time_step <1  -> plot
-            return plot_line_loading(network=self._etrago_network, **kwargs)
+            return plot_line_loading(network=self.etrago.network, **kwargs)
 
         def _stacked_gen(self, **kwargs):
             """
             Integrate function from eTraGo.
             For more information see:
             """
-            return plot_stacked_gen(network=self._etrago_network, **kwargs)
+            return plot_stacked_gen(network=self.etrago.network, **kwargs)
 
         def _curtailment(self, **kwargs):
             """
             Integrate function from eTraGo.
             For more information see:
             """
-            return curtailment(network=self._etrago_network, **kwargs)
+            return curtailment(network=self.etrago.network, **kwargs)
 
         def _gen_dist(self, **kwargs):
             """
             Integrate function from eTraGo.
             For more information see:
             """
-            return gen_dist(network=self._etrago_network, **kwargs)
+            return gen_dist(network=self.etrago.network, **kwargs)
 
         def _storage_distribution(self, **kwargs):
             """
             Integrate function from eTraGo.
             For more information see:
             """
-            return storage_distribution(network=self._etrago_network, **kwargs)
+            return storage_distribution(network=self.etrago.network, **kwargs)
 
         def _voltage(self, **kwargs):
             """
             Integrate function from eTraGo.
             For more information see:
             """
-            return plot_voltage(network=self._etrago_network, **kwargs)
+            return plot_voltage(network=self.etrago.network, **kwargs)
 
         def _residual_load(self, **kwargs):
             """
             Integrate function from eTraGo.
             For more information see:
             """
-            return plot_residual_load(network=self._etrago_network, **kwargs)
+            return plot_residual_load(network=self.etrago.network, **kwargs)
 
         def _line_loading_diff(self, networkB, **kwargs):
             """
             Integrate function from eTraGo.
             For more information see:
             """
-            return plot_line_loading_diff(networkA=self._etrago_network,
+            return plot_line_loading_diff(networkA=self.etrago.network,
                                           networkB=networkB, **kwargs)
 
         def _extension_overlay_network(self, **kwargs):
@@ -368,7 +365,7 @@ class eTraGoResults(egoBasic):
             Integrate function from eTraGo.
             For more information see:
             """
-            return extension_overlay_network(network=self._etrago_network,
+            return extension_overlay_network(network=self.etrago.network,
                                              **kwargs)
 
         def _full_load_hours(self, **kwargs):
@@ -376,7 +373,7 @@ class eTraGoResults(egoBasic):
             Integrate function from eTraGo.
             For more information see:
             """
-            return full_load_hours(network=self._etrago_network, **kwargs)
+            return full_load_hours(network=self.etrago.network, **kwargs)
 
         # add other methods from eTraGo here
 
@@ -390,37 +387,15 @@ class eDisGoResults(eTraGoResults):
     def __init__(self, jsonpath, *args, **kwargs):
         super(eDisGoResults, self).__init__(self, jsonpath, *args, **kwargs)
 
-        self._edisgo = None
-        self._edisgo_networks = None
-
         if self.json_file['eGo']['eDisGo'] is True:
-            logger.info('Create eDisGo networks')
+            logger.info('Create eDisGo network')
 
-            self._edisgo = pd.DataFrame()
-
-            self._edisgo_networks = EDisGoNetworks(
+            self._edisgo = EDisGoNetworks(
                 json_file=self.json_file,
-                etrago_network=self._etrago_disaggregated_network)
-
-            self._edisgo.grid_investment_costs = edisgo_grid_investment(
-                self._edisgo_networks,
-                self.json_file
-            )
-            # add networks
-            self.edisgo.networks = self.edisgo_networks.edisgo_grids
-
-    @property
-    def edisgo_networks(self):
-        """
-        Container for eDisGo grids, including all results
-
-        Returns
-        -------
-        :obj:`dict` of :class:`edisgo.grid.network.EDisGo`
-            Dictionary of eDisGo objects, keyed by MV grid ID
-
-        """
-        return self._edisgo_networks
+                etrago_network=self.etrago.disaggregated_network)
+        else:
+            self._edisgo = None
+            logger.info('No eDisGo network')
 
     @property
     def edisgo(self):
@@ -443,7 +418,7 @@ class eGo(eDisGoResults):
     -------
     network_etrago: :class:`etrago.tools.io.NetworkScenario`
         eTraGo network object compiled by :meth:`etrago.appl.etrago`
-    edisgo_networks : :class:`ego.tools.edisgo_integration.EDisGoNetworks`
+    edisgo.network : :class:`ego.tools.edisgo_integration.EDisGoNetworks`
         Contains multiple eDisGo networks
     edisgo : :pandas:`pandas.Dataframe<dataframe>`
         aggregated results of eDisGo
@@ -741,7 +716,6 @@ def etrago_from_oedb(session, json_file):
     _mapped = {}
 
     # get metadata
-    # version = json_file['eGo']['gridversion']
 
     orm_meta = getattr(_pkg, _prefix + 'Meta')
 

@@ -346,14 +346,14 @@ def etrago_grid_investment(network, json_file):
     pass
 
 
-def edisgo_grid_investment(edisgo_networks, json_file):
+def edisgo_grid_investment(edisgo, json_file):
     """
     Function aggregates all costs, based on all calculated eDisGo
     grids and their weightings
 
     Parameters
     ----------
-    edisgo_networks : :class:`ego.tools.edisgo_integration.EDisGoNetworks`
+    edisgo : :class:`ego.tools.edisgo_integration.EDisGoNetworks`
         Contains multiple eDisGo networks
 
     Returns
@@ -377,7 +377,7 @@ def edisgo_grid_investment(edisgo_networks, json_file):
         columns=['voltage_level', 'annuity_costs', 'overnight_costs'])
 
     # Loop through all calculated eDisGo grids
-    for key, value in edisgo_networks.edisgo_grids.items():
+    for key, value in edisgo.network.items():
 
         if not hasattr(value, 'network'):
             logger.warning('No results available for grid {}'.format(key))
@@ -402,7 +402,7 @@ def edisgo_grid_investment(edisgo_networks, json_file):
             json_file=json_file)
 
         # Weighting (retrieves the singe (absolute) weighting for this grid)
-        choice = edisgo_networks.grid_choice
+        choice = edisgo.grid_choice
         weighting = choice.loc[
             choice['the_selected_network_id'] == key
         ][
@@ -433,7 +433,7 @@ def edisgo_grid_investment(edisgo_networks, json_file):
             aggr_costs[['capital_cost', 'overnight_costs']]
             * 1000)
 
-        successfull_grids = edisgo_networks.successfull_grids
+        successfull_grids = edisgo.successfull_grids
         if successfull_grids < 1:
             logger.warning(
                 'Only {} % of the grids were calculated.\n'.format(
