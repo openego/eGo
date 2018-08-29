@@ -344,10 +344,10 @@ def plot_edisgo_cluster(ego, filename, region=['DE'], display=False):
 
     cnty.plot(ax=ax, color='white', alpha=0.5)
     mvgrids.plot(ax=ax, color='white', alpha=0.1,  linewidth=0.5)
-    gridcluster.plot(ax=ax, column='cluster_percentage',
+    gridcluster.plot(ax=ax, column='no_of_points_per_cluster',
                      cmap='OrRd', legend=True)
 
-    ax.set_title('Grid district Clustering by weighting (%)')
+    ax.set_title('Grid district Clustering by Number of represent Grids')
 
     ax.autoscale(tight=True)
 
