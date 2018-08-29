@@ -184,9 +184,6 @@ class EDisGoNetworks:
                                 edisgo_db,
                                 ego_db))
             edisgo_grid.network.config['db_connection']['section'] = ego_db
-        else:
-            if not self._suppress_log:
-                logger.info("eDisGo's and eGo's database sections match")
             
         # Versioned
         ego_gridversion = self._grid_version
@@ -216,9 +213,6 @@ class EDisGoNetworks:
                                 ego_versioned))
             edisgo_grid.network.config[
                     'data_source']['oedb_data_source'] = ego_versioned       
-        else:
-            if not self._suppress_log:
-                logger.info("eDisGo's and eGo's data sources match")  
             
         # Gridversion    
         ego_gridversion = self._grid_version
@@ -236,9 +230,6 @@ class EDisGoNetworks:
                                 ego_gridversion))
             edisgo_grid.network.config[
                     'versioned']['version'] = ego_gridversion
-        else:
-            if not self._suppress_log:
-                logger.info("eDisGo's and eGo's grid versions match") 
             
         if not self._suppress_log:
             logger.info("Changing eDisGo's voltage configurations")
