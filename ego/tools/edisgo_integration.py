@@ -39,6 +39,7 @@ if not 'READTHEDOCS' in os.environ:
         run_edisgo_pool_flexible
     )
     from edisgo.grid import tools
+    from edisgo.grid.network import EDisGo
     from ego.tools.specs import (
         get_etragospecs_direct
     )
@@ -239,10 +240,23 @@ class EDisGoNetworks:
             if not self._suppress_log:
                 logger.info("eDisGo's and eGo's grid versions match") 
             
-        self._suppress_log = True
+        if not self._suppress_log:
+            logger.info("Changing eDisGo's voltage configurations")
+                
+        edisgo_grid.network.config[
+                'grid_expansion_allowed_voltage_deviations'] = {
+                'hv_mv_trafo_offset': 0.04,
+                'hv_mv_trafo_control_deviation': 0.0,
+                'mv_load_case_max_v_deviation': 0.055,
+                'mv_feedin_case_max_v_deviation': 0.02,
+                'lv_load_case_max_v_deviation': 0.065,
+                'lv_feedin_case_max_v_deviation': 0.03,
+                'mv_lv_station_load_case_max_v_deviation': 0.02,
+                'mv_lv_station_feedin_case_max_v_deviation': 0.01
+            }   
     
-            
-
+        self._suppress_log = True
+        
     def _set_scenario_settings(self):
                
         self._csv_import = self._json_file['eGo']['csv_import_eDisGo']
@@ -621,8 +635,10 @@ class EDisGoNetworks:
         Session = scoped_session(session_factory)
         session = Session()
 
+        # Query bus ID for this MV grid
         bus_id = self._get_bus_id_from_mv_grid(session, mv_grid_id)
 
+        # Calculate Interface values for this MV grid
         specs = get_etragospecs_direct(
             session,
             bus_id,
@@ -631,9 +647,9 @@ class EDisGoNetworks:
             self._grid_version,
             self._pf_post_lopf,
             self._max_cos_phi_renewable)
-
         Session.remove()
 
+        # Get ding0 (MV grid) form folder
         ding0_filepath = (
             self._ding0_files
             + '/ding0_grids__'
@@ -645,33 +661,49 @@ class EDisGoNetworks:
             logger.error(msg)
             raise Exception(msg)
 
-        # Inital grid reinforcements
-        logger.info('Initial MV grid reinforcement (worst-case anaylsis)')
+        # Initalize eDisGo with this MV grid
+        logger.info(("MV grid {}: Initialize MV grid").format(mv_grid_id))        
+
+        edisgo_grid = EDisGo(ding0_grid=ding0_filepath,
+                             worst_case_analysis='worst-case')
         
-        edisgo_grid, costs_before, issues_before = run_edisgo_basic(
-            ding0_filepath=ding0_filepath,
-            generator_scenario=None,
-            analysis='worst-case')  # only the edisgo_grid is returned
-
-        try:
-            total_costs_before_EUR = costs_before['total_costs'].sum() * 1000
-            logger.info(
-                ("MV grid {}: Costs for initial "
-                 + "reinforcement: EUR {}").format(
-                    mv_grid_id,
-                    "{0:,.2f}".format(total_costs_before_EUR)))
-        except:
-            logger.warning("Costs for initial reinforcement could not "
-                           "be calculated")
-
-        edisgo_grid.network.results = Results(edisgo_grid.network)
-
         # Update eDisGo settings (from config files) with scenario settings
         logger.info("MV grid {}: Updating eDisgo configuration".format(
                 mv_grid_id))
+        
         self._update_edisgo_configs(edisgo_grid)
- 
+        
+        # Inital grid reinforcements
+        logger.info(("MV grid {}: Initial MV grid reinforcement "
+                     +"(worst-case anaylsis)").format(mv_grid_id))
+      
+        edisgo_grid.reinforce()
+        
+        # Get costs for initial reinforcement
+        costs_grouped = \
+            edisgo_grid.network.results.grid_expansion_costs.groupby(
+                ['type']).sum()
+        costs = pd.DataFrame(
+                costs_grouped.values,
+                columns=costs_grouped.columns,
+                index=[[edisgo_grid.network.id] * len(costs_grouped), 
+                       costs_grouped.index]).reset_index()
+        costs.rename(columns={'level_0': 'grid'}, inplace=True)
+        
+        costs_before = costs
     
+        total_costs_before_EUR = costs_before['total_costs'].sum() * 1000
+        logger.info(
+            ("MV grid {}: Costs for initial "
+             + "reinforcement: EUR {}").format(
+                mv_grid_id,
+                "{0:,.2f}".format(total_costs_before_EUR)))
+
+        logger.info((
+                "MV grid {}: Resetting grid after initial reinforcement"
+                     ).format(mv_grid_id)) 
+        edisgo_grid.network.results = Results(edisgo_grid.network)
+   
         logger.info("MV grid {}: eTraGo feed-in case".format(mv_grid_id))
 
         # Generator import for NEP 2035 and eGo 100 scenarios
