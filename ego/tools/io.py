@@ -94,17 +94,17 @@ class egoBasic(object):
 
     """
 
-    def __init__(self, jsonpath, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         """
         """
-        self.jsonpath = kwargs.get(jsonpath, 'scenario_setting.json')
+                
         logger.info("Using scenario setting: {}".format(self.jsonpath))
 
         self.json_file = None
         self.session = None
         self.scn_name = None
 
-        self.json_file = get_scenario_setting(self.jsonpath)
+        self.json_file = get_scenario_setting(jsonpath=self.jsonpath)
 
         # Database connection from json_file
         try:
@@ -131,11 +131,10 @@ class eTraGoResults(egoBasic):
         DataFrame which collects several eTraGo results
     """
 
-    def __init__(self, jsonpath, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         """
         """
-        super(eTraGoResults, self).__init__(self, jsonpath,
-                                            *args, **kwargs)
+        super(eTraGoResults, self).__init__(self, *args, **kwargs)
         self.etrago = None
         self._etrago_network = None
         self._etrago_disaggregated_network = None
@@ -384,8 +383,8 @@ class eDisGoResults(eTraGoResults):
 
     """
 
-    def __init__(self, jsonpath, *args, **kwargs):
-        super(eDisGoResults, self).__init__(self, jsonpath, *args, **kwargs)
+    def __init__(self, *args, **kwargs):
+        super(eDisGoResults, self).__init__(self, *args, **kwargs)
 
         if self.json_file['eGo']['eDisGo'] is True:
             logger.info('Create eDisGo network')
@@ -429,8 +428,8 @@ class eGo(eDisGoResults):
     """
 
     def __init__(self, jsonpath, *args, **kwargs):
-        super(eGo, self).__init__(self, jsonpath,
-                                  *args, **kwargs)
+        self.jsonpath = jsonpath
+        super(eGo, self).__init__(self,  *args, **kwargs)
 
         # add total results here
         self._total_investment_costs = None

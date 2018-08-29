@@ -106,7 +106,7 @@ def get_scenario_setting(jsonpath='scenario_setting.json'):
     # add try ego/
     logger.info("Your path is: {}".format(path))
 
-    with open(path + '/'+jsonpath) as f:
+    with open(path + '/' + jsonpath) as f:
         json_file = json.load(f)
 
     # check settings

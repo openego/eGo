@@ -230,22 +230,7 @@ class EDisGoNetworks:
                                 ego_gridversion))
             edisgo_grid.network.config[
                     'versioned']['version'] = ego_gridversion
-            
-        if not self._suppress_log:
-            logger.info("Changing eDisGo's voltage configurations")
                 
-        edisgo_grid.network.config[
-                'grid_expansion_allowed_voltage_deviations'] = {
-                'hv_mv_trafo_offset': 0.04,
-                'hv_mv_trafo_control_deviation': 0.0,
-                'mv_load_case_max_v_deviation': 0.055,
-                'mv_feedin_case_max_v_deviation': 0.02,
-                'lv_load_case_max_v_deviation': 0.065,
-                'lv_feedin_case_max_v_deviation': 0.03,
-                'mv_lv_station_load_case_max_v_deviation': 0.02,
-                'mv_lv_station_feedin_case_max_v_deviation': 0.01
-            }   
-    
         self._suppress_log = True
         
     def _set_scenario_settings(self):
@@ -276,14 +261,16 @@ class EDisGoNetworks:
             logger.info("All eDisGo settings are taken from CSV folder"
                         + "(scenario settings are ignored)")
             # This overwrites the original object...
-#            raise NotImplementedError("CSV import is not yet implemented")
 
         # Imported or directly from the Settings
+        ## eDisGo section of the settings
         self._edisgo_args = self._json_file['eDisGo']
 
+        ## Reading all eDisGo settings
+        #TODO: Integrate into a for-loop
         self._db_section = self._edisgo_args['db']
         self._grid_version = self._edisgo_args['gridversion']
-        
+        self._timesteps_pfa = self._edisgo_args['timesteps_pfa']
         self._solver = self._edisgo_args['solver']
         self._curtailment_voltage_threshold = self._edisgo_args[
                 'curtailment_voltage_threshold']       
@@ -291,11 +278,7 @@ class EDisGoNetworks:
         self._choice_mode = self._edisgo_args['choice_mode']
         self._parallelization = self._edisgo_args['parallelization']
         self._initial_reinforcement = self._edisgo_args[
-            'initial_reinforcement']
-        if not self._initial_reinforcement:
-            raise NotImplementedError(
-                "Skipping the initial reinforcement is not yet implemented"
-            )
+            'initial_reinforcement']        
         self._storage_distribution = self._edisgo_args['storage_distribution']
         self._apply_curtailment = self._edisgo_args['apply_curtailment']
         self._cluster_attributes = self._edisgo_args['cluster_attributes']
@@ -304,10 +287,15 @@ class EDisGoNetworks:
             'max_cos_phi_renewable']
         self._results = self._edisgo_args['results']
 
+        ## Some basic checks
         if (self._storage_distribution is True) & (self._ext_storage is False):
             logger.warning("Storage distribution (MV grids) is active, "
                            + "but eTraGo dataset has no extendable storages")
-
+        if not self._initial_reinforcement:
+            raise NotImplementedError(
+                "Skipping the initial reinforcement is not yet implemented"
+            )
+            
         # Versioning
         if self._grid_version is not None:
             self._versioned = True
@@ -658,12 +646,21 @@ class EDisGoNetworks:
         edisgo_grid = EDisGo(ding0_grid=ding0_filepath,
                              worst_case_analysis='worst-case')
         
-        # Update eDisGo settings (from config files) with scenario settings
-        logger.info("MV grid {}: Updating eDisgo configuration".format(
-                mv_grid_id))
-        
-        self._update_edisgo_configs(edisgo_grid)
-        
+        logger.info(("MV grid {}: Changing eDisGo's voltage configurations " 
+                     + "for initial reinforcement").format(mv_grid_id)) 
+                
+        edisgo_grid.network.config[
+                'grid_expansion_allowed_voltage_deviations'] = {
+                'hv_mv_trafo_offset': 0.04,
+                'hv_mv_trafo_control_deviation': 0.0,
+                'mv_load_case_max_v_deviation': 0.055,
+                'mv_feedin_case_max_v_deviation': 0.02,
+                'lv_load_case_max_v_deviation': 0.065,
+                'lv_feedin_case_max_v_deviation': 0.03,
+                'mv_lv_station_load_case_max_v_deviation': 0.02,
+                'mv_lv_station_feedin_case_max_v_deviation': 0.01
+            }   
+                   
         # Inital grid reinforcements
         logger.info(("MV grid {}: Initial MV grid reinforcement "
                      +"(worst-case anaylsis)").format(mv_grid_id))
@@ -671,6 +668,7 @@ class EDisGoNetworks:
         edisgo_grid.reinforce()
         
         # Get costs for initial reinforcement
+        # TODO: Implement a separate cost function
         costs_grouped = \
             edisgo_grid.network.results.grid_expansion_costs.groupby(
                 ['type']).sum()
@@ -694,9 +692,18 @@ class EDisGoNetworks:
                 "MV grid {}: Resetting grid after initial reinforcement"
                      ).format(mv_grid_id)) 
         edisgo_grid.network.results = Results(edisgo_grid.network)
-   
+        # Reload the (original) eDisGo configs
+        edisgo_grid.network.config = None
+          
+        # eTraGo case begins here
         logger.info("MV grid {}: eTraGo feed-in case".format(mv_grid_id))
-
+        
+        # Update eDisGo settings (from config files) with scenario settings
+        logger.info("MV grid {}: Updating eDisgo configuration".format(
+                mv_grid_id))                
+        # Update configs with eGo's scenario settings
+        self._update_edisgo_configs(edisgo_grid)
+        
         # Generator import for NEP 2035 and eGo 100 scenarios
         if self._generator_scn:
             logger.info(
@@ -762,7 +769,7 @@ class EDisGoNetworks:
                 curtailment_timeseries=curt_abs,
                 methodology='voltage-based',
                 solver=self._solver,
-                voltage_threshold=1.05)
+                voltage_threshold=self._curtailment_voltage_threshold)
         else:
             logger.info('No curtailment applied')
 
@@ -783,7 +790,7 @@ class EDisGoNetworks:
 
         logger.info("MV grid {}: eDisGo grid analysis".format(mv_grid_id))
 
-        edisgo_grid.reinforce(timesteps_pfa='snapshot_analysis')
+        edisgo_grid.reinforce(timesteps_pfa=self._timesteps_pfa)
 
         return edisgo_grid
 
