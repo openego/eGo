@@ -20,50 +20,6 @@ def main():
         path = os.getcwd()
         file_prefix = path+'/results/'+str(date)
 
-        # Check eTraGo
-        print("eTraGo container: %s", ego.etrago_network)
-        print("eTraGo container (disaggregated): %s",
-              ego.etrago_disaggregated_network)
-
-        # Check eTraGo results
-        print(ego.etrago.operating_costs)
-        pd.DataFrame(ego.etrago.operating_costs)\
-            .to_csv(file_prefix + '__etrago_operating_costs.csv')
-
-        print(ego.etrago.storage_charges)
-        pd.DataFrame(ego.etrago.storage_charges)\
-            .to_csv(file_prefix + '__etrago_storage_charges.csv')
-        print(ego.etrago.storage_investment_costs)
-
-        pd.DataFrame(ego.etrago.storage_investment_costs)\
-            .to_csv(file_prefix + '__etrago_storage_costs.csv')
-        print(ego.etrago.grid_investment_costs)
-        etg_gic = pd.DataFrame(ego.etrago.grid_investment_costs)
-        etg_gic.to_csv(file_prefix + '__etrago_grid_costs.csv')
-
-        ego.plot_storage_usage(filename='results/plot_storage_usage.pdf')
-
-        ego.plot_total_investment_costs(
-            filename="results/overnight_cost_investment.pdf", var='overnight_cost')
-        ego.plot_total_investment_costs(
-            filename="results/annuity_investment.pdf")
-
-        ego.plot_power_price(filename='results/powerprice.pdf')
-
-        # eGo Results
-        # ego.total_investment_costs
-        print(ego.total_investment_costs)
-        ego_t = pd.DataFrame(ego.total_investment_costs)
-        ego_t.to_csv(file_prefix + '__ego_total-costs.csv')
-
-        # eDisGo results
-        try:
-            print(ego.edisgo.grid_investment_costs)
-            edg_gic = pd.DataFrame(ego.edisgo.grid_investment_costs)
-            edg_gic.to_csv(file_prefix + '__edisgo_gridscosts.csv')
-        except:
-            pass
-
         # object size
         print(sys.getsizeof(ego))
 
