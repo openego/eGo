@@ -80,7 +80,7 @@ def define_logging(name):
     return logger
 
 
-#logger = define_logging(name='ego')
+# logger = define_logging(name='ego')
 
 # import scenario settings **args
 
@@ -109,6 +109,46 @@ def get_scenario_setting(jsonpath='scenario_setting.json'):
     with open(path + '/'+jsonpath) as f:
         json_file = json.load(f)
 
+    # check settings
+    if json_file['eGo']['eTraGo'] is False and json_file['eGo']['eDisGo'] is False:
+        logger.warning("Something went wrong! \n"
+                       "Please contoll your settings and restart. \n"
+                       "Set at least eTraGo = true")
+        return
+
+    if json_file['eGo']['eTraGo'] is None and json_file['eGo']['eDisGo'] is None:
+        logger.warning("Something went wrong! \n"
+                       "Please contoll your settings and restart. \n"
+                       "Set at least eTraGo = true")
+        return
+
+    if json_file['eGo']['result_id'] and json_file['eGo']['csv_import_eTraGo']:
+        logger.warning(
+            "You set a DB result_id and a csv import path! \n"
+            "Please remove on of this settings")
+        return
+        # or ? json_file['eGo']['result_id'] = None
+
+    if json_file['eGo']['eTraGo'] is None and json_file['eGo']['eDisGo']:
+        logger.info(
+            "eDisGo needs eTraGo results. Please change your settings!\n")
+        return
+
+    if json_file['eGo']['eTraGo'] is False and json_file['eGo']['eDisGo']:
+        logger.info(
+            "eDisGo needs eTraGo results. Please change your settings!\n")
+        return
+
+    if (json_file['eGo']['result_id'] is None and
+            json_file['eGo']['csv_import_eTraGo'] is None):
+        logger.info(
+            "No data import from results is set \n"
+            "eGo runs by given settings")
+
+    if json_file['eGo']['csv_import_eTraGo'] and json_file['eGo']['csv_import_eDisGo']:
+        logger.info(
+            "eDisGo and eTraGo results will be imported from csv\n")
+
     if json_file['eGo'].get('eTraGo') == True:
 
         logger.info('Using and importing eTraGo settings')
@@ -117,13 +157,13 @@ def get_scenario_setting(jsonpath='scenario_setting.json'):
         # ToDo: check and maybe remove this part
         sh_scen = ["SH Status Quo", "SH NEP 2035", "SH eGo 100"]
         if json_file['eTraGo'].get('scn_name') in sh_scen and json_file['eTraGo'].\
-                get('gridversion') == "v0.4.2":
+                get('gridversion') is not None:
             json_file['eTraGo']['gridversion'] = None
 
     # add eGo parameter to eTraGo scn_set
-    json_file['eTraGo'].update({'db': json_file['eGo'].get('db')})
-    json_file['eTraGo'].update(
-        {'gridversion': json_file['eGo'].get('gridversion')})
+    # json_file['eTraGo'].update({'db': json_file['eGo'].get('db')})
+    # json_file['eTraGo'].update(
+    #    {'gridversion': json_file['eGo'].get('gridversion')})
 
     if json_file['eGo'].get('eDisGo') == True:
         logger.info('Using and importing eDisGo settings')
