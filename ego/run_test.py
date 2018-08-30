@@ -3,6 +3,7 @@ from tools.io import eGo
 import sys
 from pycallgraph import PyCallGraph
 from pycallgraph.output import GraphvizOutput
+from pycallgraph import Config
 import pandas as pd
 import matplotlib.pyplot as plt
 import os
@@ -14,7 +15,7 @@ def main():
     date
     graphviz.output_file = 'results/'+str(date)+'_basic_process_plot.png'
     print(date)
-    with PyCallGraph(output=graphviz):
+    with PyCallGraph(output=graphviz, config=Config(groups=True)):
 
         ego = eGo(jsonpath='scenario_setting.json')
         path = os.getcwd()
