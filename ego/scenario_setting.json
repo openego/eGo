@@ -3,7 +3,7 @@
     "eTraGo": true,
     "eDisGo": true,
     "result_id": null,
-    "csv_import_eTraGo": "results/structure_test/eTraGo",
+    "csv_import_eTraGo": "results/eTraGo_t60_ego100_sto_280818",
     "csv_import_eDisGo": false
   },
   "eTraGo": {
@@ -39,7 +39,7 @@
   "eDisGo": {
     "db": "oedb",
     "gridversion": "v0.4.5",
-    "ding0_files": "/home/student/ZNES_Data/MV grids/20180821164021",
+    "ding0_files": "/home/dozeumbuw/ego_v03/eGo/ego/data/MV_grids/20180821165042",
     "choice_mode": "manual",
     "cluster_attributes":["farthest_node", "wind_cap", "solar_cap", "extended_storage"],
     "manual_grids": [1718],
