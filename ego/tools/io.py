@@ -97,7 +97,7 @@ class egoBasic(object):
     def __init__(self, *args, **kwargs):
         """
         """
-                
+
         logger.info("Using scenario setting: {}".format(self.jsonpath))
 
         self.json_file = None
@@ -438,8 +438,7 @@ class eGo(eDisGoResults):
         self._ehv_grid_costs = None
         self._mv_grid_costs = None
 
-    @property
-    def get_investment_cost(self):
+    def _calculate_investment_cost(self):
         """ Get total investment costs of all voltage level for storages
         and grid expansion
         """
@@ -494,7 +493,7 @@ class eGo(eDisGoResults):
         :pandas:`pandas.DataFrame<dataframe>`
 
         """
-        self.get_investment_cost
+        self._calculate_investment_cost()
 
         return self._total_investment_costs
 
@@ -515,7 +514,7 @@ class eGo(eDisGoResults):
         """ Plot total investment costs
         """
         # initiate total_investment_costs
-        self.get_investment_cost
+        self._calculate_investment_cost()
 
         if filename is None:
             filename = "results/plot_total_investment_costs.pdf"
