@@ -30,6 +30,7 @@ if not 'READTHEDOCS' in os.environ:
                                    storage_distribution,
                                    plot_voltage, plot_residual_load)
     import pyproj as proj
+    from math import sqrt, log10
     from shapely.geometry import Polygon, Point, MultiPolygon
     from geoalchemy2 import *
     import geopandas as gpd
@@ -301,7 +302,7 @@ def prepareGD(session, subst_id=None, version=None):
     return region
 
 
-def plot_edisgo_cluster(ego, filename, region=['DE'], display=False):
+def plot_edisgo_cluster(ego, filename, region=['DE'], display=False, dpi=600):
     """Plot the Clustering of selected Dingo networks
 
     Parameters
@@ -346,7 +347,9 @@ def plot_edisgo_cluster(ego, filename, region=['DE'], display=False):
     mvgrids.plot(ax=ax, color='white', alpha=0.1,  linewidth=0.5)
     gridcluster.plot(ax=ax, column='no_of_points_per_cluster',
                      cmap='OrRd', legend=True)
-
+    # add storage distribution
+    _storage_distribution(ego.etrago.network, scaling=1, filename=None,
+                          ax=ax, fig=fig)
     ax.set_title('Grid district Clustering by Number of represent Grids')
 
     ax.autoscale(tight=True)
@@ -356,7 +359,8 @@ def plot_edisgo_cluster(ego, filename, region=['DE'], display=False):
     else:
         fig = ax.get_figure()
         fig.set_size_inches(10, 8, forward=True)
-        fig.savefig(filename,  dpi=100)
+        fig.savefig(filename,  dpi=dpi)
+        plt.close()
 
 
 def igeoplot(ego, tiles=None, geoloc=None, args=None):
@@ -660,3 +664,52 @@ def colormapper_lines(colormap, lines, line, column="s_nom"):
     else:
         l_color = (0., 0., 0., 1.)
     return l_color
+
+
+def _storage_distribution(network, ax, fig, scaling=1, filename=None):
+    """
+    Plot storage distribution as circles on grid nodes
+    Displays storage size and distribution in network.
+    Parameters
+    ----------
+    network : PyPSA network container
+        Holds topology of grid including results from powerflow analysis
+    filename : str
+        Specify filename
+        If not given, figure will be show directly
+    """
+
+    stores = network.storage_units
+    storage_distribution = network.storage_units.p_nom_opt[stores.index]\
+        .groupby(network.storage_units.bus)\
+        .sum().reindex(network.buses.index, fill_value=0.)
+
+    msd_max = storage_distribution.max()
+    msd_median = storage_distribution[storage_distribution != 0].median()
+    msd_min = storage_distribution[storage_distribution > 1].min()
+
+    if msd_max != 0:
+        LabelVal = int(log10(msd_max))
+    else:
+        LabelVal = 0
+    if LabelVal < 0:
+        LabelUnit = 'kW'
+        msd_max, msd_median, msd_min = msd_max * \
+            1000, msd_median * 1000, msd_min * 1000
+        storage_distribution = storage_distribution * 1000
+    elif LabelVal < 3:
+        LabelUnit = 'MW'
+    else:
+        LabelUnit = 'GW'
+        msd_max, msd_median, msd_min = msd_max / \
+            1000, msd_median / 1000, msd_min / 1000
+        storage_distribution = storage_distribution / 1000
+
+    if sum(storage_distribution) == 0:
+        network.plot(bus_sizes=0, ax=ax)
+    else:
+        network.plot(
+            bus_sizes=storage_distribution * scaling,
+            ax=ax,
+            line_widths=0.3
+        )
