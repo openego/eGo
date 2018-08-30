@@ -484,6 +484,24 @@ class eGo(eDisGoResults):
         self._ehv_grid_costs = _grid_ehv
         self._mv_grid_costs = _grid_mv_lv
 
+
+    def _calculate_mv_storage_investment(self):
+        """
+        """
+        # Total investment costs
+        etrago_network = self._etrago_disaggregated_network
+        
+        ## This should query only the storages relevant for
+        ## MV grids
+        min_extended = 0.3
+        stor_df = etrago_network.storage_units.loc[
+            (etrago_network.storage_units['p_nom_extendable'] == True)
+            & (etrago_network.storage_units['p_nom_opt'] > min_extended)
+            & (etrago_network.storage_units['max_hours'] <= 20.)]
+        
+        
+        
+        
     @property
     def total_investment_costs(self):
         """

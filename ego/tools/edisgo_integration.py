@@ -82,7 +82,6 @@ class EDisGoNetworks:
 
         # Create reduced eTraGo network
         self._etrago_network = _ETraGoData(etrago_network)
-        del etrago_network
 
         # eDisGo specific naming
         self._edisgo_scenario_translation()
@@ -163,6 +162,52 @@ class EDisGoNetworks:
 
         """
         return self._grid_investment_costs
+    
+    def get_mv_grid_from_bus_id(self, bus_id):
+        """
+        Queries the MV grid ID for a given eTraGo bus
+
+        Parameters
+        ----------
+        bus_id : int
+            eTraGo bus ID
+
+        Returns
+        -------
+        int
+            MV grid (ding0) ID
+
+        """
+        
+        conn = db.connection(section=self._db_section)
+        session_factory = sessionmaker(bind=conn)
+        Session = scoped_session(session_factory)
+        session = Session()
+        
+        return self._get_mv_grid_from_bus_id(session, bus_id)  
+
+    def get_bus_id_from_mv_grid(self, subst_id):
+        """
+        Queries the eTraGo bus ID for given MV grid (ding0) ID
+
+        Parameters
+        ----------
+        subst_id : int
+            MV grid (ding0) ID
+
+        Returns
+        -------
+        int
+            eTraGo bus ID
+
+        """
+        
+        conn = db.connection(section=self._db_section)
+        session_factory = sessionmaker(bind=conn)
+        Session = scoped_session(session_factory)
+        session = Session()
+        
+        return self._get_bus_id_from_mv_grid(session, subst_id)
     
     def _update_edisgo_configs(self, edisgo_grid):
         
