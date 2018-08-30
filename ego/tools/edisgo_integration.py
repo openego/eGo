@@ -186,7 +186,11 @@ class EDisGoNetworks:
         Session = scoped_session(session_factory)
         session = Session()
         
-        return self._get_mv_grid_from_bus_id(session, bus_id)  
+        mv_grid_id = self._get_mv_grid_from_bus_id(session, bus_id)
+        
+        Session.remove()
+        
+        return mv_grid_id
 
     def get_bus_id_from_mv_grid(self, subst_id):
         """
@@ -209,7 +213,11 @@ class EDisGoNetworks:
         Session = scoped_session(session_factory)
         session = Session()
         
-        return self._get_bus_id_from_mv_grid(session, subst_id)
+        bus_id = self._get_bus_id_from_mv_grid(session, subst_id)
+        
+        Session.remove()
+        
+        return bus_id
     
     def _update_edisgo_configs(self, edisgo_grid):
         
@@ -297,7 +305,6 @@ class EDisGoNetworks:
 
         # eDisGo args import
         if self._csv_import:
-            #            raise NotImplementedError
 
             with open(os.path.join(
                     self._csv_import,
