@@ -101,17 +101,19 @@ class EDisGoNetworks:
         else:
             # Execute Functions
             self._set_grid_choice()
-            self._run_edisgo_pool()
+            if not self._only_cluster:
+                self._run_edisgo_pool()
             if self._results:
                 self._save_edisgo_results()
 
-        self._successfull_grids = self._successfull_grids()
-        # Calculate grid investment costs
-
-        self._grid_investment_costs = edisgo_grid_investment(
-            self,
-            self._json_file
-        )
+        if not self._only_cluster:
+            self._successfull_grids = self._successfull_grids()
+            # Calculate grid investment costs
+    
+            self._grid_investment_costs = edisgo_grid_investment(
+                self,
+                self._json_file
+            )
 
     @property
     def network(self):
@@ -284,6 +286,7 @@ class EDisGoNetworks:
         self._storage_distribution = self._edisgo_args['storage_distribution']
         self._apply_curtailment = self._edisgo_args['apply_curtailment']
         self._cluster_attributes = self._edisgo_args['cluster_attributes']
+        self._only_cluster = self._edisgo_args['only_cluster']
         self._max_workers = self._edisgo_args['max_workers']
         self._max_cos_phi_renewable = self._edisgo_args[
             'max_cos_phi_renewable']
@@ -297,6 +300,8 @@ class EDisGoNetworks:
             raise NotImplementedError(
                 "Skipping the initial reinforcement is not yet implemented"
             )
+        if self._only_cluster:
+            logger.warning("This eDisGo run only returns cluster results")
             
         # Versioning
         if self._grid_version is not None:
@@ -382,17 +387,18 @@ class EDisGoNetworks:
                 "The_Farthest_node": "farthest_node"},
             inplace=True)
 
-        if self._ext_storage is True:
-            storages = self._identify_extended_storages()
-            if not (storages.max().values[0] == 0.):
-                df = pd.concat([df, storages], axis=1)
-                df.rename(
-                    columns={"storage_p_nom": "extended_storage"},
-                    inplace=True)
-            else:
-                logger.warning('Extended storages all 0. \
-                               Therefore, extended storages \
-                               are excluded from clustering')
+        if 'extended_storage' in self._cluster_attributes:
+            if self._ext_storage:
+                storages = self._identify_extended_storages()
+                if not (storages.max().values[0] == 0.):
+                    df = pd.concat([df, storages], axis=1)
+                    df.rename(
+                        columns={"storage_p_nom": "extended_storage"},
+                        inplace=True)
+                else:
+                    logger.warning('Extended storages all 0. \
+                                   Therefore, extended storages \
+                                   are excluded from clustering')
 
         found_atts = [
             i for i in self._cluster_attributes if i in df.columns
