@@ -831,9 +831,9 @@ class EDisGoNetworks:
                         timeseries_reactive_power=specs[
                             'battery_q_series'
                         ])  # None if no pf_post_lopf
-
         else:
             logger.info('No storage integration')
+    
 
         logger.info("MV grid {}: eDisGo grid analysis".format(mv_grid_id))
 
@@ -874,7 +874,9 @@ class EDisGoNetworks:
         self._grid_choice = pd.read_csv(
             os.path.join(self._csv_import, 'grid_choice.csv'),
             index_col=0)
-
+        self._grid_choice['represented_grids'] = self._grid_choice.apply(
+                lambda x: eval(x['represented_grids']), axis=1)
+        
         for idx, row in self._grid_choice.iterrows():
             mv_grid_id = int(row['the_selected_network_id'])
 
@@ -885,7 +887,7 @@ class EDisGoNetworks:
                     str(mv_grid_id),
                     'grid_expansion_results',
                     'grid_expansion_costs.csv')
-
+    
                 grid_expansion_costs = pd.read_csv(
                     file_path,
                     index_col=0)
@@ -898,20 +900,36 @@ class EDisGoNetworks:
                 
                 imported_pypsa = pypsa.Network()
                 imported_pypsa.import_from_csv_folder(pypsa_path)
+                
+                # Storages
+                storage_path = os.path.join(
+                    self._csv_import,
+                    str(mv_grid_id),
+                    'storage_integration_results',
+                    'storages.csv')
+                
+                if os.path.exists(storage_path):
+                    storages = pd.read_csv(
+                            storage_path,
+                            index_col=0)
+                else:
+                    storages = pd.DataFrame(
+                            columns=['nominal_power','voltage_level'])
                     
                 edisgo_grid = _EDisGoImported(
                         grid_expansion_costs, 
-                        imported_pypsa)
+                        imported_pypsa,
+                        storages)
                 
                 self._edisgo_grids[
                     mv_grid_id
                 ] = edisgo_grid
-
+    
                 logger.info("Imported MV grid {}".format(mv_grid_id))
             except:
                 self._edisgo_grids[
                     mv_grid_id
-                ] = "This grid failed"
+                ] = "This grid failed to reimport"
 
                 logger.warning(
                     "MV grid {} could not be loaded".format(mv_grid_id))
@@ -1025,11 +1043,13 @@ class _EDisGoImported:
     def __init__(
             self,
             grid_expansion_costs,
-            pypsa):
+            pypsa,
+            storages):
 
         self.network = _NetworkImported(
             grid_expansion_costs,
-            pypsa)
+            pypsa,
+            storages)
 
 
 class _NetworkImported:
@@ -1040,10 +1060,12 @@ class _NetworkImported:
     def __init__(
             self,
             grid_expansion_costs,
-            pypsa):
+            pypsa,
+            storages):
 
         self.results = _ResultsImported(
-            grid_expansion_costs)
+            grid_expansion_costs,
+            storages)
         self.pypsa = pypsa
 
 
@@ -1054,6 +1076,12 @@ class _ResultsImported:
 
     def __init__(
             self,
-            grid_expansion_costs):
+            grid_expansion_costs,
+            storages):
 
         self.grid_expansion_costs = grid_expansion_costs
+        self._storages = storages
+    
+    def storages(self):
+        return self._storages
+        

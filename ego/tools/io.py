@@ -485,19 +485,61 @@ class eGo(eDisGoResults):
         self._mv_grid_costs = _grid_mv_lv
 
 
-    def _calculate_mv_storage_investment(self):
+    def _calculate_mv_storage(self):
         """
         """
         # Total investment costs
         etrago_network = self._etrago_disaggregated_network
         
-        ## This should query only the storages relevant for
-        ## MV grids
         min_extended = 0.3
         stor_df = etrago_network.storage_units.loc[
             (etrago_network.storage_units['p_nom_extendable'] == True)
             & (etrago_network.storage_units['p_nom_opt'] > min_extended)
             & (etrago_network.storage_units['max_hours'] <= 20.)]
+        
+        # Only MV-grid relevant battery storages
+#        stor_df['investment_costs'] = (
+#                stor_df['capital_cost'] * stor_df['p_nom_opt'])
+        
+        stor_df = stor_df[['bus', 'p_nom_opt']]
+        
+        integrated_storage = .0 # Storage integrated in MV grids
+        
+        for idx, row in stor_df.iterrows():
+            bus_id = row['bus']
+            p_nom_opt = row['p_nom_opt']
+            
+            mv_grid_id = self.edisgo.get_mv_grid_from_bus_id(bus_id)
+            if not mv_grid_id:
+                continue
+            
+            grid_choice = self.edisgo.grid_choice
+            
+            cluster = grid_choice.loc[
+                    [mv_grid_id in repr_grids for repr_grids in grid_choice[
+                            'represented_grids']]]
+            
+            if len(cluster) == 0:
+                continue
+                
+            else:
+                representative_grid = cluster[
+                        'the_selected_network_id'].values[0]
+            
+            
+            
+            [
+                            'the_selected_network_id']
+            if len(representative) == 0:
+
+
+#    
+#            #evaaaaaal!!!
+#        
+#        
+        
+        
+        
         
         
         
