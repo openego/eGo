@@ -48,6 +48,8 @@ if not 'READTHEDOCS' in os.environ:
         cluster_mv_grids)
     from ego.tools.economics import (
         edisgo_grid_investment)
+    
+    import pypsa
 
     import pandas as pd
     import json
@@ -877,6 +879,7 @@ class EDisGoNetworks:
             mv_grid_id = int(row['the_selected_network_id'])
 
             try:
+                # Grid expansion costs
                 file_path = os.path.join(
                     self._csv_import,
                     str(mv_grid_id),
@@ -886,9 +889,20 @@ class EDisGoNetworks:
                 grid_expansion_costs = pd.read_csv(
                     file_path,
                     index_col=0)
-
-                edisgo_grid = _EDisGoImported(grid_expansion_costs)
-
+               
+                # PyPSA network
+                pypsa_path = os.path.join(
+                    self._csv_import,
+                    str(mv_grid_id),
+                    'pypsa_network')
+                
+                imported_pypsa = pypsa.Network()
+                imported_pypsa.import_from_csv_folder(pypsa_path)
+                    
+                edisgo_grid = _EDisGoImported(
+                        grid_expansion_costs, 
+                        imported_pypsa)
+                
                 self._edisgo_grids[
                     mv_grid_id
                 ] = edisgo_grid
@@ -1010,10 +1024,12 @@ class _EDisGoImported:
 
     def __init__(
             self,
-            grid_expansion_costs):
+            grid_expansion_costs,
+            pypsa):
 
         self.network = _NetworkImported(
-            grid_expansion_costs)
+            grid_expansion_costs,
+            pypsa)
 
 
 class _NetworkImported:
@@ -1023,10 +1039,12 @@ class _NetworkImported:
 
     def __init__(
             self,
-            grid_expansion_costs):
+            grid_expansion_costs,
+            pypsa):
 
         self.results = _ResultsImported(
             grid_expansion_costs)
+        self.pypsa = pypsa
 
 
 class _ResultsImported:
