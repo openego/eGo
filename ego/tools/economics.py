@@ -190,44 +190,48 @@ def etrago_operating_costs(network):
     +-------------+-------------------+------------------+
 
     """
-    # TODO   - change naming and function structure
-    # TODO    - seperate operation costs in other functions ?
-    #      - losses
-    #    - grid losses : amount and costs
-    #    - use calc_line_losses(network)  from etrago pf_post_lopf
+    # TODO add voltage_level
 
     etg = network
 
     # groupby v_nom
-    power_price = etg.generators_t.p[etg.generators[etg.generators.
-                                                    control != 'Slack'].index] * etg.generators.\
+    operating_costs = etg.generators_t.p[
+        etg.generators[etg.generators.
+                       control != 'Slack'].index] * etg.generators.\
         marginal_cost[etg.generators[etg.generators.
                                      control != 'Slack'].index]  # without Slack
 
-    power_price = power_price.groupby(
+    operating_costs = operating_costs.groupby(
         etg.generators.carrier, axis=1).sum().sum()
-    power_price
 
-    etg.buses_t.marginal_price
-    etg.buses_t['p'].sum().sum()
+    tpc = pd.DataFrame(operating_costs.sum(),
+                       columns=['operation_costs'],
+                       index=['total_power_costs'])
+    operating_costs = pd.DataFrame(operating_costs)
+    operating_costs.columns = ['operation_costs']
+    operating_costs = operating_costs.append(tpc)
 
-    # TODO add Grid and Transform Costs
-    # active power x nodel price /
-    etg.lines_t['p0'].sum().sum()
-    etg.lines_t['p1'].sum().sum()
-    # Reactive power
-    etg.lines_t['q0'].sum().sum()
-    etg.lines_t['q1'].sum().sum()
+    # add Grid and Transform Costs
+    try:
+        losses_total = sum(etg.lines.losses) + sum(etg.transformers.losses)
+        losses_costs = losses_total * np.average(etg.buses_t.marginal_price)
 
-    # currency/MVA ? wie berechnen
+        # add Transform and Grid losses
 
-    etg.lines_t['mu_lower'].sum().sum()
+    except AttributeError:
+        logger.info("No Transform and Line losses are calcualted! \n"
+                    "Use eTraGo pf_post_lopf method")
+        losses_total = 0
+        losses_costs = 0
+    # total grid losses costs
+    tgc = pd.DataFrame(losses_costs,
+                       columns=['operation_costs'],
+                       index=['total_grid_losses'])
+    operating_costs = operating_costs.append(tgc)
 
-    etg.lines['s_nom'].sum()
+    #power_price = power_price.T.iloc[0]
 
-    etg.lines_t['mu_upper'].sum().sum()
-
-    return power_price
+    return operating_costs
 
 
 def etrago_grid_investment(network, json_file):
@@ -362,12 +366,6 @@ def edisgo_grid_investment(edisgo, json_file):
         Dataframe containing annuity costs per voltage level
 
     """
-#    etrago_args = json_file['eTraGo']
-#    scn_name = etrago_args['scn_name']
-
-#    if scn_name == 'Status Quo':
-#        logger.info('No eDisGo grid investment in Status Quo scenario')
-#        return None
 
     t = 40
     p = 0.05
@@ -405,9 +403,7 @@ def edisgo_grid_investment(edisgo, json_file):
         choice = edisgo.grid_choice
         weighting = choice.loc[
             choice['the_selected_network_id'] == key
-        ][
-            'no_of_points_per_cluster'
-        ].values[0]
+        ]['no_of_points_per_cluster'].values[0]
 
         costs_single[['capital_cost', 'overnight_costs']] = (
             costs_single[['capital_cost', 'overnight_costs']]

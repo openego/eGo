@@ -433,7 +433,7 @@ class eGo(eDisGoResults):
 
         # add total results here
         self._total_investment_costs = None
-        self._total_operation_costs = None  # TODO
+        self._total_operation_costs = None
         self._storage_costs = None
         self._ehv_grid_costs = None
         self._mv_grid_costs = None
@@ -473,7 +473,6 @@ class eGo(eDisGoResults):
                 append(_grid_mv_lv, ignore_index=True)
 
         # add overnight costs
-
         self._total_investment_costs = self._total_inv_cost
         self._total_investment_costs[
             'overnight_costs'] = etrago_convert_overnight_cost(
@@ -507,6 +506,9 @@ class eGo(eDisGoResults):
         :pandas:`pandas.DataFrame<dataframe>`
 
         """
+        self._total_operation_costs = self.etrago.operating_costs
+        # append eDisGo
+
         return self._total_operation_costs
 
     def plot_total_investment_costs(self, filename=None,
