@@ -10,18 +10,6 @@ with a Optimization of flexibility options for transmission grids based on PyPSA
 and eDisGo which analysis and optimization distribution grids. All those python
 packages are part of the research project `open_eGo <https://openegoproject.wordpress.com>`_.
 
-
-Model overview
-==============
-
-.. figure:: images/open_ego_models_overview.png
-   :width: 1123px
-   :height: 794px
-   :scale: 70%
-   :alt: Overview of Models and processes which are used by eGo
-   :align: center
-
-
 The open_eGo project
 ====================
 This software project is part of the research project
@@ -43,8 +31,19 @@ this platform.
 `Learn more about the database access <https://oep-data-interface.readthedocs.io>`_.
 
 
+Model overview
+==============
+
+.. figure:: images/open_ego_models_overview.png
+   :width: 1123px
+   :height: 794px
+   :scale: 70%
+   :alt: Overview of Models and processes which are used by eGo
+   :align: center
+
+
 eTraGo
-======
+------
 
 The python package eTraGo provides a optimization of flexibility options for
 transmission grids based on PyPSA.A speciality in this context is that transmission
@@ -57,7 +56,7 @@ energy storages and grid expansion measures.
 
 
 eDisGo
-======
+------
 The python package eDisGo provides a toolbox for analysis and optimization
 of distribution grids. It is closely related to the python project Ding0 as this
 project is currently the single data source for eDisGo providing synthetic
@@ -65,14 +64,14 @@ grid data for whole Germany. Learn more here <http://edisgo.readthedocs.io/>`_.
 
 
 Dataprocessing
-==============
+--------------
 
 For the open_eGo project several python packages are developt which are feeded 
 by the input data of the data processing. The Dataprocessing is writen in 
 SQL and Python. `Learn more here <https://data-processing.readthedocs.io/>`_.
 
 ego.io
-======
+------
 
 SQLAlchemy Interface to the OpenEnergy database (oedb).OEDB table ORM objects 
 are defined here and small helpers for io tasks are contained.
@@ -80,7 +79,7 @@ are defined here and small helpers for io tasks are contained.
 
 
 Dingo
-=====
+-----
 
 The DIstribution Network GeneratOr (Ding0) is a tool to generate synthetic 
 medium and low voltage power distribution grids based on open 
