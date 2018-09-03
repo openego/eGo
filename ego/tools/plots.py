@@ -29,6 +29,7 @@ if not 'READTHEDOCS' in os.environ:
                                    add_coordinates, curtailment, gen_dist,
                                    storage_distribution,
                                    plot_voltage, plot_residual_load)
+    from ego.tools.economics import etrago_convert_overnight_cost
     import pyproj as proj
     from math import sqrt, log10
     from shapely.geometry import Polygon, Point, MultiPolygon
@@ -97,6 +98,79 @@ def ego_colore():
               }
 
     return colors
+
+
+def polt_line_expansion(ego, filename=None, dpi=300, column='overnight_costs'):
+    """ Plot line expantion
+    """
+
+    network = ego.etrago.network
+    json_file = ego.json_file
+
+    # get values
+    if 'network' in ego.json_file['eTraGo']['extendable']:
+        network.lines['s_nom_expansion'] = network.lines.s_nom_opt.subtract(
+            network.lines.s_nom, axis='index')
+        network.lines['capital_investment'] = network.lines.s_nom_expansion.multiply(
+            network.lines.capital_cost, axis='index')
+        network.lines['overnight_costs'] = etrago_convert_overnight_cost(
+            network.lines['capital_investment'], json_file)
+
+    else:
+        network.lines['s_nom_expansion'] = None
+        network.lines['capital_investment'] = None
+        network.lines['overnight_costs'] = None
+
+    # start plotting
+    figsize = 10, 8
+    fig, ax = plt.subplots(1, 1, figsize=(figsize))
+
+    cmap = plt.cm.jet
+
+    if column == 's_nom_expansion':
+        line_value = network.lines[column]
+        title = "Line expansion in MVA"
+    if column == 'overnight_costs':
+        line_value = network.lines[column]
+        title = "Total Expansion Costs in € per line"
+    if column == 'capital_investment':
+        line_value = network.lines[column]
+        title = "Annualized Expansion Costs in € per line and time step"
+
+    line_widths = (line_value/line_value.max())
+
+    lc = network.plot(ax=ax, line_colors=line_value,
+                      line_cmap=cmap,
+                      title=title,
+                      line_widths=line_widths)
+
+    boundaries = [min(line_value),
+                  max(line_value)]
+
+    v = np.linspace(boundaries[0], boundaries[1], 101)
+
+    # colorbar
+    cb = plt.colorbar(lc[1], boundaries=v,
+                      ticks=v[0:101:10],
+                      ax=ax)
+    cb.set_clim(vmin=boundaries[0], vmax=boundaries[1])
+
+    if column == 's_nom_expansion':
+        cb.set_label('Expansion in MVA per line')
+    if column == 'overnight_costs':
+        cb.set_label('Total Expansion Costs in € per line')
+    if column == 'capital_investment':
+        cb.set_label('Annualized Expansion Costs in € per line')
+
+    ax.autoscale(tight=True)
+
+    if filename is None:
+        plt.show()
+    else:
+        fig = ax.get_figure()
+        fig.set_size_inches(10, 8, forward=True)
+        fig.savefig(filename,  dpi=dpi)
+        plt.close()
 
 
 def grid_storage_investment(ego, filename, display, var=None):
@@ -332,8 +406,9 @@ def plot_edisgo_cluster(ego, filename, region=['DE'], display=False, dpi=600):
     # get country Polygon
     cnty = get_country(session, region=region)
     # get grid districts
-    gridcluster = prepareGD(session, cluster_id, version)
-    gridcluster = gridcluster.merge(cluster, on='subst_id')
+    if ego.json_file['eGo']['eDisGo'] is True:
+        gridcluster = prepareGD(session, cluster_id, version)
+        gridcluster = gridcluster.merge(cluster, on='subst_id')
 
     # get all MV grids
     bus_id = "all"
@@ -345,8 +420,9 @@ def plot_edisgo_cluster(ego, filename, region=['DE'], display=False, dpi=600):
 
     cnty.plot(ax=ax, color='white', alpha=0.5)
     mvgrids.plot(ax=ax, color='white', alpha=0.1,  linewidth=0.5)
-    gridcluster.plot(ax=ax, column='no_of_points_per_cluster',
-                     cmap='OrRd', legend=True)
+    if ego.json_file['eGo']['eDisGo'] is True:
+        gridcluster.plot(ax=ax, column='no_of_points_per_cluster',
+                         cmap='OrRd', legend=True)
     # add storage distribution
     _storage_distribution(ego.etrago.network, scaling=1, filename=None,
                           ax=ax, fig=fig)
@@ -478,7 +554,7 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
     for line in network.lines.index:
         popup = """<b>Line:</b> {} <br>
             version: {} <br>
-            angle_diff: {} <br>
+
             b: {} <br>
             b_pu: {} <br>
             bus0: {} <br>
@@ -504,7 +580,7 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
             x: {} <br>
             x_pu: {} <br>
             """.format(line, version,
-                       lines.angle_diff[line],
+
                        lines.b[line],
                        lines.b_pu[line],
                        lines.bus0[line],
@@ -593,25 +669,24 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
                         popup=popup, color=convert_to_hex(lr_color)).add_to(line_results_group)
 
     # add grid districs
+    if ego.json_file['eGo']['eDisGo'] is True:
 
-    grid_group = folium.FeatureGroup(name='Grid district')
-    # list(network.buses.index) # change to selected grids
+        grid_group = folium.FeatureGroup(name='Grid district')
+        # list(network.buses.index) # change to selected grids
 
-    #
-    subst_id = list(ego.edisgo.grid_choice.the_selected_network_id)
-    district = prepareGD(session, subst_id, version)
-    print(district)
-    # todo does not work with k-mean Cluster
-    # Add for loop
-    # crs = {'init': 'epsg:4326'}
+        subst_id = list(ego.edisgo.grid_choice.the_selected_network_id)
+        district = prepareGD(session, subst_id, version)
 
-    # for name, row in district.iterrows():
-    pop = """<b>Grid district:</b> {} <br>
+        # todo does not work with k-mean Cluster
+        # Add for loop
+        # crs = {'init': 'epsg:4326'}
+
+        # for name, row in district.iterrows():
+        pop = """<b>Grid district:</b> {} <br>
             """.format('12121212')
+        # date = gpd.GeoDataFrame(row, columns=['subst_id', 'geometry'], crs=crs)
 
-    # date = gpd.GeoDataFrame(row, columns=['subst_id', 'geometry'], crs=crs)
-
-    folium.GeoJson(district).add_to(grid_group).add_child(folium.Popup(pop))
+        folium.GeoJson(district).add_to(grid_group).add_child(folium.Popup(pop))
 
     # add layers and others
     colormap.caption = 'Colormap of Lines s_nom'
@@ -622,7 +697,8 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
     # Add layer groups
     bus_group.add_to(mp)
     line_group.add_to(mp)
-    grid_group.add_to(mp)
+    if ego.json_file['eGo']['eDisGo'] is True:
+        grid_group.add_to(mp)
     line_results_group.add_to(mp)
     folium.LayerControl().add_to(mp)
 

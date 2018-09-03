@@ -64,9 +64,10 @@ if not 'READTHEDOCS' in os.environ:
     from importlib import import_module
     import pypsa
     import re
-    from tools.plots import (grid_storage_investment,
-                             power_price_plot, plot_storage_use, igeoplot,
-                             plot_edisgo_cluster)
+    from ego.tools.plots import (grid_storage_investment,
+                                 power_price_plot, plot_storage_use, igeoplot,
+                                 plot_edisgo_cluster,
+                                 polt_line_expansion)
 
 __copyright__ = ("Europa-Universität Flensburg, "
                  "Centre for Sustainable Energy Systems")
@@ -548,7 +549,14 @@ class eGo(eDisGoResults):
             filename = "results/plot_edisgo_cluster.pdf"
             display = True
 
-        return plot_edisgo_cluster(self, filename=filename, display=display, **kwargs)
+        return plot_edisgo_cluster(self, filename=filename, display=display,
+                                   **kwargs)
+
+    def polt_line_expansion(self, **kwargs):
+        """Plot line expantion per line
+        """
+
+        return polt_line_expansion(self, **kwargs)
 
     @property
     def iplot(self):
