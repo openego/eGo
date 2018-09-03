@@ -91,8 +91,8 @@ medium and low voltage power distribution grids based on open
 Partner
 =======
 
+
 .. image:: https://i0.wp.com/reiner-lemoine-institut.de/wp-content/uploads/2017/03/Logo_ZNES_farbig_NEU.png
-   :align: right
    :scale: 90%
    :width: 300px
    :height: 110px
@@ -100,7 +100,6 @@ Partner
    :target: http://www.znes-flensburg.de/project/150?language=en
    
 .. image:: https://i0.wp.com/reiner-lemoine-institut.de/wp-content/uploads/2015/08/RLI_Logo.png
-   :align: right
    :scale: 90%
    :width: 180px
    :height: 131px
@@ -109,7 +108,6 @@ Partner
 
 
 .. image:: https://openegoproject.files.wordpress.com/2017/02/dlr_logo_vernetzte_energiesysteme_gb_grau.jpg?w=301&#038;h=141
-   :align: right
    :scale: 90%
    :width: 300px
    :height: 141px
@@ -118,7 +116,6 @@ Partner
 
 
 .. image:: https://i1.wp.com/reiner-lemoine-institut.de/wp-content/uploads/2016/07/Logo_Uni_Magdeburg.png
-   :align: right
    :scale: 90%
    :width: 300px
    :height: 103px
@@ -130,9 +127,11 @@ Partner
 Supported
 =========
 
+This project is supported by the German Federal Ministry for Economic 
+Affairs and Energy (BMWI).
+
 
 .. image:: https://i0.wp.com/reiner-lemoine-institut.de/wp-content/uploads/2016/07/BMWi_Logo_Englisch_KLEIN.jpg
-   :align: center
    :scale: 90%
    :alt: Supported by BMWi
    :target: http://www.bmwi.de/Navigation/EN/Home/home.html
