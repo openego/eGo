@@ -95,6 +95,7 @@ Partner
    :height: 110px
    :alt: ZNES Flensburg
    :target: http://www.znes-flensburg.de/project/150?language=en
+   :align: right
    
 .. image:: https://i0.wp.com/reiner-lemoine-institut.de/wp-content/uploads/2015/08/RLI_Logo.png
    :scale: 90%
@@ -102,6 +103,7 @@ Partner
    :height: 131px
    :alt: RLI
    :target: http://reiner-lemoine-institut.de/en/open_ego-open-electricity-grid-optimization/
+   :align: left
 
 
 .. image:: https://openegoproject.files.wordpress.com/2017/02/dlr_logo_vernetzte_energiesysteme_gb_grau.jpg?w=301&#038;h=141
@@ -110,6 +112,7 @@ Partner
    :height: 141px
    :alt: DLR
    :target: http://www.dlr.de/ve/en/desktopdefault.aspx/tabid-12472/21440_read-49440/
+   :align: right
 
 
 .. image:: https://i1.wp.com/reiner-lemoine-institut.de/wp-content/uploads/2016/07/Logo_Uni_Magdeburg.png
@@ -118,6 +121,7 @@ Partner
    :height: 103px
    :alt: Uni Magdeburg
    :target: http://iks.cs.ovgu.de/IKS.html
+   :align: left
 
 
 
