@@ -84,6 +84,18 @@ medium and low voltage power distribution grids based on open
 (or at least accessible) data. 
 `Learn more here <https://dingo.readthedocs.io/>`_.
 
+Supported by
+============
+
+This project is supported by the German Federal Ministry for Economic 
+Affairs and Energy (BMWI).
+
+
+.. image:: https://i0.wp.com/reiner-lemoine-institut.de/wp-content/uploads/2016/07/BMWi_Logo_Englisch_KLEIN.jpg
+   :scale: 90%
+   :alt: Supported by BMWi
+   :target: http://www.bmwi.de/Navigation/EN/Home/home.html
+
 
 Partner
 =======
@@ -123,18 +135,6 @@ Partner
    :target: http://iks.cs.ovgu.de/IKS.html
    :align: left
 
-
-Supported by
-============
-
-This project is supported by the German Federal Ministry for Economic 
-Affairs and Energy (BMWI).
-
-
-.. image:: https://i0.wp.com/reiner-lemoine-institut.de/wp-content/uploads/2016/07/BMWi_Logo_Englisch_KLEIN.jpg
-   :scale: 90%
-   :alt: Supported by BMWi
-   :target: http://www.bmwi.de/Navigation/EN/Home/home.html
 
 
 
