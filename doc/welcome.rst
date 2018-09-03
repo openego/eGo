@@ -11,6 +11,38 @@ and eDisGo which analysis and optimization distribution grids. All those python
 packages are part of the research project `open_eGo <https://openegoproject.wordpress.com>`_.
 
 
+Model overview
+==============
+
+.. figure:: images/open_ego_models_overview.png
+   :width: 1123px
+   :height: 794px
+   :scale: 70%
+   :alt: Overview of Models and processes which are used by eGo
+   :align: center
+
+
+The open_eGo project
+====================
+This software project is part of the research project
+`open_eGo <https://openegoproject.wordpress.com>`_.
+
+
+The OpenEnergy Platform
+=======================
+With in this project we developted the OpenEnergy Platform which this software
+is using in order to get and store the in- and output data. Before you start to
+calculate a registration on the platform is needed. For more see
+`openenergy-platform <https://openenergy-platform.org/>`_ and login.
+
+The OpenEnergy platform mainly addresses students, researchers and scientists in 
+the field of energy modelling and analytics as well as interested persons in 
+those fields. The platform provides great tools to make your energy system 
+modelling process transparent. All data of the open_eGo project are stored at
+this platform. 
+`Learn more about the database access <https://oep-data-interface.readthedocs.io>`_.
+
+
 eTraGo
 ======
 
@@ -29,12 +61,82 @@ eDisGo
 The python package eDisGo provides a toolbox for analysis and optimization
 of distribution grids. It is closely related to the python project Ding0 as this
 project is currently the single data source for eDisGo providing synthetic
-grid data for whole Germany.
+grid data for whole Germany. Learn more here <http://edisgo.readthedocs.io/>`_.
 
 
-Learn more about `eTraGo <http://eTraGo.readthedocs.io/>`_, `eDisGo <http://edisgo.readthedocs.io/>`_
-and the `OpenEnergy Platform <http://oep.iks.cs.ovgu.de/>`_ which are part of the
-open_eGo project.
+Dataprocessing
+==============
+
+For the open_eGo project several python packages are developt which are feeded 
+by the input data of the data processing. The Dataprocessing is writen in 
+SQL and Python. `Learn more here <https://data-processing.readthedocs.io/>`_.
+
+ego.io
+======
+
+SQLAlchemy Interface to the OpenEnergy database (oedb).OEDB table ORM objects 
+are defined here and small helpers for io tasks are contained.
+`Learn more here <https://github.com/openego/ego.io>`_.
+
+
+Dingo
+=====
+
+The DIstribution Network GeneratOr (Ding0) is a tool to generate synthetic 
+medium and low voltage power distribution grids based on open 
+(or at least accessible) data. 
+`Learn more here <https://dingo.readthedocs.io/>`_.
+
+
+Partner
+=======
+
+.. image:: https://i0.wp.com/reiner-lemoine-institut.de/wp-content/uploads/2017/03/Logo_ZNES_farbig_NEU.png
+   :align: right
+   :scale: 90%
+   :width: 300px
+   :height: 110px
+   :alt: ZNES Flensburg
+   :target: http://www.znes-flensburg.de/project/150?language=en
+   
+.. image:: https://i0.wp.com/reiner-lemoine-institut.de/wp-content/uploads/2015/08/RLI_Logo.png
+   :align: right
+   :scale: 90%
+   :width: 180px
+   :height: 131px
+   :alt: RLI
+   :target: http://reiner-lemoine-institut.de/en/open_ego-open-electricity-grid-optimization/
+
+
+.. image:: https://openegoproject.files.wordpress.com/2017/02/dlr_logo_vernetzte_energiesysteme_gb_grau.jpg?w=301&#038;h=141
+   :align: right
+   :scale: 90%
+   :width: 300px
+   :height: 141px
+   :alt: DLR
+   :target: http://www.dlr.de/ve/en/desktopdefault.aspx/tabid-12472/21440_read-49440/
+
+
+.. image:: https://i1.wp.com/reiner-lemoine-institut.de/wp-content/uploads/2016/07/Logo_Uni_Magdeburg.png
+   :align: right
+   :scale: 90%
+   :width: 300px
+   :height: 103px
+   :alt: Uni Magdeburg
+   :target: http://iks.cs.ovgu.de/IKS.html
+
+
+
+Supported
+=========
+
+
+.. image:: https://i0.wp.com/reiner-lemoine-institut.de/wp-content/uploads/2016/07/BMWi_Logo_Englisch_KLEIN.jpg
+   :align: center
+   :scale: 90%
+   :alt: Supported by BMWi
+   :target: http://www.bmwi.de/Navigation/EN/Home/home.html
+
 
 
 LICENSE
