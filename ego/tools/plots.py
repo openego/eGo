@@ -111,14 +111,14 @@ def polt_line_expansion(ego, filename=None, dpi=300, column='overnight_costs'):
     if 'network' in ego.json_file['eTraGo']['extendable']:
         network.lines['s_nom_expansion'] = network.lines.s_nom_opt.subtract(
             network.lines.s_nom, axis='index')
-        network.lines['capital_investment'] = network.lines.s_nom_expansion.multiply(
+        network.lines['investment_costs'] = network.lines.s_nom_expansion.multiply(
             network.lines.capital_cost, axis='index')
         network.lines['overnight_costs'] = etrago_convert_overnight_cost(
-            network.lines['capital_investment'], json_file)
+            network.lines['investment_costs'], json_file)
 
     else:
         network.lines['s_nom_expansion'] = None
-        network.lines['capital_investment'] = None
+        network.lines['investment_costs'] = None
         network.lines['overnight_costs'] = None
 
     # start plotting
@@ -133,7 +133,7 @@ def polt_line_expansion(ego, filename=None, dpi=300, column='overnight_costs'):
     if column == 'overnight_costs':
         line_value = network.lines[column]
         title = "Total Expansion Costs in € per line"
-    if column == 'capital_investment':
+    if column == 'investment_costs':
         line_value = network.lines[column]
         title = "Annualized Expansion Costs in € per line and time step"
 
@@ -159,7 +159,7 @@ def polt_line_expansion(ego, filename=None, dpi=300, column='overnight_costs'):
         cb.set_label('Expansion in MVA per line')
     if column == 'overnight_costs':
         cb.set_label('Total Expansion Costs in € per line')
-    if column == 'capital_investment':
+    if column == 'investment_costs':
         cb.set_label('Annualized Expansion Costs in € per line')
 
     ax.autoscale(tight=True)
@@ -545,6 +545,7 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
 
     # get content
     lines = network.lines
+    cols = list(network.lines.columns)
 
     # color map lines
     colormap = cm.linear.YlOrRd_09.scale(
@@ -552,59 +553,10 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
 
     # add parameter
     for line in network.lines.index:
-        popup = """<b>Line:</b> {} <br>
-            version: {} <br>
-
-            b: {} <br>
-            b_pu: {} <br>
-            bus0: {} <br>
-            bus1: {} <br>
-            capital_cost: {} <br>
-            g: {} <br>
-            g_pu: {} <br>
-            length: {} <br>
-            num_parallel: {} <br>
-            r: {} <br>
-            r_pu: {} <br>
-            s_nom: {} <br>
-            s_nom_extendable: {} <br>
-            s_nom_max: {} <br>
-            s_nom_min: {} <br>
-            s_nom_opt: {} <br>
-            sub_network: {} <br>
-            terrain_factor: {} <br>
-            type: {} <br>
-            v_ang_max: {} <br>
-            v_ang_min: {} <br>
-            v_nom: {} <br>
-            x: {} <br>
-            x_pu: {} <br>
-            """.format(line, version,
-
-                       lines.b[line],
-                       lines.b_pu[line],
-                       lines.bus0[line],
-                       lines.bus1[line],
-                       lines.capital_cost[line],
-                       lines.g[line],
-                       lines.g_pu[line],
-                       lines.length[line],
-                       lines.num_parallel[line],
-                       lines.r[line],
-                       lines.r_pu[line],
-                       lines.s_nom[line],
-                       lines.s_nom_extendable[line],
-                       lines.s_nom_max[line],
-                       lines.s_nom_min[line],
-                       lines.s_nom_opt[line],
-                       lines.sub_network[line],
-                       lines.terrain_factor[line],
-                       lines.type[line],
-                       lines.v_ang_max[line],
-                       lines.v_ang_min[line],
-                       lines.v_nom[line],
-                       lines.x[line],
-                       lines.x_pu[line])
+        popup = """ <b>Line:</b> {} <br>
+                    version: {} <br>""".format(line, version)
+        for col in cols:
+            popup += """ {}: {} <br>""".format(col, lines[col][line])
 
         # change colore function
         l_color = colormapper_lines(
