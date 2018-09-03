@@ -9,7 +9,7 @@ Installation
 .. note::
       Installation is only tested on (Ubuntu 16.04 ) linux OS.
 
-Please read the Installation Guideline :ref:`installation`.   
+Please read the Installation Guideline :ref:`ego.doc.installation`.   
      
 
 1. Use virtual environment
