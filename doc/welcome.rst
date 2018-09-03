@@ -130,7 +130,6 @@ Affairs and Energy (BMWI).
 
 
 .. image:: https://i0.wp.com/reiner-lemoine-institut.de/wp-content/uploads/2016/07/BMWi_Logo_Englisch_KLEIN.jpg
-   :align: right
    :scale: 90%
    :alt: Supported by BMWi
    :target: http://www.bmwi.de/Navigation/EN/Home/home.html
