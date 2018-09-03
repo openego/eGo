@@ -1,9 +1,9 @@
 {
   "eGo": {
     "eTraGo": true,
-    "eDisGo": false,
+    "eDisGo": true,
     "result_id": null,
-    "csv_import_eTraGo": false,
+    "csv_import_eTraGo": "results/etrago_k10_sto_net_ego100_t300",
     "csv_import_eDisGo": false
   },
   "eTraGo": {
@@ -12,16 +12,16 @@
     "method": "lopf",
     "pf_post_lopf": true,
     "start_snapshot": 1,
-    "end_snapshot" : 2,
+    "end_snapshot" : 300,
     "solver": "gurobi",
     "solver_options":{},
     "scn_name": "eGo 100",
     "scn_extension": null,
     "scn_decommissioning": null,
     "lpfile":  false,
-    "results":  "results/k10_eTraGo_t1_e100_v5_ntsto",
+    "results":  "results/etrago_k10_sto_net_ego100_t300",
     "export": false,
-    "extendable":  "['network', 'storages']",
+    "extendable":  ["network","storages"],
     "generator_noise": 789456,
     "minimize_loading": false,
     "network_clustering_kmeans": 10,
