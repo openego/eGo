@@ -1,17 +1,21 @@
-Release v0.3.0 (August 17, 2018)
+Release v0.3.0 (September 07, 2018)
 ++++++++++++++++++++++++++++++++
 
-Power Flow and Clustering. xxx
+Power Flow and Clustering.
+
+* Final Release 
 
 
 Added features
 --------------
 
 * Update of dependencies
-* Implemting of Ding0 grid parallelization 
-* Adding the Power Flow of eTraGo
-* Testing new Dataprocessing Version "v0.4.3"
-* make eGo installable from pip 
-* ....
+* Implemting of Ding0 grid parallelization
+* Redesign of Application of the methods call and structure of the calculation settings 
+* Adding and using the Power Flow of eTraGo in eGo
+* Testing  and using new Dataprocessing Version v0.4.3, v0.4.4 and v0.4.5  
+* make eGo installable from pip via ``pip3 install eGo -- process-dependency-links``
+* Implementing eDisGo's storage distribution for MV and LV grids
+* ..
 
 

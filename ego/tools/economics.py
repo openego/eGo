@@ -166,7 +166,7 @@ def etrago_operating_costs(network):
 
     Returns
     -------
-    power_price :  :pandas:`pandas.Dataframe<dataframe>`
+    operating_costs :  :pandas:`pandas.Dataframe<dataframe>`
         DataFrame with aggregate operational costs per component and voltage
         level in [EUR] per calculated time steps.
 
@@ -182,41 +182,96 @@ def etrago_operating_costs(network):
     +-------------+-------------------+------------------+
     | component   |operation_costs    |  voltage_level   |
     +=============+===================+==================+
-    |biomass      |   27.0            |                  |
+    |biomass      |   27.0            |      ehv         |
     +-------------+-------------------+------------------+
-    |line losses  |    0.0            |                  |
+    |line losses  |    0.0            |      ehv         |
     +-------------+-------------------+------------------+
-    |wind_onshore |    0.0            |                  |
+    |wind_onshore |    0.0            |      ehv         |
     +-------------+-------------------+------------------+
 
     """
-    # TODO add voltage_level
 
     etg = network
 
-    # groupby v_nom
-    operating_costs = etg.generators_t.p[
-        etg.generators[etg.generators.
-                       control != 'Slack'].index] * etg.generators.\
-        marginal_cost[etg.generators[etg.generators.
-                                     control != 'Slack'].index]  # without Slack
+    # get v_nom
+    _bus = pd.DataFrame(etg.buses['v_nom'])
+    _bus.index.name = "name"
+    _bus.reset_index(level=0, inplace=True)
 
-    operating_costs = operating_costs.groupby(
+    # Add voltage level
+    idx = etg.generators.index
+    etg.generators = pd.merge(etg.generators, _bus,
+                              left_on='bus', right_on='name')
+    etg.generators.index = idx
+
+    etg.generators['voltage_level'] = 'unknown'
+
+    # add ehv
+    ix_ehv = etg.generators[etg.generators['v_nom'] >= 380].index
+    etg.generators.set_value(ix_ehv, 'voltage_level', 'ehv')
+    # add hv
+    ix_hv = etg.generators[(etg.generators['v_nom'] <= 220) &
+                           (etg.generators['v_nom'] >= 110)].index
+    etg.generators.set_value(ix_hv, 'voltage_level', 'hv')
+
+    # get voltage_level index
+    ix_by_ehv = etg.generators[etg.generators.voltage_level == 'ehv'].index
+    ix_by_hv = etg.generators[etg.generators.voltage_level == 'hv'].index
+    ix_slack = etg.generators[etg.generators.control != 'Slack'].index
+
+    ix_by_ehv = ix_slack.join(ix_by_ehv, how='left', level=None,
+                              return_indexers=False, sort=False)
+    ix_by_hv = ix_slack.join(ix_by_hv, how='right', level=None,
+                             return_indexers=False, sort=False)
+
+    # groupby v_nom ehv
+    operating_costs_ehv = (etg.generators_t.p[ix_by_ehv] *
+                           etg.generators. marginal_cost[ix_by_ehv])
+    operating_costs_ehv = operating_costs_ehv.groupby(
         etg.generators.carrier, axis=1).sum().sum()
 
-    tpc = pd.DataFrame(operating_costs.sum(),
-                       columns=['operation_costs'],
-                       index=['total_power_costs'])
-    operating_costs = pd.DataFrame(operating_costs)
+    operating_costs = pd.DataFrame(operating_costs_ehv)
     operating_costs.columns = ['operation_costs']
-    operating_costs = operating_costs.append(tpc)
+    operating_costs['voltage_level'] = 'ehv'
+    # groupby v_nom ehv
+    operating_costs_hv = (etg.generators_t.p[ix_by_hv] *
+                          etg.generators. marginal_cost[ix_by_hv])
+    operating_costs_hv = operating_costs_hv.groupby(
+        etg.generators.carrier, axis=1).sum().sum()
+
+    opt_costs_hv = pd.DataFrame(operating_costs_hv)
+    opt_costs_hv.columns = ['operation_costs']
+    opt_costs_hv['voltage_level'] = 'hv'
+    # add df
+    operating_costs = operating_costs.append(opt_costs_hv)
+
+    tpc_ehv = pd.DataFrame(operating_costs_ehv.sum(),
+                           columns=['operation_costs'],
+                           index=['total_power_costs'])
+    tpc_ehv['voltage_level'] = 'ehv'
+    operating_costs = operating_costs.append(tpc_ehv)
+
+    tpc_hv = pd.DataFrame(operating_costs_hv.sum(),
+                          columns=['operation_costs'],
+                          index=['total_power_costs'])
+    tpc_hv['voltage_level'] = 'hv'
+    operating_costs = operating_costs.append(tpc_hv)
 
     # add Grid and Transform Costs
     try:
+        etg.lines['voltage_level'] = 'unknown'
+        ix_ehv = etg.lines[etg.lines['v_nom'] >= 380].index
+        etg.lines.set_value(ix_ehv, 'voltage_level', 'ehv')
+        ix_hv = etg.lines[(etg.lines['v_nom'] <= 220) &
+                          (etg.lines['v_nom'] >= 110)].index
+        etg.lines.set_value(ix_hv, 'voltage_level', 'hv')
+
         losses_total = sum(etg.lines.losses) + sum(etg.transformers.losses)
         losses_costs = losses_total * np.average(etg.buses_t.marginal_price)
 
         # add Transform and Grid losses
+        # etg.lines[['losses','voltage_level']].groupby('voltage_level',
+        # axis=0).sum().reset_index()
 
     except AttributeError:
         logger.info("No Transform and Line losses are calcualted! \n"
@@ -227,6 +282,7 @@ def etrago_operating_costs(network):
     tgc = pd.DataFrame(losses_costs,
                        columns=['operation_costs'],
                        index=['total_grid_losses'])
+    tgc['voltage_level'] = 'ehv/hv'
     operating_costs = operating_costs.append(tgc)
 
     #power_price = power_price.T.iloc[0]
