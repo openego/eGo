@@ -124,7 +124,8 @@ Partner
    :align: left
 
 
-
+Supported by
+============
 
 This project is supported by the German Federal Ministry for Economic 
 Affairs and Energy (BMWI).
