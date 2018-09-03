@@ -99,7 +99,7 @@ Affairs and Energy (BMWI).
 
 
 
-LICENSE
+License
 =======
 
 © Copyright 2015-2018
