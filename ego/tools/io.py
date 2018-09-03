@@ -200,8 +200,6 @@ class eTraGoResults(egoBasic):
                 # get pathway
                 pathway = self.json_file['eGo'].get('csv_import_eTraGo')
 
-                # TODO clean network.csv from folder
-
                 try:
                     # create Network from csv
                     self._etrago_network = pypsa.Network()
