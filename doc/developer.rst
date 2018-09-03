@@ -7,9 +7,15 @@ Installation
 ============
 
 .. note::
-      Installation is only tested on (Ubuntu like) linux OS.
+      Installation is only tested on (Ubuntu 16.04 ) linux OS.
 
-1. Create a virtualenvironment (where you like it) and activate it:
+Please read the Installation Guideline :ref:`installation`.   
+     
+
+1. Use virtual environment
+--------------------------
+
+Create a virtualenvironment (where you like it) and activate it:
 
 .. code-block:: bash
 
@@ -18,7 +24,10 @@ Installation
    $ source bin/activate
 
 
-2. Clone eGo from github.com by running following command in your terminal:
+2. Get eGo
+----------
+
+Clone eGo from github.com by running following command in your terminal:
 
 .. code-block:: bash
 
@@ -26,66 +35,44 @@ Installation
 
 
 With your activated environment `cd` to the cloned directory and run
-``pip3 install -e eGo --process-dependency-links --allow-all-external`` .
+``pip3 install -e eGo --process-dependency-links`` .
 This will install all needed packages into your environment.
 
-.. warning::
+3. Get your Database login data
+-------------------------------
 
-      Note, that the first release for deveolper is partly dependent on
-      forks and developent versions which could not automaticly be installed.
-      Check your installed packages using ``pip3 freeze`` with the
-      `ego_dependencies.txt
-      <https://github.com/openego/eGo/blob/dev/ego_dependencies.txt>`_
+`Learn more here <https://openego.readthedocs.io/en/dev/installation.html#setup-database-connection>`_.
 
+4. Create Dingo grids
+----------------------
 
-3. Work arounds :
+Install ding0 from github.com and run the ``example_parallel_multiple_grid_districts.py``
+script, which can be found under ``ding0/ding0/examples/``.
 
-After your installation install the eGo PyPSA fork on
-`dev <https://github.com/openego/PyPSA/tree/dev>`_
-``pip3 install -e git+https://github.com/openego/PyPSA.git@dev#egg=PyPSA``
-and Folium for an web based ploting with
-``pip3 install -e git+git@github.com:python-visualization/folium.git@dev#egg=folium``
+.. code-block:: bash
 
-Check if the `config.json <https://github.com/openego/eTraGo/blob/dev/etrago/tools/config.json>`_
-file from eTraGo is installed in your libary
-``/lib/python3.5/site-packages/etrago/tools`` .
-If not copy and paste this file into this folder.
+   $ git clone https://github.com/openego/ding0.git
+   $ pip3 install -e ding0
+   $ python3 ding0/ding0/examples/example_parallel_multiple_grid_districts.py
 
-If Database connection or table erros appears use:
-``pip3 install -e git+git@github.com:openego/ego.io.git@dev#egg=ego.io``
-
-
-eDisGo
-======
-
-eDisGo units
-------------
-
-.. csv-table:: List of variables and units
-   :url: https://raw.githubusercontent.com/openego/eDisGo/dev/doc/units_table.csv
-   :delim: ;
-   :header-rows: 1
-   :widths: 5, 1, 1, 5
-   :stub-columns: 0
+`Learn more about Dingo <https://dingo.readthedocs.io/en/dev/usage_details.html`_.
+Before you run the script check also the configs of Dingo and eDisGo in order to
+use the right database version. You finde this files unter  
+``ding0/ding0/config/config_db_tables.cfg`` and 
+``~.edisgo/config/config_db_tables.cfg``. Your created ding0 grids are stored in
+``~.ding0/..``. 
+ 
 
 
-Definition of grid expansion costs
-==================================
+eDisGo and eTraGo
+-----------------
 
-`grid expansion costs <http://edisgo.readthedocs.io/en/dev/api/edisgo.grid.html#edisgo.grid.network.Results.grid_expansion_costs>`_
+Please read the Developer notes of 
+`eDisGo <https://edisgo.readthedocs.io/en/dev/dev_notes.html>`_ and 
+`eTraGo <https://etrago.readthedocs.io/en/latest/developer_notes.html>`_.
 
-Definition of storage exansion
-------------------------------
 
-`Attributes according to PyPSA <https://pypsa.org/doc/components.html#storage-unit>`_
 
-Change of units from Mega to kilo:
 
-.. csv-table:: List of variables and units
-   :file: storage_units.csv
-   :delim: ,
-   :header-rows: 1
 
-eTraGo
-======
 
