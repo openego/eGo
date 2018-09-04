@@ -317,7 +317,7 @@ def plot_line_expansion(ego, filename=None, dpi=300, column='overnight_costs'):
         plt.close()
 
 
-def grid_storage_investment(ego, filename, display, var=None):
+def plot_grid_storage_investment(ego, filename, display, var=None):
     """
     """
     colors = ego_colore()
@@ -800,9 +800,9 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
             popup += """ {}: {} <br>""".format(col, stores[col][store])
 
         # get storage radius by p_nom_opt
-        if stores['p_nom_opt'][store] > 0.:
+        if (stores['p_nom_opt'][store] - stores['p_nom'][store]) > 0.:
             radius = (9**(1+stores['p_nom_opt'][store]/sto_max))
-        if stores['p_nom_opt'][store] == 0.:
+        if (stores['p_nom_opt'][store] - stores['p_nom'][store]) == 0.:
             radius = 0
 
         # add singel storage
