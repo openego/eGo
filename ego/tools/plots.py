@@ -325,7 +325,7 @@ def plot_grid_storage_investment(ego, filename, display, var=None):
     opacity = 0.4
 
     if var == 'overnight_cost':
-        tic = ego.total_investment_costs[['component',
+        tic = costs_df[['component',
                                           'overnight_costs', 'voltage_level']]
         tic.set_index(['voltage_level', 'component'], inplace=True)
         ax = tic.unstack().plot(kind='bar',
@@ -340,7 +340,7 @@ def plot_grid_storage_investment(ego, filename, display, var=None):
                      "voltage level and component", y=1.08)
 
     else:
-        tic = ego.total_investment_costs[['component',
+        tic = costs_df[['component',
                                           'capital_cost', 'voltage_level']]
         tic.set_index(['voltage_level', 'component'], inplace=True)
         ax = tic.unstack().plot(kind='bar',
