@@ -64,10 +64,11 @@ if not 'READTHEDOCS' in os.environ:
     from importlib import import_module
     import pypsa
     import re
-    from ego.tools.plots import (grid_storage_investment,
+    from ego.tools.plots import (plot_grid_storage_investment,
                                  power_price_plot, plot_storage_use, igeoplot,
                                  plot_edisgo_cluster,
-                                 polt_line_expansion)
+                                 plot_line_expansion,
+                                 plot_storage_expansion)
 
 __copyright__ = ("Europa-Universität Flensburg, "
                  "Centre for Sustainable Energy Systems")
@@ -431,27 +432,25 @@ class eGo(eDisGoResults):
         super(eGo, self).__init__(self,  *args, **kwargs)
 
         # add total results here
-        self._total_investment_costs = None
         self._total_operation_costs = None
-        self._storage_costs = None
-        self._ehv_grid_costs = None
-        self._mv_grid_costs = None
+        self._calculate_investment_cost()
+        self.total_investment_costs = self._calculate_investment_cost()
 
     def _calculate_investment_cost(self):
         """ Get total investment costs of all voltage level for storages
         and grid expansion
         """
 
-        self._total_inv_cost = pd.DataFrame(columns=['component',
-                                                     'voltage_level',
-                                                     'capital_cost'
-                                                     ])
+        _total_inv_cost = pd.DataFrame(columns=['component',
+                                                'voltage_level',
+                                                'capital_cost'
+                                                ])
         _grid_ehv = None
         if 'network' in self.json_file['eTraGo']['extendable']:
             _grid_ehv = self.etrago.grid_investment_costs
             _grid_ehv['component'] = 'grid'
 
-            self._total_inv_cost = self._total_inv_cost.\
+            _total_inv_cost = _total_inv_cost.\
                 append(_grid_ehv, ignore_index=True)
 
         _storage = None
@@ -459,7 +458,7 @@ class eGo(eDisGoResults):
             _storage = self.etrago.storage_investment_costs
             _storage['component'] = 'storage'
 
-            self._total_inv_cost = self._total_inv_cost.\
+            _total_inv_cost = _total_inv_cost.\
                 append(_storage, ignore_index=True)
 
         _grid_mv_lv = None
@@ -468,32 +467,15 @@ class eGo(eDisGoResults):
             _grid_mv_lv = self.edisgo.grid_investment_costs
             _grid_mv_lv['component'] = 'grid'
 
-            self._total_inv_cost = self._total_inv_cost.\
+            _total_inv_cost = _total_inv_cost.\
                 append(_grid_mv_lv, ignore_index=True)
 
         # add overnight costs
-        self._total_investment_costs = self._total_inv_cost
-        self._total_investment_costs[
+        _total_inv_cost[
             'overnight_costs'] = etrago_convert_overnight_cost(
-            self._total_investment_costs['capital_cost'], self.json_file)
+            _total_inv_cost['capital_cost'], self.json_file)
 
-        self._storage_costs = _storage
-        self._ehv_grid_costs = _grid_ehv
-        self._mv_grid_costs = _grid_mv_lv
-
-    @property
-    def total_investment_costs(self):
-        """
-        Contains all investment informations about eGo
-
-        Returns
-        -------
-        :pandas:`pandas.DataFrame<dataframe>`
-
-        """
-        self._calculate_investment_cost()
-
-        return self._total_investment_costs
+        return _total_inv_cost
 
     @property
     def total_operation_costs(self):
@@ -521,8 +503,8 @@ class eGo(eDisGoResults):
             filename = "results/plot_total_investment_costs.pdf"
             display = True
 
-        return grid_storage_investment(self, filename=filename,
-                                       display=display, **kwargs)
+        return plot_grid_storage_investment(self, filename=filename,
+                                            display=display, **kwargs)
 
     def plot_power_price(self, filename=None, display=False):
         """ Plot power prices per carrier of calculation
@@ -552,11 +534,17 @@ class eGo(eDisGoResults):
         return plot_edisgo_cluster(self, filename=filename, display=display,
                                    **kwargs)
 
-    def polt_line_expansion(self, **kwargs):
+    def plot_line_expansion(self, **kwargs):
         """Plot line expantion per line
         """
 
-        return polt_line_expansion(self, **kwargs)
+        return plot_line_expansion(self, **kwargs)
+
+    def plot_storage_expansion(self, **kwargs):
+        """Plot storage expantion per bus
+        """
+
+        return plot_storage_expansion(self, **kwargs)
 
     @property
     def iplot(self):

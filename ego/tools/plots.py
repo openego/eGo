@@ -89,7 +89,12 @@ def carriers_colore():
 
 
 def ego_colore():
-    """
+    """ Get the four eGo colores
+
+    Returns
+    -------
+    colors :  :obj:`dict`
+        List of eGo matplotlib colores
     """
     colors = {'egoblue1': '#1F567D',
               'egoblue2': '#84A2B8',
@@ -100,8 +105,147 @@ def ego_colore():
     return colors
 
 
-def polt_line_expansion(ego, filename=None, dpi=300, column='overnight_costs'):
+def plot_storage_expansion(ego, filename=None, dpi=300, column='overnight_costs',
+                           scaling=1):
     """ Plot line expantion
+
+    Parameters
+    ----------
+    ego : :class:`ego.tools.io.eGo`
+        eGo ``eGo`` inclueds on eTraGo and eDisGo
+    filename: list
+        Filename and or path of location to store graphic
+    dpi: int
+        dpi value of graphic
+    column: str
+        column name of eTraGo's line costs. Default: ``overnight_costs`` in EURO.
+        Also available ``s_nom_expansion`` in MVA or
+        annualized ``investment_costs`` in EURO
+    scaling: numeric
+        Factor to scale storage size of bus_sizes
+
+    Returns
+    -------
+    plot :obj:`matplotlib.pyplot.show`
+            https://matplotlib.org/api/pyplot_api.html#matplotlib.pyplot.show
+    """
+
+    network = ego.etrago.network
+    json_file = ego.json_file
+
+    # get storage values
+    if 'storages' in ego.json_file['eTraGo']['extendable']:
+        storage_inv = network.storage_units[network.storage_units.capital_cost > 0.]
+        storage_inv['investment_costs'] = (storage_inv.capital_cost *
+                                           storage_inv.p_nom_opt)
+        storage_inv['overnight_costs'] = etrago_convert_overnight_cost(
+            storage_inv['investment_costs'], json_file)
+
+    msd_max = storage_inv[column].max()
+    msd_median = storage_inv[column].median()
+    msd_min = storage_inv[column].min()
+
+    if (msd_max - msd_min) > 1.e+5:
+
+        if msd_max != 0:
+            LabelVal = int(log10(msd_max))
+        else:
+            LabelVal = 0
+        if LabelVal < 0:
+            LabelUnit = '€'
+            msd_max, msd_median, msd_min = msd_max * \
+                1000, msd_median * 1000, msd_min * 1000
+            storage_inv[column] = storage_inv[column] * 1000
+        elif LabelVal < 3:
+            LabelUnit = 'k €'
+        else:
+            LabelUnit = 'M €'
+            msd_max, msd_median, msd_min = msd_max / \
+                1000, msd_median / 1000, msd_min / 1000
+            storage_inv[column] = storage_inv[column] / 1000
+    else:
+        LabelUnit = '€'
+
+    # start plotting
+    figsize = 6, 6
+    fig, ax = plt.subplots(1, 1, figsize=(figsize))
+
+    bus_sizes = storage_inv[column] * scaling
+
+    if column == 'investment_costs':
+        title = 'Annualized Storage costs per timestep'
+        ltitel = 'Storage costs'
+    if column == 'overnight_costs':
+        title = 'Total Expansion Costs Overnight'
+        ltitel = 'Storage costs'
+    if column == 'p_nom_opt':
+        title = 'Storage Expansion in MVA'
+        ltitel = 'Storage size'
+        LabelUnit = 'kW'
+    if column not in ['investment_costs', 'overnight_costs', 'p_nom_opt']:
+        title = 'unknown'
+        ltitel = 'unknown'
+        LabelUnit = 'unknown'
+
+    if sum(storage_inv[column]) == 0:
+        sc = network.plot(bus_sizes=0,
+                          ax=ax,
+                          title="No storage expantion")
+    else:
+        sc = network.plot(
+            bus_sizes=bus_sizes,
+            bus_colors='g',
+            # bus_cmap=
+            # line_colors='gray',
+            title=title,
+            line_widths=0.3
+        )
+
+    ax.set_alpha(0.4)
+
+    # add legend
+    for area in [msd_max, msd_median, msd_min]:
+        plt.scatter([], [], c='white', s=area * scaling,
+                    label='= ' + str(round(area, 0)) + LabelUnit + ' ')
+
+    plt.legend(scatterpoints=1,
+               labelspacing=1,
+               title=ltitel,
+               loc='upper left',
+               shadow=True,
+               fontsize='x-large')
+
+    ax.autoscale(tight=True)
+
+    if filename is None:
+        plt.show()
+    else:
+        fig = ax.get_figure()
+        fig.set_size_inches(10, 8, forward=True)
+        fig.savefig(filename,  dpi=dpi)
+        plt.close()
+
+
+def plot_line_expansion(ego, filename=None, dpi=300, column='overnight_costs'):
+    """ Plot line expantion
+
+    Parameters
+    ----------
+    ego : :class:`ego.tools.io.eGo`
+        eGo ``eGo`` inclueds on eTraGo and eDisGo
+    filename: list
+        Filename and or path of location to store graphic
+    dpi: int
+        dpi value of graphic
+    column: str
+        column name of eTraGo's line costs. Default: ``overnight_costs`` in EURO.
+        Also available ``s_nom_expansion`` in MVA or
+        annualized ``investment_costs`` in EURO
+
+    Returns
+    -------
+    plot :obj:`matplotlib.pyplot.show`
+            https://matplotlib.org/api/pyplot_api.html#matplotlib.pyplot.show
     """
 
     network = ego.etrago.network
@@ -575,8 +719,8 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
         lines['capital_investment'] = lines.s_nom_expansion.multiply(
             lines.capital_cost, axis='index')
     else:
-        lines['s_nom_expansion'] = 'No expansion calculated'
-        lines['capital_investment'] = 'No investment calculated'
+        lines['s_nom_expansion'] = 0.
+        lines['capital_investment'] = 0.
 
     # Prepare lines
     line_results_group = folium.FeatureGroup(name='Lines specific results')
@@ -640,6 +784,38 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
 
         folium.GeoJson(district).add_to(grid_group).add_child(folium.Popup(pop))
 
+    # Create storage expantion plot
+    store_group = folium.FeatureGroup(name='Storage expantion')
+
+    sto_x = network.storage_units.bus.map(network.buses.x)
+    sto_y = network.storage_units.bus.map(network.buses.y)
+    cols = list(network.storage_units.columns)
+    stores = network.storage_units
+    sto_max = stores.p_nom_opt.max()
+
+    for store in network.storage_units.index:
+        popup = """ <b>Storage:</b> {} <br>
+                    version: {} <br>""".format(store, version)
+        for col in cols:
+            popup += """ {}: {} <br>""".format(col, stores[col][store])
+
+        # get storage radius by p_nom_opt
+        if stores['p_nom_opt'][store] > 0.:
+            radius = (9**(1+stores['p_nom_opt'][store]/sto_max))
+        if stores['p_nom_opt'][store] == 0.:
+            radius = 0
+
+        # add singel storage
+        folium.CircleMarker(
+            location=([sto_y[store], sto_x[store]]),
+            radius=radius,
+            popup=popup,
+            color='#3186cc',
+            fill=True,
+            fill_color='#3186cc',
+            weight=1
+        ).add_to(store_group)
+
     # add layers and others
     colormap.caption = 'Colormap of Lines s_nom'
     colormap2.caption = 'Colormap of Lines investment'
@@ -652,6 +828,7 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
     if ego.json_file['eGo']['eDisGo'] is True:
         grid_group.add_to(mp)
     line_results_group.add_to(mp)
+    store_group.add_to(mp)
     folium.LayerControl().add_to(mp)
 
     plugins.Fullscreen(
