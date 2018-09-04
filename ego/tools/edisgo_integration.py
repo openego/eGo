@@ -48,6 +48,8 @@ if not 'READTHEDOCS' in os.environ:
         cluster_mv_grids)
     from ego.tools.economics import (
         edisgo_grid_investment)
+    
+    import pypsa
 
     import pandas as pd
     import json
@@ -99,17 +101,19 @@ class EDisGoNetworks:
         else:
             # Execute Functions
             self._set_grid_choice()
-            self._run_edisgo_pool()
+            if not self._only_cluster:
+                self._run_edisgo_pool()
             if self._results:
                 self._save_edisgo_results()
 
-        self._successfull_grids = self._successfull_grids()
-        # Calculate grid investment costs
-
-        self._grid_investment_costs = edisgo_grid_investment(
-            self,
-            self._json_file
-        )
+        if not self._only_cluster:
+            self._successfull_grids = self._successfull_grids()
+            # Calculate grid investment costs
+    
+            self._grid_investment_costs = edisgo_grid_investment(
+                self,
+                self._json_file
+            )
 
     @property
     def network(self):
@@ -282,6 +286,7 @@ class EDisGoNetworks:
         self._storage_distribution = self._edisgo_args['storage_distribution']
         self._apply_curtailment = self._edisgo_args['apply_curtailment']
         self._cluster_attributes = self._edisgo_args['cluster_attributes']
+        self._only_cluster = self._edisgo_args['only_cluster']
         self._max_workers = self._edisgo_args['max_workers']
         self._max_cos_phi_renewable = self._edisgo_args[
             'max_cos_phi_renewable']
@@ -295,6 +300,8 @@ class EDisGoNetworks:
             raise NotImplementedError(
                 "Skipping the initial reinforcement is not yet implemented"
             )
+        if self._only_cluster:
+            logger.warning("This eDisGo run only returns cluster results")
             
         # Versioning
         if self._grid_version is not None:
@@ -380,17 +387,18 @@ class EDisGoNetworks:
                 "The_Farthest_node": "farthest_node"},
             inplace=True)
 
-        if self._ext_storage is True:
-            storages = self._identify_extended_storages()
-            if not (storages.max().values[0] == 0.):
-                df = pd.concat([df, storages], axis=1)
-                df.rename(
-                    columns={"storage_p_nom": "extended_storage"},
-                    inplace=True)
-            else:
-                logger.warning('Extended storages all 0. \
-                               Therefore, extended storages \
-                               are excluded from clustering')
+        if 'extended_storage' in self._cluster_attributes:
+            if self._ext_storage:
+                storages = self._identify_extended_storages()
+                if not (storages.max().values[0] == 0.):
+                    df = pd.concat([df, storages], axis=1)
+                    df.rename(
+                        columns={"storage_p_nom": "extended_storage"},
+                        inplace=True)
+                else:
+                    logger.warning('Extended storages all 0. \
+                                   Therefore, extended storages \
+                                   are excluded from clustering')
 
         found_atts = [
             i for i in self._cluster_attributes if i in df.columns
@@ -832,6 +840,7 @@ class EDisGoNetworks:
             mv_grid_id = int(row['the_selected_network_id'])
 
             try:
+                # Grid expansion costs
                 file_path = os.path.join(
                     self._csv_import,
                     str(mv_grid_id),
@@ -841,9 +850,20 @@ class EDisGoNetworks:
                 grid_expansion_costs = pd.read_csv(
                     file_path,
                     index_col=0)
-
-                edisgo_grid = _EDisGoImported(grid_expansion_costs)
-
+               
+                # PyPSA network
+                pypsa_path = os.path.join(
+                    self._csv_import,
+                    str(mv_grid_id),
+                    'pypsa_network')
+                
+                imported_pypsa = pypsa.Network()
+                imported_pypsa.import_from_csv_folder(pypsa_path)
+                    
+                edisgo_grid = _EDisGoImported(
+                        grid_expansion_costs, 
+                        imported_pypsa)
+                
                 self._edisgo_grids[
                     mv_grid_id
                 ] = edisgo_grid
@@ -965,10 +985,12 @@ class _EDisGoImported:
 
     def __init__(
             self,
-            grid_expansion_costs):
+            grid_expansion_costs,
+            pypsa):
 
         self.network = _NetworkImported(
-            grid_expansion_costs)
+            grid_expansion_costs,
+            pypsa)
 
 
 class _NetworkImported:
@@ -978,10 +1000,12 @@ class _NetworkImported:
 
     def __init__(
             self,
-            grid_expansion_costs):
+            grid_expansion_costs,
+            pypsa):
 
         self.results = _ResultsImported(
             grid_expansion_costs)
+        self.pypsa = pypsa
 
 
 class _ResultsImported:
