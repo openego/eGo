@@ -439,7 +439,9 @@ class eGo(eDisGoResults):
         self._mv_grid_costs = None
 
     @property
-    def get_investment_cost(self):
+    def get_investment_cost(
+            self,
+            storage_mv_integration=True):
         """ Get total investment costs of all voltage level for storages
         and grid expansion
         """
@@ -479,15 +481,68 @@ class eGo(eDisGoResults):
         self._total_investment_costs[
             'overnight_costs'] = etrago_convert_overnight_cost(
             self._total_investment_costs['capital_cost'], self.json_file)
-
+    
+        ### Include MV storages into the _total_investment_costs dataframe
+        if storage_mv_integration is True:
+            self._integrate_mv_storage_investment()
+    
         self._storage_costs = _storage
         self._ehv_grid_costs = _grid_ehv
         self._mv_grid_costs = _grid_mv_lv
 
-
+    def _integrate_mv_storage_investment(self):
+        """
+        Updates the total investment costs dataframe and includes the 
+        storage integrated in MV grids.
+        """
+        
+        costs_df = self._total_investment_costs        
+        
+        total_stor = self._calculate_all_extended_storages()
+        mv_stor = self._calculate_mv_storage()
+        
+        integrated_share = mv_stor / total_stor
+        
+        if integrated_share > 0:    
+            ehv_stor_idx = costs_df.index[
+                    (costs_df['component'] == 'storage')
+                    & (costs_df['voltage_level'] == 'ehv')][0]
+                                    
+            int_capital_costs = costs_df.loc[ehv_stor_idx][
+                            'capital_cost'
+                            ] * integrated_share
+            int_overnight_costs =  costs_df.loc[ehv_stor_idx][
+                            'overnight_costs'
+                            ] * integrated_share  
+                                                        
+            costs_df.at[
+                    ehv_stor_idx, 
+                    'capital_cost'
+                    ] = (
+                    costs_df.loc[ehv_stor_idx]['capital_cost']
+                    - int_capital_costs)
+                                                        
+            costs_df.at[
+                    ehv_stor_idx, 
+                    'overnight_costs'
+                    ] = (
+                    costs_df.loc[ehv_stor_idx]['overnight_costs']
+                    - int_overnight_costs)        
+    
+            new_storage_row = {
+                    'component' : ['storage'],
+                    'voltage_level' : ['mv'],
+                    'capital_cost' : [int_capital_costs],
+                    'overnight_costs' : [int_overnight_costs]}  
+            
+            new_storage_row = pd.DataFrame(new_storage_row)
+            costs_df = costs_df.append(new_storage_row)
+            
+            self._total_investment_costs = costs_df
+            
     def _calculate_all_extended_storages(self):
         """
-        Returns the all extended storage p_nom_opt in MW
+        Returns the all extended storage p_nom_opt in MW.
         """
         etrago_network = self._etrago_disaggregated_network
 
@@ -580,63 +635,22 @@ class eGo(eDisGoResults):
         return self._total_operation_costs
     
     def plot_total_investment_costs(self, 
-                                    storage_integration=True,
                                     filename=None,
                                     display=False, **kwargs):
         """ Plot total investment costs
         """
         # initiate total_investment_costs
         self.get_investment_cost
-        costs_df = self._total_investment_costs
         
-        if storage_integration:
-            total_stor = self._calculate_all_extended_storages()
-            mv_stor = self._calculate_mv_storage()
-            
-            integrated_share = mv_stor / total_stor
-            
-            if integrated_share > 0:    
-                ehv_stor_idx = costs_df.index[
-                        (costs_df['component'] == 'storage')
-                        & (costs_df['voltage_level'] == 'ehv')][0]
-                                        
-                int_capital_costs = costs_df.loc[ehv_stor_idx][
-                                'capital_cost'
-                                ] * integrated_share
-                int_overnight_costs =  costs_df.loc[ehv_stor_idx][
-                                'overnight_costs'
-                                ] * integrated_share  
-                                                            
-                costs_df.at[
-                        ehv_stor_idx, 
-                        'capital_cost'
-                        ] = (
-                        costs_df.loc[ehv_stor_idx]['capital_cost']
-                        - int_capital_costs)
-                                                            
-                costs_df.at[
-                        ehv_stor_idx, 
-                        'overnight_costs'
-                        ] = (
-                        costs_df.loc[ehv_stor_idx]['overnight_costs']
-                        - int_overnight_costs)        
-        
-                new_storage_row = {
-                        'component' : ['storage'],
-                        'voltage_level' : ['mv'],
-                        'capital_cost' : [int_capital_costs],
-                        'overnight_costs' : [int_overnight_costs]}  
-                
-                new_storage_row = pd.DataFrame(new_storage_row)
-                costs_df = costs_df.append(new_storage_row)
-        
-         
         if filename is None:
             filename = "results/plot_total_investment_costs.pdf"
             display = True
 
-        return grid_storage_investment(costs_df, filename=filename,
-                                       display=display, **kwargs)
+        return grid_storage_investment(
+                self._total_investment_costs, 
+                filename=filename,
+                display=display, 
+                **kwargs)
 
     def plot_power_price(self, filename=None, display=False):
         """ Plot power prices per carrier of calculation
