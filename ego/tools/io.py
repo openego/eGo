@@ -439,7 +439,9 @@ class eGo(eDisGoResults):
         self._mv_grid_costs = None
 
     @property
-    def get_investment_cost(self):
+    def get_investment_cost(
+            self,
+            storage_mv_integration=True):
         """ Get total investment costs of all voltage level for storages
         and grid expansion
         """
@@ -479,11 +481,133 @@ class eGo(eDisGoResults):
         self._total_investment_costs[
             'overnight_costs'] = etrago_convert_overnight_cost(
             self._total_investment_costs['capital_cost'], self.json_file)
-
+    
+        ### Include MV storages into the _total_investment_costs dataframe
+        if storage_mv_integration is True:
+            self._integrate_mv_storage_investment()
+    
         self._storage_costs = _storage
         self._ehv_grid_costs = _grid_ehv
         self._mv_grid_costs = _grid_mv_lv
 
+    def _integrate_mv_storage_investment(self):
+        """
+        Updates the total investment costs dataframe and includes the 
+        storage integrated in MV grids.
+        """
+        
+        costs_df = self._total_investment_costs        
+        
+        total_stor = self._calculate_all_extended_storages()
+        mv_stor = self._calculate_mv_storage()
+        
+        integrated_share = mv_stor / total_stor
+        
+        if integrated_share > 0:    
+            ehv_stor_idx = costs_df.index[
+                    (costs_df['component'] == 'storage')
+                    & (costs_df['voltage_level'] == 'ehv')][0]
+                                    
+            int_capital_costs = costs_df.loc[ehv_stor_idx][
+                            'capital_cost'
+                            ] * integrated_share
+            int_overnight_costs =  costs_df.loc[ehv_stor_idx][
+                            'overnight_costs'
+                            ] * integrated_share  
+                                                        
+            costs_df.at[
+                    ehv_stor_idx, 
+                    'capital_cost'
+                    ] = (
+                    costs_df.loc[ehv_stor_idx]['capital_cost']
+                    - int_capital_costs)
+                                                        
+            costs_df.at[
+                    ehv_stor_idx, 
+                    'overnight_costs'
+                    ] = (
+                    costs_df.loc[ehv_stor_idx]['overnight_costs']
+                    - int_overnight_costs)        
+    
+            new_storage_row = {
+                    'component' : ['storage'],
+                    'voltage_level' : ['mv'],
+                    'capital_cost' : [int_capital_costs],
+                    'overnight_costs' : [int_overnight_costs]}  
+            
+            new_storage_row = pd.DataFrame(new_storage_row)
+            costs_df = costs_df.append(new_storage_row)
+            
+            self._total_investment_costs = costs_df
+            
+    def _calculate_all_extended_storages(self):
+        """
+        Returns the all extended storage p_nom_opt in MW.
+        """
+        etrago_network = self._etrago_disaggregated_network
+
+        stor_df = etrago_network.storage_units.loc[
+            (etrago_network.storage_units['p_nom_extendable'] == True)]
+        
+        stor_df = stor_df[['bus', 'p_nom_opt']]
+        
+        all_extended_storages = stor_df['p_nom_opt'].sum()
+        
+        return all_extended_storages
+               
+    def _calculate_mv_storage(self):
+        """
+        Returns the storage p_nom_opt in MW, integrated in MV grids
+        """
+        etrago_network = self._etrago_disaggregated_network
+        
+        min_extended = 0.3
+        stor_df = etrago_network.storage_units.loc[
+            (etrago_network.storage_units['p_nom_extendable'] == True)
+            & (etrago_network.storage_units['p_nom_opt'] > min_extended)
+            & (etrago_network.storage_units['max_hours'] <= 20.)]
+               
+        stor_df = stor_df[['bus', 'p_nom_opt']]
+        
+        integrated_storage = .0 # Storage integrated in MV grids
+        
+        for idx, row in stor_df.iterrows():
+            bus_id = row['bus']
+            p_nom_opt = row['p_nom_opt']
+            
+            mv_grid_id = self.edisgo.get_mv_grid_from_bus_id(bus_id)
+            
+            if not mv_grid_id:
+                continue
+            
+            logger.info("Checking storage integration for MV grid {}".format(
+                    mv_grid_id))
+                        
+            grid_choice = self.edisgo.grid_choice
+            
+            cluster = grid_choice.loc[
+                    [mv_grid_id in repr_grids for repr_grids in grid_choice[
+                            'represented_grids']]]
+            
+            if len(cluster) == 0:
+                continue
+                
+            else:
+                representative_grid = cluster[
+                        'the_selected_network_id'].values[0]
+                
+            integration_df = self.edisgo.network[
+                    representative_grid].network.results.storages()
+                       
+            integrated_power = integration_df['nominal_power'].sum() / 1000
+            if integrated_power > p_nom_opt:
+                integrated_power = p_nom_opt
+            
+            integrated_storage = integrated_storage + integrated_power
+            
+        return integrated_storage
+            
+   
     @property
     def total_investment_costs(self):
         """
@@ -509,20 +633,24 @@ class eGo(eDisGoResults):
 
         """
         return self._total_operation_costs
-
-    def plot_total_investment_costs(self, filename=None,
+    
+    def plot_total_investment_costs(self, 
+                                    filename=None,
                                     display=False, **kwargs):
         """ Plot total investment costs
         """
         # initiate total_investment_costs
         self.get_investment_cost
-
+        
         if filename is None:
             filename = "results/plot_total_investment_costs.pdf"
             display = True
 
-        return grid_storage_investment(self, filename=filename,
-                                       display=display, **kwargs)
+        return grid_storage_investment(
+                self._total_investment_costs, 
+                filename=filename,
+                display=display, 
+                **kwargs)
 
     def plot_power_price(self, filename=None, display=False):
         """ Plot power prices per carrier of calculation
