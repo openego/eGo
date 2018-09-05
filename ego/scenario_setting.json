@@ -3,7 +3,7 @@
     "eTraGo": true,
     "eDisGo": true,
     "result_id": null,
-    "csv_import_eTraGo": "results/etrago_k10_sto_net_ego100_t3",
+    "csv_import_eTraGo": false,
     "csv_import_eDisGo": false
   },
   "eTraGo": {
@@ -19,7 +19,7 @@
     "scn_extension": null,
     "scn_decommissioning": null,
     "lpfile":  false,
-    "results":  "results/etrago_k10_sto_net_ego100_t3",
+    "results":  "results/etrago_result",
     "export": false,
     "extendable":  ["network","storages"],
     "generator_noise": 789456,
@@ -40,11 +40,11 @@
   "eDisGo": {
     "db": "oedb",
     "gridversion": "v0.4.5",
-    "ding0_files": "/home/dozeumbuw/ego_v03/eGo/ego/data/MV_grids/20180821165042",
+    "ding0_files": "Path/to/ding0/grids",
     "choice_mode": "cluster",
     "cluster_attributes":["farthest_node", "wind_cap", "solar_cap", "extended_storage"],
-    "only_cluster": true,
-    "manual_grids": [1718],
+    "only_cluster": false,
+    "manual_grids": [],
     "no_grids": 2,
     "parallelization":false,
     "max_workers":8,
