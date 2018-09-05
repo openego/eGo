@@ -341,35 +341,21 @@ def cluster_mv_grids(
             'represented_grids'])
     cluster_df.index.name = 'cluster_id'
 
-    # Iterating through the clusters dictionary (key represents cluster's id , value represents another disctionary with network's id and distance of that point to cluster's center)
+    # Iterating through the clusters dictionary 
+    # (key represents cluster's id , value represents another disctionary 
+    # with network's id and distance of that point to cluster's center)
+    
     for key, value in id_clus_dist.items():
-        no_points_clus = sum(1 for v in value if v)  # How many points/cluster
+        no_points_clus = sum(1 for v in value if v)  
         # percentage of points per cluster
         clus_perc = (no_points_clus / len(X)) * 100
 
-    # in the last dict "id_clus_dist" each key (cluster's id) has several dicts that contain information of network's id and distance,
-    # the below code just to split the sub dicts and merge them as items in anothe single dict
         id_dist = {}
         for value_1 in value:
             id_dist.update(value_1)
 
-        # returns the shortest distance point (selected network) to cluster's center
+        # returns the shortest distance point (selected network) 
         short_dist_net_id_dist = min(id_dist.items(), key=lambda x: x[1])
-
-        # Exporting CSV sheet for every cluster that contains the assigned points (networks) and siatance from each to cluster's center
-#        daf = pd.DataFrame()
-#        daf['Network_id'] = id_dist.keys()
-#        daf['Distance_to_cluster_center'] = id_dist.values()
-#        daf.to_csv('Cluster_No_{}.csv'.format(key), sep=',')
-
-        # export to lists
-#        cluster_id.append(key)  # cluster id
-#        cluster_points.append(no_points_clus)  # No of points / cluster
-        # Percentage of points per cluster, # round(), two digits after comma
-#        clus_percentage.append(round(clus_perc, 2))
-
-        # the nearest point to cluster center (represented network), there is [0] because it is a tuple
-#        closest_point.append(short_dist_net_id_dist[0])
         
         cluster_df.loc[key] = [
                 no_points_clus,
@@ -377,34 +363,4 @@ def cluster_mv_grids(
                 short_dist_net_id_dist[0],
                 list(id_dist.keys())]
         
-
-    # exporting results to CSV file that contains cluster's id, the no. of assigned points (networks) and the selected network
-#    d = {'CLuster_id': cluster_id, 'no_of_points_per_cluster': cluster_points,
-#         'cluster_percentage': clus_percentage,
-#         'the_selected_network_id': closest_point}
-#    df = pd.DataFrame(d)
-#    df.to_csv('Selected_networks_{}_clusters_dec.csv'.format(no_clusters), sep=',')
-   
     return cluster_df
-
-#    # Initiation of 3d graph for scattering plot
-#    fig = plt.figure()
-#    fig.suptitle('KMeans clustering', fontsize=20)
-#    ax = fig.add_subplot(111, projection='3d')
-#
-#    # 3d scatter Plot
-#    colors = cm.spectral(cluster_labels.astype(float) / no_clusters)
-#    ax.scatter(X[:, 0], X[:, 1], X[:, 2], alpha=0.3, c=colors)
-#
-#    # Clusters centers 3d scatter plot
-#    ax.scatter(centroids[:, 0], centroids[:, 1], centroids[:, 2], marker='x', alpha=1, s=50, linewidths=5, zorder=10,c='r')
-#
-#    #limiting the axes scale
-#    ax.set_xlim(0, 1)
-#    ax.set_ylim(0, 1)
-#    ax.set_zlim(0, 1)
-#
-#    # show 3d scatter clustering
-#    plt.show()
-#
-#    # as for this example where no. of clusters is 20, the results should show 21 CSV files (20 for clusters and 1 for the selected netorks)

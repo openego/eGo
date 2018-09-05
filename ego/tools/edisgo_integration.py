@@ -53,6 +53,8 @@ if not 'READTHEDOCS' in os.environ:
 
     import csv
     import pandas as pd
+    import numpy as np
+    from time import localtime, strftime
     import json
     from sqlalchemy.orm import sessionmaker
     from sqlalchemy.orm import scoped_session
@@ -99,6 +101,7 @@ class EDisGoNetworks:
         else:
             # Execute Functions
             self._set_grid_choice()
+            self._init_status()
             if not self._only_cluster:
                 self._run_edisgo_pool()
             if self._results:
@@ -242,8 +245,36 @@ class EDisGoNetworks:
                 time_step)
             
     def _init_status(self):
-        self._grid_choice['the_selected_network_id']
-    
+        
+        status = self._grid_choice.copy()
+        status = status.set_index('the_selected_network_id')
+        status.index.names = ['MV grid']
+        
+        tot_reprs = self._grid_choice['no_of_points_per_cluster'].sum()
+        
+        status['cluster_perc'] = round(
+                status['no_of_points_per_cluster']
+                / tot_reprs, 2)
+        
+        status['start_time'] = None
+        status['end_time'] = None
+        
+        status.drop(
+                ['no_of_points_per_cluster', 'represented_grids'], 
+                axis=1, 
+                inplace=True)
+        
+        self._status = status
+        
+    def _status_update(self, mv_grid_id, time):
+        
+        now = strftime("%Y-%m-%d_%H:%M", localtime())
+        if time == 'start':
+            self._status.at[mv_grid_id, 'start_time'] = now
+        elif time == 'end':
+            self._status.at[mv_grid_id, 'end_time'] = now
+        logger.info(self._status.to_string())
+        
     def _update_edisgo_configs(self, edisgo_grid):
         
         # Info and Warning handling
@@ -383,7 +414,8 @@ class EDisGoNetworks:
             self._versioned = True
         else:
             self._versioned = False
-
+            
+    
     def _edisgo_scenario_translation(self):
 
         # Scenario translation
@@ -684,6 +716,8 @@ class EDisGoNetworks:
         :class:`edisgo.grid.network.EDisGo`
             Returns the complete eDisGo container, also including results
         """
+        self._status_update(mv_grid_id, 'start')
+        
         storage_integration = self._storage_distribution
         apply_curtailment = self._apply_curtailment
 
@@ -872,6 +906,8 @@ class EDisGoNetworks:
         logger.info("MV grid {}: eDisGo grid analysis".format(mv_grid_id))
 
         edisgo_grid.reinforce(timesteps_pfa=self._timesteps_pfa)
+        
+        self._status_update(mv_grid_id, 'end')
 
         return edisgo_grid
 
