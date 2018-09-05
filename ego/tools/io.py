@@ -462,14 +462,14 @@ class eGo(eDisGoResults):
             _total_inv_cost = _total_inv_cost.\
                 append(_storage, ignore_index=True)
 
-        #_grid_mv_lv = None
-        # if self.json_file['eGo']['eDisGo'] is True:
+        _grid_mv_lv = None
+        if self.json_file['eGo']['eDisGo'] is True:
 
-            #_grid_mv_lv = self.edisgo.grid_investment_costs
-            #_grid_mv_lv['component'] = 'grid'
+            _grid_mv_lv = self.edisgo.grid_investment_costs
+            _grid_mv_lv['component'] = 'grid'
 
-            # _total_inv_cost = _total_inv_cost.\
-            #    append(_grid_mv_lv, ignore_index=True)
+            _total_inv_cost = _total_inv_cost.\
+                append(_grid_mv_lv, ignore_index=True)
 
         # add overnight costs
         _total_inv_cost[
@@ -479,8 +479,8 @@ class eGo(eDisGoResults):
         self._total_investment_costs = _total_inv_cost
 
         # Include MV storages into the _total_investment_costs dataframe
-        # if storage_mv_integration is True:
-        #    self._integrate_mv_storage_investment()
+        if storage_mv_integration is True:
+            self._integrate_mv_storage_investment()
 
         return _total_inv_cost
 
@@ -622,12 +622,12 @@ class eGo(eDisGoResults):
         """ Plot total investment costs
         """
         # initiate total_investment_costs
-        self.get_investment_cost
+        self.total_investment_costs
 
         self._calculate_investment_cost()
 
-        return grid_storage_investment(
-            self._total_investment_costs,
+        return plot_grid_storage_investment(
+            self.total_investment_costs,
             filename=filename,
             display=display,
             **kwargs)
