@@ -316,6 +316,7 @@ def plot_line_expansion(ego, filename=None, dpi=300, column='overnight_costs'):
         fig.savefig(filename,  dpi=dpi)
         plt.close()
 
+
 def plot_grid_storage_investment(costs_df, filename, display, var=None):
     """
     """
@@ -550,10 +551,26 @@ def plot_edisgo_cluster(ego, filename, region=['DE'], display=False, dpi=600):
 
     # get country Polygon
     cnty = get_country(session, region=region)
-    # get grid districts
+    # get grid districts singel
     if ego.json_file['eGo']['eDisGo'] is True:
         gridcluster = prepareGD(session, cluster_id, version)
         gridcluster = gridcluster.merge(cluster, on='subst_id')
+        # get represented grids
+        repre_grids = pd.DataFrame(columns=['subst_id',
+                                            'geometry',
+                                            'cluster_id',
+                                            'style'])
+        for cluster in gridcluster.index:
+
+            rep_id = gridcluster.represented_grids[cluster]
+            # represented_grids
+            repre_grid = prepareGD(session, rep_id, version)
+            repre_grid['cluster_id'] = gridcluster.subst_id[cluster]
+            # repre_grids['style'] = """{'fillColor': '#2e1f56', 'weight': 2, 'color': 'black'}"""
+            repre_grids = repre_grids.append(repre_grid, ignore_index=True)
+        # add common SRID
+        crs = {'init': 'epsg:4326'}
+        repre_grids = gpd.GeoDataFrame(repre_grids, crs=crs)
 
     # get all MV grids
     bus_id = "all"
@@ -563,11 +580,14 @@ def plot_edisgo_cluster(ego, filename, region=['DE'], display=False, dpi=600):
     figsize = 5, 5
     fig, ax = plt.subplots(1, 1, figsize=(figsize))
 
-    cnty.plot(ax=ax, color='white', alpha=0.5)
+    cnty.plot(ax=ax, color='white', edgecolor='whitesmoke', alpha=0.5)
     mvgrids.plot(ax=ax, color='white', alpha=0.1,  linewidth=0.5)
     if ego.json_file['eGo']['eDisGo'] is True:
+        repre_grids.plot(ax=ax, column='cluster_id',
+                         cmap='GnBu', edgecolor='whitesmoke', legend=True)
         gridcluster.plot(ax=ax, column='no_of_points_per_cluster',
                          cmap='OrRd', legend=True)
+
     # add storage distribution
     _storage_distribution(ego.etrago.network, scaling=1, filename=None,
                           ax=ax, fig=fig)
@@ -785,6 +805,21 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
 
         folium.GeoJson(district).add_to(grid_group).add_child(folium.Popup(pop))
 
+        repgrid_group = folium.FeatureGroup(name='represented Grids by Cluster')
+        cluster = ego.edisgo.grid_choice
+        cluster = cluster.rename(
+            columns={"the_selected_network_id": "subst_id"})
+
+        for idx in cluster.index:
+            pop2 = """<b>Represented Grid:</b> {} <br>
+                """.format(cluster.subst_id[idx])
+
+            cluster_id = list(cluster.represented_grids[idx])
+            # represented_grids
+            repre_grid = prepareGD(session, cluster_id, version)
+            folium.GeoJson(repre_grid).add_to(
+                repgrid_group).add_child(folium.Popup(pop2))
+
     # Create storage expantion plot
     store_group = folium.FeatureGroup(name='Storage expantion')
 
@@ -828,6 +863,7 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
     line_group.add_to(mp)
     if ego.json_file['eGo']['eDisGo'] is True:
         grid_group.add_to(mp)
+        repgrid_group.add_to(mp)
     line_results_group.add_to(mp)
     store_group.add_to(mp)
     folium.LayerControl().add_to(mp)
