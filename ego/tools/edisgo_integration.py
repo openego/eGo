@@ -171,30 +171,6 @@ class EDisGoNetworks:
         """
         return self._grid_investment_costs
 
-    def plot_line_loading(self, mv_grid_id, time_step):
-        """
-        Plot line loading as color on lines
-    
-        Displays line loading relative to nominal capacity
-        Parameters
-        ----------
-        mv_grid_id : int
-            MV grid ID of the grid to plot
-            
-        timestep : :pandas:`pandas.Timestamp<timestamp>`
-            Time step to plot analysis results for.
-            Time step must be included in s_res
-            
-        """   
-        line_loading(
-                self._edisgo_grids[mv_grid_id].network.pypsa,
-                self._edisgo_grids[mv_grid_id].network.config,
-                self._edisgo_grids[mv_grid_id].network.results.s_res(),
-                time_step)
-            
-    def _init_status(self):
-        self._grid_choice['the_selected_network_id']
-    
     def get_mv_grid_from_bus_id(self, bus_id):
         """
         Queries the MV grid ID for a given eTraGo bus
@@ -248,6 +224,30 @@ class EDisGoNetworks:
         Session.remove()
         
         return bus_id
+
+    def plot_line_loading(self, mv_grid_id, time_step):
+        """
+        Plot line loading as color on lines
+    
+        Displays line loading relative to nominal capacity
+        Parameters
+        ----------
+        mv_grid_id : int
+            MV grid ID of the grid to plot
+            
+        timestep : :pandas:`pandas.Timestamp<timestamp>`
+            Time step to plot analysis results for.
+            Time step must be included in s_res
+            
+        """   
+        line_loading(
+                self._edisgo_grids[mv_grid_id].network.pypsa,
+                self._edisgo_grids[mv_grid_id].network.config,
+                self._edisgo_grids[mv_grid_id].network.results.s_res(),
+                time_step)
+            
+    def _init_status(self):
+        self._grid_choice['the_selected_network_id']
     
     def _update_edisgo_configs(self, edisgo_grid):
         
@@ -873,7 +873,6 @@ class EDisGoNetworks:
                         timeseries_reactive_power=specs[
                             'battery_q_series'
                         ])  # None if no pf_post_lopf
-
         else:
             logger.info('No storage integration')
     
@@ -987,13 +986,14 @@ class EDisGoNetworks:
                 edisgo_grid = _EDisGoImported(
                         grid_expansion_costs, 
                         s_res,
+                        storages,
                         imported_pypsa,
                         edisgo_config)
-                
+                 
                 self._edisgo_grids[
                     mv_grid_id
                 ] = edisgo_grid
-
+    
                 logger.info("Imported MV grid {}".format(mv_grid_id))
             except:
                 self._edisgo_grids[
@@ -1113,15 +1113,16 @@ class _EDisGoImported:
             self,
             grid_expansion_costs,
             s_res,
+            storages,
             pypsa,
             edisgo_config):
 
         self.network = _NetworkImported(
             grid_expansion_costs,
             s_res,
+            storages,
             pypsa,
             edisgo_config)
-
 
 class _NetworkImported:
     """
@@ -1132,15 +1133,17 @@ class _NetworkImported:
             self,
             grid_expansion_costs,
             s_res,
+            storages,
             pypsa,
             edisgo_config):
 
         self.results = _ResultsImported(
             grid_expansion_costs,
-            s_res)
+            s_res,
+            storages)
+        
         self.pypsa = pypsa
         self.config = edisgo_config
-
 
 class _ResultsImported:
     """
@@ -1150,13 +1153,12 @@ class _ResultsImported:
     def __init__(
             self,
             grid_expansion_costs,
-            s_res):
+            s_res,
+            storages):
 
         self.grid_expansion_costs = grid_expansion_costs
+        self.storages = storages
         self._s_res = s_res
-
-    def storages(self):
-        return self._storages   
-
+        
     def s_res(self):
         return self._s_res

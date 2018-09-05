@@ -316,7 +316,6 @@ def plot_line_expansion(ego, filename=None, dpi=300, column='overnight_costs'):
         fig.savefig(filename,  dpi=dpi)
         plt.close()
 
-
 def plot_grid_storage_investment(costs_df, filename, display, var=None):
     """
     """
