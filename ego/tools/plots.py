@@ -99,7 +99,6 @@ def ego_colore():
 
     return colors
 
-
 def polt_line_expansion(ego, filename=None, dpi=300, column='overnight_costs'):
     """ Plot line expantion
     """
@@ -172,8 +171,7 @@ def polt_line_expansion(ego, filename=None, dpi=300, column='overnight_costs'):
         fig.savefig(filename,  dpi=dpi)
         plt.close()
 
-
-def grid_storage_investment(ego, filename, display, var=None):
+def grid_storage_investment(costs_df, filename, display, var=None):
     """
     """
     colors = ego_colore()
@@ -181,7 +179,7 @@ def grid_storage_investment(ego, filename, display, var=None):
     opacity = 0.4
 
     if var == 'overnight_cost':
-        tic = ego.total_investment_costs[['component',
+        tic = costs_df[['component',
                                           'overnight_costs', 'voltage_level']]
         tic.set_index(['voltage_level', 'component'], inplace=True)
         ax = tic.unstack().plot(kind='bar',
@@ -196,7 +194,7 @@ def grid_storage_investment(ego, filename, display, var=None):
                      "voltage level and component", y=1.08)
 
     else:
-        tic = ego.total_investment_costs[['component',
+        tic = costs_df[['component',
                                           'capital_cost', 'voltage_level']]
         tic.set_index(['voltage_level', 'component'], inplace=True)
         ax = tic.unstack().plot(kind='bar',
