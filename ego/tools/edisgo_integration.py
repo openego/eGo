@@ -981,8 +981,7 @@ class EDisGoNetworks:
                         storages,
                         imported_pypsa,
                         edisgo_config)
-
-                
+                 
                 self._edisgo_grids[
                     mv_grid_id
                 ] = edisgo_grid
@@ -1106,7 +1105,7 @@ class _EDisGoImported:
             self,
             grid_expansion_costs,
             s_res,
-            storage,
+            storages,
             pypsa,
             edisgo_config):
 
