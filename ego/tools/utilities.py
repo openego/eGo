@@ -154,13 +154,23 @@ def get_scenario_setting(jsonpath='scenario_setting.json'):
         logger.info('Using and importing eTraGo settings')
 
         # special case of SH and model_draft
-        # ToDo: check and maybe remove this part
+        # TODO: check and maybe remove this part
         sh_scen = ["SH Status Quo", "SH NEP 2035", "SH eGo 100"]
         if json_file['eTraGo'].get('scn_name') in sh_scen and json_file['eTraGo'].\
                 get('gridversion') is not None:
             json_file['eTraGo']['gridversion'] = None
 
+        if json_file['eTraGo'].get('extendable') == "['network', 'storages']":
+            json_file['eTraGo'].update({'extendable': ['network', 'storages']})
+
+        if json_file['eTraGo'].get('extendable') == "['network']":
+            json_file['eTraGo'].update({'extendable': ['network']})
+
+        if json_file['eTraGo'].get('extendable') == "['storages']":
+            json_file['eTraGo'].update({'extendable': ['storages']})
+
     # add eGo parameter to eTraGo scn_set
+
     # json_file['eTraGo'].update({'db': json_file['eGo'].get('db')})
     # json_file['eTraGo'].update(
     #    {'gridversion': json_file['eGo'].get('gridversion')})

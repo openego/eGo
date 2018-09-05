@@ -29,7 +29,9 @@ if not 'READTHEDOCS' in os.environ:
                                    add_coordinates, curtailment, gen_dist,
                                    storage_distribution,
                                    plot_voltage, plot_residual_load)
+    from ego.tools.economics import etrago_convert_overnight_cost
     import pyproj as proj
+    from math import sqrt, log10
     from shapely.geometry import Polygon, Point, MultiPolygon
     from geoalchemy2 import *
     import geopandas as gpd
@@ -97,6 +99,77 @@ def ego_colore():
 
     return colors
 
+def polt_line_expansion(ego, filename=None, dpi=300, column='overnight_costs'):
+    """ Plot line expantion
+    """
+
+    network = ego.etrago.network
+    json_file = ego.json_file
+
+    # get values
+    if 'network' in ego.json_file['eTraGo']['extendable']:
+        network.lines['s_nom_expansion'] = network.lines.s_nom_opt.subtract(
+            network.lines.s_nom, axis='index')
+        network.lines['investment_costs'] = network.lines.s_nom_expansion.multiply(
+            network.lines.capital_cost, axis='index')
+        network.lines['overnight_costs'] = etrago_convert_overnight_cost(
+            network.lines['investment_costs'], json_file)
+
+    else:
+        network.lines['s_nom_expansion'] = None
+        network.lines['investment_costs'] = None
+        network.lines['overnight_costs'] = None
+
+    # start plotting
+    figsize = 10, 8
+    fig, ax = plt.subplots(1, 1, figsize=(figsize))
+
+    cmap = plt.cm.jet
+
+    if column == 's_nom_expansion':
+        line_value = network.lines[column]
+        title = "Line expansion in MVA"
+    if column == 'overnight_costs':
+        line_value = network.lines[column]
+        title = "Total Expansion Costs in € per line"
+    if column == 'investment_costs':
+        line_value = network.lines[column]
+        title = "Annualized Expansion Costs in € per line and time step"
+
+    line_widths = (line_value/line_value.max())
+
+    lc = network.plot(ax=ax, line_colors=line_value,
+                      line_cmap=cmap,
+                      title=title,
+                      line_widths=line_widths)
+
+    boundaries = [min(line_value),
+                  max(line_value)]
+
+    v = np.linspace(boundaries[0], boundaries[1], 101)
+
+    # colorbar
+    cb = plt.colorbar(lc[1], boundaries=v,
+                      ticks=v[0:101:10],
+                      ax=ax)
+    cb.set_clim(vmin=boundaries[0], vmax=boundaries[1])
+
+    if column == 's_nom_expansion':
+        cb.set_label('Expansion in MVA per line')
+    if column == 'overnight_costs':
+        cb.set_label('Total Expansion Costs in € per line')
+    if column == 'investment_costs':
+        cb.set_label('Annualized Expansion Costs in € per line')
+
+    ax.autoscale(tight=True)
+
+    if filename is None:
+        plt.show()
+    else:
+        fig = ax.get_figure()
+        fig.set_size_inches(10, 8, forward=True)
+        fig.savefig(filename,  dpi=dpi)
+        plt.close()
 
 def grid_storage_investment(costs_df, filename, display, var=None):
     """
@@ -301,7 +374,7 @@ def prepareGD(session, subst_id=None, version=None):
     return region
 
 
-def plot_edisgo_cluster(ego, filename, region=['DE'], display=False):
+def plot_edisgo_cluster(ego, filename, region=['DE'], display=False, dpi=600):
     """Plot the Clustering of selected Dingo networks
 
     Parameters
@@ -331,8 +404,9 @@ def plot_edisgo_cluster(ego, filename, region=['DE'], display=False):
     # get country Polygon
     cnty = get_country(session, region=region)
     # get grid districts
-    gridcluster = prepareGD(session, cluster_id, version)
-    gridcluster = gridcluster.merge(cluster, on='subst_id')
+    if ego.json_file['eGo']['eDisGo'] is True:
+        gridcluster = prepareGD(session, cluster_id, version)
+        gridcluster = gridcluster.merge(cluster, on='subst_id')
 
     # get all MV grids
     bus_id = "all"
@@ -344,9 +418,12 @@ def plot_edisgo_cluster(ego, filename, region=['DE'], display=False):
 
     cnty.plot(ax=ax, color='white', alpha=0.5)
     mvgrids.plot(ax=ax, color='white', alpha=0.1,  linewidth=0.5)
-    gridcluster.plot(ax=ax, column='no_of_points_per_cluster',
-                     cmap='OrRd', legend=True)
-
+    if ego.json_file['eGo']['eDisGo'] is True:
+        gridcluster.plot(ax=ax, column='no_of_points_per_cluster',
+                         cmap='OrRd', legend=True)
+    # add storage distribution
+    _storage_distribution(ego.etrago.network, scaling=1, filename=None,
+                          ax=ax, fig=fig)
     ax.set_title('Grid district Clustering by Number of represent Grids')
 
     ax.autoscale(tight=True)
@@ -356,7 +433,8 @@ def plot_edisgo_cluster(ego, filename, region=['DE'], display=False):
     else:
         fig = ax.get_figure()
         fig.set_size_inches(10, 8, forward=True)
-        fig.savefig(filename,  dpi=100)
+        fig.savefig(filename,  dpi=dpi)
+        plt.close()
 
 
 def igeoplot(ego, tiles=None, geoloc=None, args=None):
@@ -465,6 +543,7 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
 
     # get content
     lines = network.lines
+    cols = list(network.lines.columns)
 
     # color map lines
     colormap = cm.linear.YlOrRd_09.scale(
@@ -472,59 +551,10 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
 
     # add parameter
     for line in network.lines.index:
-        popup = """<b>Line:</b> {} <br>
-            version: {} <br>
-            angle_diff: {} <br>
-            b: {} <br>
-            b_pu: {} <br>
-            bus0: {} <br>
-            bus1: {} <br>
-            capital_cost: {} <br>
-            g: {} <br>
-            g_pu: {} <br>
-            length: {} <br>
-            num_parallel: {} <br>
-            r: {} <br>
-            r_pu: {} <br>
-            s_nom: {} <br>
-            s_nom_extendable: {} <br>
-            s_nom_max: {} <br>
-            s_nom_min: {} <br>
-            s_nom_opt: {} <br>
-            sub_network: {} <br>
-            terrain_factor: {} <br>
-            type: {} <br>
-            v_ang_max: {} <br>
-            v_ang_min: {} <br>
-            v_nom: {} <br>
-            x: {} <br>
-            x_pu: {} <br>
-            """.format(line, version,
-                       lines.angle_diff[line],
-                       lines.b[line],
-                       lines.b_pu[line],
-                       lines.bus0[line],
-                       lines.bus1[line],
-                       lines.capital_cost[line],
-                       lines.g[line],
-                       lines.g_pu[line],
-                       lines.length[line],
-                       lines.num_parallel[line],
-                       lines.r[line],
-                       lines.r_pu[line],
-                       lines.s_nom[line],
-                       lines.s_nom_extendable[line],
-                       lines.s_nom_max[line],
-                       lines.s_nom_min[line],
-                       lines.s_nom_opt[line],
-                       lines.sub_network[line],
-                       lines.terrain_factor[line],
-                       lines.type[line],
-                       lines.v_ang_max[line],
-                       lines.v_ang_min[line],
-                       lines.v_nom[line],
-                       lines.x[line],
-                       lines.x_pu[line])
+        popup = """ <b>Line:</b> {} <br>
+                    version: {} <br>""".format(line, version)
+        for col in cols:
+            popup += """ {}: {} <br>""".format(col, lines[col][line])
 
         # change colore function
         l_color = colormapper_lines(
@@ -589,25 +619,24 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
                         popup=popup, color=convert_to_hex(lr_color)).add_to(line_results_group)
 
     # add grid districs
+    if ego.json_file['eGo']['eDisGo'] is True:
 
-    grid_group = folium.FeatureGroup(name='Grid district')
-    # list(network.buses.index) # change to selected grids
+        grid_group = folium.FeatureGroup(name='Grid district')
+        # list(network.buses.index) # change to selected grids
 
-    #
-    subst_id = list(ego.edisgo.grid_choice.the_selected_network_id)
-    district = prepareGD(session, subst_id, version)
-    print(district)
-    # todo does not work with k-mean Cluster
-    # Add for loop
-    # crs = {'init': 'epsg:4326'}
+        subst_id = list(ego.edisgo.grid_choice.the_selected_network_id)
+        district = prepareGD(session, subst_id, version)
 
-    # for name, row in district.iterrows():
-    pop = """<b>Grid district:</b> {} <br>
+        # todo does not work with k-mean Cluster
+        # Add for loop
+        # crs = {'init': 'epsg:4326'}
+
+        # for name, row in district.iterrows():
+        pop = """<b>Grid district:</b> {} <br>
             """.format('12121212')
+        # date = gpd.GeoDataFrame(row, columns=['subst_id', 'geometry'], crs=crs)
 
-    # date = gpd.GeoDataFrame(row, columns=['subst_id', 'geometry'], crs=crs)
-
-    folium.GeoJson(district).add_to(grid_group).add_child(folium.Popup(pop))
+        folium.GeoJson(district).add_to(grid_group).add_child(folium.Popup(pop))
 
     # add layers and others
     colormap.caption = 'Colormap of Lines s_nom'
@@ -618,7 +647,8 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
     # Add layer groups
     bus_group.add_to(mp)
     line_group.add_to(mp)
-    grid_group.add_to(mp)
+    if ego.json_file['eGo']['eDisGo'] is True:
+        grid_group.add_to(mp)
     line_results_group.add_to(mp)
     folium.LayerControl().add_to(mp)
 
@@ -660,3 +690,52 @@ def colormapper_lines(colormap, lines, line, column="s_nom"):
     else:
         l_color = (0., 0., 0., 1.)
     return l_color
+
+
+def _storage_distribution(network, ax, fig, scaling=1, filename=None):
+    """
+    Plot storage distribution as circles on grid nodes
+    Displays storage size and distribution in network.
+    Parameters
+    ----------
+    network : PyPSA network container
+        Holds topology of grid including results from powerflow analysis
+    filename : str
+        Specify filename
+        If not given, figure will be show directly
+    """
+
+    stores = network.storage_units
+    storage_distribution = network.storage_units.p_nom_opt[stores.index]\
+        .groupby(network.storage_units.bus)\
+        .sum().reindex(network.buses.index, fill_value=0.)
+
+    msd_max = storage_distribution.max()
+    msd_median = storage_distribution[storage_distribution != 0].median()
+    msd_min = storage_distribution[storage_distribution > 1].min()
+
+    if msd_max != 0:
+        LabelVal = int(log10(msd_max))
+    else:
+        LabelVal = 0
+    if LabelVal < 0:
+        LabelUnit = 'kW'
+        msd_max, msd_median, msd_min = msd_max * \
+            1000, msd_median * 1000, msd_min * 1000
+        storage_distribution = storage_distribution * 1000
+    elif LabelVal < 3:
+        LabelUnit = 'MW'
+    else:
+        LabelUnit = 'GW'
+        msd_max, msd_median, msd_min = msd_max / \
+            1000, msd_median / 1000, msd_min / 1000
+        storage_distribution = storage_distribution / 1000
+
+    if sum(storage_distribution) == 0:
+        network.plot(bus_sizes=0, ax=ax)
+    else:
+        network.plot(
+            bus_sizes=storage_distribution * scaling,
+            ax=ax,
+            line_widths=0.3
+        )
