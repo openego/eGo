@@ -64,9 +64,10 @@ if not 'READTHEDOCS' in os.environ:
     from importlib import import_module
     import pypsa
     import re
-    from tools.plots import (grid_storage_investment,
-                             power_price_plot, plot_storage_use, igeoplot,
-                             plot_edisgo_cluster)
+    from ego.tools.plots import (grid_storage_investment,
+                                 power_price_plot, plot_storage_use, igeoplot,
+                                 plot_edisgo_cluster,
+                                 polt_line_expansion)
 
 __copyright__ = ("Europa-Universität Flensburg, "
                  "Centre for Sustainable Energy Systems")
@@ -97,7 +98,7 @@ class egoBasic(object):
     def __init__(self, *args, **kwargs):
         """
         """
-                
+
         logger.info("Using scenario setting: {}".format(self.jsonpath))
 
         self.json_file = None
@@ -199,8 +200,6 @@ class eTraGoResults(egoBasic):
 
                 # get pathway
                 pathway = self.json_file['eGo'].get('csv_import_eTraGo')
-
-                # TODO clean network.csv from folder
 
                 try:
                     # create Network from csv
@@ -433,13 +432,12 @@ class eGo(eDisGoResults):
 
         # add total results here
         self._total_investment_costs = None
-        self._total_operation_costs = None  # TODO
+        self._total_operation_costs = None
         self._storage_costs = None
         self._ehv_grid_costs = None
         self._mv_grid_costs = None
 
-    @property
-    def get_investment_cost(self):
+    def _calculate_investment_cost(self):
         """ Get total investment costs of all voltage level for storages
         and grid expansion
         """
@@ -474,7 +472,6 @@ class eGo(eDisGoResults):
                 append(_grid_mv_lv, ignore_index=True)
 
         # add overnight costs
-
         self._total_investment_costs = self._total_inv_cost
         self._total_investment_costs[
             'overnight_costs'] = etrago_convert_overnight_cost(
@@ -494,7 +491,7 @@ class eGo(eDisGoResults):
         :pandas:`pandas.DataFrame<dataframe>`
 
         """
-        self.get_investment_cost
+        self._calculate_investment_cost()
 
         return self._total_investment_costs
 
@@ -508,6 +505,9 @@ class eGo(eDisGoResults):
         :pandas:`pandas.DataFrame<dataframe>`
 
         """
+        self._total_operation_costs = self.etrago.operating_costs
+        # append eDisGo
+
         return self._total_operation_costs
 
     def plot_total_investment_costs(self, filename=None,
@@ -515,7 +515,7 @@ class eGo(eDisGoResults):
         """ Plot total investment costs
         """
         # initiate total_investment_costs
-        self.get_investment_cost
+        self._calculate_investment_cost()
 
         if filename is None:
             filename = "results/plot_total_investment_costs.pdf"
@@ -549,7 +549,14 @@ class eGo(eDisGoResults):
             filename = "results/plot_edisgo_cluster.pdf"
             display = True
 
-        return plot_edisgo_cluster(self, filename=filename, display=display, **kwargs)
+        return plot_edisgo_cluster(self, filename=filename, display=display,
+                                   **kwargs)
+
+    def polt_line_expansion(self, **kwargs):
+        """Plot line expantion per line
+        """
+
+        return polt_line_expansion(self, **kwargs)
 
     @property
     def iplot(self):
