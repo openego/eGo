@@ -89,11 +89,9 @@ class EDisGoNetworks:
         # eDisGo specific naming
         self._edisgo_scenario_translation()
 
-        # Program information
-        self._run_finished = False
-
         # eDisGo Result grids
         self._edisgo_grids = {}
+
 
         if self._csv_import:
             self._laod_edisgo_results()
@@ -167,6 +165,9 @@ class EDisGoNetworks:
 
         """
         return self._grid_investment_costs
+    
+    def _init_status(self):
+        self._grid_choice['the_selected_network_id']
     
     def _update_edisgo_configs(self, edisgo_grid):
         
@@ -592,8 +593,6 @@ class EDisGoNetworks:
                         'MV grid {} failed: \n'.format(mv_grid_id)
                     )
                 count += 1
-
-        self._run_finished = True
 
     def _run_edisgo(
             self,
