@@ -35,10 +35,10 @@ if not 'READTHEDOCS' in os.environ:
     from egoio.tools import db
     from edisgo.grid.network import Results, TimeSeriesControl
     from edisgo.tools.edisgo_run import (
-        run_edisgo_basic,
         run_edisgo_pool_flexible
     )
     from edisgo.grid import tools
+    from edisgo.tools.plots import line_loading
     from edisgo.grid.network import EDisGo
     from ego.tools.specs import (
         get_etragospecs_direct
@@ -51,6 +51,7 @@ if not 'READTHEDOCS' in os.environ:
     
     import pypsa
 
+    import csv
     import pandas as pd
     import json
     from sqlalchemy.orm import sessionmaker
@@ -219,6 +220,27 @@ class EDisGoNetworks:
         
         return bus_id
 
+    def plot_line_loading(self, mv_grid_id, time_step):
+        """
+        Plot line loading as color on lines
+    
+        Displays line loading relative to nominal capacity
+        Parameters
+        ----------
+        mv_grid_id : int
+            MV grid ID of the grid to plot
+            
+        timestep : :pandas:`pandas.Timestamp<timestamp>`
+            Time step to plot analysis results for.
+            Time step must be included in s_res
+            
+        """   
+        line_loading(
+                self._edisgo_grids[mv_grid_id].network.pypsa,
+                self._edisgo_grids[mv_grid_id].network.config,
+                self._edisgo_grids[mv_grid_id].network.results.s_res(),
+                time_step)
+            
     def _init_status(self):
         self._grid_choice['the_selected_network_id']
     
@@ -903,6 +925,31 @@ class EDisGoNetworks:
                 grid_expansion_costs = pd.read_csv(
                     file_path,
                     index_col=0)
+                
+                # powerflow results
+                pf_path = os.path.join(
+                    self._csv_import,
+                    str(mv_grid_id),
+                    'powerflow_results',
+                    'apparent_powers.csv')
+                
+                s_res = pd.read_csv(
+                    pf_path,
+                    index_col=0,
+                    parse_dates=True)
+                              
+                # Configs
+                config_path = os.path.join(
+                    self._csv_import,
+                    str(mv_grid_id),
+                    'configs.csv')
+                
+                edisgo_config = {}
+                with open(config_path, 'r') as f:
+                    reader = csv.reader(f)
+                    for row in reader:
+                        a = iter(row[1:])
+                        edisgo_config[row[0]] = dict(zip(a, a))
                
                 # PyPSA network
                 pypsa_path = os.path.join(
@@ -930,8 +977,11 @@ class EDisGoNetworks:
                     
                 edisgo_grid = _EDisGoImported(
                         grid_expansion_costs, 
+                        s_res,
+                        storages,
                         imported_pypsa,
-                        storages)
+                        edisgo_config)
+
                 
                 self._edisgo_grids[
                     mv_grid_id
@@ -1055,14 +1105,17 @@ class _EDisGoImported:
     def __init__(
             self,
             grid_expansion_costs,
+            s_res,
+            storage,
             pypsa,
-            storages):
+            edisgo_config):
 
         self.network = _NetworkImported(
             grid_expansion_costs,
+            s_res,
+            storages,
             pypsa,
-            storages)
-
+            edisgo_config)
 
 class _NetworkImported:
     """
@@ -1072,14 +1125,18 @@ class _NetworkImported:
     def __init__(
             self,
             grid_expansion_costs,
+            s_res,
+            storages,
             pypsa,
-            storages):
+            edisgo_config):
 
         self.results = _ResultsImported(
             grid_expansion_costs,
+            s_res,
             storages)
+        
         self.pypsa = pypsa
-
+        self.config = edisgo_config
 
 class _ResultsImported:
     """
@@ -1089,9 +1146,13 @@ class _ResultsImported:
     def __init__(
             self,
             grid_expansion_costs,
+            s_res,
             storages):
 
         self.grid_expansion_costs = grid_expansion_costs
         self.storages = storages
-    
+        self._s_res = s_res
         
+    def s_res(self):
+        return self._s_res
+
