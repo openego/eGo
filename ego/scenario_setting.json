@@ -3,7 +3,7 @@
     "eTraGo": true,
     "eDisGo": true,
     "result_id": null,
-    "csv_import_eTraGo": "results/etrago_k10_sto_net_ego100_t300",
+    "csv_import_eTraGo": "results/etrago_k100_sto_ego100_t5_",
     "csv_import_eDisGo": false
   },
   "eTraGo": {
