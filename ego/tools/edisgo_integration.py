@@ -1093,8 +1093,6 @@ class _ResultsImported:
             storages):
 
         self.grid_expansion_costs = grid_expansion_costs
-        self._storages = storages
+        self.storages = storages
     
-    def storages(self):
-        return self._storages
         

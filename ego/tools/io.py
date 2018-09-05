@@ -597,7 +597,7 @@ class eGo(eDisGoResults):
                         'the_selected_network_id'].values[0]
                 
             integration_df = self.edisgo.network[
-                    representative_grid].network.results.storages()
+                    representative_grid].network.results.storages
                        
             integrated_power = integration_df['nominal_power'].sum() / 1000
             if integrated_power > p_nom_opt:
