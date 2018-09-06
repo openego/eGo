@@ -817,9 +817,9 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
                                             'cluster_id'
                                             'colore'])
 
-        style_function = (lambda feature: dict(color=color,
-                                               weight=0.5, opacity=0.6
-                                               ))
+        style_function = (lambda x: {
+                          'fillColor':  x['properties']['color'],
+                          'weight': 0.5, 'color': 'black'})
 
         for idx in cluster.index:
             pop2 = """<b>Represented Grid:</b> {} <br>
@@ -832,7 +832,7 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
 
             repre_grids = repre_grids.append(repre_grid, ignore_index=True)
             # prepare cluster colore
-        vals = list(repre_grids.cluster_id)
+        vals = list(repre_grids.subst_id)
         normal = mpl.colors.Normalize(vals)
         cellColours = plt.cm.hot(vals)  # change here colormap
         for i in repre_grids.index:
@@ -843,9 +843,10 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
             repre_grids, geometry='geometry', crs=crs)
 
         folium.GeoJson(repre_grids,
-                       style_function
+                       style_function=style_function
                        ).add_to(repgrid_group).add_child(
             folium.Popup(pop2))
+        print(repre_grids.groupby('color').count())
 
     # Create storage expantion plot
     store_group = folium.FeatureGroup(name='Storage expantion')
