@@ -246,6 +246,12 @@ class EDisGoNetworks:
             
     def _init_status(self):
         
+        self._status_dir = 'status'
+        if not os.path.exists(self._status_dir):
+            os.makedirs(self._status_dir)
+            
+        self._status_file = 'eGo_' +  strftime("%Y-%m-%d_%H%M", localtime())    
+               
         status = self._grid_choice.copy()
         status = status.set_index('the_selected_network_id')
         status.index.names = ['MV grid']
@@ -256,24 +262,41 @@ class EDisGoNetworks:
                 status['no_of_points_per_cluster']
                 / tot_reprs, 2)
         
-        status['start_time'] = None
-        status['end_time'] = None
+        status['start_time'] = 'Not started yet'
+        status['end_time'] = 'Not finished yet'
         
         status.drop(
                 ['no_of_points_per_cluster', 'represented_grids'], 
                 axis=1, 
                 inplace=True)
         
-        self._status = status
+        self._status_path = os.path.join(
+                self._status_dir,
+                self._status_file + '.csv')
+        
+        status.to_csv(self._status_path)
         
     def _status_update(self, mv_grid_id, time):
         
+        status = pd.read_csv(
+            self._status_path,
+            index_col=0)
+        
+        status['start_time'] = status['start_time'].astype(str)
+        status['end_time'] = status['end_time'].astype(str)
+        
         now = strftime("%Y-%m-%d_%H:%M", localtime())
         if time == 'start':
-            self._status.at[mv_grid_id, 'start_time'] = now
+            status.at[mv_grid_id, 'start_time'] = now
         elif time == 'end':
-            self._status.at[mv_grid_id, 'end_time'] = now
-        logger.info(self._status.to_string())
+            status.at[mv_grid_id, 'end_time'] = now
+            
+        logger.info("\n\neDisGo Status: \n\n"
+                    + status.to_string()
+                    + "\n\n")
+        
+        status.to_csv(self._status_path)
+        
         
     def _update_edisgo_configs(self, edisgo_grid):
         
