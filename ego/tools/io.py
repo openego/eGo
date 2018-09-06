@@ -37,6 +37,7 @@ if not 'READTHEDOCS' in os.environ:
     from sqlalchemy import MetaData, create_engine,  and_, func
     from sqlalchemy.orm import sessionmaker
     from sqlalchemy.ext.automap import automap_base
+    import oedialect
     from geoalchemy2 import *
 
     from egoio.tools import db

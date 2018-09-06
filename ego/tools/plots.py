@@ -38,6 +38,7 @@ if not 'READTHEDOCS' in os.environ:
     import folium
     from folium import plugins
     import branca.colormap as cm
+    import oedialect
     import webbrowser
     from egoio.db_tables.model_draft import (
         EgoGridMvGriddistrict, RenpassGisParameterRegion)
@@ -637,6 +638,9 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
 
     network = ego.etrago.network
     session = ego.session
+    # get scenario name from args
+    scn_name = ego.json_file['eTraGo']['scn_name']
+    version = ego.json_file['eTraGo']['gridversion']
 
     if geoloc is None:
         geoloc = [network.buses.y.mean(), network.buses.x.mean()]
@@ -658,10 +662,6 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
     # Legend name
     bus_group = folium.FeatureGroup(name='Buses full informations')
     # add buses
-
-    # get scenario name from args
-    scn_name = ego.json_file['eTraGo']['scn_name']
-    version = ego.json_file['eTraGo']['gridversion']
 
     for name, row in network.buses.iterrows():
         # get information of buses
@@ -810,6 +810,15 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
         cluster = cluster.rename(
             columns={"the_selected_network_id": "subst_id"})
 
+        repre_grids = pd.DataFrame(columns=['subst_id',
+                                            'geometry',
+                                            'cluster_id'])
+        style_function = (lambda x: {'fillColor': 'white' if
+                                     x['properties']['cluster_id'] < 999
+                                     else 'blue' if
+                                     1000 < x['properties']['cluster_id'] > 5000
+                                     else 'red', 'weight': 0.5, 'color': 'black'})
+
         for idx in cluster.index:
             pop2 = """<b>Represented Grid:</b> {} <br>
                 """.format(cluster.subst_id[idx])
@@ -817,9 +826,17 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
             cluster_id = list(cluster.represented_grids[idx])
             # represented_grids
             repre_grid = prepareGD(session, cluster_id, version)
-            folium.GeoJson(repre_grid).add_to(
+            repre_grid['cluster_id'] = cluster.subst_id[idx]
+
+            repre_grids = repre_grids.append(repre_grid, ignore_index=True)
+
+            repre_grids = gpd.GeoDataFrame(repre_grids, geometry='geometry')
+            folium.GeoJson(repre_grid,
+                           style_function
+                           ).add_to(
                 repgrid_group).add_child(folium.Popup(pop2))
 
+        print(repre_grids)
     # Create storage expantion plot
     store_group = folium.FeatureGroup(name='Storage expantion')
 
