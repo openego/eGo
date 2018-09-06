@@ -44,6 +44,7 @@ if not 'READTHEDOCS' in os.environ:
         EgoGridMvGriddistrict, RenpassGisParameterRegion)
     from egoio.db_tables.grid import EgoDpMvGriddistrict
     import matplotlib.pyplot as plt
+    import matplotlib as mpl
 
 import logging
 logger = logging.getLogger('ego')
@@ -796,7 +797,7 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
 
         # todo does not work with k-mean Cluster
         # Add for loop
-        # crs = {'init': 'epsg:4326'}
+        crs = {'init': 'epsg:4326'}
 
         # for name, row in district.iterrows():
         pop = """<b>Grid district:</b> {} <br>
@@ -805,6 +806,7 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
 
         folium.GeoJson(district).add_to(grid_group).add_child(folium.Popup(pop))
 
+        # Add cluster grids
         repgrid_group = folium.FeatureGroup(name='represented Grids by Cluster')
         cluster = ego.edisgo.grid_choice
         cluster = cluster.rename(
@@ -812,12 +814,16 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
 
         repre_grids = pd.DataFrame(columns=['subst_id',
                                             'geometry',
-                                            'cluster_id'])
-        style_function = (lambda x: {'fillColor': 'white' if
-                                     x['properties']['cluster_id'] < 999
-                                     else 'blue' if
-                                     1000 < x['properties']['cluster_id'] > 5000
-                                     else 'red', 'weight': 0.5, 'color': 'black'})
+                                            'cluster_id'
+                                            'colore'])
+
+        style_function = (lambda feature: dict(color=color,
+                                               weight=0.5, opacity=0.6,
+                                               color='black'))
+        # prepare cluster colore
+        vals = list(cluster.subst_id)
+        normal = mpl.colors.Normalize(vals)
+        cellColours = plt.cm.hot(vals)  # change here colormap
 
         for idx in cluster.index:
             pop2 = """<b>Represented Grid:</b> {} <br>
@@ -830,13 +836,17 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
 
             repre_grids = repre_grids.append(repre_grid, ignore_index=True)
 
-            repre_grids = gpd.GeoDataFrame(repre_grids, geometry='geometry')
-            folium.GeoJson(repre_grid,
-                           style_function
-                           ).add_to(
-                repgrid_group).add_child(folium.Popup(pop2))
+            for i in repre_grids.index:
+                repre_grids['color'] = convert_to_hex(cellColours[i])
 
-        print(repre_grids)
+            repre_grids = gpd.GeoDataFrame(
+                repre_grids, geometry='geometry', crs=crs)
+
+            folium.GeoJson(repre_grids,
+                           style_function
+                           ).add_to(repgrid_group).add_child(
+                folium.Popup(pop2))
+
     # Create storage expantion plot
     store_group = folium.FeatureGroup(name='Storage expantion')
 
