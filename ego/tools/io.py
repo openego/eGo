@@ -59,7 +59,7 @@ if not 'READTHEDOCS' in os.environ:
                                    curtailment, gen_dist, storage_distribution,
                                    plot_voltage, plot_residual_load,
                                    plot_line_loading_diff, full_load_hours,
-                                   extension_overlay_network)
+                                   nodal_gen_dispatch)
     from etrago.appl import etrago
     from importlib import import_module
     import pypsa
@@ -295,8 +295,8 @@ class eTraGoResults(egoBasic):
         self.etrago.plot_line_loading_diff = self._line_loading_diff
         self.etrago.plot_plot_residual_load = self._residual_load
         self.etrago.plot_voltage = self._voltage
-        self.etrago.plot_extension_overlay_network = \
-            self._extension_overlay_network
+        self.etrago.plot_nodal_gen_dispatch = \
+            self._nodal_gen_dispatch
         self.etrago.plot_full_load_hours = self._full_load_hours
 
     if not 'READTHEDOCS' in os.environ:
@@ -359,13 +359,13 @@ class eTraGoResults(egoBasic):
             return plot_line_loading_diff(networkA=self.etrago.network,
                                           networkB=networkB, **kwargs)
 
-        def _extension_overlay_network(self, **kwargs):
+        def _nodal_gen_dispatch(self, **kwargs):
             """
             Integrate function from eTraGo.
             For more information see:
             """
-            return extension_overlay_network(network=self.etrago.network,
-                                             **kwargs)
+            return nodal_gen_dispatch(network=self.etrago.network,
+                                      **kwargs)
 
         def _full_load_hours(self, **kwargs):
             """
