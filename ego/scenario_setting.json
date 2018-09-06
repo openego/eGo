@@ -19,11 +19,12 @@
     "scn_extension": null,
     "scn_decommissioning": null,
     "lpfile":  false,
-    "results":  "results/etrago_result",
+    "results":  "results/etrago_k100_sto_ego100_t5_",
     "export": false,
     "extendable":  ["network","storages"],
     "generator_noise": 789456,
     "minimize_loading": false,
+    "ramp_limits": false,
     "network_clustering_kmeans": 10,
     "load_cluster": false,
     "network_clustering_ehv": false,
@@ -34,7 +35,7 @@
     "line_grouping": false,
     "branch_capacity_factor": 0.7,
     "load_shedding": false,
-    "foreign_lines" : "AC",
+    "foreign_lines" :{"carrier": "AC", "capacity": "osmTGmod"},
     "comments": ""
   },
   "eDisGo": {
