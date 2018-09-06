@@ -34,9 +34,9 @@ if not 'READTHEDOCS' in os.environ:
     from egoio.db_tables import model_draft, grid
     from egoio.tools import db
     from edisgo.grid.network import Results, TimeSeriesControl
-    from edisgo.tools.edisgo_run import (
-        run_edisgo_pool_flexible
-    )
+#    from edisgo.tools.edisgo_run import (
+#        run_edisgo_pool_flexible
+#    )
     from edisgo.grid import tools
     from edisgo.tools.plots import line_loading
     from edisgo.grid.network import EDisGo
@@ -258,9 +258,7 @@ class EDisGoNetworks:
         
         tot_reprs = self._grid_choice['no_of_points_per_cluster'].sum()
         
-        status['cluster_perc'] = round(
-                status['no_of_points_per_cluster']
-                / tot_reprs, 2)
+        status['cluster_perc'] = status['no_of_points_per_cluster'] / tot_reprs
         
         status['start_time'] = 'Not started yet'
         status['end_time'] = 'Not finished yet'
@@ -276,7 +274,7 @@ class EDisGoNetworks:
         
         status.to_csv(self._status_path)
         
-    def _status_update(self, mv_grid_id, time):
+    def _status_update(self, mv_grid_id, time, message=None):
         
         status = pd.read_csv(
             self._status_path,
@@ -285,7 +283,11 @@ class EDisGoNetworks:
         status['start_time'] = status['start_time'].astype(str)
         status['end_time'] = status['end_time'].astype(str)
         
-        now = strftime("%Y-%m-%d_%H:%M", localtime())
+        if message:
+            now = message
+        else:
+            now = strftime("%Y-%m-%d_%H:%M", localtime())
+            
         if time == 'start':
             status.at[mv_grid_id, 'start_time'] = now
         elif time == 'end':
@@ -420,6 +422,7 @@ class EDisGoNetworks:
         self._max_cos_phi_renewable = self._edisgo_args[
             'max_cos_phi_renewable']
         self._results = self._edisgo_args['results']
+        self._max_calc_time = self._edisgo_args['max_calc_time']
 
         ## Some basic checks
         if (self._storage_distribution is True) & (self._ext_storage is False):
@@ -671,7 +674,12 @@ class EDisGoNetworks:
                 'Calculating all available {} MV grids'.format(no_grids)
             )
 
+        choice_df = choice_df.sort_values(
+                'no_of_points_per_cluster', 
+                ascending=False)
+        
         self._grid_choice = choice_df
+        
 
     def _run_edisgo_pool(self):
         """
@@ -679,7 +687,7 @@ class EDisGoNetworks:
 
         """
         parallelization = self._parallelization
-
+        
         if parallelization is True:
             logger.info('Run eDisGo parallel')
             mv_grids = self._grid_choice['the_selected_network_id'].tolist()
@@ -691,12 +699,18 @@ class EDisGoNetworks:
                         self._max_workers
                     ))
 
-            self._edisgo_grids = run_edisgo_pool_flexible(
+            self._edisgo_grids = set(mv_grids)
+            self._edisgo_grids = parallelizer(
                 mv_grids,
                 lambda *xs: xs[1]._run_edisgo(xs[0]),
                 (self,),
+                self._max_calc_time,
                 workers=no_cpu)
 
+            for g in mv_grids:
+                if not g in self._edisgo_grids:
+                    self._edisgo_grids[g] = 'Timeout'
+                    
         else:
             logger.info('Run eDisGo sequencial')
             no_grids = len(self._grid_choice)
@@ -1214,3 +1228,88 @@ class _ResultsImported:
     def s_res(self):
         return self._s_res
 
+
+def parallelizer(
+        ding0_id_list, 
+        func, 
+        func_arguments,
+        max_calc_time,
+        workers=mp2.cpu_count(), 
+        worker_lifetime=1):
+    """
+    Use python multiprocessing toolbox for parallelization
+
+    Several grids are analyzed in parallel based on your custom function that
+    defines the specific application of eDisGo.
+
+    Parameters
+    ----------
+    ding0_id_list : list of int
+        List of ding0 grid data IDs (also known as HV/MV substation IDs)
+    func : any function
+        Your custom function that shall be parallelized
+    func_arguments : tuple
+        Arguments to custom function ``func``
+    workers: int
+        Number of parallel process
+    worker_lifetime : int
+        Bunch of grids sequentially analyzed by a worker
+
+    Notes
+    -----
+    Please note, the following requirements for the custom function which is to
+    be executed in parallel
+
+    #. It must return an instance of the type :class:`~.edisgo.EDisGo`.
+    #. The first positional argument is the MV grid district id (as int). It is
+       prepended to the tuple of arguments ``func_arguments``
+
+
+    Returns
+    -------
+    containers : dict of :class:`~.edisgo.EDisGo`
+        Dict of EDisGo instances keyed by its ID
+    """   
+    def collect_pool_results(result):
+        """
+        Store results from parallelized calculation in structured manner
+
+        Parameters
+        ----------
+        result: :class:`~.edisgo.EDisGo`
+        """
+        results.update({result.network.id: result})
+        
+    def error_callback(key):
+        
+#        message='Failed'
+#        func_arguments[0]._status_update(key, 'end', message)
+        return lambda o: results.update({key: o})
+      
+    results = {}
+        
+    max_calc_time_seconds = max_calc_time * 3600
+    
+    pool = mp2.Pool(workers,
+                   maxtasksperchild=worker_lifetime)
+   
+    for ding0_id in ding0_id_list:
+        logger.info("\n\nStarting with MV grid: {} \n\n".format(ding0_id))
+        edisgo_args = (ding0_id, *func_arguments)
+
+        res = pool.apply_async(func=func,
+                         args=edisgo_args,
+                         callback=collect_pool_results,
+                         error_callback=error_callback(ding0_id))
+
+    try:
+        res.get(timeout=max_calc_time_seconds)
+        logger.info("All MV grids were calculated without Timeout")
+    except:
+        logger.warning("MV grid simulation was stopped by Timeout")
+        pool.terminate()
+ 
+    pool.close()
+    pool.join()
+
+    return results

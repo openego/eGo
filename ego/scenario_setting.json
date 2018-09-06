@@ -47,6 +47,7 @@
     "manual_grids": [],
     "no_grids": 100,
     "parallelization":false,
+    "max_calc_time": 0.04,
     "max_workers":8,
     "initial_reinforcement":true,
     "apply_curtailment":true,
