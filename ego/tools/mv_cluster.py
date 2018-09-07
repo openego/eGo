@@ -39,10 +39,6 @@ if not 'READTHEDOCS' in os.environ:
     from sklearn.cluster import KMeans
     import numpy as np
     
-    #import matplotlib.pyplot as plt
-    #from mpl_toolkits.mplot3d import Axes3D
-    #import matplotlib.cm as cm
-
 logger = logging.getLogger(__name__)
 
 def analyze_attributes(ding0_files):
@@ -64,19 +60,15 @@ def analyze_attributes(ding0_files):
     fnlvmv = []  # the Farthest Node in both networks (lv and mv)
     MV_id_list = []  # Distrct id list
 
-    for district_number in list(range(1, 4000)):  # 3608 MVGDs
+    for district_number in list(range(1, 4000)):
 
-        # To bypass not found error
         try:
             pickle_name = 'ding0_grids__{}.pkl'.format(
-                district_number)  # To open the pickle files
-            # assign the data to a variable
+                district_number)  
             nd = pickle.load(open(os.path.join(base_path, pickle_name), 'rb'))
             print('District no.', district_number, 'found!')
         except:
-            # append not found network files id to a list
             not_found.append(district_number)
-            # print('District no.', district_number, 'NOT found') # print not found ids
             continue
 
         MV_id = 0
@@ -93,15 +85,13 @@ def analyze_attributes(ding0_files):
                 mv_cum_wind_MV += geno.capacity
 
         lvg = 0
-#        lvg_type = []
-#        counter_lv = [{}]
         mv_cum_solar_LV = 0
         mv_cum_wind_LV = 0
 
         # cumulative capacity of solar and wind in LV
         for lvgs in nd._mv_grid_districts[0].lv_load_areas():
             for lvgs1 in lvgs.lv_grid_districts():
-                lvg += len(list(lvgs1.lv_grid.generators()))  # No. of DGs in lv
+                lvg += len(list(lvgs1.lv_grid.generators()))
                 for deno in lvgs1.lv_grid.generators():
                     if deno.type == 'solar':
                         mv_cum_solar_LV += deno.capacity
@@ -133,41 +123,48 @@ def analyze_attributes(ding0_files):
         # Iteration through nodes
         for node2 in nd._mv_grid_districts[0].mv_grid._graph.nodes():
             # select only LV station nodes
-            if isinstance(node2, LVStationDing0) and not node2.lv_load_area.is_aggregated:
+            if isinstance(
+                    node2, 
+                    LVStationDing0) and not node2.lv_load_area.is_aggregated:
 
                 length_from_MV_to_LV_station = 0
                 # Distance from MV substation to LV station node
-                length_from_MV_to_LV_station = nd._mv_grid_districts[0].mv_grid.graph_path_length(
+                length_from_MV_to_LV_station = nd._mv_grid_districts[
+                        0
+                        ].mv_grid.graph_path_length(
                     node_source=node2, node_target=root_mv) / 1000
-                # 2nd from LV station node to the longest distance node
 
                 # Iteration through lv load areas
                 for lvgs in nd._mv_grid_districts[0].lv_load_areas():
-                    for lvgs1 in lvgs.lv_grid_districts():  # Iteration through lv grid districts
-                        # In order to measure the distance between the LV station and the nodes that belong to it and not from other stations
+                    for lvgs1 in lvgs.lv_grid_districts():  
                         if lvgs1.lv_grid._station == node2:
                             root_lv = node2  # setting a new root
-                            for node1 in lvgs1.lv_grid._graph.nodes():  # iteration of all nodes in LV grid
+                            for node1 in lvgs1.lv_grid._graph.nodes():  
 
                                 length_from_LV_staion_to_LV_node = 0
+                                
                                 # Distance from LV station to LV nodes
-                                length_from_LV_staion_to_LV_node = lvgs1.lv_grid.graph_path_length(
-                                    node_source=node1, node_target=root_lv) / 1000
+                                length_from_LV_staion_to_LV_node = (
+                                        lvgs1.lv_grid.graph_path_length(
+                                    node_source=node1, 
+                                    node_target=root_lv) / 1000)
 
                                 length_from_LV_node_to_MV_substation = 0
+                                
                                 # total distances in both grids MV and LV
-                                length_from_LV_node_to_MV_substation = length_from_MV_to_LV_station + \
-                                    length_from_LV_staion_to_LV_node
+                                length_from_LV_node_to_MV_substation = (
+                                        length_from_MV_to_LV_station 
+                                        + length_from_LV_staion_to_LV_node)
 
                                 # append the total distance to a list
                                 tot_dist.append(
                                     length_from_LV_node_to_MV_substation)
-                            if any(tot_dist):  # to make sure the list is not empty
-                                # to pick up the max length within this grid
+                            if any(tot_dist):  
                                 max_length = max(tot_dist)
+                                
                                 # append max lengths of all grids to a list
                                 max_length_list.append(max_length)
-                    if any(max_length_list):  # to make sure the list is not empty
+                    if any(max_length_list):  
                         # to pick up max of max
                         max_of_max = max(max_length_list)
 
@@ -190,29 +187,6 @@ def analyze_attributes(ding0_files):
     df.to_csv(base_path + '/' + 'attributes.csv', sep=',')
     df_are_not_found.to_csv(base_path + '/' + 'Not_found_grids.csv', sep=',')
 
-    # 3d scatter plotting
-    #from mpl_toolkits.mplot3d import Axes3D
-    #import matplotlib.pyplot as plt
-    #
-    #fig = plt.figure()
-    #ax = fig.add_subplot(111, projection='3d')
-    #
-    #X = tccs
-    #Y = tccw
-    #Z = fnlvmv
-    #
-    #ax.scatter(X, Y, Z)
-    #
-    #ax.set_xlim(0, max(tccs)/1000)
-    #ax.set_ylim(0, max(tccw)/1000)
-    #ax.set_zlim(0, max(fnlvmv))
-    #
-    #ax.set_xlabel('\nSolar cumulative capacity (MW)', linespacing=2)
-    #ax.set_ylabel('\nWind cumulative capacity (MW)', linespacing=2)
-    #ax.set_zlabel('\nThe farthest node (km)', linespacing=2)
-    #
-    # plt.show()
-
 
 def cluster_mv_grids(      
         no_grids,
@@ -234,11 +208,7 @@ def cluster_mv_grids(
         Dataframe containing the clustered MV grids and their weightings
 
     """
-    # import CSV data file that exported from Networks_analysis_solar_wind_farthest-node.py and assign it to a data frame
-
-#    attributes = cluster_base.columns
     cluster_base_pu = pd.DataFrame()
-#    no_attributes = len(cluster_base.columns)
     
     for attribute in cluster_base:
         attribute_max = cluster_base[attribute].max()
@@ -260,51 +230,14 @@ def cluster_mv_grids(
             'Used Clustering Attributes: \n {}'.format(
                     list(cluster_base.columns)))
         
-#    # Converting from vectors to coordinates array
-#    m = []
-#    for r, s, t in zip(solar_pu, wind_pu, distances_pu):
-#        f = [r, s, t]
-#        m.append(f)
-#    X = np.array(m)        
-#    
-#    
-##    print(attributes)
-#
-#    # extract each column to a variable
-#    x = df.Solar_cumulative_capacity  # Solar capacity in MV and LV
-#    y = df.Wind_cumulative_capacity  # Wind capacity in MV and LV
-#    # The farthest node (the length between HV/MV substation to the farthest node in LV networks)
-#    z = df.The_Farthest_node
-#    id_ = df.id  # Network id
-#
-#    # Addressing the max value of each column
-#    max_solar = max(x)
-#    max_wind = max(y)
-#    max_farthest = max(z)
-#
-#    # Converting data to perunit scale
-#    solar_pu = x / max_solar
-#    wind_pu = y / max_wind
-#    distances_pu = z / max_farthest
-#
-#    # Converting from vectors to coordinates array
-#    m = []
-#    for r, s, t in zip(solar_pu, wind_pu, distances_pu):
-#        f = [r, s, t]
-#        m.append(f)
-#    X = np.array(m)
-
-    # Initialize KMeans clustering by Sklearn pkg
-    no_clusters = no_grids  # no. of clusters
-
-    # random state should be given in order to have same results with every run of the script
-    # it acts as a seed where the algorihm define the starting clustering point, 1808 shows good results
+    no_clusters = no_grids  
+    
     ran_state = 1808
 
     # Starting KMeans clustering
     kmeans = KMeans(n_clusters=no_clusters, random_state=ran_state)
 
-    # Return a label for each point which indicates to which cluster each point is assigned
+    # Return a label for each point 
     cluster_labels = kmeans.fit_predict(X)
 
     # Centers of clusters
@@ -318,21 +251,13 @@ def cluster_mv_grids(
         cent = centroids[cluster_labels[i]]  # Cluster's center coordinates
 
         # Distance from that point to cluster's center (3d coordinates)
-        dist = ((X[i][0] - centroids[clus][0]) ** 2 + (X[i][1] - centroids[clus]
-                                                       [1]) ** 2 + (X[i][2] - centroids[clus][2]) ** 2) ** (1 / 2)
+        dist = (
+                (X[i][0] - centroids[clus][0]) ** 2 
+                + (X[i][1] - centroids[clus][1]) ** 2 
+                + (X[i][2] - centroids[clus][2]) ** 2) ** (1 / 2)
 
-        # three results are appended to a list (cluster's id, point's (MVGD) id and distance from that point to cluster's center)
-        #id_clus_dist = [clus, id_[i], dist]
-        # list_id_clus_dist.append(id_clus_dist)
-
-        # three results are appended to a dictionary (cluster's id, point's (MVGD) id and distance from that point to cluster's center)
         id_clus_dist.setdefault(clus, []).append({id_[i]: dist})
-
-#    cluster_id = []
-#    cluster_points = []
-#    clus_percentage = []
-#    closest_point = []
-    
+   
     cluster_df = pd.DataFrame(
             columns=[
             'no_of_points_per_cluster',
@@ -340,11 +265,7 @@ def cluster_mv_grids(
             'the_selected_network_id',
             'represented_grids'])
     cluster_df.index.name = 'cluster_id'
-
-    # Iterating through the clusters dictionary 
-    # (key represents cluster's id , value represents another disctionary 
-    # with network's id and distance of that point to cluster's center)
-    
+   
     for key, value in id_clus_dist.items():
         no_points_clus = sum(1 for v in value if v)  
         # percentage of points per cluster

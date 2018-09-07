@@ -24,13 +24,11 @@ the distribution and transmission grids of eTraGo and eDisGo.
 .. note:: Note, the data source of eGo relies on
           the Open Energy Database. - The registration for the public
           accessible API can be found on
-          `openenergy-platform.org/login <http://openenergy-platform.org/login/>`_.
+   `openenergy-platform.org/login <http://openenergy-platform.org/login/>`_.
 """
 
-import pandas as pd
 import os
     
-
 if not 'READTHEDOCS' in os.environ:
     from tools.io import eGo
     from tools.utilities import define_logging
@@ -48,7 +46,7 @@ if __name__ == '__main__':
     # import scenario settings **args of eTraGo
     #    logger.info('Start calculation')
 
-    ego = eGo(jsonpath='scenario_setting(log_improvement).json')
+    ego = eGo(jsonpath='scenario_setting.json')
 #    logger.info('Print results')
 #    ego.etrago_line_loading()
 #    print(ego.etrago.generator)

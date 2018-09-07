@@ -437,7 +437,7 @@ class eGo(eDisGoResults):
         self._ehv_grid_costs = None
         self._mv_grid_costs = None
         
-#        self._calculate_investment_cost()
+        self._calculate_investment_cost()
 
     def _calculate_investment_cost(
             self,
@@ -470,10 +470,11 @@ class eGo(eDisGoResults):
         if self.json_file['eGo']['eDisGo'] is True:
 
             _grid_mv_lv = self.edisgo.grid_investment_costs
-            _grid_mv_lv['component'] = 'grid'
-
-            self._total_inv_cost = self._total_inv_cost.\
-                append(_grid_mv_lv, ignore_index=True)
+            if _grid_mv_lv is not None:
+                _grid_mv_lv['component'] = 'grid'
+    
+                self._total_inv_cost = self._total_inv_cost.\
+                    append(_grid_mv_lv, ignore_index=True)
 
         # add overnight costs
         self._total_investment_costs = self._total_inv_cost
@@ -483,7 +484,8 @@ class eGo(eDisGoResults):
     
         ### Include MV storages into the _total_investment_costs dataframe
         if storage_mv_integration is True:
-            self._integrate_mv_storage_investment()
+            if _grid_mv_lv is not None:
+                self._integrate_mv_storage_investment()
     
         self._storage_costs = _storage
         self._ehv_grid_costs = _grid_ehv
