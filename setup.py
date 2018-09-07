@@ -1,4 +1,5 @@
 import os
+from os.path import abspath, dirname, join, isfile
 from setuptools import find_packages, setup
 
 __copyright__ = ("Flensburg University of Applied Sciences, "
@@ -8,8 +9,25 @@ __license__ = "GNU Affero General Public License Version 3 (AGPL-3.0)"
 __author__ = "wolf_bunke, maltesc"
 
 
-def read(fname):
-    return open(os.path.join(os.path.dirname(__file__), fname)).read()
+# files
+README_MD = "README.md"
+README_RST = "README.rst"
+
+cur_dir = abspath(dirname(__file__))
+readme_md = join(cur_dir, README_MD)
+readme_rst = join(cur_dir, README_RST)
+
+long_description = ""
+using_rst = False
+try:
+    with open(readme_rst, 'r') as f:
+        long_description = f.read()
+        using_rst = True
+except IOError:
+    with open(readme_md, 'r') as f:
+        long_description = f.read()
+
+
 
 
 setup(name='eGo',
@@ -18,7 +36,7 @@ setup(name='eGo',
       author_email='',
       description=("A python package for distribution and transmission"
                    "grid analysis and optimization based eDisGo and eTraGo"),
-      long_description=read('README.rst'),
+      long_description=long_description,
       long_description_content_type="text/x-rst",
       url='https://github.com/openego/eGo',
       license="GNU Affero General Public License Version 3 (AGPL-3.0)",
