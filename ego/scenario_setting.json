@@ -4,7 +4,7 @@
     "eDisGo": true,
     "result_id": null,
     "csv_import_eTraGo": "results/08-30_eTraGo_t60_ego100_sto",
-    "csv_import_eDisGo": "results/all_test"
+    "csv_import_eDisGo": false
   },
   "eTraGo": {
     "db": "oedb",
@@ -46,14 +46,14 @@
     "manual_grids": [1718, 2477, 1611],
     "no_grids": 20,
     "parallelization":true,
-    "max_calc_time": 0.1,
+    "max_calc_time": 0.5,
     "max_workers":3,
     "initial_reinforcement":true,
     "apply_curtailment":true,
     "curtailment_voltage_threshold": 0,
     "storage_distribution":true,
     "max_cos_phi_renewable": 0.9,
-    "results": false,
+    "results": "results/total_run_test",
     "solver": "gurobi",
     "timesteps_pfa": "snapshot_analysis"
   }
