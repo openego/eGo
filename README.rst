@@ -1,4 +1,5 @@
 |readthedocs| |badge_githubstars|
+
 -----
 
 .. image:: https://openegoproject.files.wordpress.com/2017/02/open_ego_logo_breit.png?w=400
@@ -20,6 +21,7 @@ can be found on
 
 .. contents::
 
+----------------------------
 Installing Developer Version
 ----------------------------
 
@@ -32,7 +34,7 @@ Create a virtualenvironment and activate it:
    $ cd venv
    $ pip3 install -e git+https://github.com/openego/eGo@dev#egg=eGo --process-dependency-links
 
-
+-------
 License
 -------
 
