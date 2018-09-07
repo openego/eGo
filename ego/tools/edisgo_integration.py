@@ -48,7 +48,7 @@ if not 'READTHEDOCS' in os.environ:
         cluster_mv_grids)
     from ego.tools.economics import (
         edisgo_grid_investment)
-    
+
     import pypsa
 
     import csv
@@ -85,13 +85,16 @@ class EDisGoNetworks:
 
         # Create reduced eTraGo network
         self._etrago_network = _ETraGoData(etrago_network)
+        del etrago_network
 
         # eDisGo specific naming
         self._edisgo_scenario_translation()
 
+        # Program information
+        self._run_finished = False
+
         # eDisGo Result grids
         self._edisgo_grids = {}
-
 
         if self._csv_import:
             self._laod_edisgo_results()
@@ -107,7 +110,7 @@ class EDisGoNetworks:
         if not self._only_cluster:
             self._successfull_grids = self._successfull_grids()
             # Calculate grid investment costs
-    
+
             self._grid_investment_costs = edisgo_grid_investment(
                 self,
                 self._json_file
@@ -165,7 +168,7 @@ class EDisGoNetworks:
 
         """
         return self._grid_investment_costs
-    
+
     def get_mv_grid_from_bus_id(self, bus_id):
         """
         Queries the MV grid ID for a given eTraGo bus
@@ -181,16 +184,16 @@ class EDisGoNetworks:
             MV grid (ding0) ID
 
         """
-        
+
         conn = db.connection(section=self._db_section)
         session_factory = sessionmaker(bind=conn)
         Session = scoped_session(session_factory)
         session = Session()
-        
+
         mv_grid_id = self._get_mv_grid_from_bus_id(session, bus_id)
-        
+
         Session.remove()
-        
+
         return mv_grid_id
 
     def get_bus_id_from_mv_grid(self, subst_id):
@@ -208,113 +211,113 @@ class EDisGoNetworks:
             eTraGo bus ID
 
         """
-        
+
         conn = db.connection(section=self._db_section)
         session_factory = sessionmaker(bind=conn)
         Session = scoped_session(session_factory)
         session = Session()
-        
+
         bus_id = self._get_bus_id_from_mv_grid(session, subst_id)
-        
+
         Session.remove()
-        
+
         return bus_id
 
     def plot_line_loading(self, mv_grid_id, time_step):
         """
         Plot line loading as color on lines
-    
+
         Displays line loading relative to nominal capacity
         Parameters
         ----------
         mv_grid_id : int
             MV grid ID of the grid to plot
-            
+
         timestep : :pandas:`pandas.Timestamp<timestamp>`
             Time step to plot analysis results for.
             Time step must be included in s_res
-            
-        """   
+
+        """
         line_loading(
-                self._edisgo_grids[mv_grid_id].network.pypsa,
-                self._edisgo_grids[mv_grid_id].network.config,
-                self._edisgo_grids[mv_grid_id].network.results.s_res(),
-                time_step)
-            
+            self._edisgo_grids[mv_grid_id].network.pypsa,
+            self._edisgo_grids[mv_grid_id].network.config,
+            self._edisgo_grids[mv_grid_id].network.results.s_res(),
+            time_step)
+
     def _init_status(self):
         self._grid_choice['the_selected_network_id']
-    
+
     def _update_edisgo_configs(self, edisgo_grid):
-        
+
         # Info and Warning handling
         if not hasattr(self, '_suppress_log'):
-            self._suppress_log = False # Only in the first run warnings and 
-                                       # info get thrown
-         
+            self._suppress_log = False  # Only in the first run warnings and
+            # info get thrown
+
         # Database section
-        ego_db = self._db_section        
+        ego_db = self._db_section
         edisgo_db = edisgo_grid.network.config['db_connection']['section']
-        
+
         if not ego_db == edisgo_db:
             if not self._suppress_log:
                 logger.warning(
-                        ("eDisGo database configuration (db: '{}') "
-                        + "will be overwritten with database configuration "
-                        + "from eGo's scenario settings (db: '{}')").format(
-                                edisgo_db,
-                                ego_db))
+                    ("eDisGo database configuration (db: '{}') "
+                     + "will be overwritten with database configuration "
+                     + "from eGo's scenario settings (db: '{}')").format(
+                        edisgo_db,
+                        ego_db))
             edisgo_grid.network.config['db_connection']['section'] = ego_db
-            
+
         # Versioned
         ego_gridversion = self._grid_version
         if ego_gridversion == None:
             ego_versioned = 'model_draft'
             if not self._suppress_log:
                 logger.info("eGo's grid_version == None is "
-                            +"evaluated as data source: model_draft")
+                            + "evaluated as data source: model_draft")
         else:
             ego_versioned = 'versioned'
             if not self._suppress_log:
                 logger.info(("eGo's grid_version == '{}' is "
-                            +"evaluated as data source: versioned").format(
-                                    ego_gridversion))
-        
+                             + "evaluated as data source: versioned").format(
+                    ego_gridversion))
+
         edisgo_versioned = edisgo_grid.network.config[
-                'data_source']['oedb_data_source']
-        
+            'data_source']['oedb_data_source']
+
         if not ego_versioned == edisgo_versioned:
             if not self._suppress_log:
                 logger.warning(
-                        ("eDisGo data source configuration ('{}') "
-                        + "will be overwritten with data source config. from "
-                        + "eGo's scenario settings (data source: '{}')"
-                        ).format(
-                                edisgo_versioned,
-                                ego_versioned))
+                    ("eDisGo data source configuration ('{}') "
+                     + "will be overwritten with data source config. from "
+                     + "eGo's scenario settings (data source: '{}')"
+                     ).format(
+                        edisgo_versioned,
+                        ego_versioned))
             edisgo_grid.network.config[
-                    'data_source']['oedb_data_source'] = ego_versioned       
-            
-        # Gridversion    
+                'data_source']['oedb_data_source'] = ego_versioned
+
+        # Gridversion
         ego_gridversion = self._grid_version
         edisgo_gridversion = edisgo_grid.network.config[
-                'versioned']['version']
-        
+            'versioned']['version']
+
         if not ego_gridversion == edisgo_gridversion:
             if not self._suppress_log:
                 logger.warning(
-                        ("eDisGo version configuration (version: '{}') "
-                        + "will be overwritten with version configuration "
-                        + "from eGo's scenario settings (version: '{}')"
-                        ).format(
-                                edisgo_gridversion,
-                                ego_gridversion))
+                    ("eDisGo version configuration (version: '{}') "
+                     + "will be overwritten with version configuration "
+                     + "from eGo's scenario settings (version: '{}')"
+                     ).format(
+                        edisgo_gridversion,
+                        ego_gridversion))
             edisgo_grid.network.config[
-                    'versioned']['version'] = ego_gridversion
-                
+                'versioned']['version'] = ego_gridversion
+
         self._suppress_log = True
-        
+
     def _set_scenario_settings(self):
-               
+
         self._csv_import = self._json_file['eGo']['csv_import_eDisGo']
 
         # eTraGo args
@@ -330,6 +333,7 @@ class EDisGoNetworks:
 
         # eDisGo args import
         if self._csv_import:
+            #            raise NotImplementedError
 
             with open(os.path.join(
                     self._csv_import,
@@ -342,22 +346,22 @@ class EDisGoNetworks:
             # This overwrites the original object...
 
         # Imported or directly from the Settings
-        ## eDisGo section of the settings
+        # eDisGo section of the settings
         self._edisgo_args = self._json_file['eDisGo']
 
-        ## Reading all eDisGo settings
-        #TODO: Integrate into a for-loop
+        # Reading all eDisGo settings
+        # TODO: Integrate into a for-loop
         self._db_section = self._edisgo_args['db']
         self._grid_version = self._edisgo_args['gridversion']
         self._timesteps_pfa = self._edisgo_args['timesteps_pfa']
         self._solver = self._edisgo_args['solver']
         self._curtailment_voltage_threshold = self._edisgo_args[
-                'curtailment_voltage_threshold']       
+            'curtailment_voltage_threshold']
         self._ding0_files = self._edisgo_args['ding0_files']
         self._choice_mode = self._edisgo_args['choice_mode']
         self._parallelization = self._edisgo_args['parallelization']
         self._initial_reinforcement = self._edisgo_args[
-            'initial_reinforcement']        
+            'initial_reinforcement']
         self._storage_distribution = self._edisgo_args['storage_distribution']
         self._apply_curtailment = self._edisgo_args['apply_curtailment']
         self._cluster_attributes = self._edisgo_args['cluster_attributes']
@@ -367,7 +371,7 @@ class EDisGoNetworks:
             'max_cos_phi_renewable']
         self._results = self._edisgo_args['results']
 
-        ## Some basic checks
+        # Some basic checks
         if (self._storage_distribution is True) & (self._ext_storage is False):
             logger.warning("Storage distribution (MV grids) is active, "
                            + "but eTraGo dataset has no extendable storages")
@@ -377,7 +381,7 @@ class EDisGoNetworks:
             )
         if self._only_cluster:
             logger.warning("This eDisGo run only returns cluster results")
-            
+
         # Versioning
         if self._grid_version is not None:
             self._versioned = True
@@ -668,6 +672,8 @@ class EDisGoNetworks:
                     )
                 count += 1
 
+        self._run_finished = True
+
     def _run_edisgo(
             self,
             mv_grid_id):
@@ -722,17 +728,17 @@ class EDisGoNetworks:
             raise Exception(msg)
 
         # Initalize eDisGo with this MV grid
-        logger.info(("MV grid {}: Initialize MV grid").format(mv_grid_id))        
+        logger.info(("MV grid {}: Initialize MV grid").format(mv_grid_id))
 
         edisgo_grid = EDisGo(ding0_grid=ding0_filepath,
                              worst_case_analysis='worst-case')
-        
-        logger.info(("MV grid {}: Changing eDisGo's voltage configurations " 
-                     + "for initial reinforcement").format(mv_grid_id)) 
-                
+
+        logger.info(("MV grid {}: Changing eDisGo's voltage configurations "
+                     + "for initial reinforcement").format(mv_grid_id))
+
         edisgo_grid.network.config[
-                'grid_expansion_allowed_voltage_deviations'] = {
-                'hv_mv_trafo_offset': 0.04,
+            'grid_expansion_allowed_voltage_deviations'] = {
+            'hv_mv_trafo_offset': 0.04,
                 'hv_mv_trafo_control_deviation': 0.0,
                 'mv_load_case_max_v_deviation': 0.055,
                 'mv_feedin_case_max_v_deviation': 0.02,
@@ -740,28 +746,28 @@ class EDisGoNetworks:
                 'lv_feedin_case_max_v_deviation': 0.03,
                 'mv_lv_station_load_case_max_v_deviation': 0.02,
                 'mv_lv_station_feedin_case_max_v_deviation': 0.01
-            }   
-                   
+        }
+
         # Inital grid reinforcements
         logger.info(("MV grid {}: Initial MV grid reinforcement "
-                     +"(worst-case anaylsis)").format(mv_grid_id))
-      
+                     + "(worst-case anaylsis)").format(mv_grid_id))
+
         edisgo_grid.reinforce()
-        
+
         # Get costs for initial reinforcement
         # TODO: Implement a separate cost function
         costs_grouped = \
             edisgo_grid.network.results.grid_expansion_costs.groupby(
                 ['type']).sum()
         costs = pd.DataFrame(
-                costs_grouped.values,
-                columns=costs_grouped.columns,
-                index=[[edisgo_grid.network.id] * len(costs_grouped), 
-                       costs_grouped.index]).reset_index()
+            costs_grouped.values,
+            columns=costs_grouped.columns,
+            index=[[edisgo_grid.network.id] * len(costs_grouped),
+                   costs_grouped.index]).reset_index()
         costs.rename(columns={'level_0': 'grid'}, inplace=True)
-        
+
         costs_before = costs
-    
+
         total_costs_before_EUR = costs_before['total_costs'].sum() * 1000
         logger.info(
             ("MV grid {}: Costs for initial "
@@ -770,21 +776,21 @@ class EDisGoNetworks:
                 "{0:,.2f}".format(total_costs_before_EUR)))
 
         logger.info((
-                "MV grid {}: Resetting grid after initial reinforcement"
-                     ).format(mv_grid_id)) 
+            "MV grid {}: Resetting grid after initial reinforcement"
+        ).format(mv_grid_id))
         edisgo_grid.network.results = Results(edisgo_grid.network)
         # Reload the (original) eDisGo configs
         edisgo_grid.network.config = None
-          
+
         # eTraGo case begins here
         logger.info("MV grid {}: eTraGo feed-in case".format(mv_grid_id))
-        
+
         # Update eDisGo settings (from config files) with scenario settings
         logger.info("MV grid {}: Updating eDisgo configuration".format(
-                mv_grid_id))                
+            mv_grid_id))
         # Update configs with eGo's scenario settings
         self._update_edisgo_configs(edisgo_grid)
-        
+
         # Generator import for NEP 2035 and eGo 100 scenarios
         if self._generator_scn:
             logger.info(
@@ -867,7 +873,6 @@ class EDisGoNetworks:
                         ])  # None if no pf_post_lopf
         else:
             logger.info('No storage integration')
-    
 
         logger.info("MV grid {}: eDisGo grid analysis".format(mv_grid_id))
 
@@ -909,8 +914,8 @@ class EDisGoNetworks:
             os.path.join(self._csv_import, 'grid_choice.csv'),
             index_col=0)
         self._grid_choice['represented_grids'] = self._grid_choice.apply(
-                lambda x: eval(x['represented_grids']), axis=1)
-        
+            lambda x: eval(x['represented_grids']), axis=1)
+
         for idx, row in self._grid_choice.iterrows():
             mv_grid_id = int(row['the_selected_network_id'])
 
@@ -921,71 +926,71 @@ class EDisGoNetworks:
                     str(mv_grid_id),
                     'grid_expansion_results',
                     'grid_expansion_costs.csv')
-    
+
                 grid_expansion_costs = pd.read_csv(
                     file_path,
                     index_col=0)
-                
+
                 # powerflow results
                 pf_path = os.path.join(
                     self._csv_import,
                     str(mv_grid_id),
                     'powerflow_results',
                     'apparent_powers.csv')
-                
+
                 s_res = pd.read_csv(
                     pf_path,
                     index_col=0,
                     parse_dates=True)
-                              
+
                 # Configs
                 config_path = os.path.join(
                     self._csv_import,
                     str(mv_grid_id),
                     'configs.csv')
-                
+
                 edisgo_config = {}
                 with open(config_path, 'r') as f:
                     reader = csv.reader(f)
                     for row in reader:
                         a = iter(row[1:])
                         edisgo_config[row[0]] = dict(zip(a, a))
-               
+
                 # PyPSA network
                 pypsa_path = os.path.join(
                     self._csv_import,
                     str(mv_grid_id),
                     'pypsa_network')
-                
+
                 imported_pypsa = pypsa.Network()
                 imported_pypsa.import_from_csv_folder(pypsa_path)
-                
+
                 # Storages
                 storage_path = os.path.join(
                     self._csv_import,
                     str(mv_grid_id),
                     'storage_integration_results',
                     'storages.csv')
-                
+
                 if os.path.exists(storage_path):
                     storages = pd.read_csv(
-                            storage_path,
-                            index_col=0)
+                        storage_path,
+                        index_col=0)
                 else:
                     storages = pd.DataFrame(
-                            columns=['nominal_power','voltage_level'])
-                    
+                        columns=['nominal_power', 'voltage_level'])
+
                 edisgo_grid = _EDisGoImported(
-                        grid_expansion_costs, 
-                        s_res,
-                        storages,
-                        imported_pypsa,
-                        edisgo_config)
-                 
+                    grid_expansion_costs,
+                    s_res,
+                    storages,
+                    imported_pypsa,
+                    edisgo_config)
+
                 self._edisgo_grids[
                     mv_grid_id
                 ] = edisgo_grid
-    
+
                 logger.info("Imported MV grid {}".format(mv_grid_id))
             except:
                 self._edisgo_grids[
@@ -1116,6 +1121,7 @@ class _EDisGoImported:
             pypsa,
             edisgo_config)
 
+
 class _NetworkImported:
     """
     Reduced eDisG network class, used of eGo's reimport
@@ -1133,9 +1139,10 @@ class _NetworkImported:
             grid_expansion_costs,
             s_res,
             storages)
-        
+
         self.pypsa = pypsa
         self.config = edisgo_config
+
 
 class _ResultsImported:
     """
@@ -1151,7 +1158,6 @@ class _ResultsImported:
         self.grid_expansion_costs = grid_expansion_costs
         self.storages = storages
         self._s_res = s_res
-        
+
     def s_res(self):
         return self._s_res
-

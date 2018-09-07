@@ -410,17 +410,14 @@ def edisgo_grid_investment(edisgo, json_file):
     """
     Function aggregates all costs, based on all calculated eDisGo
     grids and their weightings
-
     Parameters
     ----------
     edisgo : :class:`ego.tools.edisgo_integration.EDisGoNetworks`
         Contains multiple eDisGo networks
-
     Returns
     -------
     None or :pandas:`pandas.DataFrame<dataframe>`
         Dataframe containing annuity costs per voltage level
-
     """
 
     t = 40
@@ -459,7 +456,9 @@ def edisgo_grid_investment(edisgo, json_file):
         choice = edisgo.grid_choice
         weighting = choice.loc[
             choice['the_selected_network_id'] == key
-        ]['no_of_points_per_cluster'].values[0]
+        ][
+            'no_of_points_per_cluster'
+        ].values[0]
 
         costs_single[['capital_cost', 'overnight_costs']] = (
             costs_single[['capital_cost', 'overnight_costs']]
@@ -496,7 +495,7 @@ def edisgo_grid_investment(edisgo, json_file):
                 aggr_costs[['capital_cost', 'overnight_costs']]
                 / successfull_grids)
 
-        return aggr_costs
+    return aggr_costs
 
 
 def get_generator_investment(network, scn_name):
