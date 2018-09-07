@@ -471,10 +471,11 @@ class eGo(eDisGoResults):
         if self.json_file['eGo']['eDisGo'] is True:
 
             _grid_mv_lv = self.edisgo.grid_investment_costs
-            _grid_mv_lv['component'] = 'grid'
-
-            self._total_inv_cost = self._total_inv_cost.\
-                append(_grid_mv_lv, ignore_index=True)
+            if _grid_mv_lv is not None:
+                _grid_mv_lv['component'] = 'grid'
+    
+                self._total_inv_cost = self._total_inv_cost.\
+                    append(_grid_mv_lv, ignore_index=True)
 
         # add overnight costs
         self._total_investment_costs = self._total_inv_cost
@@ -484,8 +485,9 @@ class eGo(eDisGoResults):
 
         # Include MV storages into the _total_investment_costs dataframe
         if storage_mv_integration is True:
-            self._integrate_mv_storage_investment()
-
+            if _grid_mv_lv is not None:
+                self._integrate_mv_storage_investment()
+    
         self._storage_costs = _storage
         self._ehv_grid_costs = _grid_ehv
         self._mv_grid_costs = _grid_mv_lv
@@ -596,10 +598,14 @@ class eGo(eDisGoResults):
                 representative_grid = cluster[
                     'the_selected_network_id'].values[0]
 
-            integration_df = self.edisgo.network[
-                representative_grid].network.results.storages
+            if hasattr(self.edisgo.network[representative_grid], 'network'):               
+                integration_df = self.edisgo.network[
+                    representative_grid].network.results.storages
 
-            integrated_power = integration_df['nominal_power'].sum() / 1000
+                integrated_power = integration_df['nominal_power'].sum() / 1000
+            else:
+                integrated_power = 0.
+                
             if integrated_power > p_nom_opt:
                 integrated_power = p_nom_opt
 
@@ -645,7 +651,7 @@ class eGo(eDisGoResults):
             filename = "results/plot_total_investment_costs.pdf"
             display = True
 
-        return grid_storage_investment(
+        return plot_grid_storage_investment(
             self._total_investment_costs,
             filename=filename,
             display=display,
