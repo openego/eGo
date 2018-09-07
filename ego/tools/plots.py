@@ -928,6 +928,9 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
         force_separate_button=True).add_to(mp)
 
     # Save Map
+    html_dir = 'results/html'
+    if not os.path.exists(log_dir):
+        os.makedirs(html_dir)
     mp.save("results/html/iplot_map.html")
 
     # Display htm result from consol
