@@ -485,14 +485,9 @@ class eGo(eDisGoResults):
 
         # Include MV storages into the _total_investment_costs dataframe
         if storage_mv_integration is True:
-<<<<<<< HEAD
             if _grid_mv_lv is not None:
                 self._integrate_mv_storage_investment()
     
-=======
-            self._integrate_mv_storage_investment()
-
->>>>>>> origin/dev
         self._storage_costs = _storage
         self._ehv_grid_costs = _grid_ehv
         self._mv_grid_costs = _grid_mv_lv
@@ -603,10 +598,14 @@ class eGo(eDisGoResults):
                 representative_grid = cluster[
                     'the_selected_network_id'].values[0]
 
-            integration_df = self.edisgo.network[
-                representative_grid].network.results.storages
+            if hasattr(self.edisgo.network[representative_grid], 'network'):               
+                integration_df = self.edisgo.network[
+                    representative_grid].network.results.storages
 
-            integrated_power = integration_df['nominal_power'].sum() / 1000
+                integrated_power = integration_df['nominal_power'].sum() / 1000
+            else:
+                integrated_power = 0.
+                
             if integrated_power > p_nom_opt:
                 integrated_power = p_nom_opt
 
@@ -652,7 +651,7 @@ class eGo(eDisGoResults):
             filename = "results/plot_total_investment_costs.pdf"
             display = True
 
-        return grid_storage_investment(
+        return plot_grid_storage_investment(
             self._total_investment_costs,
             filename=filename,
             display=display,

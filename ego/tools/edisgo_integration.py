@@ -1332,7 +1332,6 @@ def parallelizer(
                    maxtasksperchild=worker_lifetime)
    
     for ding0_id in ding0_id_list:
-        logger.info("\n\nStarting with MV grid: {} \n\n".format(ding0_id))
         edisgo_args = (ding0_id, *func_arguments)
 
         res = pool.apply_async(func=func,

@@ -45,7 +45,7 @@
     "choice_mode": "manual",
     "cluster_attributes":["farthest_node", "wind_cap", "solar_cap", "extended_storage"],
     "only_cluster": false,
-    "manual_grids": [1718, 2477, 1611],
+    "manual_grids": [1718, 1611],
     "no_grids": 20,
     "parallelization":true,
     "max_calc_time": 0.5,
@@ -55,7 +55,7 @@
     "curtailment_voltage_threshold": 0,
     "storage_distribution":true,
     "max_cos_phi_renewable": 0.9,
-    "results": "results/total_run_test",
+    "results": "results/another_storage",
     "solver": "gurobi",
     "timesteps_pfa": "snapshot_analysis"
   }
