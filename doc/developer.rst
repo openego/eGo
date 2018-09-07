@@ -55,7 +55,7 @@ script, which can be found under ``ding0/ding0/examples/``.
    $ pip3 install -e ding0
    $ python3 ding0/ding0/examples/example_parallel_multiple_grid_districts.py
 
-`Learn more about Dingo <https://dingo.readthedocs.io/en/dev/usage_details.html`_.
+`Learn more about Dingo <https://dingo.readthedocs.io/en/dev/usage_details.html>`_.
 Before you run the script check also the configs of Dingo and eDisGo in order to
 use the right database version. You finde this files unter  
 ``ding0/ding0/config/config_db_tables.cfg`` and 
