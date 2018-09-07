@@ -16,7 +16,7 @@ command in order to install eGo:
 Using virtual environment
 =========================
 
-Firstly, you create a virtual environment (where you like it) and activate it:
+Firstly, you create a virtual environment and activate it:
 
 .. code-block:: bash
 
@@ -29,7 +29,7 @@ Inside your virtual environment you can install eGo with the pip command.
 Linux and Ubuntu
 ================
 
-The Package eGo is tested with Ubuntu 16.04 and 18.04 inside the virtual
+The package eGo is tested with Ubuntu 16.04 and 18.04 inside the virtual
 environments of `virtualenv <https://virtualenv.pypa.io/en/stable/>`_.
 The installation is shown above.
 
@@ -39,7 +39,7 @@ Windows or Mac OSX users
 ========================
 
 For Windows and/or Mac OSX user we highly recommend to install and use Anaconda
-for you Python3 installation. First install anaconda inclusing python 3.5 or
+for your Python3 installation. First install anaconda inclusing python 3.5 or
 higher version from https://www.anaconda.com/download/ and open an anaconda
 prompt as administrator and run:
 
@@ -50,9 +50,9 @@ prompt as administrator and run:
   $ conda install shapely
   $ pip3 install eGo --process-dependency-links
 
-The full Documentation can be found
-`on this page <https://docs.anaconda.com/anaconda/install/>`_ . We use Anaconda
-with an own environment in order to reduze problems with Packages and different
+The full documentation can be found
+`on this page <https://docs.anaconda.com/anaconda/install/>`_. We use Anaconda
+with an own environment in order to reduce problems with packages and different
 versions on our system. Learn more about
 `Anacona <https://conda.io/docs/user-guide/tasks/manage-environments.html>`_
 environments.

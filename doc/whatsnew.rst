@@ -1,7 +1,7 @@
-What's New
+What's new
 ~~~~~~~~~~
 
-See what's new as per release!
+See what's new as per this release!
 
 .. contents:: `Releases`
     :depth: 1

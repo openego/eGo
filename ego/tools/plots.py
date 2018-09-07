@@ -107,7 +107,8 @@ def ego_colore():
     return colors
 
 
-def plot_storage_expansion(ego, filename=None, dpi=300, column='overnight_costs',
+def plot_storage_expansion(ego, filename=None, dpi=300,
+                           column='overnight_costs',
                            scaling=1):
     """ Plot line expantion
 
@@ -137,7 +138,8 @@ def plot_storage_expansion(ego, filename=None, dpi=300, column='overnight_costs'
 
     # get storage values
     if 'storages' in ego.json_file['eTraGo']['extendable']:
-        storage_inv = network.storage_units[network.storage_units.capital_cost > 0.]
+        storage_inv = network.storage_units[network.storage_units.
+                                            capital_cost > 0.]
         storage_inv['investment_costs'] = (storage_inv.capital_cost *
                                            storage_inv.p_nom_opt)
         storage_inv['overnight_costs'] = etrago_convert_overnight_cost(
@@ -257,8 +259,8 @@ def plot_line_expansion(ego, filename=None, dpi=300, column='overnight_costs'):
     if 'network' in ego.json_file['eTraGo']['extendable']:
         network.lines['s_nom_expansion'] = network.lines.s_nom_opt.subtract(
             network.lines.s_nom, axis='index')
-        network.lines['investment_costs'] = network.lines.s_nom_expansion.multiply(
-            network.lines.capital_cost, axis='index')
+        network.lines['investment_costs'] = network.lines.s_nom_expansion.\
+            multiply(network.lines.capital_cost, axis='index')
         network.lines['overnight_costs'] = etrago_convert_overnight_cost(
             network.lines['investment_costs'], json_file)
 
@@ -474,8 +476,9 @@ def get_country(session, region=None):
     Regions = [(gid, u_region_id, stat_level,
                 shape.to_shape(geom),
                 shape.to_shape(geom_point)) for gid, u_region_id, stat_level,
-               geom, geom_point in query.filter(RenpassGisParameterRegion.u_region_id.
-                                                in_(region)).all()]
+               geom, geom_point in query.filter(
+               RenpassGisParameterRegion.u_region_id.
+               in_(region)).all()]
     # define SRID
     crs = {'init': 'epsg:4326'}
 
@@ -498,16 +501,19 @@ def prepareGD(session, subst_id=None, version=None):
         if isinstance(subst_id, list):
             Regions = [(subst_id, shape.to_shape(geom)) for subst_id, geom in
                        query.filter(EgoDpMvGriddistrict.version == version,
-                                    EgoDpMvGriddistrict.subst_id.in_(subst_id)).all()]
+                                    EgoDpMvGriddistrict.subst_id.in_(
+                                        subst_id)).all()]
 
         elif subst_id == "all":
 
             Regions = [(subst_id, shape.to_shape(geom)) for subst_id, geom in
-                       query.filter(EgoDpMvGriddistrict.version == version).all()]
+                       query.filter(EgoDpMvGriddistrict.version ==
+                                    version).all()]
         else:
             # ToDo query doesn't looks stable
             Regions = [(subst_id, shape.to_shape(geom)) for subst_id, geom in
-                       query.filter(EgoDpMvGriddistrict.version == version).all()]
+                       query.filter(EgoDpMvGriddistrict.version ==
+                                    version).all()]
     # toDo add values of sub_id etc. to popup
     else:
         # from model_draft
@@ -515,7 +521,8 @@ def prepareGD(session, subst_id=None, version=None):
         query = session.query(EgoGridMvGriddistrict.subst_id,
                               EgoGridMvGriddistrict.geom)
         Regions = [(subst_id, shape.to_shape(geom)) for subst_id, geom in
-                   query.filter(EgoGridMvGriddistrict.subst_id.in_(subst_id)).all()]
+                   query.filter(EgoGridMvGriddistrict.subst_id.in_(
+                       subst_id)).all()]
 
     crs = {'init': 'epsg:3035'}
     region = gpd.GeoDataFrame(
@@ -568,7 +575,7 @@ def plot_edisgo_cluster(ego, filename, region=['DE'], display=False, dpi=600):
             # represented_grids
             repre_grid = prepareGD(session, rep_id, version)
             repre_grid['cluster_id'] = gridcluster.subst_id[cluster]
-            # repre_grids['style'] = """{'fillColor': '#2e1f56', 'weight': 2, 'color': 'black'}"""
+
             repre_grids = repre_grids.append(repre_grid, ignore_index=True)
         # add common SRID
         crs = {'init': 'epsg:4326'}
@@ -627,15 +634,9 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
      """
 
     #     # TODO
-    #     # - implement eDisGo Polygons
-    #     # - fix version problems of data
-    #     # - use  grid.ego_dp_hvmv_substation subst_id and otg_id
     #     # - use cluster or boxes to limit data volumn
     #     # - add Legend
     #     # - Map see: http://nbviewer.jupyter.org/gist/BibMartin/f153aa957ddc5fadc64929abdee9ff2e
-    #     # - test cluster
-    #     # - add logger
-    #     # - add html folder to results folder
 
     network = ego.etrago.network
     session = ego.session
@@ -653,8 +654,12 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
 
     # add Nasa light background
     if tiles == 'Nasa':
-        tiles = 'https://map1.vis.earthdata.nasa.gov/wmts-webmerc/VIIRS_CityLights_2012/default/GoogleMapsCompatible_Level8/{z}/{y}/{x}.jpg'
-        attr = ('&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="http://cartodb.com/attributions">CartoDB</a>')
+        tiles = ("https://map1.vis.earthdata.nasa.gov/wmts-webmerc/" +
+                 "VIIRS_CityLights_2012/default/GoogleMapsCompatible_" +
+                 "Level8/{z}/{y}/{x}.jpg")
+        attr = ("&copy; <a href="http: // www.openstreetmap.org/copyright">" +
+                "OpenStreetMap</a> contributors, &copy;" +
+                "<a href="http: // cartodb.com/attributions">CartoDB</a>")
 
         folium.raster_layers.TileLayer(tiles=tiles, attr=attr).add_to(mp)
     else:
@@ -806,8 +811,7 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
 
         # for name, row in district.iterrows():
         pop = """<b>Grid district:</b> {} <br>
-            """.format('12121212')
-        # date = gpd.GeoDataFrame(row, columns=['subst_id', 'geometry'], crs=crs)
+            """.format('Number')
 
         folium.GeoJson(district).add_to(grid_group).add_child(folium.Popup(pop))
 
@@ -919,7 +923,6 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
     mp.save("results/html/iplot_map.html")
 
     # Display htm result from consol
-    # TODO add var inoder to control browser Display
     new = 2  # open in a new tab, if possible
     # open a public URL, in this case, the webbrowser docs
     path = os.getcwd()

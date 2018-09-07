@@ -15,7 +15,7 @@ Please read the Installation Guideline :ref:`ego.doc.installation`.
 1. Use virtual environment
 --------------------------
 
-Create a virtualenvironment (where you like it) and activate it:
+Create a virtualenvironment  and activate it:
 
 .. code-block:: bash
 
@@ -27,7 +27,7 @@ Create a virtualenvironment (where you like it) and activate it:
 2. Get eGo
 ----------
 
-Clone eGo from github.com by running following command in your terminal:
+Clone eGo from github.com by running the following command in your terminal:
 
 .. code-block:: bash
 

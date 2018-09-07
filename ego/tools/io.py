@@ -375,8 +375,6 @@ class eTraGoResults(egoBasic):
             """
             return full_load_hours(network=self.etrago.network, **kwargs)
 
-        # add other methods from eTraGo here
-
 
 class eDisGoResults(eTraGoResults):
     """The ``eDisGoResults`` class create and contains all results
@@ -473,7 +471,7 @@ class eGo(eDisGoResults):
             _grid_mv_lv = self.edisgo.grid_investment_costs
             if _grid_mv_lv is not None:
                 _grid_mv_lv['component'] = 'grid'
-    
+
                 self._total_inv_cost = self._total_inv_cost.\
                     append(_grid_mv_lv, ignore_index=True)
 
@@ -487,7 +485,7 @@ class eGo(eDisGoResults):
         if storage_mv_integration is True:
             if _grid_mv_lv is not None:
                 self._integrate_mv_storage_investment()
-    
+
         self._storage_costs = _storage
         self._ehv_grid_costs = _grid_ehv
         self._mv_grid_costs = _grid_mv_lv
@@ -598,14 +596,14 @@ class eGo(eDisGoResults):
                 representative_grid = cluster[
                     'the_selected_network_id'].values[0]
 
-            if hasattr(self.edisgo.network[representative_grid], 'network'):               
+            if hasattr(self.edisgo.network[representative_grid], 'network'):
                 integration_df = self.edisgo.network[
                     representative_grid].network.results.storages
 
                 integrated_power = integration_df['nominal_power'].sum() / 1000
             else:
                 integrated_power = 0.
-                
+
             if integrated_power > p_nom_opt:
                 integrated_power = p_nom_opt
 
@@ -709,7 +707,7 @@ class eGo(eDisGoResults):
 
 def results_to_excel(ego):
     """
-    Wirte results to excel
+    Wirte results of ego.total_investment_costs to an excel file
     """
     # Write the results as xlsx file
     # ToDo add time of calculation to file name
@@ -717,11 +715,9 @@ def results_to_excel(ego):
     writer = pd.ExcelWriter('open_ego_results.xlsx', engine='xlsxwriter')
 
     # write results of installed Capacity by fuels
-    ego.total.to_excel(writer, index=False, sheet_name='Total Calculation')
-
-    # write orgininal data in second sheet
-    ego.to_excel(writer, index=True, sheet_name='Results by carriers')
-    # add plots
+    ego.total_investment_costs.to_excel(writer,
+                                        index=False,
+                                        sheet_name='Total Calculation')
 
     # Close the Pandas Excel writer and output the Excel file.
     writer.save()
@@ -988,9 +984,12 @@ def recover_resultsettings(session, json_file, orm_meta, result_id):
                                    result_id == result_id).all()
 
     # get meta data as json_file
-    meta = session.query(orm_meta.result_id, orm_meta.scn_name, orm_meta.calc_date,
-                         orm_meta.user_name, orm_meta.method, orm_meta.start_snapshot,
-                         orm_meta.end_snapshot, orm_meta.solver, orm_meta.settings
+    meta = session.query(orm_meta.result_id, orm_meta.scn_name,
+                         orm_meta.calc_date,
+                         orm_meta.user_name, orm_meta.method,
+                         orm_meta.start_snapshot,
+                         orm_meta.end_snapshot, orm_meta.solver,
+                         orm_meta.settings
                          ).filter(orm_meta.result_id == result_id)
 
     meta_df = pd.read_sql(

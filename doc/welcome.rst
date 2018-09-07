@@ -3,10 +3,10 @@ The eGo tool
 ============
 
 
-The python package eGo is a toolbox and application which connects the tool eTraGo
-with a Optimization of flexibility options for transmission grids based on PyPSA
-and eDisGo which analysis and optimization distribution grids. All those python
-packages are part of the research project `open_eGo <https://openegoproject.wordpress.com>`_.
+The python package eGo is a toolbox and application which connects the tool 
+**eTraGo** - with an optimization of flexibility options for transmission grids 
+based on PyPSA and **eDisGo** - which analysis and optimization distribution 
+grids. 
 
 The open_eGo project
 ====================
@@ -16,7 +16,7 @@ This software project is part of the research project
 
 The OpenEnergy Platform
 =======================
-With in this project we developted the OpenEnergy Platform which this software
+Within this project we developed the OpenEnergy Platform which this software
 is using in order to get and store the in- and output data. Before you start to
 calculate a registration on the platform is needed. For more see
 `openenergy-platform <https://openenergy-platform.org/>`_ and login.
@@ -43,11 +43,12 @@ Model overview
 eTraGo
 ------
 
-The python package eTraGo provides a optimization of flexibility options for
-transmission grids based on PyPSA.A speciality in this context is that transmission
-grids are described by the 380, 220 and 110 kV in Germany. Conventionally the
-110kV grid is part of the distribution grid. The integration of the transmission
-and ‘upper’ distribution grid is part of eTraGo.
+The python package eTraGo provides an optimization of flexibility options for
+transmission grids based on PyPSA. A speciality in this context is that 
+transmission grids are described by the 380, 220 and 110 kV in Germany. 
+Conventionally the 110kV grid is part of the distribution grid. 
+The integration of the transmission and ‘upper’ distribution grid 
+is part of eTraGo.
 
 The focus of optimization are flexibility options with a special focus on
 energy storages and grid expansion measures.
@@ -58,21 +59,22 @@ eDisGo
 The python package eDisGo provides a toolbox for analysis and optimization
 of distribution grids. It is closely related to the python project Ding0 as this
 project is currently the single data source for eDisGo providing synthetic
-grid data for whole Germany. Learn more here <http://edisgo.readthedocs.io/>`_.
+grid data for whole Germany. `Learn more here <http://edisgo.readthedocs.io>`_.
 
 
 Dataprocessing
 --------------
 
-For the open_eGo project several python packages are developt which are feeded 
-by the input data of the data processing. The Dataprocessing is writen in 
+For the open_eGo project several python packages are developed which are feeded 
+by the input data of the data processing. The dataprocessing is writen in 
 SQL and Python. `Learn more here <https://data-processing.readthedocs.io/>`_.
 
 ego.io
 ------
 
-SQLAlchemy Interface to the OpenEnergy database (oedb).OEDB table ORM objects 
-are defined here and small helpers for io tasks are contained.
+The ``ego.io`` is a `SQLAlchemy <https://www.sqlalchemy.org/>`_ Interface to 
+the OpenEnergy database (oedb). The oedb tables as ORM objects are defined here 
+and small helpers for I/O tasks are contained. 
 `Learn more here <https://github.com/openego/ego.io>`_.
 
 

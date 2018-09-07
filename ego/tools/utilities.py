@@ -80,11 +80,6 @@ def define_logging(name):
     return logger
 
 
-# logger = define_logging(name='ego')
-
-# import scenario settings **args
-
-
 def get_scenario_setting(jsonpath='scenario_setting.json'):
     """Get and open json file with scenaio settings of eGo.
     The settings incluede eGo, eTraGo and eDisGo specific
@@ -110,13 +105,15 @@ def get_scenario_setting(jsonpath='scenario_setting.json'):
         json_file = json.load(f)
 
     # check settings
-    if json_file['eGo']['eTraGo'] is False and json_file['eGo']['eDisGo'] is False:
+    if (json_file['eGo']['eTraGo'] is False and json_file['eGo']['eDisGo']
+            is False):
         logger.warning("Something went wrong! \n"
                        "Please contoll your settings and restart. \n"
                        "Set at least eTraGo = true")
         return
 
-    if json_file['eGo']['eTraGo'] is None and json_file['eGo']['eDisGo'] is None:
+    if (json_file['eGo']['eTraGo'] is None and json_file['eGo']['eDisGo']
+            is None):
         logger.warning("Something went wrong! \n"
                        "Please contoll your settings and restart. \n"
                        "Set at least eTraGo = true")
@@ -145,7 +142,8 @@ def get_scenario_setting(jsonpath='scenario_setting.json'):
             "No data import from results is set \n"
             "eGo runs by given settings")
 
-    if json_file['eGo']['csv_import_eTraGo'] and json_file['eGo']['csv_import_eDisGo']:
+    if (json_file['eGo']['csv_import_eTraGo'] and
+            json_file['eGo']['csv_import_eDisGo']):
         logger.info(
             "eDisGo and eTraGo results will be imported from csv\n")
 
@@ -168,12 +166,6 @@ def get_scenario_setting(jsonpath='scenario_setting.json'):
 
         if json_file['eTraGo'].get('extendable') == "['storages']":
             json_file['eTraGo'].update({'extendable': ['storages']})
-
-    # add eGo parameter to eTraGo scn_set
-
-    # json_file['eTraGo'].update({'db': json_file['eGo'].get('db')})
-    # json_file['eTraGo'].update(
-    #    {'gridversion': json_file['eGo'].get('gridversion')})
 
     if json_file['eGo'].get('eDisGo') == True:
         logger.info('Using and importing eDisGo settings')
