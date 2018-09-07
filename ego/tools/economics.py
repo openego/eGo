@@ -511,7 +511,6 @@ def get_generator_investment(network, scn_name):
 
     etg = network
 
-    # TODO change it to utilities function
     try:
         dirname = os.path.dirname(__file__)
         filename = 'investment_costs.csv'
