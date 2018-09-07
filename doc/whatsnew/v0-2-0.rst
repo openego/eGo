@@ -1,9 +1,16 @@
 Release v0.2.0 (July 18, 2018)
 ++++++++++++++++++++++++++++++
 
-Fundamental structural changes of the eGo tool are included in this release. A new feature is the integration of the MV grid power flow simulations, performed by the tool `eDisGo. <https://github.com/openego/eDisGo>`_. Thereby, eGo can be used to perforem power flow simulations and optimizations for EHV, HV (*eTraGo*) and MV (*eDisGo*) grids.
+Fundamental structural changes of the eGo tool are included in this release. 
+A new feature is the integration of the MV grid power flow simulations, 
+performed by the tool `eDisGo. <https://github.com/openego/eDisGo>`_. 
+Thereby, eGo can be used to perform power flow simulations and optimizations 
+for EHV, HV (*eTraGo*) and MV (*eDisGo*) grids.
 
-Moreover, the use of the Dataprocessing versions ``''v0.4.1''`` and ``''v0.4.2''`` is supported. Please note, that this release is still under construction and only recommended for developers of the *open_eGo* project.
+Moreover, the use of the Dataprocessing versions 
+``''v0.4.1''`` and ``''v0.4.2''`` is supported. Please note, that this release 
+is still under construction and only recommended for developers of 
+the *open_eGo* project.
 
 Furthermore, overall cost aggregation functions are available.
 
@@ -11,7 +18,7 @@ Added features
 --------------
 
 * Cleaned and restructured eGo classes and functions
-    * Moved classes of eGo from results.py to io.py
+    * Move classes of eGo from results.py to io.py
     * Move serveral function
 
 * Introduce new files for *eDisGo* handling
@@ -33,7 +40,10 @@ Added features
 
 Notes
 -----
-* As an external user you need to have and account on the
+* As an external user you need to have an account on the
   `openenergy-platform.org/login <http://openenergy-platform.org/login/>`_
-* In future versions, all MV grids (*ding0* grids) will be queried from your database. However, in this version all MV grids have to be generated with the tool `ding0 <https://github.com/openego/ding0>`_ and stored in *eGo*'s *data* folder.
+* In future versions, all MV grids (*ding0* grids) will be queried from your 
+  database. However, in this version all MV grids have to be generated with 
+  the tool `ding0 <https://github.com/openego/ding0>`_ and stored in *eGo*'s 
+  *data* folder.
 * Total operational costs are missing in this release
