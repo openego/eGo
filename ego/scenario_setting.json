@@ -24,7 +24,8 @@
     "extendable": ["storages", "network"],
     "generator_noise": 789456,
     "minimize_loading": false,
-    "network_clustering_kmeans": 30,
+    "ramp_limits": false,
+    "network_clustering_kmeans": 10,
     "load_cluster": false,
     "network_clustering_ehv": false,
     "disaggregation": "uniform",
@@ -34,6 +35,7 @@
     "line_grouping": false,
     "branch_capacity_factor": 0.7,
     "load_shedding": false,
+    "foreign_lines" :{"carrier": "AC", "capacity": "osmTGmod"},
     "comments": ""
   },
   "eDisGo": {

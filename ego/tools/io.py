@@ -37,6 +37,7 @@ if not 'READTHEDOCS' in os.environ:
     from sqlalchemy import MetaData, create_engine,  and_, func
     from sqlalchemy.orm import sessionmaker
     from sqlalchemy.ext.automap import automap_base
+    import oedialect
     from geoalchemy2 import *
 
     from egoio.tools import db
@@ -59,15 +60,16 @@ if not 'READTHEDOCS' in os.environ:
                                    curtailment, gen_dist, storage_distribution,
                                    plot_voltage, plot_residual_load,
                                    plot_line_loading_diff, full_load_hours,
-                                   extension_overlay_network)
+                                   nodal_gen_dispatch)
     from etrago.appl import etrago
     from importlib import import_module
     import pypsa
     import re
-    from ego.tools.plots import (grid_storage_investment,
+    from ego.tools.plots import (plot_grid_storage_investment,
                                  power_price_plot, plot_storage_use, igeoplot,
                                  plot_edisgo_cluster,
-                                 polt_line_expansion)
+                                 plot_line_expansion,
+                                 plot_storage_expansion)
 
 __copyright__ = ("Europa-Universität Flensburg, "
                  "Centre for Sustainable Energy Systems")
@@ -294,8 +296,8 @@ class eTraGoResults(egoBasic):
         self.etrago.plot_line_loading_diff = self._line_loading_diff
         self.etrago.plot_plot_residual_load = self._residual_load
         self.etrago.plot_voltage = self._voltage
-        self.etrago.plot_extension_overlay_network = \
-            self._extension_overlay_network
+        self.etrago.plot_nodal_gen_dispatch = \
+            self._nodal_gen_dispatch
         self.etrago.plot_full_load_hours = self._full_load_hours
 
     if not 'READTHEDOCS' in os.environ:
@@ -358,13 +360,13 @@ class eTraGoResults(egoBasic):
             return plot_line_loading_diff(networkA=self.etrago.network,
                                           networkB=networkB, **kwargs)
 
-        def _extension_overlay_network(self, **kwargs):
+        def _nodal_gen_dispatch(self, **kwargs):
             """
             Integrate function from eTraGo.
             For more information see:
             """
-            return extension_overlay_network(network=self.etrago.network,
-                                             **kwargs)
+            return nodal_gen_dispatch(network=self.etrago.network,
+                                      **kwargs)
 
         def _full_load_hours(self, **kwargs):
             """
@@ -433,11 +435,10 @@ class eGo(eDisGoResults):
         # add total results here
         self._total_investment_costs = None
         self._total_operation_costs = None
+        self._calculate_investment_cost()
         self._storage_costs = None
         self._ehv_grid_costs = None
         self._mv_grid_costs = None
-        
-        self._calculate_investment_cost()
 
     def _calculate_investment_cost(
             self,
@@ -481,66 +482,71 @@ class eGo(eDisGoResults):
         self._total_investment_costs[
             'overnight_costs'] = etrago_convert_overnight_cost(
             self._total_investment_costs['capital_cost'], self.json_file)
-    
-        ### Include MV storages into the _total_investment_costs dataframe
+
+        # Include MV storages into the _total_investment_costs dataframe
         if storage_mv_integration is True:
+<<<<<<< HEAD
             if _grid_mv_lv is not None:
                 self._integrate_mv_storage_investment()
     
+=======
+            self._integrate_mv_storage_investment()
+
+>>>>>>> origin/dev
         self._storage_costs = _storage
         self._ehv_grid_costs = _grid_ehv
         self._mv_grid_costs = _grid_mv_lv
 
     def _integrate_mv_storage_investment(self):
         """
-        Updates the total investment costs dataframe and includes the 
+        Updates the total investment costs dataframe and includes the
         storage integrated in MV grids.
         """
-        
-        costs_df = self._total_investment_costs        
-        
+
+        costs_df = self._total_investment_costs
+
         total_stor = self._calculate_all_extended_storages()
         mv_stor = self._calculate_mv_storage()
-        
+
         integrated_share = mv_stor / total_stor
-        
-        if integrated_share > 0:    
+
+        if integrated_share > 0:
             ehv_stor_idx = costs_df.index[
-                    (costs_df['component'] == 'storage')
-                    & (costs_df['voltage_level'] == 'ehv')][0]
-                                    
+                (costs_df['component'] == 'storage')
+                & (costs_df['voltage_level'] == 'ehv')][0]
+
             int_capital_costs = costs_df.loc[ehv_stor_idx][
-                            'capital_cost'
-                            ] * integrated_share
-            int_overnight_costs =  costs_df.loc[ehv_stor_idx][
-                            'overnight_costs'
-                            ] * integrated_share  
-                                                        
+                'capital_cost'
+            ] * integrated_share
+            int_overnight_costs = costs_df.loc[ehv_stor_idx][
+                'overnight_costs'
+            ] * integrated_share
+
             costs_df.at[
-                    ehv_stor_idx, 
-                    'capital_cost'
-                    ] = (
-                    costs_df.loc[ehv_stor_idx]['capital_cost']
-                    - int_capital_costs)
-                                                        
+                ehv_stor_idx,
+                'capital_cost'
+            ] = (
+                costs_df.loc[ehv_stor_idx]['capital_cost']
+                - int_capital_costs)
+
             costs_df.at[
-                    ehv_stor_idx, 
-                    'overnight_costs'
-                    ] = (
-                    costs_df.loc[ehv_stor_idx]['overnight_costs']
-                    - int_overnight_costs)        
-    
+                ehv_stor_idx,
+                'overnight_costs'
+            ] = (
+                costs_df.loc[ehv_stor_idx]['overnight_costs']
+                - int_overnight_costs)
+
             new_storage_row = {
-                    'component' : ['storage'],
-                    'voltage_level' : ['mv'],
-                    'capital_cost' : [int_capital_costs],
-                    'overnight_costs' : [int_overnight_costs]}  
-            
+                'component': ['storage'],
+                'voltage_level': ['mv'],
+                'capital_cost': [int_capital_costs],
+                'overnight_costs': [int_overnight_costs]}
+
             new_storage_row = pd.DataFrame(new_storage_row)
             costs_df = costs_df.append(new_storage_row)
-            
+
             self._total_investment_costs = costs_df
-            
+
     def _calculate_all_extended_storages(self):
         """
         Returns the all extended storage p_nom_opt in MW.
@@ -549,66 +555,65 @@ class eGo(eDisGoResults):
 
         stor_df = etrago_network.storage_units.loc[
             (etrago_network.storage_units['p_nom_extendable'] == True)]
-        
+
         stor_df = stor_df[['bus', 'p_nom_opt']]
-        
+
         all_extended_storages = stor_df['p_nom_opt'].sum()
-        
+
         return all_extended_storages
-               
+
     def _calculate_mv_storage(self):
         """
         Returns the storage p_nom_opt in MW, integrated in MV grids
         """
         etrago_network = self._etrago_disaggregated_network
-        
+
         min_extended = 0.3
         stor_df = etrago_network.storage_units.loc[
             (etrago_network.storage_units['p_nom_extendable'] == True)
             & (etrago_network.storage_units['p_nom_opt'] > min_extended)
             & (etrago_network.storage_units['max_hours'] <= 20.)]
-               
+
         stor_df = stor_df[['bus', 'p_nom_opt']]
-        
-        integrated_storage = .0 # Storage integrated in MV grids
-        
+
+        integrated_storage = .0  # Storage integrated in MV grids
+
         for idx, row in stor_df.iterrows():
             bus_id = row['bus']
             p_nom_opt = row['p_nom_opt']
-            
+
             mv_grid_id = self.edisgo.get_mv_grid_from_bus_id(bus_id)
-            
+
             if not mv_grid_id:
                 continue
-            
+
             logger.info("Checking storage integration for MV grid {}".format(
-                    mv_grid_id))
-                        
+                mv_grid_id))
+
             grid_choice = self.edisgo.grid_choice
-            
+
             cluster = grid_choice.loc[
-                    [mv_grid_id in repr_grids for repr_grids in grid_choice[
-                            'represented_grids']]]
-            
+                [mv_grid_id in repr_grids for repr_grids in grid_choice[
+                    'represented_grids']]]
+
             if len(cluster) == 0:
                 continue
-                
+
             else:
                 representative_grid = cluster[
-                        'the_selected_network_id'].values[0]
-                
+                    'the_selected_network_id'].values[0]
+
             integration_df = self.edisgo.network[
-                    representative_grid].network.results.storages
-                       
+                representative_grid].network.results.storages
+
             integrated_power = integration_df['nominal_power'].sum() / 1000
             if integrated_power > p_nom_opt:
                 integrated_power = p_nom_opt
-            
+
             integrated_storage = integrated_storage + integrated_power
-            
+
         return integrated_storage
-            
-   
+
     @property
     def total_investment_costs(self):
         """
@@ -636,8 +641,8 @@ class eGo(eDisGoResults):
         # append eDisGo
 
         return self._total_operation_costs
-    
-    def plot_total_investment_costs(self, 
+
+    def plot_total_investment_costs(self,
                                     filename=None,
                                     display=False, **kwargs):
         """ Plot total investment costs
@@ -648,10 +653,10 @@ class eGo(eDisGoResults):
             display = True
 
         return grid_storage_investment(
-                self._total_investment_costs, 
-                filename=filename,
-                display=display, 
-                **kwargs)
+            self._total_investment_costs,
+            filename=filename,
+            display=display,
+            **kwargs)
 
     def plot_power_price(self, filename=None, display=False):
         """ Plot power prices per carrier of calculation
@@ -681,11 +686,17 @@ class eGo(eDisGoResults):
         return plot_edisgo_cluster(self, filename=filename, display=display,
                                    **kwargs)
 
-    def polt_line_expansion(self, **kwargs):
+    def plot_line_expansion(self, **kwargs):
         """Plot line expantion per line
         """
 
-        return polt_line_expansion(self, **kwargs)
+        return plot_line_expansion(self, **kwargs)
+
+    def plot_storage_expansion(self, **kwargs):
+        """Plot storage expantion per bus
+        """
+
+        return plot_storage_expansion(self, **kwargs)
 
     @property
     def iplot(self):
