@@ -20,18 +20,15 @@ readme_rst = join(cur_dir, README_RST)
 long_description = ""
 using_rst = False
 try:
-    with open(readme_rst, 'r') as f:
+    with open(readme_rst) as f:
         long_description = f.read()
         using_rst = True
 except IOError:
-    with open(readme_md, 'r') as f:
+    with open(readme_md) as f:
         long_description = f.read()
 
-
-
-
 setup(name='eGo',
-      version='0.3.0',
+      version='0.3.1',
       author='wolfbunke, maltesc',
       author_email='',
       description=("A python package for distribution and transmission"
