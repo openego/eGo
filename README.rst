@@ -2,6 +2,7 @@
 
 -----
 
+
 .. image:: https://openegoproject.files.wordpress.com/2017/02/open_ego_logo_breit.png?w=400
  
 
