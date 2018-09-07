@@ -1,16 +1,18 @@
 |readthedocs| |badge_githubstars|
 
+-----
+
 
 .. image:: https://openegoproject.files.wordpress.com/2017/02/open_ego_logo_breit.png?w=400
-   :align: right
-   :scale: 100%
+ 
 
 *A cross-grid-level electricity grid and storage optimization tool*
 | `openegoproject.wordpress.com <https://openegoproject.wordpress.com/>`_
 
 
+---
 eGo
-===
+---
 
 Integrated optimization of flexibility options and grid extension measures
 for power grids based on `eTraGo <http://eTraGo.readthedocs.io/>`_ and
@@ -20,8 +22,9 @@ can be found on
 
 .. contents::
 
+----------------------------
 Installing Developer Version
-============================
+----------------------------
 
 Create a virtualenvironment and activate it:
 
@@ -32,9 +35,10 @@ Create a virtualenvironment and activate it:
    $ cd venv
    $ pip3 install -e git+https://github.com/openego/eGo@dev#egg=eGo --process-dependency-links
 
+-------
+License
+-------
 
-LICENSE
-=======
 © Europa-Universität Flensburg,
 © Flensburg University of Applied Sciences,
   Centre for Sustainable Energy Systems

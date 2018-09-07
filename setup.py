@@ -8,8 +8,11 @@ __license__ = "GNU Affero General Public License Version 3 (AGPL-3.0)"
 __author__ = "wolf_bunke, maltesc"
 
 
-def read(fname):
-    return open(os.path.join(os.path.dirname(__file__), fname)).read()
+
+
+
+with open('README.rst') as f:
+    long_description = f.read()
 
 
 setup(name='eGo',
@@ -18,8 +21,7 @@ setup(name='eGo',
       author_email='',
       description=("A python package for distribution and transmission"
                    "grid analysis and optimization based eDisGo and eTraGo"),
-      long_description=read('README.rst'),
-      long_description_content_type="text/x-rst",
+      long_description=long_description,
       url='https://github.com/openego/eGo',
       license="GNU Affero General Public License Version 3 (AGPL-3.0)",
       packages=find_packages(),
@@ -43,8 +45,7 @@ setup(name='eGo',
                         'folium'
                         ],
       dependency_links=[('git+https://git@github.com/openego/PyPSA.git'
-                         '@dev#egg=pypsa-0.11.0fork')
-                        ],
+                         '@master#egg=pypsa-0.11.0fork')],
       extras_require={
           'doc': [
               'sphinx >= 1.4',
