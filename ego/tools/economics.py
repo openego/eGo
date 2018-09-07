@@ -17,8 +17,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # File description
-"""This module collects useful functions for economic calculation of eGo which can
-mainly distinguished in operational and investment costs.
+"""This module collects useful functions for economic calculation of eGo
+which can mainly distinguished in operational and investment costs.
 """
 
 import io
@@ -136,6 +136,7 @@ def etrago_convert_overnight_cost(annuity_cost, json_file, t=40, p=0.05):
     .. math::
 
         PVA =   (1 / p) - (1 / (p*(1 + p)^t))
+
         K_{ON} = K_a*PVA*((t/(period+1))
 
     """
@@ -387,11 +388,13 @@ def etrago_grid_investment(network, json_file):
             trafos.set_value(ix_hv, 'voltage_level', 'hv')
             # aggregate trafo
             trafo = trafos[['voltage_level',
-                            'capital_cost']].groupby('voltage_level').sum().reset_index()
+                            'capital_cost']].groupby('voltage_level'
+                                                     ).sum().reset_index()
 
         # aggregate lines
         line = lines[['voltage_level',
-                      'capital_cost']].groupby('voltage_level').sum().reset_index()
+                      'capital_cost']].groupby('voltage_level'
+                                               ).sum().reset_index()
 
         # merge trafos and line
         frames = [line, trafo]
@@ -532,8 +535,9 @@ def get_generator_investment(network, scn_name):
                             etg.generators.groupby('carrier')['p_nom'].sum()],
                            axis=1, join='inner')
 
-    gen_invest = pd.concat([invest[invest_scn], etg.generators.groupby('carrier')
-                            ['p_nom'].sum()], axis=1, join='inner')
+    gen_invest = pd.concat([invest[invest_scn], etg.generators.groupby(
+        'carrier')
+        ['p_nom'].sum()], axis=1, join='inner')
     gen_invest['carrier_costs'] = gen_invest[invest_scn] * \
         gen_invest['p_nom'] * 1000  # in MW
 
