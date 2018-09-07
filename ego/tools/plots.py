@@ -657,9 +657,7 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
         tiles = ("https://map1.vis.earthdata.nasa.gov/wmts-webmerc/" +
                  "VIIRS_CityLights_2012/default/GoogleMapsCompatible_" +
                  "Level8/{z}/{y}/{x}.jpg")
-        attr = ("&copy; <a href="http: // www.openstreetmap.org/copyright">" +
-                "OpenStreetMap</a> contributors, &copy;" +
-                "<a href="http: // cartodb.com/attributions">CartoDB</a>")
+        attr = ('&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="http://cartodb.com/attributions">CartoDB</a>')
 
         folium.raster_layers.TileLayer(tiles=tiles, attr=attr).add_to(mp)
     else:
