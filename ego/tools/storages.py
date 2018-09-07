@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # File description
-"""This module contains functions to summarize and studies on storages.
+"""This module contains functions for storage units.
 """
 
 import io
@@ -35,7 +35,7 @@ __license__ = "GNU Affero General Public License Version 3 (AGPL-3.0)"
 __author__ = "wolf_bunke,maltesc"
 
 
-def total_storage_charges(network):
+def etrago_storages(network):
     """Sum up the pysical storage values of the total scenario based on
     eTraGo results.
 
@@ -48,74 +48,59 @@ def total_storage_charges(network):
     Returns
     -------
     results : :pandas:`pandas.DataFrame<dataframe>`
-        Summarize and returns a ``DataFrame`` of the storages optimaziation.
+        Summarize and returns a ``DataFrame`` of the storage optimaziation.
 
     Notes
     -----
 
-    The ``results`` dataframe inclueds following parameters:
+    The ``results`` dataframe incluedes following parameters:
 
     charge : numeric
-         Quantity of charged Energy in MWh over scenario time steps
+         Quantity of charged energy in MWh over scenario time steps
     discharge : numeric
-        Quantity of discharged Energy in MWh over scenario time steps
+        Quantity of discharged energy in MWh over scenario time steps
     count : int
         Number of storage units
     p_nom_o_sum: numeric
         Sum of optimal installed power capacity
     """
+    if len(network.storage_units_t.p.sum()) > 0:
+        charge = network.storage_units_t.\
+            p[network.storage_units_t.p[network.
+                                        storage_units[network.storage_units.
+                                                      p_nom_opt > 0].index].
+              values > 0.].groupby(network.storage_units.
+                                   carrier, axis=1).sum().sum()
 
-    charge = network.storage_units_t.\
-        p[network.storage_units_t.p[network.
-                                    storage_units[network.storage_units.
-                                                  p_nom_opt > 0].index].
-          values > 0.].groupby(network.storage_units.
-                               carrier, axis=1).sum().sum()
+        discharge = network.storage_units_t.p[network.storage_units_t.
+                                              p[network.
+                                                storage_units[
+                                                    network.storage_units.
+                                                    p_nom_opt > 0].
+                                                index].values < 0.].\
+            groupby(network.storage_units.carrier, axis=1).sum().sum()
 
-    discharge = network.storage_units_t.p[network.storage_units_t.
-                                          p[network.
-                                            storage_units[network.storage_units.
-                                                          p_nom_opt > 0].
-                                            index].values < 0.].\
-        groupby(network.storage_units.carrier, axis=1).sum().sum()
+        count = network.storage_units.bus[network.storage_units.p_nom_opt > 0].\
+            groupby(network.storage_units.carrier, axis=0).count()
 
-    count = network.storage_units.bus[network.storage_units.p_nom_opt > 0].\
-        groupby(network.storage_units.carrier, axis=0).count()
+        p_nom_sum = network.storage_units.p_nom.groupby(network.storage_units.
+                                                        carrier, axis=0).sum()
 
-    p_nom_sum = network.storage_units.p_nom.groupby(network.storage_units.
-                                                    carrier, axis=0).sum()
+        p_nom_o_sum = network.storage_units.p_nom_opt.groupby(
+            network.storage_units.
+            carrier, axis=0).sum()
+        p_nom_o = p_nom_sum - p_nom_o_sum  # Zubau
 
-    p_nom_o_sum = network.storage_units.p_nom_opt.groupby(network.storage_units.
-                                                          carrier, axis=0).sum()
-    p_nom_o = p_nom_sum - p_nom_o_sum  # Zubau
+        results = pd.concat([charge.rename('charge'),
+                             discharge.rename('discharge'),
+                             p_nom_sum, count.rename('total_units'), p_nom_o
+                             .rename('extension'), ], axis=1, join='outer')
 
-    results = pd.concat([charge.rename('charge'), discharge.rename('discharge'),
-                         p_nom_sum, count.rename('total_units'), p_nom_o
-                         .rename('extension'), ], axis=1, join='outer')
+    else:
+        logger.info("No timeseries p for storages!")
+        results = None
 
     return results
-
-
-def etrago_storages(network):
-    """Using function ``total_storage_charges`` for storage and grid expantion
-    costs of eTraGo.
-
-    Parameters
-    ----------
-    network : :class:`etrago.tools.io.NetworkScenario`
-        eTraGo ``NetworkScenario`` based on PyPSA Network. See also
-        `pypsa.network <https://pypsa.org/doc/components.html#network>`_
-
-    Returns
-    -------
-    storages : :pandas:`pandas.DataFrame<dataframe>`
-        DataFrame with cumulated results of storages
-
-    """
-    # Charge / discharge (MWh) and installed capacity MW
-    storages = total_storage_charges(network=network)
-
-    return storages
 
 
 def etrago_storages_investment(network, json_file):
@@ -136,20 +121,22 @@ def etrago_storages_investment(network, json_file):
     """
     # check settings for extendable
     if 'storages' not in json_file['eTraGo']['extendable']:
-        print("The optimizition was not using parameter 'extendable': storages")
-        print("No storages expantion costs from etrago")
+        logger.info("The optimizition was not using parameter "
+                    " 'extendable': storages"
+                    "No storages expantion costs from etrago")
 
     if 'storages' in json_file['eTraGo']['extendable']:
 
         # get v_nom
         _bus = pd.DataFrame(network.buses['v_nom'])
+        _bus.index.name = "name"
         _bus.reset_index(level=0, inplace=True)
 
         _storage = network.storage_units[network.storage_units.p_nom_opt != 0]
-
+        _storage.reset_index(level=0, inplace=True)
         # provide storage installation costs per voltage level
         installed_storages = \
-            pd.merge(_storage, _bus, left_on='bus', right_on='index')
+            pd.merge(_storage, _bus, left_on='bus', right_on='name')
 
         installed_storages['investment_costs'] = (installed_storages.
                                                   capital_cost *

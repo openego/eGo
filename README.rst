@@ -23,7 +23,7 @@ can be found on
 Installing Developer Version
 ============================
 
-Create a virtualenvironment (where you like it) and activate it:
+Create a virtualenvironment and activate it:
 
 .. code-block::
 

@@ -1,0 +1,29 @@
+Release v0.3.0 (September 07, 2018)
+++++++++++++++++++++++++++++++++
+
+Power Flow and Clustering. eGo is now using eTraGo non-linear power flows based 
+on optimization results and its disaggregation of clustered results 
+to an original spatial complexities. With the release of eDisGo speed-up options, 
+a new storage integration methodology and more are now available.  
+
+
+Added features
+--------------
+
+* Update of dependencies
+* Implementing of Ding0 grid parallelization
+* Redesign of scenario settings and API simplifications
+* Adding and using the Power Flow of eTraGo in eGo
+* Testing  and using new dataprocessing Version v0.4.3, v0.4.4 and v0.4.5  
+* make eGo installable from pip via ``pip3 install eGo -- process-dependency-links``
+* Implementing eDisGo's storage distribution for MV and LV grids
+* Improved logging and the creation of status files
+* Maximal calculation time for ding0 grids can be set by user
+* eDisGo results import and export (all eGo-relevant data from eDisGo can be re-imported after a run)
+* Storage-related investment costs are also allocated to MV grids
+* Update of cluster plots
+* Plot of investment costs per line and bus
+* Update of ``ego.iplot`` for an interactive visualization 
+  
+
+

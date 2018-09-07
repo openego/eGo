@@ -5,14 +5,10 @@ Welcome to eGo documentation!
 
 
 .. image:: images/open_ego_logo.png
-   :align: right
    :scale: 40%
 
 
 
-
-.. note:: Note, this software is under construction and not
-          ready for a normal use.
 
 .. note:: Note, the data source of eGo relies on
           the Open Energy Database. - The registration for the public
@@ -35,7 +31,7 @@ Overview
    api
 
 
-Take also a look into the Documentation of
+Take also a look into the documentation of
 `eTraGo <http://eTraGo.readthedocs.io/>`_ and
 `eDisGo <http://edisgo.readthedocs.io/>`_ which are part of eGo.
 

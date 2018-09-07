@@ -12,4 +12,4 @@ Added features
 
 * Interface between eTraGo and eDisGo
 * Plots with folium
-* first Result structure
+* First result structure

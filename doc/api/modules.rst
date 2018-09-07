@@ -1,5 +1,5 @@
 ===
-ego
+eGo
 ===
 
 
@@ -51,7 +51,7 @@ The file can be found on
 
 .. json:object:: eDisGo
 
-   This section of :json:object:`scenario_setting.json` contains all input parameters for the eDisGo tool and the Clustering of MV grids.
+   This section of :json:object:`scenario_setting.json` contains all input parameters for the eDisGo tool and the clustering of MV grids.
 
    :property string ding0_files: Relative path to the MV grid files (created by `ding0 <https://readthedocs.org/projects/dingo/>`_) (e.g. ``''data/MV_grids/20180713110719''``)
    :property string choice_mode: Mode that eGo uses to chose MV grids out of the files in **ding0_files** (e.g. ``''manual''``, ``''cluster''`` or ``''all''``). If ``''manual''`` is chosen, the parameter **manual_grids** must contain a list of the desired grids. If ``''cluster''`` is chosen, **no_grids** must specify the desired number of clusters. If ``''all''`` is chosen, all MV grids from **ding0_files** are calculated.

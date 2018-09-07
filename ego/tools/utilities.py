@@ -19,10 +19,16 @@
 # File description
 """This module contains utility functions for the eGo application.
 """
+import csv
 import os
 import pandas as pd
 import json
+import csv
+import sys
 import logging
+logger = logging.getLogger(__name__)
+
+from time import localtime, strftime
 
 __copyright__ = ("Flensburg University of Applied Sciences, "
                  "Europa-Universität Flensburg, "
@@ -31,8 +37,8 @@ __license__ = "GNU Affero General Public License Version 3 (AGPL-3.0)"
 __author__ = "wolf_bunke"
 
 
-def define_logging(log_name='ego.log'):
-    """Helpers to log your modeling process with eGo and defines all settings.
+def define_logging(name):
+    """Helps to log your modeling process with eGo and defines all settings.
 
     Parameters
     ----------
@@ -47,33 +53,36 @@ def define_logging(log_name='ego.log'):
 
     # ToDo: Logger should be set up more specific
     #       add pypsa and other logger INFO to ego.log
+    now = strftime("%Y-%m-%d_%H%M", localtime())
+
+    log_dir = 'logs'
+    if not os.path.exists(log_dir):
+        os.makedirs(log_dir)
 
     # Logging
-    logging.basicConfig(format='%(asctime)s %(message)s',
+    logging.basicConfig(stream=sys.stdout,
+                        format='%(asctime)s %(message)s',
                         level=logging.INFO)
 
-    logger = logging.getLogger(__name__)
-    logger = logging.getLogger('ego')
+    logger = logging.getLogger(name)
 
-    logger = logging.FileHandler(log_name, mode='w')
+    formatter = logging.Formatter(
+        '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    )
 
-    formatter = logging.Formatter('%(asctime)s - %(name)s - \
-                                   %(levelname)s - %(message)s')
-    logger.setFormatter(formatter)
-
-    # logger.addHandler(xy)
+#    logger = logging.FileHandler(log_name, mode='w')
+    fh = logging.FileHandler(
+        log_dir + '/' + name + '_' + now + '.log', mode='w')
+    fh.setLevel(logging.INFO)
+    fh.setFormatter(formatter)
+    logger.addHandler(fh)
 
     return logger
 
 
-logger = define_logging(log_name='ego.log')
-
-# import scenario settings **args
-
-
 def get_scenario_setting(jsonpath='scenario_setting.json'):
     """Get and open json file with scenaio settings of eGo.
-    The settings incluede global, eTraGo and eDisGo specific
+    The settings incluede eGo, eTraGo and eDisGo specific
     settings of arguments and parameters for a reproducible
     calculation.
 
@@ -90,31 +99,102 @@ def get_scenario_setting(jsonpath='scenario_setting.json'):
     """
     path = os.getcwd()
     # add try ego/
-    print("Your path is:\n", path)
+    logger.info("Your path is: {}".format(path))
 
-    with open(path + '/'+jsonpath) as f:
+    with open(path + '/' + jsonpath) as f:
         json_file = json.load(f)
 
-    if json_file['global'].get('eTraGo') == True:
+    # check settings
+    if (json_file['eGo']['eTraGo'] is False and json_file['eGo']['eDisGo']
+            is False):
+        logger.warning("Something went wrong! \n"
+                       "Please contoll your settings and restart. \n"
+                       "Set at least eTraGo = true")
+        return
 
-        print('Using and importing eTraGo settings')
+    if (json_file['eGo']['eTraGo'] is None and json_file['eGo']['eDisGo']
+            is None):
+        logger.warning("Something went wrong! \n"
+                       "Please contoll your settings and restart. \n"
+                       "Set at least eTraGo = true")
+        return
+
+    if json_file['eGo']['result_id'] and json_file['eGo']['csv_import_eTraGo']:
+        logger.warning(
+            "You set a DB result_id and a csv import path! \n"
+            "Please remove on of this settings")
+        return
+        # or ? json_file['eGo']['result_id'] = None
+
+    if json_file['eGo']['eTraGo'] is None and json_file['eGo']['eDisGo']:
+        logger.info(
+            "eDisGo needs eTraGo results. Please change your settings!\n")
+        return
+
+    if json_file['eGo']['eTraGo'] is False and json_file['eGo']['eDisGo']:
+        logger.info(
+            "eDisGo needs eTraGo results. Please change your settings!\n")
+        return
+
+    if (json_file['eGo']['result_id'] is None and
+            json_file['eGo']['csv_import_eTraGo'] is None):
+        logger.info(
+            "No data import from results is set \n"
+            "eGo runs by given settings")
+
+    if (json_file['eGo']['csv_import_eTraGo'] and
+            json_file['eGo']['csv_import_eDisGo']):
+        logger.info(
+            "eDisGo and eTraGo results will be imported from csv\n")
+
+    if json_file['eGo'].get('eTraGo') == True:
+
+        logger.info('Using and importing eTraGo settings')
 
         # special case of SH and model_draft
-        # ToDo: check and maybe remove this part
+        # TODO: check and maybe remove this part
         sh_scen = ["SH Status Quo", "SH NEP 2035", "SH eGo 100"]
         if json_file['eTraGo'].get('scn_name') in sh_scen and json_file['eTraGo'].\
-                get('gridversion') == "v0.4.2":
+                get('gridversion') is not None:
             json_file['eTraGo']['gridversion'] = None
 
-    # add global parameter to eTraGo scn_set
-    json_file['eTraGo'].update({'db': json_file['global'].get('db')})
-    json_file['eTraGo'].update(
-        {'gridversion': json_file['global'].get('gridversion')})
+        if json_file['eTraGo'].get('extendable') == "['network', 'storages']":
+            json_file['eTraGo'].update({'extendable': ['network', 'storages']})
 
-    if json_file['global'].get('eDisGo') == True:
-        print('Use eDisGo settings')
+        if json_file['eTraGo'].get('extendable') == "['network']":
+            json_file['eTraGo'].update({'extendable': ['network']})
+
+        if json_file['eTraGo'].get('extendable') == "['storages']":
+            json_file['eTraGo'].update({'extendable': ['storages']})
+
+    if json_file['eGo'].get('eDisGo') == True:
+        logger.info('Using and importing eDisGo settings')
 
     return json_file
+
+
+def fix_leading_separator(csv_file, **kwargs):
+    """
+    Takes the path to a csv-file. If the first line of this file has a leading
+    separator in its header, this field is deleted. If this is done the second
+    field of every row is removed, too.
+    """
+    with open(csv_file, 'r') as f:
+        lines = csv.reader(f, **kwargs)
+        if not lines:
+            raise Exception('File %s contained no data' % csv_file)
+        first_line = next(lines)
+        if first_line[0] == '':
+            path, fname = os.path.split(csv_file)
+            tmp_file = os.path.join(path, 'tmp_' + fname)
+            with open(tmp_file, 'w+') as out:
+                writer = csv.writer(out, **kwargs)
+                writer.writerow(first_line[1:])
+                for line in lines:
+                    l = line[2:]
+                    l.insert(0, line[0])
+                    writer.writerow(l, **kwargs)
+            os.rename(tmp_file, csv_file)
 
 
 def get_time_steps(json_file):
