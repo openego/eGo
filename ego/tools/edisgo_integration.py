@@ -35,6 +35,7 @@ if not 'READTHEDOCS' in os.environ:
     from egoio.tools import db
     from edisgo.grid.network import Results, TimeSeriesControl
     from edisgo.tools.edisgo_run import (
+        run_edisgo_basic,
         run_edisgo_pool_flexible
     )
     from edisgo.grid import tools
@@ -85,9 +86,13 @@ class EDisGoNetworks:
 
         # Create reduced eTraGo network
         self._etrago_network = _ETraGoData(etrago_network)
+        del etrago_network
 
         # eDisGo specific naming
         self._edisgo_scenario_translation()
+
+        # Program information
+        self._run_finished = False
 
         # eDisGo Result grids
         self._edisgo_grids = {}
@@ -165,7 +170,7 @@ class EDisGoNetworks:
 
         """
         return self._grid_investment_costs
-    
+
     def get_mv_grid_from_bus_id(self, bus_id):
         """
         Queries the MV grid ID for a given eTraGo bus
@@ -330,6 +335,7 @@ class EDisGoNetworks:
 
         # eDisGo args import
         if self._csv_import:
+            #            raise NotImplementedError
 
             with open(os.path.join(
                     self._csv_import,
@@ -668,6 +674,8 @@ class EDisGoNetworks:
                     )
                 count += 1
 
+        self._run_finished = True
+
     def _run_edisgo(
             self,
             mv_grid_id):
@@ -921,7 +929,7 @@ class EDisGoNetworks:
                     str(mv_grid_id),
                     'grid_expansion_results',
                     'grid_expansion_costs.csv')
-    
+
                 grid_expansion_costs = pd.read_csv(
                     file_path,
                     index_col=0)
@@ -1154,4 +1162,3 @@ class _ResultsImported:
         
     def s_res(self):
         return self._s_res
-

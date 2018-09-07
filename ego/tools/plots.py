@@ -38,11 +38,13 @@ if not 'READTHEDOCS' in os.environ:
     import folium
     from folium import plugins
     import branca.colormap as cm
+    import oedialect
     import webbrowser
     from egoio.db_tables.model_draft import (
         EgoGridMvGriddistrict, RenpassGisParameterRegion)
     from egoio.db_tables.grid import EgoDpMvGriddistrict
     import matplotlib.pyplot as plt
+    import matplotlib as mpl
 
 import logging
 logger = logging.getLogger('ego')
@@ -89,7 +91,12 @@ def carriers_colore():
 
 
 def ego_colore():
-    """
+    """ Get the four eGo colores
+
+    Returns
+    -------
+    colors :  :obj:`dict`
+        List of eGo matplotlib colores
     """
     colors = {'egoblue1': '#1F567D',
               'egoblue2': '#84A2B8',
@@ -99,8 +106,148 @@ def ego_colore():
 
     return colors
 
-def polt_line_expansion(ego, filename=None, dpi=300, column='overnight_costs'):
+
+def plot_storage_expansion(ego, filename=None, dpi=300, column='overnight_costs',
+                           scaling=1):
     """ Plot line expantion
+
+    Parameters
+    ----------
+    ego : :class:`ego.tools.io.eGo`
+        eGo ``eGo`` inclueds on eTraGo and eDisGo
+    filename: list
+        Filename and or path of location to store graphic
+    dpi: int
+        dpi value of graphic
+    column: str
+        column name of eTraGo's line costs. Default: ``overnight_costs`` in EURO.
+        Also available ``s_nom_expansion`` in MVA or
+        annualized ``investment_costs`` in EURO
+    scaling: numeric
+        Factor to scale storage size of bus_sizes
+
+    Returns
+    -------
+    plot :obj:`matplotlib.pyplot.show`
+            https://matplotlib.org/api/pyplot_api.html#matplotlib.pyplot.show
+    """
+
+    network = ego.etrago.network
+    json_file = ego.json_file
+
+    # get storage values
+    if 'storages' in ego.json_file['eTraGo']['extendable']:
+        storage_inv = network.storage_units[network.storage_units.capital_cost > 0.]
+        storage_inv['investment_costs'] = (storage_inv.capital_cost *
+                                           storage_inv.p_nom_opt)
+        storage_inv['overnight_costs'] = etrago_convert_overnight_cost(
+            storage_inv['investment_costs'], json_file)
+
+    msd_max = storage_inv[column].max()
+    msd_median = storage_inv[column].median()
+    msd_min = storage_inv[column].min()
+
+    if (msd_max - msd_min) > 1.e+5:
+
+        if msd_max != 0:
+            LabelVal = int(log10(msd_max))
+        else:
+            LabelVal = 0
+        if LabelVal < 0:
+            LabelUnit = '€'
+            msd_max, msd_median, msd_min = msd_max * \
+                1000, msd_median * 1000, msd_min * 1000
+            storage_inv[column] = storage_inv[column] * 1000
+        elif LabelVal < 3:
+            LabelUnit = 'k €'
+        else:
+            LabelUnit = 'M €'
+            msd_max, msd_median, msd_min = msd_max / \
+                1000, msd_median / 1000, msd_min / 1000
+            storage_inv[column] = storage_inv[column] / 1000
+    else:
+        LabelUnit = '€'
+
+    # start plotting
+    figsize = 6, 6
+    fig, ax = plt.subplots(1, 1, figsize=(figsize))
+
+    bus_sizes = storage_inv[column] * scaling
+
+    if column == 'investment_costs':
+        title = 'Annualized Storage costs per timestep'
+        ltitel = 'Storage costs'
+    if column == 'overnight_costs':
+        title = 'Total Expansion Costs Overnight'
+        ltitel = 'Storage costs'
+    if column == 'p_nom_opt':
+        title = 'Storage Expansion in MVA'
+        ltitel = 'Storage size'
+        LabelUnit = 'kW'
+    if column not in ['investment_costs', 'overnight_costs', 'p_nom_opt']:
+        title = 'unknown'
+        ltitel = 'unknown'
+        LabelUnit = 'unknown'
+
+    if sum(storage_inv[column]) == 0:
+        sc = network.plot(bus_sizes=0,
+                          ax=ax,
+                          title="No storage expantion")
+    else:
+        sc = network.plot(
+            bus_sizes=bus_sizes,
+            bus_colors='g',
+            # bus_cmap=
+            # line_colors='gray',
+            title=title,
+            line_widths=0.3
+        )
+
+    ax.set_alpha(0.4)
+
+    # add legend
+    for area in [msd_max, msd_median, msd_min]:
+        plt.scatter([], [], c='white', s=area * scaling,
+                    label='= ' + str(round(area, 0)) + LabelUnit + ' ')
+
+    plt.legend(scatterpoints=1,
+               labelspacing=1,
+               title=ltitel,
+               loc='upper left',
+               shadow=True,
+               fontsize='x-large')
+
+    ax.autoscale(tight=True)
+
+    if filename is None:
+        plt.show()
+    else:
+        fig = ax.get_figure()
+        fig.set_size_inches(10, 8, forward=True)
+        fig.savefig(filename,  dpi=dpi)
+        plt.close()
+
+
+def plot_line_expansion(ego, filename=None, dpi=300, column='overnight_costs'):
+    """ Plot line expantion
+
+    Parameters
+    ----------
+    ego : :class:`ego.tools.io.eGo`
+        eGo ``eGo`` inclueds on eTraGo and eDisGo
+    filename: list
+        Filename and or path of location to store graphic
+    dpi: int
+        dpi value of graphic
+    column: str
+        column name of eTraGo's line costs. Default: ``overnight_costs`` in EURO.
+        Also available ``s_nom_expansion`` in MVA or
+        annualized ``investment_costs`` in EURO
+
+    Returns
+    -------
+    plot :obj:`matplotlib.pyplot.show`
+            https://matplotlib.org/api/pyplot_api.html#matplotlib.pyplot.show
     """
 
     network = ego.etrago.network
@@ -171,7 +318,8 @@ def polt_line_expansion(ego, filename=None, dpi=300, column='overnight_costs'):
         fig.savefig(filename,  dpi=dpi)
         plt.close()
 
-def grid_storage_investment(costs_df, filename, display, var=None):
+
+def plot_grid_storage_investment(costs_df, filename, display, var=None):
     """
     """
     colors = ego_colore()
@@ -180,7 +328,8 @@ def grid_storage_investment(costs_df, filename, display, var=None):
 
     if var == 'overnight_cost':
         tic = costs_df[['component',
-                                          'overnight_costs', 'voltage_level']]
+                        'overnight_costs',
+                        'voltage_level']]
         tic.set_index(['voltage_level', 'component'], inplace=True)
         ax = tic.unstack().plot(kind='bar',
                                 rot=0,
@@ -195,7 +344,8 @@ def grid_storage_investment(costs_df, filename, display, var=None):
 
     else:
         tic = costs_df[['component',
-                                          'capital_cost', 'voltage_level']]
+                        'capital_cost',
+                        'voltage_level']]
         tic.set_index(['voltage_level', 'component'], inplace=True)
         ax = tic.unstack().plot(kind='bar',
                                 rot=0,
@@ -403,10 +553,26 @@ def plot_edisgo_cluster(ego, filename, region=['DE'], display=False, dpi=600):
 
     # get country Polygon
     cnty = get_country(session, region=region)
-    # get grid districts
+    # get grid districts singel
     if ego.json_file['eGo']['eDisGo'] is True:
         gridcluster = prepareGD(session, cluster_id, version)
         gridcluster = gridcluster.merge(cluster, on='subst_id')
+        # get represented grids
+        repre_grids = pd.DataFrame(columns=['subst_id',
+                                            'geometry',
+                                            'cluster_id',
+                                            'style'])
+        for cluster in gridcluster.index:
+
+            rep_id = gridcluster.represented_grids[cluster]
+            # represented_grids
+            repre_grid = prepareGD(session, rep_id, version)
+            repre_grid['cluster_id'] = gridcluster.subst_id[cluster]
+            # repre_grids['style'] = """{'fillColor': '#2e1f56', 'weight': 2, 'color': 'black'}"""
+            repre_grids = repre_grids.append(repre_grid, ignore_index=True)
+        # add common SRID
+        crs = {'init': 'epsg:4326'}
+        repre_grids = gpd.GeoDataFrame(repre_grids, crs=crs)
 
     # get all MV grids
     bus_id = "all"
@@ -416,11 +582,14 @@ def plot_edisgo_cluster(ego, filename, region=['DE'], display=False, dpi=600):
     figsize = 5, 5
     fig, ax = plt.subplots(1, 1, figsize=(figsize))
 
-    cnty.plot(ax=ax, color='white', alpha=0.5)
+    cnty.plot(ax=ax, color='white', edgecolor='whitesmoke', alpha=0.5)
     mvgrids.plot(ax=ax, color='white', alpha=0.1,  linewidth=0.5)
     if ego.json_file['eGo']['eDisGo'] is True:
+        repre_grids.plot(ax=ax, column='cluster_id',
+                         cmap='GnBu', edgecolor='whitesmoke', legend=True)
         gridcluster.plot(ax=ax, column='no_of_points_per_cluster',
                          cmap='OrRd', legend=True)
+
     # add storage distribution
     _storage_distribution(ego.etrago.network, scaling=1, filename=None,
                           ax=ax, fig=fig)
@@ -470,6 +639,11 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
 
     network = ego.etrago.network
     session = ego.session
+    # get scenario name from args
+    scn_name = ego.json_file['eTraGo']['scn_name']
+    version = ego.json_file['eTraGo']['gridversion']
+    # define SRID
+    crs = {'init': 'epsg:4326'}
 
     if geoloc is None:
         geoloc = [network.buses.y.mean(), network.buses.x.mean()]
@@ -478,7 +652,6 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
                     control_scale=True, zoom_start=6)
 
     # add Nasa light background
-    # http://nbviewer.jupyter.org/github/ocefpaf/folium_notebooks/blob/master/test_add_tile_layer.ipynb
     if tiles == 'Nasa':
         tiles = 'https://map1.vis.earthdata.nasa.gov/wmts-webmerc/VIIRS_CityLights_2012/default/GoogleMapsCompatible_Level8/{z}/{y}/{x}.jpg'
         attr = ('&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="http://cartodb.com/attributions">CartoDB</a>')
@@ -491,10 +664,6 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
     # Legend name
     bus_group = folium.FeatureGroup(name='Buses full informations')
     # add buses
-
-    # get scenario name from args
-    scn_name = ego.json_file['eTraGo']['scn_name']
-    version = ego.json_file['eTraGo']['gridversion']
 
     for name, row in network.buses.iterrows():
         # get information of buses
@@ -510,8 +679,10 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
      					sub_network: {} <br>
      					Version: {} <br>
      				""".format(row.name, scn_name, row['carrier'],
-                    row['control'], row['type'], row['v_nom'], row['v_mag_pu_set'],
-                    row['v_mag_pu_min'], row['v_mag_pu_max'], row['sub_network'], version)
+                    row['control'], row['type'], row['v_nom'],
+                    row['v_mag_pu_set'],
+                    row['v_mag_pu_min'], row['v_mag_pu_max'],
+                    row['sub_network'], version)
         # add Popup values use HTML for formating
         folium.Marker([row["y"], row["x"]], popup=popup).add_to(bus_group)
 
@@ -573,8 +744,8 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
         lines['capital_investment'] = lines.s_nom_expansion.multiply(
             lines.capital_cost, axis='index')
     else:
-        lines['s_nom_expansion'] = 'No expansion calculated'
-        lines['capital_investment'] = 'No investment calculated'
+        lines['s_nom_expansion'] = 0.
+        lines['capital_investment'] = 0.
 
     # Prepare lines
     line_results_group = folium.FeatureGroup(name='Lines specific results')
@@ -616,7 +787,9 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
             colormap2, lines, line, column="s_nom_expansion")
         # ToDo make it more generic
         folium.PolyLine(([y0[line], x0[line]], [y1[line], x1[line]]),
-                        popup=popup, color=convert_to_hex(lr_color)).add_to(line_results_group)
+                        popup=popup,
+                        color=convert_to_hex(lr_color)
+                        ).add_to(line_results_group)
 
     # add grid districs
     if ego.json_file['eGo']['eDisGo'] is True:
@@ -629,7 +802,7 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
 
         # todo does not work with k-mean Cluster
         # Add for loop
-        # crs = {'init': 'epsg:4326'}
+        crs = {'init': 'epsg:4326'}
 
         # for name, row in district.iterrows():
         pop = """<b>Grid district:</b> {} <br>
@@ -637,6 +810,88 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
         # date = gpd.GeoDataFrame(row, columns=['subst_id', 'geometry'], crs=crs)
 
         folium.GeoJson(district).add_to(grid_group).add_child(folium.Popup(pop))
+
+        # Add cluster grids
+        repgrid_group = folium.FeatureGroup(name='represented Grids by Cluster')
+        cluster = ego.edisgo.grid_choice
+        cluster = cluster.rename(
+            columns={"the_selected_network_id": "subst_id"})
+
+        repre_grids = pd.DataFrame(columns=['subst_id',
+                                            'geometry',
+                                            'cluster_id'
+                                            'color',
+                                            'mpl_color'])
+
+        style_function = (lambda x: {
+                          'fillColor':  x['properties']['color'],
+                          'weight': 0.5, 'color': 'black'})
+
+        for idx in cluster.index:
+
+            pop2 = """<b>Represented Grid:</b> {} <br>
+                """.format(cluster.subst_id[idx])
+
+            cluster_id = list(cluster.represented_grids[idx])
+            # represented_grids
+            repre_grid = prepareGD(session, cluster_id, version)
+            repre_grid['cluster_id'] = cluster.subst_id[idx]
+
+            repre_grids = repre_grids.append(repre_grid, ignore_index=True)
+            # prepare cluster colore
+            vals = list(repre_grids.cluster_id)  # cluster_id
+            normal = mpl.colors.Normalize(vals)
+            # cm.get_cmap('BrBG')
+            cellColours = plt.cm.jet(vals)  # change here colormap
+            repre_grids['color'] = ''
+
+            for i in repre_grids.index:
+                repre_grids['mpl_color'][i] = cellColours[i]
+                # get hex color
+                repre_grids['color'][i] = convert_to_hex(
+                    repre_grids['mpl_color'][i])
+
+            repre_grids['mpl_color'] = ''
+
+            repre_grids = gpd.GeoDataFrame(
+                repre_grids, geometry='geometry', crs=crs)
+
+            folium.GeoJson(repre_grids,
+                           style_function=style_function
+                           ).add_to(repgrid_group).add_child(
+                folium.Popup(pop2))
+
+    # Create storage expantion plot
+    store_group = folium.FeatureGroup(name='Storage expantion')
+
+    sto_x = network.storage_units.bus.map(network.buses.x)
+    sto_y = network.storage_units.bus.map(network.buses.y)
+    cols = list(network.storage_units.columns)
+    stores = network.storage_units
+    sto_max = stores.p_nom_opt.max()
+
+    for store in network.storage_units.index:
+        popup = """ <b>Storage:</b> {} <br>
+                    version: {} <br>""".format(store, version)
+        for col in cols:
+            popup += """ {}: {} <br>""".format(col, stores[col][store])
+
+        # get storage radius by p_nom_opt
+        if (stores['p_nom_opt'][store] - stores['p_nom'][store]) > 0.:
+            radius = (9**(1+stores['p_nom_opt'][store]/sto_max))
+        if (stores['p_nom_opt'][store] - stores['p_nom'][store]) == 0.:
+            radius = 0
+
+        # add singel storage
+        folium.CircleMarker(
+            location=([sto_y[store], sto_x[store]]),
+            radius=radius,
+            popup=popup,
+            color='#3186cc',
+            fill=True,
+            fill_color='#3186cc',
+            weight=1
+        ).add_to(store_group)
 
     # add layers and others
     colormap.caption = 'Colormap of Lines s_nom'
@@ -649,7 +904,9 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
     line_group.add_to(mp)
     if ego.json_file['eGo']['eDisGo'] is True:
         grid_group.add_to(mp)
+        repgrid_group.add_to(mp)
     line_results_group.add_to(mp)
+    store_group.add_to(mp)
     folium.LayerControl().add_to(mp)
 
     plugins.Fullscreen(
