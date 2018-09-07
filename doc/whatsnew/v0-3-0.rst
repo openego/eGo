@@ -11,11 +11,15 @@ Added features
 
 * Update of dependencies
 * Implemting of Ding0 grid parallelization
-* Redesign of Application of the methods call and structure of the calculation settings 
+* Redesign of scenario settings and API simplifications
 * Adding and using the Power Flow of eTraGo in eGo
 * Testing  and using new Dataprocessing Version v0.4.3, v0.4.4 and v0.4.5  
 * make eGo installable from pip via ``pip3 install eGo -- process-dependency-links``
 * Implementing eDisGo's storage distribution for MV and LV grids
-* ..
+* Improved logging and the creation of status files
+* Maximal calculation time for ding0 grids can be set by user
+* eDisGo results import and export (all eGo-relevant data from eDisGo can be re-imported after a run)
+* Storage-related investment costs are also allocated to MV grids
+
 
 
