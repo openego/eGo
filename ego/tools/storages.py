@@ -74,8 +74,9 @@ def etrago_storages(network):
 
         discharge = network.storage_units_t.p[network.storage_units_t.
                                               p[network.
-                                                storage_units[network.storage_units.
-                                                              p_nom_opt > 0].
+                                                storage_units[
+                                                    network.storage_units.
+                                                    p_nom_opt > 0].
                                                 index].values < 0.].\
             groupby(network.storage_units.carrier, axis=1).sum().sum()
 
@@ -85,11 +86,13 @@ def etrago_storages(network):
         p_nom_sum = network.storage_units.p_nom.groupby(network.storage_units.
                                                         carrier, axis=0).sum()
 
-        p_nom_o_sum = network.storage_units.p_nom_opt.groupby(network.storage_units.
-                                                              carrier, axis=0).sum()
+        p_nom_o_sum = network.storage_units.p_nom_opt.groupby(
+            network.storage_units.
+            carrier, axis=0).sum()
         p_nom_o = p_nom_sum - p_nom_o_sum  # Zubau
 
-        results = pd.concat([charge.rename('charge'), discharge.rename('discharge'),
+        results = pd.concat([charge.rename('charge'),
+                             discharge.rename('discharge'),
                              p_nom_sum, count.rename('total_units'), p_nom_o
                              .rename('extension'), ], axis=1, join='outer')
 
