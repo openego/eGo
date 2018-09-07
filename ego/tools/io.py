@@ -31,12 +31,9 @@ import json
 
 if not 'READTHEDOCS' in os.environ:
     import pyproj as proj
-    # import geopandas as gpd
-
     from shapely.geometry import Polygon, Point, MultiPolygon
     from sqlalchemy import MetaData, create_engine,  and_, func
     from sqlalchemy.orm import sessionmaker
-    from sqlalchemy.ext.automap import automap_base
     import oedialect
     from geoalchemy2 import *
 

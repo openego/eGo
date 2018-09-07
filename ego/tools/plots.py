@@ -24,6 +24,8 @@ eGo results.
 import numpy as np
 import pandas as pd
 import os
+geopandas = True
+
 if not 'READTHEDOCS' in os.environ:
     from etrago.tools.plot import (plot_line_loading, plot_stacked_gen,
                                    add_coordinates, curtailment, gen_dist,
@@ -34,10 +36,13 @@ if not 'READTHEDOCS' in os.environ:
     from math import sqrt, log10
     from shapely.geometry import Polygon, Point, MultiPolygon
     from geoalchemy2 import *
-    import geopandas as gpd
-    import folium
-    from folium import plugins
-    import branca.colormap as cm
+    try:
+        import geopandas as gpd
+        import folium
+        from folium import plugins
+        import branca.colormap as cm
+    except:
+        geopandas = False
     import oedialect
     import webbrowser
     from egoio.db_tables.model_draft import (
