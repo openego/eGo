@@ -67,11 +67,13 @@ def create_etrago_results(network, scn_name):  # rename function
         'p_nom_opt'].sum()  # in MW
     #  power price
     etrago['marginal_cost'] = etg.generators.groupby('carrier'
-                                                     )['marginal_cost'].mean()  # in in [EUR]
+                                                     )['marginal_cost'].mean()
+    # in in [EUR]
 
     # get power price by production MWh _t.p * marginal_cost
     power_price = etg.generators_t.p[etg.generators[etg.generators.
-                                                    control != 'Slack'].index] * etg.generators.\
+                                                    control != 'Slack']
+                                     .index] * etg.generators.\
         marginal_cost[etg.generators[etg.generators.
                                      control != 'Slack'].index]  # without Slack
 
@@ -81,9 +83,12 @@ def create_etrago_results(network, scn_name):  # rename function
 
     # use country code
     p_by_carrier = pd.concat([etg.generators_t.p
-                              [etg.generators[etg.generators.control != 'Slack'].index],
-                              etg.generators_t.p[etg.generators[etg.
-                                                                generators.control == 'Slack'].index].iloc[:, 0].
+                              [etg.generators[etg.generators.control !=
+                                              'Slack'].index],
+                              etg.generators_t.p[etg.generators[
+                                  etg.
+                                  generators.control == 'Slack'].index
+                              ].iloc[:, 0].
                               apply(lambda x: x if x > 0 else 0)], axis=1).\
         groupby(etg.generators.carrier, axis=1).sum()  # in MWh
 
