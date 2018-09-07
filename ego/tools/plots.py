@@ -642,6 +642,8 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
     # get scenario name from args
     scn_name = ego.json_file['eTraGo']['scn_name']
     version = ego.json_file['eTraGo']['gridversion']
+    # define SRID
+    crs = {'init': 'epsg:4326'}
 
     if geoloc is None:
         geoloc = [network.buses.y.mean(), network.buses.x.mean()]
@@ -650,7 +652,6 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
                     control_scale=True, zoom_start=6)
 
     # add Nasa light background
-    # http://nbviewer.jupyter.org/github/ocefpaf/folium_notebooks/blob/master/test_add_tile_layer.ipynb
     if tiles == 'Nasa':
         tiles = 'https://map1.vis.earthdata.nasa.gov/wmts-webmerc/VIIRS_CityLights_2012/default/GoogleMapsCompatible_Level8/{z}/{y}/{x}.jpg'
         attr = ('&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="http://cartodb.com/attributions">CartoDB</a>')
@@ -678,8 +679,10 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
      					sub_network: {} <br>
      					Version: {} <br>
      				""".format(row.name, scn_name, row['carrier'],
-                    row['control'], row['type'], row['v_nom'], row['v_mag_pu_set'],
-                    row['v_mag_pu_min'], row['v_mag_pu_max'], row['sub_network'], version)
+                    row['control'], row['type'], row['v_nom'],
+                    row['v_mag_pu_set'],
+                    row['v_mag_pu_min'], row['v_mag_pu_max'],
+                    row['sub_network'], version)
         # add Popup values use HTML for formating
         folium.Marker([row["y"], row["x"]], popup=popup).add_to(bus_group)
 
@@ -784,7 +787,9 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
             colormap2, lines, line, column="s_nom_expansion")
         # ToDo make it more generic
         folium.PolyLine(([y0[line], x0[line]], [y1[line], x1[line]]),
-                        popup=popup, color=convert_to_hex(lr_color)).add_to(line_results_group)
+                        popup=popup,
+                        color=convert_to_hex(lr_color)
+                        ).add_to(line_results_group)
 
     # add grid districs
     if ego.json_file['eGo']['eDisGo'] is True:
@@ -815,13 +820,15 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
         repre_grids = pd.DataFrame(columns=['subst_id',
                                             'geometry',
                                             'cluster_id'
-                                            'colore'])
+                                            'color',
+                                            'mpl_color'])
 
         style_function = (lambda x: {
                           'fillColor':  x['properties']['color'],
                           'weight': 0.5, 'color': 'black'})
 
         for idx in cluster.index:
+
             pop2 = """<b>Represented Grid:</b> {} <br>
                 """.format(cluster.subst_id[idx])
 
@@ -832,21 +839,27 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
 
             repre_grids = repre_grids.append(repre_grid, ignore_index=True)
             # prepare cluster colore
-        vals = list(repre_grids.subst_id)
-        normal = mpl.colors.Normalize(vals)
-        cellColours = plt.cm.hot(vals)  # change here colormap
-        for i in repre_grids.index:
+            vals = list(repre_grids.cluster_id)  # cluster_id
+            normal = mpl.colors.Normalize(vals)
+            # cm.get_cmap('BrBG')
+            cellColours = plt.cm.jet(vals)  # change here colormap
+            repre_grids['color'] = ''
 
-            repre_grids['color'] = convert_to_hex(cellColours[i])
+            for i in repre_grids.index:
+                repre_grids['mpl_color'][i] = cellColours[i]
+                # get hex color
+                repre_grids['color'][i] = convert_to_hex(
+                    repre_grids['mpl_color'][i])
 
-        repre_grids = gpd.GeoDataFrame(
-            repre_grids, geometry='geometry', crs=crs)
+            repre_grids['mpl_color'] = ''
 
-        folium.GeoJson(repre_grids,
-                       style_function=style_function
-                       ).add_to(repgrid_group).add_child(
-            folium.Popup(pop2))
-        print(repre_grids.groupby('color').count())
+            repre_grids = gpd.GeoDataFrame(
+                repre_grids, geometry='geometry', crs=crs)
+
+            folium.GeoJson(repre_grids,
+                           style_function=style_function
+                           ).add_to(repgrid_group).add_child(
+                folium.Popup(pop2))
 
     # Create storage expantion plot
     store_group = folium.FeatureGroup(name='Storage expantion')
