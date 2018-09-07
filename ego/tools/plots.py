@@ -594,13 +594,18 @@ def plot_edisgo_cluster(ego, filename, region=['DE'], display=False, dpi=600):
     figsize = 5, 5
     fig, ax = plt.subplots(1, 1, figsize=(figsize))
 
-    cnty.plot(ax=ax, color='white', edgecolor='whitesmoke', alpha=0.5)
-    mvgrids.plot(ax=ax, color='white', alpha=0.1,  linewidth=0.5)
+    cnty.plot(ax=ax, color='white',
+              edgecolor='whitesmoke', alpha=0.5, linewidth=0.1)
+    mvgrids.plot(ax=ax, color='white', alpha=0.1,  linewidth=0.1)
     if ego.json_file['eGo']['eDisGo'] is True:
         repre_grids.plot(ax=ax, column='cluster_id',
-                         cmap='GnBu', edgecolor='whitesmoke', legend=True)
+                         cmap='GnBu', edgecolor='whitesmoke',
+                         linewidth=0.1,
+                         legend=True)
         gridcluster.plot(ax=ax, column='no_of_points_per_cluster',
-                         cmap='OrRd', legend=True)
+                         cmap='OrRd',
+                         linewidth=0.1,
+                         legend=True)
 
     # add storage distribution
     _storage_distribution(ego.etrago.network, scaling=1, filename=None,
