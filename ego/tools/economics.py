@@ -292,7 +292,7 @@ def etrago_operating_costs(network):
 
 
 def etrago_grid_investment(network, json_file):
-    """ Function to get grid expantion costs form etrago
+    """ Function to get grid expantion costs from eTraGo
 
     Parameters
     ----------

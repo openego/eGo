@@ -31,7 +31,7 @@ Overview
    api
 
 
-Take also a look into the Documentation of
+Take also a look into the documentation of
 `eTraGo <http://eTraGo.readthedocs.io/>`_ and
 `eDisGo <http://edisgo.readthedocs.io/>`_ which are part of eGo.
 

@@ -117,7 +117,7 @@ def plot_storage_expansion(ego, filename=None, dpi=300,
     ego : :class:`ego.tools.io.eGo`
         eGo ``eGo`` inclueds on eTraGo and eDisGo
     filename: list
-        Filename and or path of location to store graphic
+        Filename and/or path of location to store graphic
     dpi: int
         dpi value of graphic
     column: str
@@ -236,7 +236,7 @@ def plot_line_expansion(ego, filename=None, dpi=300, column='overnight_costs'):
     Parameters
     ----------
     ego : :class:`ego.tools.io.eGo`
-        eGo ``eGo`` inclueds on eTraGo and eDisGo
+        eGo  ``eGo`` inclueds on eTraGo and eDisGo
     filename: list
         Filename and or path of location to store graphic
     dpi: int
@@ -615,7 +615,7 @@ def plot_edisgo_cluster(ego, filename, region=['DE'], display=False, dpi=600):
 
 def igeoplot(ego, tiles=None, geoloc=None, args=None):
     """Plot function in order to display eGo results on leaflet OSM map.
-    This function will open the results in your main Webbrowser
+    This function will open the results in your main web browser
 
     Parameters
     ----------

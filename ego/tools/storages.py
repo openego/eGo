@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # File description
-"""This module contains functions to summarize and studies on storages.
+"""This module contains functions for storage units.
 """
 
 import io
@@ -48,17 +48,17 @@ def etrago_storages(network):
     Returns
     -------
     results : :pandas:`pandas.DataFrame<dataframe>`
-        Summarize and returns a ``DataFrame`` of the storages optimaziation.
+        Summarize and returns a ``DataFrame`` of the storage optimaziation.
 
     Notes
     -----
 
-    The ``results`` dataframe inclueds following parameters:
+    The ``results`` dataframe incluedes following parameters:
 
     charge : numeric
-         Quantity of charged Energy in MWh over scenario time steps
+         Quantity of charged energy in MWh over scenario time steps
     discharge : numeric
-        Quantity of discharged Energy in MWh over scenario time steps
+        Quantity of discharged energy in MWh over scenario time steps
     count : int
         Number of storage units
     p_nom_o_sum: numeric

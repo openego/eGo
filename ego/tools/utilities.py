@@ -38,7 +38,7 @@ __author__ = "wolf_bunke"
 
 
 def define_logging(name):
-    """Helpers to log your modeling process with eGo and defines all settings.
+    """Helps to log your modeling process with eGo and defines all settings.
 
     Parameters
     ----------
@@ -175,7 +175,7 @@ def get_scenario_setting(jsonpath='scenario_setting.json'):
 
 def fix_leading_separator(csv_file, **kwargs):
     """
-    Takes the path to a csv-file. If the first line this file has a leading
+    Takes the path to a csv-file. If the first line of this file has a leading
     separator in its header, this field is deleted. If this is done the second
     field of every row is removed, too.
     """

@@ -79,7 +79,7 @@ __author__ = "wolf_bunke,maltesc"
 
 class egoBasic(object):
     """The eGo basic class select and creates based on your
-    ``scenario_setting.json`` file  your definde eTraGo and
+    ``scenario_setting.json`` file  your definded eTraGo and
     eDisGo results container. And contains the session for the
     database connection.
 
@@ -123,7 +123,7 @@ class egoBasic(object):
 
 
 class eTraGoResults(egoBasic):
-    """The ``eTraGoResults`` class create and contains all results
+    """The ``eTraGoResults`` class creates and contains all results
     of eTraGo  and it's network container for eGo.
 
     Returns
@@ -409,7 +409,7 @@ class eDisGoResults(eTraGoResults):
 
 
 class eGo(eDisGoResults):
-    """Main eGo module which including all results and main functionalities.
+    """Main eGo module which includs all results and main functionalities.
 
 
     Returns
