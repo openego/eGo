@@ -25,9 +25,9 @@ setup(name='eGo',
       packages=find_packages(),
       package_dir={'ego': 'ego'},
       include_package_data=True,
-      install_requires=['egoio==0.4.0',
-                        'eDisGo==0.0.6dev',
-                        'eTraGo==0.6.1',
+      install_requires=['egoio==0.4.5',
+                        'eDisGo==v0.0.6',
+                        'eTraGo==0.7.0',
                         'pandas==0.20.3',
                         'pypsa==0.11.0fork',
                         'geoalchemy2>= 0.3.0, <=0.4.0',
@@ -43,13 +43,7 @@ setup(name='eGo',
                         'folium'
                         ],
       dependency_links=[('git+https://git@github.com/openego/PyPSA.git'
-                         '@dev#egg=pypsa-0.11.0fork'),
-                        ('git+https://git@github.com/openego/eDisGo.git'
-                         '@dev#egg=0.0.6dev'),
-                        ('git+https://git@github.com/openego/eTraGo.git'
-                         '@dev#egg=0.6.1'),
-                        ('git+https://git@github.com/openego/ego.io.git'
-                         '@dev#egg=0.4.0')
+                         '@dev#egg=pypsa-0.11.0fork')
                         ],
       extras_require={
           'doc': [
