@@ -929,7 +929,7 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
 
     # Save Map
     html_dir = 'results/html'
-    if not os.path.exists(log_dir):
+    if not os.path.exists(html_dir):
         os.makedirs(html_dir)
     mp.save("results/html/iplot_map.html")
 
