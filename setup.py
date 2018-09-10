@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import os
 from setuptools import find_packages, setup
 
@@ -6,9 +7,6 @@ __copyright__ = ("Flensburg University of Applied Sciences, "
                  "Centre for Sustainable Energy Systems")
 __license__ = "GNU Affero General Public License Version 3 (AGPL-3.0)"
 __author__ = "wolf_bunke, maltesc"
-
-
-
 
 
 with open('README.rst') as f:
@@ -39,10 +37,10 @@ setup(name='eGo',
                         'Rtree',
                         'descartes',
                         'plotly==2.2.3',
-                        'Pyomo==5.5.0',
-                        'oedialect',
                         'multiprocess',
-                        'folium',],
+                        'folium',
+                        'Pyomo==5.5.0',
+                        'oedialect'],
       dependency_links=[('git+https://git@github.com/openego/PyPSA.git'
                          '@master#egg=pypsa-0.11.0fork')],
       extras_require={
