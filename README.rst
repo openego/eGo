@@ -41,7 +41,7 @@ License
 
 © Europa-Universität Flensburg,
 © Flensburg University of Applied Sciences,
-  Centre for Sustainable Energy Systems
+*Centre for Sustainable Energy Systems*
 © DLR Institute for Networked Energy Systems,
 © Reiner-Lemoine-Institute"
 
