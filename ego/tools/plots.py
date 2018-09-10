@@ -301,7 +301,7 @@ def plot_line_expansion(ego, filename=None, dpi=300, column='overnight_costs'):
                   max(line_value)]
 
     v = np.linspace(boundaries[0], boundaries[1], 101)
-
+    print(v.dtype.name)
     # colorbar
     cb = plt.colorbar(lc[1], boundaries=v,
                       ticks=v[0:101:10],
