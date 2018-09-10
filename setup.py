@@ -13,7 +13,7 @@ def read(fname):
 
 setup(
     name='eGo',
-    version='0.3.0',
+    version='0.3.0.6',
     author='wolfbunke, maltesc',
     author_email='wolf-dieter.bunke@uni-flensburg.de',
     description=("A cross-grid-level electricity grid and storage "
@@ -36,7 +36,7 @@ setup(
                       'oedialect'],
     dependency_links=[
         ('git+https://git@github.com/openego/PyPSA.git'
-         '@master#egg=pypsa-0.11.0fork')],
+         '@2c26cf693c0457234c5ce4f3c692885779ea227b#egg=pypsa-0.11.0fork')],
     extras_require={
         'doc': [
             'sphinx >= 1.4',
