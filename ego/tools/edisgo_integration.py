@@ -263,7 +263,7 @@ class EDisGoNetworks:
         if not os.path.exists(self._status_dir):
             os.makedirs(self._status_dir)
             
-        self._status_file = 'eGo_' +  strftime("%Y-%m-%d_%H%M", localtime())    
+        self._status_file = 'eGo_' +  strftime("%Y-%m-%d_%H%M%S", localtime())    
                
         status = self._grid_choice.copy()
         status = status.set_index('the_selected_network_id')
@@ -595,11 +595,15 @@ class EDisGoNetworks:
         for mv_grid in all_mv_grids:
             bus_id = self._get_bus_id_from_mv_grid(session, mv_grid)
 
+            min_extended = 0.3
             stor_p_nom = self._etrago_network.storage_units.loc[
                 (self._etrago_network.storage_units['bus'] == str(bus_id))
                 & (self._etrago_network.storage_units[
-                    'p_nom_extendable'
-                ] == True)
+                        'p_nom_extendable'
+                        ] == True)
+                 & (self._etrago_network.storage_units[
+                         'p_nom_opt'
+                         ] > min_extended)
                 & (self._etrago_network.storage_units['max_hours'] <= 20.)
             ]['p_nom_opt']
 
