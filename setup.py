@@ -42,8 +42,7 @@ setup(name='eGo',
                         'Pyomo==5.5.0',
                         'oedialect',
                         'multiprocess',
-                        'folium'
-                        ],
+                        'folium',],
       dependency_links=[('git+https://git@github.com/openego/PyPSA.git'
                          '@master#egg=pypsa-0.11.0fork')],
       extras_require={
