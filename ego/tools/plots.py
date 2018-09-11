@@ -30,7 +30,7 @@ if not 'READTHEDOCS' in os.environ:
     from etrago.tools.plot import (plot_line_loading, plot_stacked_gen,
                                    add_coordinates, curtailment, gen_dist,
                                    storage_distribution,
-                                   plot_voltage, plot_residual_load)
+                                   plot_voltage, plot_residual_load, coloring)
     from ego.tools.economics import etrago_convert_overnight_cost
     import pyproj as proj
     from math import sqrt, log10
@@ -393,7 +393,9 @@ def power_price_plot(ego, filename, display):
             https://matplotlib.org/api/pyplot_api.html#matplotlib.pyplot.show
     """
     plt.rcdefaults()
-    colors = ego_colore()
+#    colors = ego_colore()
+    carrier_colors = coloring()
+    
     fig, ax = plt.subplots()
 
     # plot power_price
@@ -404,7 +406,10 @@ def power_price_plot(ego, filename, display):
     ind = np.arange(len(prc.index))    # the x locations for the groups
     width = 0.35       # the width of the bars: can also be len(x) sequence
 
-    ax.barh(ind, prc, align='center', color=colors['egoblue1'])
+    plt_colors = [carrier_colors[carrier] for carrier in prc.index]
+#    plt_colors = colors['egoblue1']
+        
+    ax.barh(ind, prc, align='center', color=plt_colors)
     ax.set_yticks(ind)
     ax.set_yticklabels(prc.index)
     ax.invert_yaxis()
