@@ -2,7 +2,6 @@
   "eGo": {
     "eTraGo": true,
     "eDisGo": true,
-    "result_id": null,
     "csv_import_eTraGo": false,
     "csv_import_eDisGo": false
   },
