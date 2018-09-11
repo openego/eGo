@@ -53,7 +53,7 @@ def define_logging(name):
 
     # ToDo: Logger should be set up more specific
     #       add pypsa and other logger INFO to ego.log
-    now = strftime("%Y-%m-%d_%H%M", localtime())
+    now = strftime("%Y-%m-%d_%H%M%S", localtime())
 
     log_dir = 'logs'
     if not os.path.exists(log_dir):

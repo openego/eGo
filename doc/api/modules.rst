@@ -24,41 +24,52 @@ The file can be found on
 
    This file contains all input settings for the eGo tool.
 
-   :property global: Global settings that are valid for both eTraGo and eDisGo
+   :property global: Global (superordinate) settings that are valid for both, eTraGo and eDisGo.
    :proptype global: :json:object:`global`
-   :property eTraGo: eTraGo settings, only valid for eTraGo run
+   :property eTraGo: eTraGo settings, only valid for eTraGo runs.
    :proptype eTraGo: :json:object:`eTraGo`
-   :property eDisGo: eDisGo settings, only valid for eDisGo runs
+   :property eDisGo: eDisGo settings, only valid for eDisGo runs.
    :proptype eDisGo: :json:object:`eDisGo`
 
 
 .. json:object:: global
    
    :property bool eTraGo: Decide if you want to run the eTraGo tool (HV/EHV grid optimization).
-   :property bool eDisGo: Decide if you want to run the eDisGo tool (MV grid optimiztaion).
-   :property string db: Name of your database (e.g.``''oedb''``).
-   :property bool recover: If ``true``, (previously calculated) eTraGo results are queried from your database (instead of performing a new run).
-   :property int result_id: ID of the (previeously calculated) eTraGo results that are queried if **recover** is set ``true``.
-   :property string gridversion: Version of the *open_eGo* input data-sets (e.g. ``''v0.4.2''``) 
+   :property bool eDisGo: Decide if you want to run the eDisGo tool (MV grid optimiztaion). Please note: eDisGo requires eTraGo= ``true``.
+   :property string csv_import_eTraGo: ``false`` or path to previously calculated eTraGo results (in order to reload the results instead of performing a new run). 
+   :property string csv_import_eDisGo: ``false`` or path to previously calculated eDisGo results (in order to reload the results instead of performing a new run). 
 
    
 .. json:object:: eTraGo
 
    This section of :json:object:`scenario_setting.json` contains all input parameters for the eTraGo tool. A description of the parameters can be found `here. <https://etrago.readthedocs.io/en/dev/api/etrago.html#module-etrago.appl>`_
-
-   Please note that some parameters are already included in :json:object:`global`
 	
 
 .. json:object:: eDisGo
 
    This section of :json:object:`scenario_setting.json` contains all input parameters for the eDisGo tool and the clustering of MV grids.
 
-   :property string ding0_files: Relative path to the MV grid files (created by `ding0 <https://readthedocs.org/projects/dingo/>`_) (e.g. ``''data/MV_grids/20180713110719''``)
-   :property string choice_mode: Mode that eGo uses to chose MV grids out of the files in **ding0_files** (e.g. ``''manual''``, ``''cluster''`` or ``''all''``). If ``''manual''`` is chosen, the parameter **manual_grids** must contain a list of the desired grids. If ``''cluster''`` is chosen, **no_grids** must specify the desired number of clusters. If ``''all''`` is chosen, all MV grids from **ding0_files** are calculated.
-   :property list manual_grids: List of MV grid ID's (*open_eGo* HV/MV substation ID's)
-   :property int no_grids: Number of MV grid clusters (from all files in **ding0_files**, a specified number of representative clusters is calculated)
+   :property string db: Name of your database (e.g.``''oedb''``). eDisGo queries generator data from this database. Please note that this parameters is automatically overwritten in eDisGo's configuration files. 
+   :property string gridversion: ``null`` or *open_eGo* dataset version (e.g. ``''v0.4.5''``). If ``null``, *open_eGo*'s model_draft is used. Please note that this parameters is automatically overwritten in eDisGo's configuration files. 
+   :property string ding0_files: Path to the MV grid files (created by `ding0 <https://readthedocs.org/projects/dingo/>`_) (e.g. ``''data/MV_grids/20180713110719''``)
+   :property string choice_mode: Mode that eGo uses to chose MV grids out of the files in **ding0_files** (e.g. ``''manual''``, ``''cluster''`` or ``''all''``). If ``''manual''`` is chosen, the parameter **manual_grids** must contain a list of the desired grids. If ``''cluster''`` is chosen, **no_grids** must specify the desired number of clusters and **cluster_attributes** must specify the applied cluster attributes. If ``''all''`` is chosen, all MV grids from **ding0_files** are calculated.
+   :property list cluster_attributes: List of strings containing the desired cluster attributes. Available attributes are: ``''farthest_node''``, ``''wind_cap''``, ``''solar_cap''`` and ``''extended_storage''``, thus an exemplary list looks like ``["farthest_node", "wind_cap", "solar_cap", "extended_storage"]``. ``''farthest_node''`` represents the longest path within each grid, ``''wind_cap''`` the installed wind capacity within each grid, ``''solar_cap''`` the installed solar capacity within each grid and ``''extended_storage''`` the installed storage units (as calculated by eTraGo). Please note that ``''extended_storage''`` is only available in combination with eTraGo datasets that optimized storage extension. Otherwise this attribute is ignored.
+   :property bool only_cluster: If ``true``, eGo only identifies cluster results, but performs no eDisGo run. Please note that for **only_cluster** an eTraGo run or dataset must be provided.
+   :property list manual_grids: List of MV grid ID's (*open_eGo* HV/MV substation ID's) is case of **choice_mode** = ``''manual''`` (e.g. ``[1718,1719]``). Ohterwise this parameter is ignored.
+   :property int no_grids: Number of MV grid clusters (from all files in **ding0_files**, a specified number of representative clusters is calculated) in case of **choice_mode** = ``''cluster''``. Otherwise this parameter is ignored.
+   :property bool parallelization: If ``false``, eDisgo is used in a consecutive way (this may take very long time). In order to increase the performance of MV grid simulations, ``true`` allows the parallel calculation of MV grids. If **parallelization** = ``true``, **max_calc_time** and **max_workers** must be specified.
+   :property float max_calc_time: Maximum calculation time in hours for eDisGo simulations. The calculation is terminated after this time and all costs are extrapolated based on the unfinished simulation. Please note that this parameter is only used if **parallelization** = ``true``.
+   :property ing max_workers: Number of workers (cpus) that are allocated to the simulation. If the given value exceeds the number of available workers, it is reduced to the number of available workers. Please note that this parameter is only used if **parallelization** = ``true``.
+   :property bool initial_reinforcement: This parameter must be set ``true``.
+   :property bool apply_curtailment: If ``true``, eDisGo applies and optimizes the curtailment (as calculated by eTraGo) within each MV grid. 
+   :property float curtailment_voltage_threshold: p.u. overvoltage limit (e.g. ``0.05``). If this p.u. overvoltage is exceeded at any bus, curtailment is applied.
+   :property bool storage_distribution: If ``true``, eDisGo attempts to integrate battery storages (as calculated by eTraGo) into MV grids in order to reduce grid reinforcement. 
+   :property float max_cos_phi_renewable: Maximum power factor for wind and solar generators in MV grids (e.g. ``0.9``). If the reactive power (as calculated by eTraGo) exceeds this power factor, the reactive power is reduced in order to reach the power factor conditions.
+   :property string solver: Solver eDisGo uses to optimize the curtailment and storage integration (e.g. ``''gurobi''``).
+   :property string timesteps_pfa: Method eDisGo uses for the storage integration (e.g. ``''snapshot_analysis''``).
+   :property string results: Path to folder where eDisGo's results will be saved.
    
-   
+
 
 ego_main.py
 ===========
