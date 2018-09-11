@@ -1,8 +1,8 @@
 # ego tool
--e git+https://git@github.com/openego/PyPSA.git@master#egg=pypsa-0.11.0fork
+-e git+ssh://git@github.com/openego/PyPSA.git@master#egg=0.11.0fork
 egoio==0.4.5
-eDisGo==v0.0.6
-eTraGo==0.7.0
+#eDisGo==v0.0.6
+#eTraGo==0.7.0
 pandas==0.20.3
 geoalchemy2>= 0.3.0, <=0.4.0
 pyproj==1.9.5.1
