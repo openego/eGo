@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
 from setuptools import find_packages, setup
+from pip._internal.req import parse_requirements
 
 __copyright__ = ("Flensburg University of Applied Sciences, "
                  "Europa-Universität Flensburg, "
@@ -11,9 +12,12 @@ __author__ = "wolf_bunke, maltesc"
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
+
+requirements = parse_requirements("ego_dependencies.txt", session="")
+
 setup(
     name='eGo',
-    version='0.3.0',
+    version='0.3.0.24',
     author='wolfbunke, maltesc',
     author_email='wolf-dieter.bunke@uni-flensburg.de',
     description=("A cross-grid-level electricity grid and storage "
@@ -24,24 +28,8 @@ setup(
     packages=find_packages(),
     package_dir={'ego': 'ego'},
     include_package_data=True,
-    install_requires=['egoio==0.4.5',
-                        'eDisGo==v0.0.6',
-                        'eTraGo==0.7.0',
-                        'pypsa==0.11.0fork',
-                        'pandas==0.20.3',
-                        'geoalchemy2>= 0.3.0, <=0.4.0',
-                        'pyproj==1.9.5.1',
-                        'geopandas',
-                        'matplotlib>= 1.5.3, <=1.5.3',
-                        'Rtree',
-                        'descartes',
-                        'plotly==2.2.3',
-                        'Pyomo==5.5.0',
-                        'oedialect',
-                        'multiprocess',
-                        'folium'],
-    dependency_links=[
-        ('git+ssh://git@github.com/openego/PyPSA.git@master#egg=pypsa-0.11.0fork')],
+    install_requires=[str(b.req) for b in requirements],
+    dependency_links=[str(c._link) for c in requirements if c._link],
     extras_require={
         'doc': [
             'sphinx >= 1.4',
@@ -53,4 +41,6 @@ setup(
         'ego': [os.path.join('', '*.json')],
         'ego.data': ['*.csv']
     }
-)
+    )
+    
+  
