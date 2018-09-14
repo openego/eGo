@@ -104,6 +104,9 @@ def get_scenario_setting(jsonpath='scenario_setting.json'):
     with open(path + '/' + jsonpath) as f:
         json_file = json.load(f)
 
+    # fix remove result_id
+    json_file['eGo'].update({'result_id': None})
+
     # check settings
     if (json_file['eGo']['eTraGo'] is False and json_file['eGo']['eDisGo']
             is False):

@@ -1,0 +1,8 @@
+voltage level,component,capital costs,unit,source
+110,AC overhead transmission lines,230,EUR/MVA,Dena 2012
+220,AC overhead transmission lines,290,EUR/MVA,NEP 2015
+380,AC overhead transmission lines,85,EUR/MVA,NEP 2015
+DC,DC overhead transmission lines,375,EUR/MVA,NEP 2015
+110/220,transformer,7500,EUR/MVA,Dena 2012
+110/380,transformer,17333,EUR/MVA,NEP 2015
+220/380,transformer,14166,EUR/MVA,NEP 2015
