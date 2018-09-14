@@ -140,12 +140,6 @@ and [CONSENTEC]_ study. Depents on the component the costs including earthwork
 costs depend on population density according to [Dena]_.
 
 
-Operating costs
----------------
-
-
-
-
 
 References
 ==========
