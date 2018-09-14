@@ -71,7 +71,7 @@ the year with ``8760 hours``. The overnight costs ( :math:`C_{overnight}` ) are
 calculated as:
 
 .. math::
-        C_{overnight} = C_{capital costs} * PVA * (( T / ( period + 1 ))
+        C_{overnight} = C_{\text{capital costs}} * PVA * (( T / ( period + 1 ))
 
 
 Annuity costs
@@ -86,14 +86,14 @@ The annuity costs ( :math:` C_{annuity}` )  is calculated as:
         C_{annuity} = (C_{overnight} / ( PVA * ( year / ( period + 1))))
 
 
-The capital costs (:math:`C_{capital costs}` ) of the gird measures 
+The capital costs (:math:`C_{\text{capital costs}}` ) of the gird measures 
 (lines and transformer) are calculated as:
 
 .. math::
-        Line_{overnight} = Extension [MVA] * capital costs [EUR/MVA] * Line length [km]    
+        Line_{overnight} = Extension [MVA] * \text{capital costs} [EUR/MVA] * \text{Line length} [km]    
 
 .. math::
-        Transformer_{overnight}  = Extension [MVA] * capital costs [EUR/MVA]    
+        Transformer_{overnight}  = Extension [MVA] * \text{capital costs} [EUR/MVA]    
 
 
 The conversion of the given annuity costs of *eTraGo* is done in
