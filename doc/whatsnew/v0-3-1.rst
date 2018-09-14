@@ -1,0 +1,16 @@
+Release v0.3.1 (September 21, 2018)
++++++++++++++++++++++++++++++++++++
+
+Documentation Release.
+
+
+Added features
+--------------
+
+* Add Documentation
+
+
+Fixes
+-----
+*  fix installation problems of the pypsa 0.11.0 fork
+

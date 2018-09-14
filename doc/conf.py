@@ -109,26 +109,26 @@ def rstjinja(app, docname, source):
 def setup(app):
     app.connect("source-read", rstjinja)
 
-import requests
+#import requests
 
-oep_url= 'http://oep.iks.cs.ovgu.de/'
+#oep_url= 'http://oep.iks.cs.ovgu.de/'
 
 # get data from oedb test
-power_class = requests.get(oep_url+'/api/v0/schema/model_draft/tables/ego_power_class/rows/', ).json()
+#power_class = requests.get(oep_url+'/api/v0/schema/model_draft/tables/ego_power_class/rows/', ).json()
 
-import json
-path = os.getcwd()
-json_file = '../ego/scenario_setting.json'
+#import json
+#path = os.getcwd()
+#json_file = '../ego/scenario_setting.json'
 
-with open(path +'/'+json_file) as f:
-    scn_set = json.load(f)
-
-json_global = list(scn_set['eTraGo'])
-
-html_context = {
-    'power_class': power_class,
-    'scn_setting': scn_set
-}
+#with open(path +'/'+json_file) as f:
+#    scn_set = json.load(f)
+#
+#json_global = list(scn_set['eTraGo'])
+#
+#html_context = {
+#    'power_class': power_class,
+#    'scn_setting': scn_set
+#}
 
 
 # add RestFull API

@@ -1,5 +1,5 @@
 Release v0.3.0 (September 07, 2018)
-++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++
 
 Power Flow and Clustering. eGo is now using eTraGo non-linear power flows based 
 on optimization results and its disaggregation of clustered results 
