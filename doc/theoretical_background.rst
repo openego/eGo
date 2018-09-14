@@ -57,8 +57,8 @@ Overnight costs
 
 The *overnight costs* represents the investment costs of the components which 
 appears for a given period *T* and a interest rate *p* of the optimisation. As
-default *eGo* calculates with an interest rate ( *p* ) of ``0.05`` and a number 
-of periods ( *T* ) of ``40 years``. The values are based on the [StromNEV_A1]_ 
+default *eGo* calculates with an interest rate ( :math:`p`  ) of ``0.05`` and a number 
+of periods ( :math:`T` ) of ``40 years``. The values are based on the [StromNEV_A1]_ 
 for the grid investment regulation in Germany. 
 
 The present value of an annuity (PVA) is calculated as:
@@ -67,11 +67,11 @@ The present value of an annuity (PVA) is calculated as:
         PVA =   (1 / p) - (1 / (p*(1 + p)^T))
 
 The period is given by the start and end time of a seleceted calculation and 
-the year with ``8760 hours``. The overnight costs ( :math:`C_on` ) are
+the year with ``8760 hours``. The overnight costs ( :math:`C_{overnight}` ) are
 calculated as:
 
 .. math::
-        C_on = C_cc * PVA * (( T / ( period + 1 ))
+        C_{overnight} = C_{capital costs} * PVA * (( T / ( period + 1 ))
 
 
 Annuity costs
@@ -80,20 +80,20 @@ Annuity costs
 The *annuity costs* represents theoretical investment costs of an given period
 of the optimisation which makes the different costs comparable.
 
-The annuity costs ( :math:`C_a` )  is calculated as:
+The annuity costs ( :math:` C_{annuity}` )  is calculated as:
 
 .. math::
-        C_a = (C_on / ( PVA * ( year / ( period + 1))))
+        C_{annuity} = (C_{overnight} / ( PVA * ( year / ( period + 1))))
 
 
-The capital costs ( *C_cc* ) of the gird measures (lines and transformer) are 
-calculated as:
-
-.. math::
-        Line_cc = Extension [MVA] * capital costs [EUR/MVA] * Line length [km]    
+The capital costs (:math:`C_{capital costs}` ) of the gird measures 
+(lines and transformer) are calculated as:
 
 .. math::
-        Transformer_cc  = Extension [MVA] * capital costs [EUR/MVA]    
+        Line_{overnight} = Extension [MVA] * capital costs [EUR/MVA] * Line length [km]    
+
+.. math::
+        Transformer_{overnight}  = Extension [MVA] * capital costs [EUR/MVA]    
 
 
 The conversion of the given annuity costs of *eTraGo* is done in
