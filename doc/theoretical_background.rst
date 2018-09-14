@@ -80,7 +80,7 @@ Annuity costs
 The *annuity costs* represents theoretical investment costs of an given period
 of the optimisation which makes the different costs comparable.
 
-The annuity costs ( :math:` C_{annuity}` )  is calculated as:
+The annuity costs ( :math:`C_{annuity}` )  is calculated as:
 
 .. math::
         C_{annuity} = (C_{overnight} / ( PVA * ( year / ( period + 1))))
