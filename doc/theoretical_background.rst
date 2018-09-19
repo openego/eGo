@@ -17,13 +17,13 @@ Models overview
    :align: center
 
 
-eTraGo's Theoretical Background
+eTraGo's theoretical Background
 ===============================
 
 Learn more about eTraGo's theoretical background of methods and assumptions
 `here <https://etrago.readthedocs.io/en/latest/theoretical_background.html>`_.
 
-eDisGo's Theoretical Background
+eDisGo's theoretical Background
 ===============================
 
 Learn more about eTraGo's theoretical background of methods and assumptions
@@ -55,49 +55,60 @@ the electrical grid and storage optimisation.
 Overnight costs
 ---------------
 
-The *overnight costs* represents the investment costs of the components which 
-appears for a given period *T* and a interest rate *p* of the optimisation. As
-default *eGo* calculates with an interest rate ( :math:`p`  ) of ``0.05`` and a number 
-of periods ( :math:`T` ) of ``40 years``. The values are based on the [StromNEV_A1]_ 
-for the grid investment regulation in Germany. 
-
-The present value of an annuity (PVA) is calculated as:
-            
-.. math::
-        PVA =   (1 / p) - (1 / (p*(1 + p)^T))
-
-The period is given by the start and end time of a seleceted calculation and 
-the year with ``8760 hours``. The overnight costs ( :math:`C_{overnight}` ) are
-calculated as:
+The *overnight costs* represents the investment costs of the components or 
+construction project without any interest, as if the project was completed 
+"overnight". The overnight costs (:math:`C_{\text{Overnight}}` ) of the gird measures 
+(lines and transformer) are calculated as:
 
 .. math::
-        C_{overnight} = C_{\text{capital costs}} * PVA * (( T / ( period + 1 ))
+        C_{Line extension}  = S_{\text{Extension}~[MVA] * \text{costs assumtion}~[EUR/MVA] * \text{Line length}~[km]    
+
+.. math::
+         C_{Transformer extension}   = S_{\text{Extension}~[MVA] * \text{costs assumtion}~[EUR/MVA]  
+
+
+The total overnight grid extension costs are given by:
+
+.. math::
+         C_{overnight} = \sum C_{Line extension} +  \sum C_{Transformer extension}
+
+
+
+The conversion of the given annuity costs of *eTraGo* is done in
+:func:`~ego.tools.economics.etrago_convert_overnight_cost`.
+
+
 
 
 Annuity costs
 -------------
 
-The *annuity costs* represents theoretical investment costs of an given period
-of the optimisation which makes the different costs comparable.
+The *annuity costs* represents project investment costs with an interest as present
+value of an annuity. The investment years *T* and the interest rate *p* are 
+definded as default in *eGo* with an interest rate ( :math:`p`  ) of ``0.05`` 
+and a number of investment years ( :math:`T` ) of ``40 years``. The values are 
+based on the [StromNEV_A1]_ for the grid investment regulation in Germany.
+
+The present value of an annuity (PVA) is calculated as:
+            
+.. math::
+        PVA =  \frac{1}{p}- \frac{1}{\left ( p*\left (1 + p \right )^T \right )}
+
+
+In order to calcualte the :math:`C_{annuity}` of an given period less then a 
+year and hourly basis by the optimisation the annuity costs are factorized by
+the hours of the :math:`t_{year}=8760` and the definded calculation period.
+
+.. math::
+        t_{period} =  t_{\text{end\_snapshot}} - t_{\text{start\_snapshot}} ~[h]
+
 
 The annuity costs ( :math:`C_{annuity}` )  is calculated as:
 
 .. math::
-        C_{annuity} = (C_{overnight} / ( PVA * ( year / ( period + 1))))
+        C_{annuity} =   C_{\text{overnight}} * PVA * \left ( \frac{t_{year}}{\left ( t_{\text{period}}+ 1 \right )} \right )
 
 
-The capital costs (:math:`C_{\text{capital costs}}` ) of the gird measures 
-(lines and transformer) are calculated as:
-
-.. math::
-        Line_{overnight} = Extension [MVA] * \text{capital costs} [EUR/MVA] * \text{Line length} [km]    
-
-.. math::
-        Transformer_{overnight}  = Extension [MVA] * \text{capital costs} [EUR/MVA]    
-
-
-The conversion of the given annuity costs of *eTraGo* is done in
-:func:`~ego.tools.economics.etrago_convert_overnight_cost`.
 
 
 Investment costs ehv/hv
