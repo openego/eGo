@@ -137,10 +137,10 @@ def cluster_costs_approximation(clusters, plot_path=os.path.abspath('.')):
 
 if __name__ == '__main__':
 
-    root_dir = '/home/student/Git/eGo/ego'
+    root_dir = '/home/student/Git/eGo/ego/00_nep_clustering'
     plot_path = os.path.join(root_dir, 'plots')
     os.makedirs(plot_path, exist_ok=True)
-    folder = 'ding0_grids_all (cleaned)'
+    folder = 'ding0_grids_all'
 
     cluster_sizes = range(10,1800,5)
 
@@ -218,7 +218,7 @@ if __name__ == '__main__':
         
     cluster_all = key_figuresAll[reinforce_costs_cols_scaled].sum().T.to_frame(
         'Cluster All')  
-    cluster_all = cluster_all * (3393 / (2677)) 
+    cluster_all = cluster_all * (3393 / (2919)) #2677 for ego100
     
     real_val = cluster_all.sum()
     

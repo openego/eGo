@@ -134,7 +134,7 @@ def key_figures_grids(results, cluster_info=None):
                 if math.isnan(costs):
                     key_figures.at[
                             idx, 'reinforcement_costs_total_scaled'
-                            ] = 0. #mean_good_costs * no_reprs
+                            ] = mean_good_costs * no_reprs
         
     return key_figures
 
@@ -144,7 +144,7 @@ if __name__ == '__main__':
     # INPUTS
 
     # main directory where all results are safed
-    root_dir = '/home/student/Git/eGo/ego'
+    root_dir = '/home/student/Git/eGo/ego/00_nep_clustering'
 
     # file with installed capacities etc. needed for clustering for each grid
     attr_file = os.path.join(root_dir, 'attributes.csv')
@@ -159,7 +159,7 @@ if __name__ == '__main__':
 
     # specify cluster file from ego clustering to project grid expansion costs
     # for the cluster; if no file is given all grids are used 
-    cluster_sizes = range(10,1800,5)
+    cluster_sizes = range(1800,1805,5)
     cluster_files = []
     for cs in cluster_sizes:
         cluster_files.append(
