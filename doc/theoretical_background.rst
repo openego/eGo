@@ -60,17 +60,18 @@ construction project without any interest, as if the project was completed
 "overnight". The overnight costs (:math:`C_{\text{Overnight}}` ) of the gird measures 
 (lines and transformer) are calculated as:
 
-.. math::
-        C_{Line extension}  = S_{\text{Extension}~[MVA] * \text{costs assumtion}~[EUR/MVA] * \text{Line length}~[km]    
 
 .. math::
-         C_{Transformer extension}   = S_{\text{Extension}~[MVA] * \text{costs assumtion}~[EUR/MVA]  
+        C_{Line~extension}  = S_{Extension}~[MVA] * C_{assumtion}~[\frac{EUR}{MVA}] * L{Line~length}~[km]    
+
+.. math::
+         C_{Transformer~extension}   = S_{Extension}~[MVA] * C_{assumtion}~[\frac{EUR}{MVA}]  
 
 
 The total overnight grid extension costs are given by:
 
 .. math::
-         C_{overnight} = \sum C_{Line extension} +  \sum C_{Transformer extension}
+         C_{overnight} = \sum C_{Line~extension} +  \sum C_{Transformer~extension}
 
 
 
