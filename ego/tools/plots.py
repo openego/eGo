@@ -30,7 +30,7 @@ if not 'READTHEDOCS' in os.environ:
     from etrago.tools.plot import (plot_line_loading, plot_stacked_gen,
                                    add_coordinates, curtailment, gen_dist,
                                    storage_distribution,
-                                   plot_voltage, plot_residual_load)
+                                   plot_voltage, plot_residual_load, coloring)
     from ego.tools.economics import etrago_convert_overnight_cost
     import pyproj as proj
     from math import sqrt, log10
@@ -393,7 +393,9 @@ def power_price_plot(ego, filename, display):
             https://matplotlib.org/api/pyplot_api.html#matplotlib.pyplot.show
     """
     plt.rcdefaults()
-    colors = ego_colore()
+#    colors = ego_colore()
+    carrier_colors = coloring()
+
     fig, ax = plt.subplots()
 
     # plot power_price
@@ -404,7 +406,10 @@ def power_price_plot(ego, filename, display):
     ind = np.arange(len(prc.index))    # the x locations for the groups
     width = 0.35       # the width of the bars: can also be len(x) sequence
 
-    ax.barh(ind, prc, align='center', color=colors['egoblue1'])
+    plt_colors = [carrier_colors[carrier] for carrier in prc.index]
+#    plt_colors = colors['egoblue1']
+
+    ax.barh(ind, prc, align='center', color=plt_colors)
     ax.set_yticks(ind)
     ax.set_yticklabels(prc.index)
     ax.invert_yaxis()
@@ -817,14 +822,15 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
         # Add for loop
         crs = {'init': 'epsg:4326'}
 
-        # for name, row in district.iterrows():
-        pop = """<b>Grid district:</b> {} <br>
-            """.format('Number')
+        for name, row in district.iterrows():
+            pop = """<b>Grid district:</b> {} <br>
+                """.format(row['subst_id'])
 
-        folium.GeoJson(district).add_to(grid_group).add_child(folium.Popup(pop))
+            folium.GeoJson(row['geometry']).add_to(
+                grid_group).add_child(folium.Popup(pop))
 
         # Add cluster grids
-        repgrid_group = folium.FeatureGroup(name='represented Grids by Cluster')
+        repgrid_group = folium.FeatureGroup(name='Represented Grids by Cluster')
         cluster = ego.edisgo.grid_choice
         cluster = cluster.rename(
             columns={"the_selected_network_id": "subst_id"})
@@ -838,11 +844,10 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
         style_function = (lambda x: {
                           'fillColor':  x['properties']['color'],
                           'weight': 0.5, 'color': 'black'})
+        # simplify MultiPolygon
+        tolerance = 0.008
 
         for idx in cluster.index:
-
-            pop2 = """<b>Represented Grid:</b> {} <br>
-                """.format(cluster.subst_id[idx])
 
             cluster_id = list(cluster.represented_grids[idx])
             # represented_grids
@@ -850,28 +855,37 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
             repre_grid['cluster_id'] = cluster.subst_id[idx]
 
             repre_grids = repre_grids.append(repre_grid, ignore_index=True)
-            # prepare cluster colore
-            vals = list(repre_grids.cluster_id)  # cluster_id
-            normal = mpl.colors.Normalize(vals)
-            # cm.get_cmap('BrBG')
-            cellColours = plt.cm.jet(vals)  # change here colormap
-            repre_grids['color'] = ''
 
-            for i in repre_grids.index:
-                repre_grids['mpl_color'][i] = cellColours[i]
-                # get hex color
-                repre_grids['color'][i] = convert_to_hex(
-                    repre_grids['mpl_color'][i])
+        # prepare cluster colore
+        vals = list(repre_grids.cluster_id)  # cluster_id
+        normal = mpl.colors.Normalize(vals)
+        # cm.get_cmap('BrBG')
+        cellColours = plt.cm.jet(vals)  # change here colormap
+        repre_grids['color'] = ''
 
-            repre_grids['mpl_color'] = ''
+        for i in repre_grids.index:
+            repre_grids['mpl_color'][i] = cellColours[i]
+            # get hex color
+            repre_grids['color'][i] = convert_to_hex(
+                repre_grids['mpl_color'][i])
 
-            repre_grids = gpd.GeoDataFrame(
-                repre_grids, geometry='geometry', crs=crs)
+        repre_grids['mpl_color'] = ''
 
-            folium.GeoJson(repre_grids,
-                           style_function=style_function
-                           ).add_to(repgrid_group).add_child(
-                folium.Popup(pop2))
+        repre_grids = gpd.GeoDataFrame(
+            repre_grids, geometry='geometry', crs=crs)
+
+        repre_grids.geometry = repre_grids.geometry.simplify(tolerance)
+
+        folium.GeoJson(repre_grids,
+                       style_function=style_function,
+                       name='sdsd'
+                       ).add_to(repgrid_group)
+
+        for idx in repre_grids.index:
+            print(idx)
+
+            pop2 = """<b>Represented Grid:</b> {} <br>
+                """.format(cluster.subst_id[idx])
 
     # Create storage expantion plot
     store_group = folium.FeatureGroup(name='Storage expantion')
