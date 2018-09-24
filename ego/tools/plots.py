@@ -50,6 +50,7 @@ if not 'READTHEDOCS' in os.environ:
     from egoio.db_tables.grid import EgoDpMvGriddistrict
     import matplotlib.pyplot as plt
     import matplotlib as mpl
+    import matplotlib.colors as mcolors
 
 import logging
 logger = logging.getLogger('ego')
@@ -837,15 +838,14 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
 
         repre_grids = pd.DataFrame(columns=['subst_id',
                                             'geometry',
-                                            'cluster_id'
-                                            'color',
-                                            'mpl_color'])
+                                            'cluster_id',
+                                            'color'])
 
         style_function = (lambda x: {
                           'fillColor':  x['properties']['color'],
                           'weight': 0.5, 'color': 'black'})
         # simplify MultiPolygon
-        tolerance = 0.008
+        tolerance = 0.009
 
         for idx in cluster.index:
 
@@ -857,35 +857,32 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
             repre_grids = repre_grids.append(repre_grid, ignore_index=True)
 
         # prepare cluster colore
-        vals = list(repre_grids.cluster_id)  # cluster_id
-        normal = mpl.colors.Normalize(vals)
-        # cm.get_cmap('BrBG')
-        cellColours = plt.cm.jet(vals)  # change here colormap
-        repre_grids['color'] = ''
+        normal = mpl.colors.Normalize(vmin=repre_grids.cluster_id.min(),
+                                      vmax=repre_grids.cluster_id.max(),
+                                      clip=True)
 
-        for i in repre_grids.index:
-            repre_grids['mpl_color'][i] = cellColours[i]
-            # get hex color
-            repre_grids['color'][i] = convert_to_hex(
-                repre_grids['mpl_color'][i])
-
-        repre_grids['mpl_color'] = ''
+        mapper = plt.cm.ScalarMappable(norm=normal, cmap=plt.cm.viridis)
+        # add colors to column
+        repre_grids['color'] = repre_grids['cluster_id'].apply(
+            lambda x: mcolors.to_hex(mapper.to_rgba(x)))
 
         repre_grids = gpd.GeoDataFrame(
             repre_grids, geometry='geometry', crs=crs)
 
+        # simplify Polygon geometry
         repre_grids.geometry = repre_grids.geometry.simplify(tolerance)
 
-        folium.GeoJson(repre_grids,
-                       style_function=style_function,
-                       name='sdsd'
-                       ).add_to(repgrid_group)
+        # add popup
+        for name, row in repre_grids.iterrows():
 
-        for idx in repre_grids.index:
-            print(idx)
+            pops = """<b>Represented Grid:</b> {} <br>""".format(
+                row['cluster_id'])
 
-            pop2 = """<b>Represented Grid:</b> {} <br>
-                """.format(cluster.subst_id[idx])
+            folium.GeoJson(repre_grids[name:name+1],
+                           style_function=style_function,
+                           name='represented grids'
+                           ).add_to(repgrid_group
+                                    ).add_child(folium.Popup(pops))
 
     # Create storage expantion plot
     store_group = folium.FeatureGroup(name='Storage expantion')
@@ -929,8 +926,10 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
     bus_group.add_to(mp)
     line_group.add_to(mp)
     if ego.json_file['eGo']['eDisGo'] is True:
-        grid_group.add_to(mp)
+
         repgrid_group.add_to(mp)
+        grid_group.add_to(mp)
+
     line_results_group.add_to(mp)
     store_group.add_to(mp)
     folium.LayerControl().add_to(mp)
