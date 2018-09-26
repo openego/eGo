@@ -40,6 +40,7 @@ if not 'READTHEDOCS' in os.environ:
         import geopandas as gpd
         import folium
         from folium import plugins
+        from folium.plugins import FloatImage
         import branca.colormap as cm
     except:
         geopandas = False
@@ -770,8 +771,8 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
     line_results_group = folium.FeatureGroup(name='Lines specific results')
 
     # color map lines
-    colormap2 = cm.linear.YlOrRd_09.scale(
-        lines.s_nom_expansion.min(), lines.s_nom_expansion.max()).to_step(6)
+    colormap2 = cm.linear.YlGn_09.scale(
+        lines.capital_investment.min(), lines.capital_investment.max()).to_step(6)
 
     # add parameter
     for line in network.lines.index:
@@ -803,7 +804,7 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
 
         # change colore function
         lr_color = colormapper_lines(
-            colormap2, lines, line, column="s_nom_expansion")
+            colormap2, lines, line, column="capital_investment")
         # ToDo make it more generic
         folium.PolyLine(([y0[line], x0[line]], [y1[line], x1[line]]),
                         popup=popup,
@@ -845,7 +846,7 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
                           'fillColor':  x['properties']['color'],
                           'weight': 0.5, 'color': 'black'})
         # simplify MultiPolygon
-        tolerance = 0.009
+        tolerance = 0.02
 
         for idx in cluster.index:
 
@@ -915,6 +916,65 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
             fill_color='#3186cc',
             weight=1
         ).add_to(store_group)
+    # add MV line loading
+    # Prepare MV lines
+    mv_line_group = folium.FeatureGroup(name='Choosen MV Grids (>=10kV)')
+
+    mv_list = ego.edisgo.grid_choice.the_selected_network_id
+
+    for grid in mv_list:
+
+        mv_grid_id = grid
+
+        mv_network = ego.edisgo.network[mv_grid_id].network.pypsa
+
+        # get line Coordinates
+        x0 = mv_network.lines.bus0.loc[mv_network.lines.v_nom >= 10].map(
+            mv_network.buses.x)
+        x1 = mv_network.lines.bus1.loc[mv_network.lines.v_nom >= 10].map(
+            mv_network.buses.x)
+
+        y0 = mv_network.lines.bus0.loc[mv_network.lines.v_nom >= 10].map(
+            mv_network.buses.y)
+        y1 = mv_network.lines.bus1.loc[mv_network.lines.v_nom >= 10].map(
+            mv_network.buses.y)
+
+        # get content
+        grid_expansion_costs = ego.edisgo.network[
+            mv_grid_id].network.results.grid_expansion_costs
+        lines = pd.concat([mv_network.lines,
+                           grid_expansion_costs],
+                          axis=1,
+                          join_axes=[mv_network.lines.index])
+
+        lines = lines.loc[mv_network.lines.v_nom >= 10]
+        cols = list(lines.columns)
+
+        # color map lines
+        mv_colormap = cm.linear.YlGnBu_09.scale(
+            lines.overnight_costs.min(), lines.overnight_costs.max()).to_step(6)
+
+        mv_colormap.caption = 'Colormap of MV line overnight cost'
+
+        # add parameter
+        for line in lines.index:
+            popup = """ <b>Line:</b> {} <br>
+                        version: {} <br>""".format(line, version)
+            for col in cols:
+                try:
+                    popup += """ {}: {} <br>""".format(col, lines[col][line])
+                except:
+                    popup += """ No info for:"""
+
+            # change colore function
+            mv_color = colormapper_lines(
+                colormap, lines, line, column="overnight_costs")
+            # ToDo make it more generic
+            folium.PolyLine(([y0[line], x0[line]], [y1[line], x1[line]]),
+                            popup=popup, color=convert_to_hex(mv_color)).\
+                add_to(mv_line_group)
+
+    mp.add_child(mv_colormap)
 
     # add layers and others
     colormap.caption = 'Colormap of Lines s_nom'
@@ -931,6 +991,7 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
 
         repgrid_group.add_to(mp)
         grid_group.add_to(mp)
+        mv_line_group.add_to(mp)
 
     line_results_group.add_to(mp)
     store_group.add_to(mp)
@@ -941,6 +1002,9 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
         title='Fullscreen',
         title_cancel='Exit me',
         force_separate_button=True).add_to(mp)
+
+    url = ('https://openegoproject.files.wordpress.com/2017/02/open_ego_logo_breit.png?w=200')
+    FloatImage(url, bottom=3, left=10).add_to(mp)
 
     if ego.json_file['eGo']['eDisGo'] is True:
         mp = iplot_griddistrict_legend(
@@ -1091,7 +1155,7 @@ def iplot_griddistrict_legend(mp, repre_grids, start=False):
             style='position: absolute; z-index:9999; border:2px solid grey; background-color:rgba(255, 255, 255, 0.8);
              border-radius:6px; padding: 10px; font-size:14px; right: 20px; bottom: 20px;'>
 
-        <div class='legend-title'>Legend (draggable)</div>
+        <div class='legend-title'>MV Grid districts</div>
         <div class='legend-scale'>
           <ul class='legend-labels'>
 
