@@ -1328,9 +1328,7 @@ def parallelizer(
         return lambda o: results.update({key: o})
       
     results = {}
-    max_calc_time_hours = max_calc_time
-    max_calc_time_seconds = max_calc_time_hours * 3600
-    t1 = datetime.now()
+    max_calc_time_seconds = max_calc_time * 3600
     
     pool = mp2.Pool(workers,
                    maxtasksperchild=worker_lifetime)
@@ -1343,19 +1341,24 @@ def parallelizer(
                          callback=collect_pool_results,
                          error_callback=error_callback(ding0_id))
  
-    t2 = datetime.now()
-    delta = t2 - t1
-    delta_seconds = delta.seconds
-        
-    rest_time_seconds = max_calc_time_seconds - delta_seconds
-    rest_time_hours = rest_time_seconds / 3600
-    logger.info(
-            "Remaining time for calculations: {} h".format(rest_time_hours))
+    t1 = datetime.now()
+    
     try:
-        res.get(timeout=rest_time_seconds)
-        logger.info("All MV grids were calculated without Timeout")
+        res.get(timeout=max_calc_time_seconds)
+        logger.info("All MV grids were calculated without Timeout") 
+        
+        t2 = datetime.now()
+        delta = t2 - t1        
+        logger.info("Execution finished after {} hours".format(
+                delta.seconds/ 3600))
+        
     except:
         logger.warning("MV grid simulation failed (maybe timeout)")
+        t2 = datetime.now()
+        delta = t2 - t1
+        logger.info("Execution finished after {} hours".format(
+                delta.seconds/ 3600))
+        
         pool.terminate()
  
     pool.close()
