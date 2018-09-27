@@ -134,7 +134,8 @@ def etrago_storages_investment(network, json_file, session):
         _bus.index.name = "name"
         _bus.reset_index(level=0, inplace=True)
 
-        _storage = network.storage_units[network.storage_units.p_nom_opt != 0]
+        _storage = network.storage_units[
+            network.storage_units.p_nom_extendable == True]
         _storage.reset_index(level=0, inplace=True)
         # provide storage installation costs per voltage level
         installed_storages = \

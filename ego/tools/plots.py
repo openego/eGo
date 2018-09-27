@@ -338,14 +338,17 @@ def plot_grid_storage_investment(costs_df, filename, display, var=None):
     if var == 'overnight_cost':
         tic = costs_df[['component',
                         'overnight_costs',
-                        'voltage_level']]
-        tic.set_index(['voltage_level', 'component'], inplace=True)
+                        'voltage_level',
+                        'differentiation']]
+        tic.set_index(['voltage_level', 'component',
+                       'differentiation'], inplace=True)
         ax = tic.unstack().plot(kind='bar',
                                 rot=0,
                                 color=([colors.get(key)
                                         for key in
                                         ['egoblue1',
-                                         'egoblue2']]),
+                                         'egoblue2',
+                                         'egoblue3']]),
                                 legend=False)
         ax.set_ylabel("Overnight costs of simulation")
         ax.set_title("Total costs of simulation, "
@@ -354,14 +357,17 @@ def plot_grid_storage_investment(costs_df, filename, display, var=None):
     else:
         tic = costs_df[['component',
                         'capital_cost',
-                        'voltage_level']]
-        tic.set_index(['voltage_level', 'component'], inplace=True)
+                        'voltage_level',
+                        'differentiation']]
+        tic.set_index(['voltage_level', 'component',
+                       'differentiation'], inplace=True)
         ax = tic.unstack().plot(kind='bar',
                                 rot=0,
                                 color=([colors.get(key)
                                         for key in
                                         ['egoblue1',
-                                         'egoblue2']]),
+                                         'egoblue2',
+                                         'egoblue3']]),
                                 legend=False)
         ax.set_ylabel("Annualized costs per simulation periods")
         ax.set_title("Annualized costs per simulation periods, "
@@ -369,7 +375,7 @@ def plot_grid_storage_investment(costs_df, filename, display, var=None):
 
     ax.set_xlabel('Voltage level and component')
     ax.set_yscale("log")
-    ax.legend(('Grid', 'Storage'))
+    ax.legend(('cross-border', 'domestic', 'foreign'))
     ax.autoscale()
 
     if display is True:
