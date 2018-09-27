@@ -682,7 +682,7 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
     # 'Stamen Toner'  OpenStreetMap
 
     # Legend name
-    bus_group = folium.FeatureGroup(name='Buses full informations')
+    bus_group = folium.FeatureGroup(name='Bus information')
     # add buses
 
     for name, row in network.buses.iterrows():
@@ -723,7 +723,7 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
         return '#' + red + green + blue
 
     # Prepare lines
-    line_group = folium.FeatureGroup(name='Lines full informations')
+    line_group = folium.FeatureGroup(name='Line information')
 
     # get line Coordinates
     x0 = network.lines.bus0.map(network.buses.x)
@@ -761,50 +761,51 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
     if 'network' in ego.json_file['eTraGo']['extendable']:
         lines['s_nom_expansion'] = lines.s_nom_opt.subtract(
             lines.s_nom, axis='index')
-        lines['capital_investment'] = lines.s_nom_expansion.multiply(
+        lines['annuity'] = lines.s_nom_expansion.multiply(
             lines.capital_cost, axis='index')
+        lines['overnight_cost'] = etrago_convert_overnight_cost(
+            lines['annuity'],
+            ego.json_file, t=40, p=0.05)
+
     else:
         lines['s_nom_expansion'] = 0.
-        lines['capital_investment'] = 0.
+        lines['annuity'] = 0.
+        lines['overnight_cost'] = 0.
 
     # Prepare lines
-    line_results_group = folium.FeatureGroup(name='Lines specific results')
+    line_results_group = folium.FeatureGroup(
+        name='Line cost results of overnight costs')
 
     # color map lines
     colormap2 = cm.linear.YlGn_09.scale(
-        lines.capital_investment.min(), lines.capital_investment.max()).to_step(6)
+        lines.overnight_cost.min(), lines.overnight_cost.max()).to_step(6)
 
     # add parameter
+    cols = list(ego.etrago.network.lines.columns)
+    res = ('overnight_cost', 's_nom_expansion', 'annuity')
+    unit = ('EUR', 'MVA', 'EUR')
+    cols = [x for x in cols if x not in res]
+
     for line in network.lines.index:
-        popup = """<b>Line:</b> {} <br>
-            version: {} <br>
-            capital_cost: {} <br>
-            s_nom expansion: {} <br>
-            investment: {} <br>
-            length: {} <br>
-            s_nom: {} <br>
-            s_nom_extendable: {} <br>
-            s_nom_max: {} <br>
-            s_nom_min: {} <br>
-            s_nom_opt: {} <br>
-            type: {} <br>
-            v_nom: {} <br>
-            """.format(line, version,
-                       lines.capital_cost[line],
-                       lines.s_nom_expansion[line],
-                       lines.capital_investment[line],
-                       lines.length[line],
-                       lines.s_nom[line],
-                       lines.s_nom_extendable[line],
-                       lines.s_nom_max[line],
-                       lines.s_nom_min[line],
-                       lines.s_nom_opt[line],
-                       lines.type[line],
-                       lines.v_nom[line])
+
+        popup = """ <b>Line: {} </b><br>
+                    version: {} </b><br>
+                    <hr>
+                    <b>Line parameter: </b><br>""".format(line, version)
+
+        for col in cols:
+            popup += """ {}: {} <br>""".format(col, lines[col][line])
+
+        popup += """<hr> <b> Results:</b> <br>"""
+
+        for idx, val in enumerate(res):
+            popup += """{}: {:,} in {}<br>""".format(val,
+                                                     lines[val][line],
+                                                     unit[idx])
 
         # change colore function
         lr_color = colormapper_lines(
-            colormap2, lines, line, column="capital_investment")
+            colormap2, lines, line, column="overnight_cost")
         # ToDo make it more generic
         folium.PolyLine(([y0[line], x0[line]], [y1[line], x1[line]]),
                         popup=popup,
@@ -814,7 +815,7 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
     # add grid districs
     if ego.json_file['eGo']['eDisGo'] is True:
 
-        grid_group = folium.FeatureGroup(name='Grid district')
+        grid_group = folium.FeatureGroup(name='Choosen MV Grid district')
         # list(network.buses.index) # change to selected grids
 
         subst_id = list(ego.edisgo.grid_choice.the_selected_network_id)
@@ -832,7 +833,8 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
                 grid_group).add_child(folium.Popup(pop))
 
         # Add cluster grids
-        repgrid_group = folium.FeatureGroup(name='Represented Grids by Cluster')
+        repgrid_group = folium.FeatureGroup(
+            name='Represented MV Grids per Cluster')
         cluster = ego.edisgo.grid_choice
         cluster = cluster.rename(
             columns={"the_selected_network_id": "subst_id"})
@@ -949,6 +951,9 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
 
         lines = lines.loc[mv_network.lines.v_nom >= 10]
         cols = list(lines.columns)
+        res_mv = ('overnight_costs', 'capital_cost')
+        unit = ('EUR', 'EUR/time step')
+        cols = [x for x in cols if x not in res]
 
         # color map lines
         mv_colormap = cm.linear.YlGnBu_09.scale(
@@ -959,10 +964,23 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
         # add parameter
         for line in lines.index:
             popup = """ <b>Line:</b> {} <br>
-                        version: {} <br>""".format(line, version)
+                        version: {} <br> <hr>""".format(line, version)
+
+            popup += """<b>MV line parameter:</b><br> """
+
             for col in cols:
                 try:
                     popup += """ {}: {} <br>""".format(col, lines[col][line])
+                except:
+                    popup += """ No info for:"""
+
+            popup += """<hr> <b> Results:</b> <br>"""
+
+            for idx, val in enumerate(res_mv):
+                try:
+                    popup += """{}: {} in {}<br>""".format(val,
+                                                           lines[val][line],
+                                                           unit[idx])
                 except:
                     popup += """ No info for:"""
 
@@ -1004,7 +1022,7 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
         force_separate_button=True).add_to(mp)
 
     url = ('https://openegoproject.files.wordpress.com/2017/02/open_ego_logo_breit.png?w=200')
-    FloatImage(url, bottom=3, left=10).add_to(mp)
+    FloatImage(url, bottom=0, left=3).add_to(mp)
 
     if ego.json_file['eGo']['eDisGo'] is True:
         mp = iplot_griddistrict_legend(
@@ -1099,7 +1117,7 @@ def iplot_griddistrict_legend(mp, repre_grids, start=False):
     """ Add legend to iplot function.
 
     """
-    #from branca.element import Template, MacroElement
+    # from branca.element import Template, MacroElement
     from string import Template
 
     if start:
@@ -1214,7 +1232,7 @@ def iplot_griddistrict_legend(mp, repre_grids, start=False):
 
         temps = temp_1+temp_2+temp_3
 
-        #macro = MacroElement(**leg)
-        #macro._template = Template(template)
+        # macro = MacroElement(**leg)
+        # macro._template = Template(template)
         # return mp.get_root().add_child(macro)
         return mp.get_root().html.add_child(folium.Element(temps))
