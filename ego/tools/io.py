@@ -272,7 +272,7 @@ class eTraGoResults(egoBasic):
 
         # Add function
         self.etrago.storage_investment_costs = etrago_storages_investment(
-            self.etrago.network, self.json_file)
+            self.etrago.network, self.json_file, self.session)
         self.etrago.storage_charges = etrago_storages(self.etrago.network)
 
         self.etrago.operating_costs = etrago_operating_costs(
@@ -281,7 +281,7 @@ class eTraGoResults(egoBasic):
                                                       self.scn_name)
         self.etrago.grid_investment_costs = \
             etrago_grid_investment(self.etrago.network,
-                                   self.json_file)
+                                   self.json_file, self.session)
 
         # add functions direct
         # self._etrago_network.etrago_line_loading = etrago_line_loading
@@ -468,6 +468,7 @@ class eGo(eDisGoResults):
             _grid_mv_lv = self.edisgo.grid_investment_costs
             if _grid_mv_lv is not None:
                 _grid_mv_lv['component'] = 'grid'
+                _grid_mv_lv['differentiation'] = 'domestic'
 
                 self._total_inv_cost = self._total_inv_cost.\
                     append(_grid_mv_lv, ignore_index=True)
@@ -482,6 +483,12 @@ class eGo(eDisGoResults):
         if storage_mv_integration is True:
             if _grid_mv_lv is not None:
                 self._integrate_mv_storage_investment()
+
+        # sort values
+        self._total_investment_costs['voltage_level'] = pd.Categorical(
+            self._total_investment_costs['voltage_level'], ['ehv', 'mv', 'lv'])
+        self._total_investment_costs = (
+            self._total_investment_costs.sort_values('voltage_level'))
 
         self._storage_costs = _storage
         self._ehv_grid_costs = _grid_ehv

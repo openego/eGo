@@ -848,7 +848,7 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
                           'fillColor':  x['properties']['color'],
                           'weight': 0.5, 'color': 'black'})
         # simplify MultiPolygon
-        tolerance = 0.02
+        tolerance = 0  # 0.02
 
         for idx in cluster.index:
 

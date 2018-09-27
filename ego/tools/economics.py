@@ -30,6 +30,7 @@ if not 'READTHEDOCS' in os.environ:
     import pandas as pd
     import numpy as np
     from ego.tools.utilities import get_time_steps
+    from etrago.tools.utilities import geolocation_buses
 
 __copyright__ = "Flensburg University of Applied Sciences, Europa-Universität"\
     "Flensburg, Centre for Sustainable Energy Systems"
@@ -291,7 +292,7 @@ def etrago_operating_costs(network):
     return operating_costs
 
 
-def etrago_grid_investment(network, json_file):
+def etrago_grid_investment(network, json_file, session):
     """ Function to get grid expantion costs from eTraGo
 
     Parameters
@@ -334,8 +335,30 @@ def etrago_grid_investment(network, json_file):
 
     if 'network' in json_file['eTraGo']['extendable']:
 
+        network = geolocation_buses(network, session)
+        # differentiation by country_code
+
+        network.lines['differentiation'] = 'none'
+
+        network.lines['bus0_c'] = network.lines.bus0.map(
+            network.buses.country_code)
+        network.lines['bus1_c'] = network.lines.bus1.map(
+            network.buses.country_code)
+
+        for idx, val in network.lines.iterrows():
+
+            check = val['bus0_c'] + val['bus1_c']
+
+            if "DE" in check:
+                network.lines['differentiation'][idx] = 'cross-border'
+            if "DEDE" in check:
+                network.lines['differentiation'][idx] = 'domestic'
+            if "DE" not in check:
+                network.lines['differentiation'][idx] = 'foreign'
+
         lines = network.lines[['v_nom', 'capital_cost', 's_nom',
-                               's_nom_min', 's_nom_opt']].reset_index()
+                               's_nom_min', 's_nom_opt', 'differentiation']
+                              ].reset_index()
 
         lines['s_nom_expansion'] = lines.s_nom_opt.subtract(
             lines.s_nom, axis='index')
@@ -360,6 +383,8 @@ def etrago_grid_investment(network, json_file):
         trafo = pd.DataFrame()
         # get costs of transfomers
         if json_file['eTraGo']['network_clustering_kmeans'] == False:
+
+            network.transformers['differentiation'] = 'none'
 
             trafos = network.transformers[['v_nom0', 'v_nom1', 'capital_cost',
                                            's_nom_extendable', 's_nom',
@@ -388,13 +413,17 @@ def etrago_grid_investment(network, json_file):
             trafos.set_value(ix_hv, 'voltage_level', 'hv')
             # aggregate trafo
             trafo = trafos[['voltage_level',
-                            'capital_cost']].groupby('voltage_level'
-                                                     ).sum().reset_index()
+                            'capital_cost',
+                            'differentiation']].groupby(['differentiation',
+                                                         'voltage_level']
+                                                        ).sum().reset_index()
 
         # aggregate lines
         line = lines[['voltage_level',
-                      'capital_cost']].groupby('voltage_level'
-                                               ).sum().reset_index()
+                      'capital_cost',
+                      'differentiation']].groupby(['differentiation',
+                                                   'voltage_level']
+                                                  ).sum().reset_index()
 
         # merge trafos and line
         frames = [line, trafo]
