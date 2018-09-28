@@ -1336,10 +1336,11 @@ def parallelizer(
     for ding0_id in ding0_id_list:
         edisgo_args = (ding0_id, *func_arguments)
 
-        res = pool.apply_async(func=func,
-                         args=edisgo_args,
-                         callback=collect_pool_results,
-                         error_callback=error_callback(ding0_id))
+        res = pool.apply_async(
+                func=func,
+                args=edisgo_args,
+                callback=collect_pool_results,
+                error_callback=error_callback(ding0_id))
 
     t1 = datetime.now()
 
