@@ -1007,7 +1007,7 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None, save_image=False):
 
             # change colore function
             mv_color = colormapper_lines(
-                colormap, lines, line, column="overnight_costs")
+                mv_colormap, lines, line, column="overnight_costs")
             # ToDo make it more generic
             try:
                 folium.PolyLine(([y0[line], x0[line]], [y1[line], x1[line]]),
