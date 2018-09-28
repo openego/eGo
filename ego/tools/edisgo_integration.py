@@ -1342,25 +1342,60 @@ def parallelizer(
                 callback=collect_pool_results,
                 error_callback=error_callback(ding0_id))
 
+    errors = {}
+    successes = {}
     start = datetime.now()
+    while ( result_objects and
+            ((datetime.now() - start).seconds <= max_calc_time_seconds)):
+        for grid, result in result_objects.items():
+            if result.ready():
+                del result_objects[grid]
+                if not result.successful():
+                    try:
+                        # We already know that this was not successful, so the
+                        # `get` is only here to re-raise the exception that
+                        # occurred.
+                        result.get()
+                    except Exception as e:
+                        logger.warning(
+                                "MV grid {} failed due to {}.".format(grid, e))
+                        errors[grid] = e
+                else:
+                    logger.info(
+                            "MV grid {} calculated successfully.".format(grid))
+                    successes[grid] = result.get()
 
-    try:
-        res.get(timeout=max_calc_time_seconds)
-        logger.info("All MV grids were calculated without Timeout")
+    # Now we know that we either reached the timeout, (x)or that all
+    # calculations are done. We just have collect what exactly is the case.
+    # This is done by `get`ting the results with a timeout of 0. If any of them
+    # are not yet done, a `TimeoutError` will be triggered, which we can
+    # collect like all other errors.
+    if not result_objects:
+        logger.info("All MV grids stopped before the timeout.")
+    else:
+        logger.warning("Some MV grid simulations timed out.")
 
-        end = datetime.now()
-        delta = end - start
-        logger.info("Execution finished after {} hours".format(
-                delta.seconds / 3600))
+    end = datetime.now()
+    delta = end - start
+    logger.info("Execution finished after {} hours".format(
+            delta.seconds / 3600))
 
-    except:
-        logger.warning("MV grid simulation failed (maybe timeout)")
-        end = datetime.now()
-        delta = end - start
-        logger.info("Execution finished after {} hours".format(
-                delta.seconds / 3600))
+    for grid, result in result_objects.items():
+        del result_objects[grid]
+        try:
+            successes[grid] = result.get(timeout=0)
+            logger.info("MV grid {} calculated successfully.".format(grid))
+        except Exception as e:
+            logger.warning("MV grid {} failed due to {}.".format(grid, e))
+            errors[grid] = e
 
-        pool.terminate()
+    if errors:
+        logger.info("MV grid calculation error details:")
+        for grid, error in errors.items():
+            logger.info("  {}".format(grid))
+            logger.info(
+                    "    " + "\n    "
+                    .join(traceback.format_stack(error).split("\n")))
 
     pool.close()
     pool.join()
