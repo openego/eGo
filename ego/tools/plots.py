@@ -628,7 +628,7 @@ def plot_edisgo_cluster(ego, filename, region=['DE'], display=False, dpi=600,
                          cmap='OrRd',
                          edgecolor='whitesmoke',
                          linewidth=0.1,
-                         legend=True)
+                         legend=False)
 
     # add storage distribution
     if add_ehv_storage:
