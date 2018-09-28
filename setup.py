@@ -17,7 +17,7 @@ requirements = parse_requirements("ego_dependencies.txt", session="")
 
 setup(
     name='eGo',
-    version='0.3.0.12',
+    version='0.3.0.24',
     author='wolfbunke, maltesc',
     author_email='wolf-dieter.bunke@uni-flensburg.de',
     description=("A cross-grid-level electricity grid and storage "

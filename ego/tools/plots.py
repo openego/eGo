@@ -40,16 +40,19 @@ if not 'READTHEDOCS' in os.environ:
         import geopandas as gpd
         import folium
         from folium import plugins
+        from folium.plugins import FloatImage
         import branca.colormap as cm
     except:
         geopandas = False
     import oedialect
     import webbrowser
+    import subprocess
     from egoio.db_tables.model_draft import (
         EgoGridMvGriddistrict, RenpassGisParameterRegion)
     from egoio.db_tables.grid import EgoDpMvGriddistrict
     import matplotlib.pyplot as plt
     import matplotlib as mpl
+    import matplotlib.colors as mcolors
 
 import logging
 logger = logging.getLogger('ego')
@@ -336,14 +339,19 @@ def plot_grid_storage_investment(costs_df, filename, display, var=None):
     if var == 'overnight_cost':
         tic = costs_df[['component',
                         'overnight_costs',
-                        'voltage_level']]
-        tic.set_index(['voltage_level', 'component'], inplace=True)
+                        'voltage_level',
+                        'differentiation']]
+        tic.set_index(['voltage_level', 'component',
+                       'differentiation'], inplace=True)
         ax = tic.unstack().plot(kind='bar',
+                                stacked=False,
+
                                 rot=0,
                                 color=([colors.get(key)
                                         for key in
                                         ['egoblue1',
-                                         'egoblue2']]),
+                                         'egoblue2',
+                                         'egoblue3']]),
                                 legend=False)
         ax.set_ylabel("Overnight costs of simulation")
         ax.set_title("Total costs of simulation, "
@@ -352,22 +360,27 @@ def plot_grid_storage_investment(costs_df, filename, display, var=None):
     else:
         tic = costs_df[['component',
                         'capital_cost',
-                        'voltage_level']]
-        tic.set_index(['voltage_level', 'component'], inplace=True)
+                        'voltage_level',
+                        'differentiation']]
+        tic.set_index(['voltage_level', 'component',
+                       'differentiation'], inplace=True)
         ax = tic.unstack().plot(kind='bar',
                                 rot=0,
+                                stacked=False,
+
                                 color=([colors.get(key)
                                         for key in
                                         ['egoblue1',
-                                         'egoblue2']]),
+                                         'egoblue2',
+                                         'egoblue3']]),
                                 legend=False)
         ax.set_ylabel("Annualized costs per simulation periods")
         ax.set_title("Annualized costs per simulation periods, "
                      "voltage level and component", y=1.08)
 
     ax.set_xlabel('Voltage level and component')
-    ax.set_yscale("log")
-    ax.legend(('Grid', 'Storage'))
+    ax.set_yscale("symlog")
+    ax.legend(('cross-border', 'domestic', 'foreign'))
     ax.autoscale()
 
     if display is True:
@@ -395,7 +408,7 @@ def power_price_plot(ego, filename, display):
     plt.rcdefaults()
 #    colors = ego_colore()
     carrier_colors = coloring()
-    
+
     fig, ax = plt.subplots()
 
     # plot power_price
@@ -408,7 +421,7 @@ def power_price_plot(ego, filename, display):
 
     plt_colors = [carrier_colors[carrier] for carrier in prc.index]
 #    plt_colors = colors['egoblue1']
-        
+
     ax.barh(ind, prc, align='center', color=plt_colors)
     ax.set_yticks(ind)
     ax.set_yticklabels(prc.index)
@@ -541,7 +554,8 @@ def prepareGD(session, subst_id=None, version=None):
     return region
 
 
-def plot_edisgo_cluster(ego, filename, region=['DE'], display=False, dpi=600):
+def plot_edisgo_cluster(ego, filename, region=['DE'], display=False, dpi=600,
+                        add_ehv_storage=True):
     """Plot the Clustering of selected Dingo networks
 
     Parameters
@@ -554,6 +568,8 @@ def plot_edisgo_cluster(ego, filename, region=['DE'], display=False, dpi=600):
         List of background countries e.g. ['DE', 'DK']
     display: boolean
         True show plot false print plot as ``filename``
+    add_ehv_storage: boolean
+        Display eTraGo ehv/hv storage distribution?
 
     Returns
     -------
@@ -604,17 +620,21 @@ def plot_edisgo_cluster(ego, filename, region=['DE'], display=False, dpi=600):
     mvgrids.plot(ax=ax, color='white', alpha=0.1,  linewidth=0.1)
     if ego.json_file['eGo']['eDisGo'] is True:
         repre_grids.plot(ax=ax, column='cluster_id',
-                         cmap='GnBu', edgecolor='whitesmoke',
+                         cmap='GnBu',
+                         edgecolor='whitesmoke',
                          linewidth=0.1,
                          legend=True)
         gridcluster.plot(ax=ax, column='no_of_points_per_cluster',
                          cmap='OrRd',
+                         edgecolor='whitesmoke',
                          linewidth=0.1,
-                         legend=True)
+                         legend=False)
 
     # add storage distribution
-    _storage_distribution(ego.etrago.network, scaling=1, filename=None,
-                          ax=ax, fig=fig)
+    if add_ehv_storage:
+        _storage_distribution(ego.etrago.network, scaling=1, filename=None,
+                              ax=ax, fig=fig)
+
     ax.set_title('Grid district Clustering by Number of represent Grids')
 
     ax.autoscale(tight=True)
@@ -628,7 +648,7 @@ def plot_edisgo_cluster(ego, filename, region=['DE'], display=False, dpi=600):
         plt.close()
 
 
-def igeoplot(ego, tiles=None, geoloc=None, args=None):
+def igeoplot(ego, tiles=None, geoloc=None, args=None, save_image=False):
     """Plot function in order to display eGo results on leaflet OSM map.
     This function will open the results in your main web browser
 
@@ -639,8 +659,10 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
       eTraGo network object compiled by: meth: `etrago.appl.etrago`
     tiles: str
       Folium background map style `None` as OSM or `Nasa`
-    geoloc: : obj: `list`
+    geoloc: :obj: `list`
       Listwhich define center of map as (lon, lat)
+    save_image: :obj: `bool`
+        save iplot map as image
 
     Returns
     -------
@@ -651,6 +673,7 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
     #     # TODO
     #     # - use cluster or boxes to limit data volumn
     #     # - add Legend
+    #     # - add mv tolerance
     #     # - Map see: http://nbviewer.jupyter.org/gist/BibMartin/f153aa957ddc5fadc64929abdee9ff2e
 
     network = ego.etrago.network
@@ -680,7 +703,7 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
     # 'Stamen Toner'  OpenStreetMap
 
     # Legend name
-    bus_group = folium.FeatureGroup(name='Buses full informations')
+    bus_group = folium.FeatureGroup(name='Bus information')
     # add buses
 
     for name, row in network.buses.iterrows():
@@ -721,7 +744,7 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
         return '#' + red + green + blue
 
     # Prepare lines
-    line_group = folium.FeatureGroup(name='Lines full informations')
+    line_group = folium.FeatureGroup(name='Line information')
 
     # get line Coordinates
     x0 = network.lines.bus0.map(network.buses.x)
@@ -759,50 +782,51 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
     if 'network' in ego.json_file['eTraGo']['extendable']:
         lines['s_nom_expansion'] = lines.s_nom_opt.subtract(
             lines.s_nom, axis='index')
-        lines['capital_investment'] = lines.s_nom_expansion.multiply(
+        lines['annuity'] = lines.s_nom_expansion.multiply(
             lines.capital_cost, axis='index')
+        lines['overnight_cost'] = etrago_convert_overnight_cost(
+            lines['annuity'],
+            ego.json_file, t=40, p=0.05)
+
     else:
         lines['s_nom_expansion'] = 0.
-        lines['capital_investment'] = 0.
+        lines['annuity'] = 0.
+        lines['overnight_cost'] = 0.
 
     # Prepare lines
-    line_results_group = folium.FeatureGroup(name='Lines specific results')
+    line_results_group = folium.FeatureGroup(
+        name='Line cost results of overnight costs')
 
     # color map lines
-    colormap2 = cm.linear.YlOrRd_09.scale(
-        lines.s_nom_expansion.min(), lines.s_nom_expansion.max()).to_step(6)
+    colormap2 = cm.linear.YlGn_09.scale(
+        lines.overnight_cost.min(), lines.overnight_cost.max()).to_step(6)
 
     # add parameter
+    cols = list(ego.etrago.network.lines.columns)
+    res = ('overnight_cost', 's_nom_expansion', 'annuity')
+    unit = ('EUR', 'MVA', 'EUR')
+    cols = [x for x in cols if x not in res]
+
     for line in network.lines.index:
-        popup = """<b>Line:</b> {} <br>
-            version: {} <br>
-            capital_cost: {} <br>
-            s_nom expansion: {} <br>
-            investment: {} <br>
-            length: {} <br>
-            s_nom: {} <br>
-            s_nom_extendable: {} <br>
-            s_nom_max: {} <br>
-            s_nom_min: {} <br>
-            s_nom_opt: {} <br>
-            type: {} <br>
-            v_nom: {} <br>
-            """.format(line, version,
-                       lines.capital_cost[line],
-                       lines.s_nom_expansion[line],
-                       lines.capital_investment[line],
-                       lines.length[line],
-                       lines.s_nom[line],
-                       lines.s_nom_extendable[line],
-                       lines.s_nom_max[line],
-                       lines.s_nom_min[line],
-                       lines.s_nom_opt[line],
-                       lines.type[line],
-                       lines.v_nom[line])
+
+        popup = """ <b>Line: {} </b><br>
+                    version: {} </b><br>
+                    <hr>
+                    <b>Line parameter: </b><br>""".format(line, version)
+
+        for col in cols:
+            popup += """ {}: {} <br>""".format(col, lines[col][line])
+
+        popup += """<hr> <b> Results:</b> <br>"""
+
+        for idx, val in enumerate(res):
+            popup += """{}: {:,} in {}<br>""".format(val,
+                                                     lines[val][line],
+                                                     unit[idx])
 
         # change colore function
         lr_color = colormapper_lines(
-            colormap2, lines, line, column="s_nom_expansion")
+            colormap2, lines, line, column="overnight_cost")
         # ToDo make it more generic
         folium.PolyLine(([y0[line], x0[line]], [y1[line], x1[line]]),
                         popup=popup,
@@ -812,7 +836,7 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
     # add grid districs
     if ego.json_file['eGo']['eDisGo'] is True:
 
-        grid_group = folium.FeatureGroup(name='Grid district')
+        grid_group = folium.FeatureGroup(name='Choosen MV Grid district')
         # list(network.buses.index) # change to selected grids
 
         subst_id = list(ego.edisgo.grid_choice.the_selected_network_id)
@@ -822,32 +846,32 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
         # Add for loop
         crs = {'init': 'epsg:4326'}
 
-        # for name, row in district.iterrows():
-        pop = """<b>Grid district:</b> {} <br>
-            """.format('Number')
+        for name, row in district.iterrows():
+            pop = """<b>Grid district:</b> {} <br>
+                """.format(row['subst_id'])
 
-        folium.GeoJson(district).add_to(grid_group).add_child(folium.Popup(pop))
+            folium.GeoJson(row['geometry']).add_to(
+                grid_group).add_child(folium.Popup(pop))
 
         # Add cluster grids
-        repgrid_group = folium.FeatureGroup(name='represented Grids by Cluster')
+        repgrid_group = folium.FeatureGroup(
+            name='Represented MV Grids per Cluster')
         cluster = ego.edisgo.grid_choice
         cluster = cluster.rename(
             columns={"the_selected_network_id": "subst_id"})
 
         repre_grids = pd.DataFrame(columns=['subst_id',
                                             'geometry',
-                                            'cluster_id'
-                                            'color',
-                                            'mpl_color'])
+                                            'cluster_id',
+                                            'color'])
 
         style_function = (lambda x: {
                           'fillColor':  x['properties']['color'],
                           'weight': 0.5, 'color': 'black'})
+        # simplify MultiPolygon
+        tolerance = 0.002
 
         for idx in cluster.index:
-
-            pop2 = """<b>Represented Grid:</b> {} <br>
-                """.format(cluster.subst_id[idx])
 
             cluster_id = list(cluster.represented_grids[idx])
             # represented_grids
@@ -855,28 +879,34 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
             repre_grid['cluster_id'] = cluster.subst_id[idx]
 
             repre_grids = repre_grids.append(repre_grid, ignore_index=True)
-            # prepare cluster colore
-            vals = list(repre_grids.cluster_id)  # cluster_id
-            normal = mpl.colors.Normalize(vals)
-            # cm.get_cmap('BrBG')
-            cellColours = plt.cm.jet(vals)  # change here colormap
-            repre_grids['color'] = ''
 
-            for i in repre_grids.index:
-                repre_grids['mpl_color'][i] = cellColours[i]
-                # get hex color
-                repre_grids['color'][i] = convert_to_hex(
-                    repre_grids['mpl_color'][i])
+        # prepare cluster colore
+        normal = mpl.colors.Normalize(vmin=repre_grids.cluster_id.min(),
+                                      vmax=repre_grids.cluster_id.max(),
+                                      clip=True)
 
-            repre_grids['mpl_color'] = ''
+        mapper = plt.cm.ScalarMappable(norm=normal, cmap=plt.cm.viridis)
+        # add colors to column
+        repre_grids['color'] = repre_grids['cluster_id'].apply(
+            lambda x: mcolors.to_hex(mapper.to_rgba(x)))
 
-            repre_grids = gpd.GeoDataFrame(
-                repre_grids, geometry='geometry', crs=crs)
+        repre_grids = gpd.GeoDataFrame(
+            repre_grids, geometry='geometry', crs=crs)
 
-            folium.GeoJson(repre_grids,
-                           style_function=style_function
-                           ).add_to(repgrid_group).add_child(
-                folium.Popup(pop2))
+        # simplify Polygon geometry
+        repre_grids.geometry = repre_grids.geometry.simplify(tolerance)
+
+        # add popup
+        for name, row in repre_grids.iterrows():
+
+            pops = """<b>Represented Grid:</b> {} <br>""".format(
+                row['cluster_id'])
+
+            folium.GeoJson(repre_grids[name:name+1],
+                           style_function=style_function,
+                           name='represented grids'
+                           ).add_to(repgrid_group
+                                    ).add_child(folium.Popup(pops))
 
     # Create storage expantion plot
     store_group = folium.FeatureGroup(name='Storage expantion')
@@ -909,6 +939,84 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
             fill_color='#3186cc',
             weight=1
         ).add_to(store_group)
+    # add MV line loading
+    # Prepare MV lines
+    mv_line_group = folium.FeatureGroup(name='Choosen MV Grids (>=10kV)')
+
+    mv_list = ego.edisgo.grid_choice.the_selected_network_id
+
+    for grid in mv_list:
+
+        mv_grid_id = grid
+
+        mv_network = ego.edisgo.network[mv_grid_id].network.pypsa
+
+        # get line Coordinates
+        x0 = mv_network.lines.bus0.loc[mv_network.lines.v_nom >= 10].map(
+            mv_network.buses.x)
+        x1 = mv_network.lines.bus1.loc[mv_network.lines.v_nom >= 10].map(
+            mv_network.buses.x)
+
+        y0 = mv_network.lines.bus0.loc[mv_network.lines.v_nom >= 10].map(
+            mv_network.buses.y)
+        y1 = mv_network.lines.bus1.loc[mv_network.lines.v_nom >= 10].map(
+            mv_network.buses.y)
+
+        # get content
+        grid_expansion_costs = ego.edisgo.network[
+            mv_grid_id].network.results.grid_expansion_costs
+        lines = pd.concat([mv_network.lines,
+                           grid_expansion_costs],
+                          axis=1,
+                          join_axes=[mv_network.lines.index])
+
+        lines = lines.loc[mv_network.lines.v_nom >= 10]
+        cols = list(lines.columns)
+        res_mv = ('overnight_costs', 'capital_cost')
+        unit = ('EUR', 'EUR/time step')
+        cols = [x for x in cols if x not in res_mv]
+
+        # color map lines
+        mv_colormap = cm.linear.YlGnBu_09.scale(
+            lines.overnight_costs.min(), lines.overnight_costs.max()).to_step(6)
+
+        mv_colormap.caption = 'Colormap of MV line overnight cost'
+
+        # add parameter
+        for line in lines.index:
+            popup = """ <b>Line:</b> {} <br>
+                        version: {} <br> <hr>""".format(line, version)
+
+            popup += """<b>MV line parameter:</b><br> """
+
+            for col in cols:
+                try:
+                    popup += """ {}: {} <br>""".format(col, lines[col][line])
+                except:
+                    popup += """ No info for:"""
+
+            popup += """<hr> <b> Results:</b> <br>"""
+
+            for idx, val in enumerate(res_mv):
+                try:
+                    popup += """{}: {} in {}<br>""".format(val,
+                                                           lines[val][line],
+                                                           unit[idx])
+                except:
+                    popup += """ No info for:"""
+
+            # change colore function
+            mv_color = colormapper_lines(
+                colormap, lines, line, column="overnight_costs")
+            # ToDo make it more generic
+            try:
+                folium.PolyLine(([y0[line], x0[line]], [y1[line], x1[line]]),
+                                popup=popup, color=convert_to_hex(mv_color)).\
+                    add_to(mv_line_group)
+            except:
+                logger.info('Cound not find a geometry')
+
+    mp.add_child(mv_colormap)
 
     # add layers and others
     colormap.caption = 'Colormap of Lines s_nom'
@@ -916,12 +1024,17 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
     mp.add_child(colormap)
     mp.add_child(colormap2)
 
-    # Add layer groups
+    # add legend
+    # add layer groups
     bus_group.add_to(mp)
     line_group.add_to(mp)
+
     if ego.json_file['eGo']['eDisGo'] is True:
-        grid_group.add_to(mp)
+
         repgrid_group.add_to(mp)
+        grid_group.add_to(mp)
+        mv_line_group.add_to(mp)
+
     line_results_group.add_to(mp)
     store_group.add_to(mp)
     folium.LayerControl().add_to(mp)
@@ -931,6 +1044,15 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
         title='Fullscreen',
         title_cancel='Exit me',
         force_separate_button=True).add_to(mp)
+
+    url = ('https://openegoproject.files.wordpress.com/2017/02/open_ego_logo_breit.png?w=200')
+    FloatImage(url, bottom=0, left=3).add_to(mp)
+
+    if ego.json_file['eGo']['eDisGo'] is True:
+        mp = iplot_griddistrict_legend(
+            mp=mp, repre_grids=repre_grids, start=True)
+
+    mp = iplot_totalresults_legend(mp=mp, ego=ego, start=True)
 
     # Save Map
     html_dir = 'results/html'
@@ -944,6 +1066,13 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
     path = os.getcwd()
     url = "results/html/iplot_map.html"
     webbrowser.open(url, new=new)
+
+    # save screenshots
+    if save_image:
+        url2 = "file://{}/{}".format(os.getcwd(), url)
+        outfn = os.path.join(html_dir, "outfig.png")
+        subprocess.check_call(["cutycapt", "--url={}".format(url2),
+                               "--out={}".format(outfn)])
 
 
 def colormapper_lines(colormap, lines, line, column="s_nom"):
@@ -1015,3 +1144,237 @@ def _storage_distribution(network, ax, fig, scaling=1, filename=None):
             ax=ax,
             line_widths=0.3
         )
+
+
+def iplot_griddistrict_legend(mp, repre_grids, start=False):
+    """ Add legend to iplot function.
+
+    """
+    # from branca.element import Template, MacroElement
+    from string import Template
+
+    if start:
+
+        legends = []
+        for name, row in repre_grids.groupby(['cluster_id', 'color']).count().iterrows():
+
+            color = name[1]
+            grid_no = name[0]
+
+            entry = """<li><span style = 'background:{};opacity:0.7;' >
+                     </span > Represented by Grid {} </li>""".format(color, grid_no)
+
+            legends.append(entry)
+
+        legend = "\n"
+        legend = legend.join(legends)
+
+        temp_1 = """
+
+        <!doctype html>
+        <html lang="en">
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1">
+          <title>open_eGo interactiv result plot</title>
+          <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+
+          <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+          <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+
+          <script>
+          $( function() {
+            $( "#maplegend" ).draggable({
+                            start: function (event, ui) {
+                                $(this).css({
+                                    right: "auto",
+                                    top: "auto",
+                                    bottom: "auto"
+                                });
+                            }
+                        });
+        });
+
+          </script>
+          <script>
+            $( function() {
+              $( "#map-results-legend" ).draggable({
+                              start: function (event, ui) {
+                                  $(this).css({
+                                      right: "auto",
+                                      top: "auto",
+                                      bottom: "auto"
+                                  });
+                              }
+                          });
+          });
+
+            </script>
+        </head>
+        <body>
+        """
+
+        temp_2 = """
+
+        <div id='maplegend' class='maplegend'
+            style='position: absolute; z-index:9999; border:2px solid grey; background-color:rgba(255, 255, 255, 0.8);
+             border-radius:6px; padding: 10px; font-size:14px; right: 20px; bottom: 20px;'>
+
+        <div class='legend-title'>MV Grid districts</div>
+        <div class='legend-scale'>
+          <ul class='legend-labels'>
+
+            $legend
+
+          </ul>
+        </div>
+        </div>
+        </body>
+        </html>
+        """
+
+        temp_3 = """
+        <style type='text/css'>
+          .maplegend .legend-title {
+            text-align: left;
+            margin-bottom: 5px;
+            font-weight: bold;
+            font-size: 90%;
+            }
+          .maplegend .legend-scale ul {
+            margin: 0;
+            margin-bottom: 5px;
+            padding: 0;
+            float: left;
+            list-style: none;
+            }
+          .maplegend .legend-scale ul li {
+            font-size: 80%;
+            list-style: none;
+            margin-left: 0;
+            line-height: 18px;
+            margin-bottom: 2px;
+            }
+          .maplegend ul.legend-labels li span {
+            display: block;
+            float: left;
+            height: 16px;
+            width: 30px;
+            margin-right: 5px;
+            margin-left: 0;
+            border: 1px solid #999;
+            }
+          .maplegend .legend-source {
+            font-size: 80%;
+            color: #777;
+            clear: both;
+            }
+          .maplegend a {
+            color: #777;
+            }
+        </style>
+
+        <style type='text/css'>
+          .map-results-legend .legend-title {
+            text-align: left;
+            margin-bottom: 15px;
+            font-weight: bold;
+            font-size: 90%;
+            }
+          .map-results-legend .legend-scale ul {
+            margin: 0;
+            margin-bottom: 15px;
+            padding: 0;
+            float: left;
+            list-style: none;
+            }
+          .map-results-legend .legend-scale ul li {
+            font-size: 80%;
+            list-style: none;
+            margin-left: 0;
+            line-height: 18px;
+            margin-bottom: 10px;
+            }
+          .map-results-legend ul.legend-labels li span {
+            display: block;
+            float: left;
+            height: 16px;
+            width: 30px;
+            margin-right: 15px;
+            margin-left: 20;
+            border: 1px solid #999;
+            }
+          .map-results-legend .legend-source {
+            font-size: 80%;
+            color: #777;
+            clear: both;
+            }
+          .map-results-legend a {
+            color: #777;
+            }
+        </style>
+        """
+        t = Template(temp_2)
+        temp_2 = t.substitute(legend=legend)
+
+        temps = temp_1+temp_2+temp_3
+
+        # macro = MacroElement(**leg)
+        # macro._template = Template(template)
+        # return mp.get_root().add_child(macro)
+        return mp.get_root().html.add_child(folium.Element(temps))
+
+
+def iplot_totalresults_legend(mp, ego, start=False):
+    """ Add total results as legend to iplot function.
+    """
+    from string import Template
+
+    if start:
+
+        # get data
+        total = ego.total_investment_costs.rename(
+            columns={"capital_cost": "annuity_costs"})
+        total = total[['component', 'voltage_level',
+                       'differentiation', 'overnight_costs',
+                       'annuity_costs']].to_html(index=False)
+
+        # inclued grafic
+        filepath = "results/total_investment_costs_map.png"
+        ego.plot_total_investment_costs(filename=filepath)
+
+        url = "file://{}/{}".format(os.getcwd(), filepath)
+        outfn = os.path.join(url)
+
+        temp_tr = """
+
+        <div id='map-results-legend' class='map-results-legend'
+            style='position: absolute; z-index:9999; border:2px solid grey;
+                   background-color:rgba(255, 255, 255, 0.8);
+             border-radius:6px; padding: 10px; font-size:14px; left: 10px; bottom: 200px;'>
+
+        <div class='legend-title'>Total investment costs</div>
+          <div id="plot" style="width: 400px; height: 400px">
+             <img src= $plot height="390" />
+           </div>
+
+            <div class='legend-scale'>
+              <ul class='legend-labels'>
+
+                $total
+
+              </ul>
+            </div>
+
+        </div>
+        </body>
+        </html>
+        """
+
+        temp_tmp = """        """
+        t = Template(temp_tr)
+        temp_tr = t.substitute(total=total, plot=outfn)
+
+        temps = temp_tr  # +temp_tmp
+
+        return mp.get_root().html.add_child(folium.Element(temps))

@@ -1,5 +1,5 @@
 # ego tool
--e git+https://git@github.com/openego/PyPSA.git@master#egg=pypsa-0.11.0fork
+#-e git+ssh://git@github.com/openego/PyPSA.git@master#egg=0.11.0fork
 egoio==0.4.5
 eDisGo==v0.0.6
 eTraGo==0.7.0

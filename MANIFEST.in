@@ -9,4 +9,6 @@ include ego/scenario_setting.json
 include ego/data/*.csv
 include ego/tools/*.json
 include ego/examples/tutorials/*
-
+include pypsa/component_attrs/*.csv
+include pypsa/standard_types/*.csv
+include pypsa/components.csv
