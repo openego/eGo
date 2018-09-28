@@ -30,6 +30,7 @@ __author__ = "wolf_bunke, maltesc"
 # Import
 import os
 import logging
+import traceback
 if not 'READTHEDOCS' in os.environ:
 
     from egoio.db_tables import model_draft, grid
