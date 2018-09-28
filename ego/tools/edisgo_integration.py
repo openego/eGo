@@ -1348,9 +1348,10 @@ def parallelizer(
     start = datetime.now()
     while ( result_objects and
             ((datetime.now() - start).seconds <= max_calc_time_seconds)):
+        done = []
         for grid, result in result_objects.items():
             if result.ready():
-                del result_objects[grid]
+                done.append(grid)
                 if not result.successful():
                     try:
                         # We already know that this was not successful, so the
@@ -1365,6 +1366,8 @@ def parallelizer(
                     logger.info(
                             "MV grid {} calculated successfully.".format(grid))
                     successes[grid] = result.get()
+        for grid in done:
+            del result_objects[grid]
 
     # Now we know that we either reached the timeout, (x)or that all
     # calculations are done. We just have collect what exactly is the case.
@@ -1381,14 +1384,17 @@ def parallelizer(
     logger.info("Execution finished after {} hours".format(
             delta.seconds / 3600))
 
+    done = []
     for grid, result in result_objects.items():
-        del result_objects[grid]
+        done.append[grid]
         try:
             successes[grid] = result.get(timeout=0)
             logger.info("MV grid {} calculated successfully.".format(grid))
         except Exception as e:
             logger.warning("MV grid {} failed due to {}.".format(grid, e))
             errors[grid] = e
+    for grid in done:
+        del result_objects[grid]
 
     if errors:
         logger.info("MV grid calculation error details:")
