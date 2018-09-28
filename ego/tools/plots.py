@@ -554,7 +554,8 @@ def prepareGD(session, subst_id=None, version=None):
     return region
 
 
-def plot_edisgo_cluster(ego, filename, region=['DE'], display=False, dpi=600):
+def plot_edisgo_cluster(ego, filename, region=['DE'], display=False, dpi=600,
+                        add_ehv_storage=True):
     """Plot the Clustering of selected Dingo networks
 
     Parameters
@@ -567,6 +568,8 @@ def plot_edisgo_cluster(ego, filename, region=['DE'], display=False, dpi=600):
         List of background countries e.g. ['DE', 'DK']
     display: boolean
         True show plot false print plot as ``filename``
+    add_ehv_storage: boolean
+        Display eTraGo ehv/hv storage distribution?
 
     Returns
     -------
@@ -617,17 +620,21 @@ def plot_edisgo_cluster(ego, filename, region=['DE'], display=False, dpi=600):
     mvgrids.plot(ax=ax, color='white', alpha=0.1,  linewidth=0.1)
     if ego.json_file['eGo']['eDisGo'] is True:
         repre_grids.plot(ax=ax, column='cluster_id',
-                         cmap='GnBu', edgecolor='whitesmoke',
+                         cmap='GnBu',
+                         edgecolor='whitesmoke',
                          linewidth=0.1,
                          legend=True)
         gridcluster.plot(ax=ax, column='no_of_points_per_cluster',
                          cmap='OrRd',
+                         edgecolor='whitesmoke',
                          linewidth=0.1,
                          legend=True)
 
     # add storage distribution
-    _storage_distribution(ego.etrago.network, scaling=1, filename=None,
-                          ax=ax, fig=fig)
+    if add_ehv_storage:
+        _storage_distribution(ego.etrago.network, scaling=1, filename=None,
+                              ax=ax, fig=fig)
+
     ax.set_title('Grid district Clustering by Number of represent Grids')
 
     ax.autoscale(tight=True)
@@ -1325,7 +1332,12 @@ def iplot_totalresults_legend(mp, ego, start=False):
 
     if start:
 
-        total = ego.total_investment_costs.to_html(index=False)
+        # get data
+        total = ego.total_investment_costs.rename(
+            columns={"capital_cost": "annuity_costs"})
+        total = total[['component', 'voltage_level',
+                       'differentiation', 'overnight_costs',
+                       'annuity_costs']].to_html(index=False)
 
         # inclued grafic
         filepath = "results/total_investment_costs_map.png"
@@ -1343,7 +1355,7 @@ def iplot_totalresults_legend(mp, ego, start=False):
 
         <div class='legend-title'>Total investment costs</div>
           <div id="plot" style="width: 400px; height: 400px">
-             <img src= $plot height="395" />
+             <img src= $plot height="390" />
            </div>
 
             <div class='legend-scale'>
@@ -1353,7 +1365,7 @@ def iplot_totalresults_legend(mp, ego, start=False):
 
               </ul>
             </div>
-        
+
         </div>
         </body>
         </html>
