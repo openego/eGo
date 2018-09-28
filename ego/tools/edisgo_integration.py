@@ -1342,21 +1342,21 @@ def parallelizer(
                 callback=collect_pool_results,
                 error_callback=error_callback(ding0_id))
 
-    t1 = datetime.now()
+    start = datetime.now()
 
     try:
         res.get(timeout=max_calc_time_seconds)
         logger.info("All MV grids were calculated without Timeout")
 
-        t2 = datetime.now()
-        delta = t2 - t1
+        end = datetime.now()
+        delta = end - start
         logger.info("Execution finished after {} hours".format(
                 delta.seconds / 3600))
 
     except:
         logger.warning("MV grid simulation failed (maybe timeout)")
-        t2 = datetime.now()
-        delta = t2 - t1
+        end = datetime.now()
+        delta = end - start
         logger.info("Execution finished after {} hours".format(
                 delta.seconds / 3600))
 
