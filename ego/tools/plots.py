@@ -46,6 +46,7 @@ if not 'READTHEDOCS' in os.environ:
         geopandas = False
     import oedialect
     import webbrowser
+    import subprocess
     from egoio.db_tables.model_draft import (
         EgoGridMvGriddistrict, RenpassGisParameterRegion)
     from egoio.db_tables.grid import EgoDpMvGriddistrict
@@ -343,6 +344,8 @@ def plot_grid_storage_investment(costs_df, filename, display, var=None):
         tic.set_index(['voltage_level', 'component',
                        'differentiation'], inplace=True)
         ax = tic.unstack().plot(kind='bar',
+                                stacked=False,
+
                                 rot=0,
                                 color=([colors.get(key)
                                         for key in
@@ -363,6 +366,8 @@ def plot_grid_storage_investment(costs_df, filename, display, var=None):
                        'differentiation'], inplace=True)
         ax = tic.unstack().plot(kind='bar',
                                 rot=0,
+                                stacked=False,
+
                                 color=([colors.get(key)
                                         for key in
                                         ['egoblue1',
@@ -374,7 +379,7 @@ def plot_grid_storage_investment(costs_df, filename, display, var=None):
                      "voltage level and component", y=1.08)
 
     ax.set_xlabel('Voltage level and component')
-    ax.set_yscale("log")
+    ax.set_yscale("symlog")
     ax.legend(('cross-border', 'domestic', 'foreign'))
     ax.autoscale()
 
@@ -636,7 +641,7 @@ def plot_edisgo_cluster(ego, filename, region=['DE'], display=False, dpi=600):
         plt.close()
 
 
-def igeoplot(ego, tiles=None, geoloc=None, args=None):
+def igeoplot(ego, tiles=None, geoloc=None, args=None, save_image=False):
     """Plot function in order to display eGo results on leaflet OSM map.
     This function will open the results in your main web browser
 
@@ -647,8 +652,10 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
       eTraGo network object compiled by: meth: `etrago.appl.etrago`
     tiles: str
       Folium background map style `None` as OSM or `Nasa`
-    geoloc: : obj: `list`
+    geoloc: :obj: `list`
       Listwhich define center of map as (lon, lat)
+    save_image: :obj: `bool`
+        save iplot map as image
 
     Returns
     -------
@@ -659,6 +666,7 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
     #     # TODO
     #     # - use cluster or boxes to limit data volumn
     #     # - add Legend
+    #     # - add mv tolerance
     #     # - Map see: http://nbviewer.jupyter.org/gist/BibMartin/f153aa957ddc5fadc64929abdee9ff2e
 
     network = ego.etrago.network
@@ -854,7 +862,7 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
                           'fillColor':  x['properties']['color'],
                           'weight': 0.5, 'color': 'black'})
         # simplify MultiPolygon
-        tolerance = 0  # 0.02
+        tolerance = 0.002
 
         for idx in cluster.index:
 
@@ -959,7 +967,7 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
         cols = list(lines.columns)
         res_mv = ('overnight_costs', 'capital_cost')
         unit = ('EUR', 'EUR/time step')
-        cols = [x for x in cols if x not in res]
+        cols = [x for x in cols if x not in res_mv]
 
         # color map lines
         mv_colormap = cm.linear.YlGnBu_09.scale(
@@ -994,9 +1002,12 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
             mv_color = colormapper_lines(
                 colormap, lines, line, column="overnight_costs")
             # ToDo make it more generic
-            folium.PolyLine(([y0[line], x0[line]], [y1[line], x1[line]]),
-                            popup=popup, color=convert_to_hex(mv_color)).\
-                add_to(mv_line_group)
+            try:
+                folium.PolyLine(([y0[line], x0[line]], [y1[line], x1[line]]),
+                                popup=popup, color=convert_to_hex(mv_color)).\
+                    add_to(mv_line_group)
+            except:
+                logger.info('Cound not find a geometry')
 
     mp.add_child(mv_colormap)
 
@@ -1034,6 +1045,8 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
         mp = iplot_griddistrict_legend(
             mp=mp, repre_grids=repre_grids, start=True)
 
+    mp = iplot_totalresults_legend(mp=mp, ego=ego, start=True)
+
     # Save Map
     html_dir = 'results/html'
     if not os.path.exists(html_dir):
@@ -1046,6 +1059,13 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None):
     path = os.getcwd()
     url = "results/html/iplot_map.html"
     webbrowser.open(url, new=new)
+
+    # save screenshots
+    if save_image:
+        url2 = "file://{}/{}".format(os.getcwd(), url)
+        outfn = os.path.join(html_dir, "outfig.png")
+        subprocess.check_call(["cutycapt", "--url={}".format(url2),
+                               "--out={}".format(outfn)])
 
 
 def colormapper_lines(colormap, lines, line, column="s_nom"):
@@ -1169,6 +1189,20 @@ def iplot_griddistrict_legend(mp, repre_grids, start=False):
         });
 
           </script>
+          <script>
+            $( function() {
+              $( "#map-results-legend" ).draggable({
+                              start: function (event, ui) {
+                                  $(this).css({
+                                      right: "auto",
+                                      top: "auto",
+                                      bottom: "auto"
+                                  });
+                              }
+                          });
+          });
+
+            </script>
         </head>
         <body>
         """
@@ -1232,6 +1266,46 @@ def iplot_griddistrict_legend(mp, repre_grids, start=False):
             color: #777;
             }
         </style>
+
+        <style type='text/css'>
+          .map-results-legend .legend-title {
+            text-align: left;
+            margin-bottom: 15px;
+            font-weight: bold;
+            font-size: 90%;
+            }
+          .map-results-legend .legend-scale ul {
+            margin: 0;
+            margin-bottom: 15px;
+            padding: 0;
+            float: left;
+            list-style: none;
+            }
+          .map-results-legend .legend-scale ul li {
+            font-size: 80%;
+            list-style: none;
+            margin-left: 0;
+            line-height: 18px;
+            margin-bottom: 10px;
+            }
+          .map-results-legend ul.legend-labels li span {
+            display: block;
+            float: left;
+            height: 16px;
+            width: 30px;
+            margin-right: 15px;
+            margin-left: 20;
+            border: 1px solid #999;
+            }
+          .map-results-legend .legend-source {
+            font-size: 80%;
+            color: #777;
+            clear: both;
+            }
+          .map-results-legend a {
+            color: #777;
+            }
+        </style>
         """
         t = Template(temp_2)
         temp_2 = t.substitute(legend=legend)
@@ -1241,4 +1315,54 @@ def iplot_griddistrict_legend(mp, repre_grids, start=False):
         # macro = MacroElement(**leg)
         # macro._template = Template(template)
         # return mp.get_root().add_child(macro)
+        return mp.get_root().html.add_child(folium.Element(temps))
+
+
+def iplot_totalresults_legend(mp, ego, start=False):
+    """ Add total results as legend to iplot function.
+    """
+    from string import Template
+
+    if start:
+
+        total = ego.total_investment_costs.to_html(index=False)
+
+        # inclued grafic
+        filepath = "results/total_investment_costs_map.png"
+        ego.plot_total_investment_costs(filename=filepath)
+
+        url = "file://{}/{}".format(os.getcwd(), filepath)
+        outfn = os.path.join(url)
+
+        temp_tr = """
+
+        <div id='map-results-legend' class='map-results-legend'
+            style='position: absolute; z-index:9999; border:2px solid grey;
+                   background-color:rgba(255, 255, 255, 0.8);
+             border-radius:6px; padding: 10px; font-size:14px; left: 10px; bottom: 200px;'>
+
+        <div class='legend-title'>Total investment costs</div>
+          <div id="plot" style="width: 400px; height: 400px">
+             <img src= $plot height="395" />
+           </div>
+
+            <div class='legend-scale'>
+              <ul class='legend-labels'>
+
+                $total
+
+              </ul>
+            </div>
+        
+        </div>
+        </body>
+        </html>
+        """
+
+        temp_tmp = """        """
+        t = Template(temp_tr)
+        temp_tr = t.substitute(total=total, plot=outfn)
+
+        temps = temp_tr  # +temp_tmp
+
         return mp.get_root().html.add_child(folium.Element(temps))
