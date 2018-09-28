@@ -1351,14 +1351,14 @@ def parallelizer(
         t2 = datetime.now()
         delta = t2 - t1
         logger.info("Execution finished after {} hours".format(
-                delta.seconds/ 3600))
+                delta.seconds / 3600))
 
     except:
         logger.warning("MV grid simulation failed (maybe timeout)")
         t2 = datetime.now()
         delta = t2 - t1
         logger.info("Execution finished after {} hours".format(
-                delta.seconds/ 3600))
+                delta.seconds / 3600))
 
         pool.terminate()
 
