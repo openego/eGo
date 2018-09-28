@@ -1332,11 +1332,11 @@ def parallelizer(
 
     pool = mp2.Pool(workers,
                    maxtasksperchild=worker_lifetime)
-
+    result_objects = {}
     for ding0_id in ding0_id_list:
         edisgo_args = (ding0_id, *func_arguments)
 
-        res = pool.apply_async(
+        result_objects[ding0_id] = pool.apply_async(
                 func=func,
                 args=edisgo_args,
                 callback=collect_pool_results,
