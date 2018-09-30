@@ -1386,7 +1386,7 @@ def parallelizer(
 
     done = []
     for grid, result in result_objects.items():
-        done.append[grid]
+        done.append(grid)
         try:
             successes[grid] = result.get(timeout=0)
             logger.info("MV grid {} calculated successfully.".format(grid))
