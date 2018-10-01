@@ -1379,6 +1379,7 @@ def parallelizer(
         logger.info("All MV grids stopped before the timeout.")
     else:
         logger.warning("Some MV grid simulations timed out.")
+        pool.terminate()
 
     end = datetime.now()
     delta = end - start
