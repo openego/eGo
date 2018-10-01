@@ -1403,13 +1403,11 @@ def parallelizer(
         logger.info("MV grid calculation error details:")
         for grid, error in errors.items():
             logger.info("  {}".format(grid))
-            try:
-                logger.info(
-                        "    " + "\n    "
-                        .join(traceback.format_stack(error).split("\n")))
-            except AttributeError as ae:
-                logger.info(
-                        "(Traceback not available) {e!r}: {e}".format(e=error))
+            logger.info("    " +
+                    "\n    ".join(
+                        line.replace("\n") for line in
+                        traceback.TracebackException.from_exception(error)
+                        .format()))
 
 
     pool.close()
