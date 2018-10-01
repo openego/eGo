@@ -1405,7 +1405,7 @@ def parallelizer(
             logger.info("  {}".format(grid))
             logger.info("    " +
                     "\n    ".join(
-                        line.replace("\n") for line in
+                        line.replace("\n", "") for line in
                         traceback.TracebackException.from_exception(error)
                         .format()))
 
