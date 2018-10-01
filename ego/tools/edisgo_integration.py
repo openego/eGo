@@ -1360,7 +1360,8 @@ def parallelizer(
                         result.get()
                     except Exception as e:
                         logger.warning(
-                                "MV grid {} failed due to {}.".format(grid, e))
+                                "MV grid {} failed due to {e!r}: '{e}'."
+                                .format(grid, e=e))
                         errors[grid] = e
                 else:
                     logger.info(
@@ -1391,7 +1392,8 @@ def parallelizer(
             successes[grid] = result.get(timeout=0)
             logger.info("MV grid {} calculated successfully.".format(grid))
         except Exception as e:
-            logger.warning("MV grid {} failed due to {}.".format(grid, e))
+            logger.warning(
+                    "MV grid {} failed due to {e!r}: '{e}'.".format(grid, e=e))
             errors[grid] = e
     for grid in done:
         del result_objects[grid]
