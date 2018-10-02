@@ -1403,11 +1403,9 @@ def parallelizer(
         logger.info("MV grid calculation error details:")
         for grid, error in errors.items():
             logger.info("  {}".format(grid))
-            logger.info("    " +
-                    "\n    ".join(
-                        line.replace("\n", "") for line in
-                        traceback.TracebackException.from_exception(error)
-                        .format()))
+            lines = traceback.TracebackException.from_exception(error).format()
+            for line in lines:
+                logger.info("    " + line.replace("\n", ""))
 
 
     pool.close()
