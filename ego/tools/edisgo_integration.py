@@ -28,6 +28,7 @@ __license__ = "GNU Affero General Public License Version 3 (AGPL-3.0)"
 __author__ = "wolf_bunke, maltesc"
 
 # Import
+from traceback import TracebackException
 import os
 import logging
 import traceback
@@ -1403,9 +1404,10 @@ def parallelizer(
         logger.info("MV grid calculation error details:")
         for grid, error in errors.items():
             logger.info("  {}".format(grid))
-            lines = traceback.TracebackException.from_exception(error).format()
+            strings = TracebackException.from_exception(error).format()
+            lines = [line for string in strings for line in string.split("\n")]
             for line in lines:
-                logger.info("    " + line.replace("\n", ""))
+                logger.info("    " + line)
 
 
     pool.close()
