@@ -1398,7 +1398,7 @@ def parallelizer(
 
     end = datetime.now()
     delta = end - start
-    logger.info("Execution finished after {} hours".format(
+    logger.info("Execution finished after {:.2f} hours".format(
             delta.seconds / 3600))
 
     done = []
