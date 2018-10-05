@@ -1350,9 +1350,19 @@ def parallelizer(
     log.info(
             "Jobs started. They will time out at {}."
             .format(end[:end.index('.')]))
+    current = datetime.now()
+    time_spent = 0
     while ( result_objects and
-            ((datetime.now() - start).seconds <= max_calc_time_seconds)):
+            ((current - start).seconds <= max_calc_time_seconds)):
         done = []
+        tick = (current - start).seconds * 100 / max_calc_time_seconds
+        if tick - time_spent >= 1 or tick >= 100:
+            hours_to_go = (current - start).seconds / 3600
+            log.info("{:.2f}% ({:.2f}/{}h) spent"
+                    .format(tick, hours_to_go, max_calc_time))
+            log.info("Jobs time out in {:.2f}h."
+                    .format(max_calc_time - hours_to_go))
+            time_spent = tick
         for grid, result in result_objects.items():
             if result.ready():
                 done.append(grid)
@@ -1373,6 +1383,7 @@ def parallelizer(
                     successes[grid] = result.get()
         for grid in done:
             del result_objects[grid]
+        current = datetime.now()
 
     # Now we know that we either reached the timeout, (x)or that all
     # calculations are done. We just have collect what exactly is the case.
