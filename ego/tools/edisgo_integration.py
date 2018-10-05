@@ -55,7 +55,7 @@ if not 'READTHEDOCS' in os.environ:
     import csv
     import pandas as pd
     from time import localtime, strftime
-    from datetime import datetime
+    from datetime import datetime, timedelta as td
     import json
     from sqlalchemy.orm import sessionmaker
     from sqlalchemy.orm import scoped_session
@@ -1346,6 +1346,10 @@ def parallelizer(
     errors = {}
     successes = {}
     start = datetime.now()
+    end = (start + td(hours = max_calc_time)).isoformat(' ')
+    log.info(
+            "Jobs started. They will time out at {}."
+            .format(end[:end.index('.')]))
     while ( result_objects and
             ((datetime.now() - start).seconds <= max_calc_time_seconds)):
         done = []
