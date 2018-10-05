@@ -1332,8 +1332,7 @@ def parallelizer(
     results = {}
     max_calc_time_seconds = max_calc_time * 3600
 
-    pool = mp2.Pool(workers,
-                   maxtasksperchild=worker_lifetime)
+    pool = mp2.Pool(workers, maxtasksperchild=worker_lifetime)
     result_objects = {}
     for ding0_id in ding0_id_list:
         edisgo_args = (ding0_id, *func_arguments)
