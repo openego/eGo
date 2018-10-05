@@ -1347,7 +1347,7 @@ def parallelizer(
     successes = {}
     start = datetime.now()
     end = (start + td(hours = max_calc_time)).isoformat(' ')
-    log.info(
+    logger.info(
             "Jobs started. They will time out at {}."
             .format(end[:end.index('.')]))
     current = datetime.now()
@@ -1358,9 +1358,9 @@ def parallelizer(
         tick = (current - start).seconds * 100 / max_calc_time_seconds
         if tick - time_spent >= 1 or tick >= 100:
             hours_to_go = (current - start).seconds / 3600
-            log.info("{:.2f}% ({:.2f}/{}h) spent"
+            logger.info("{:.2f}% ({:.2f}/{}h) spent"
                     .format(tick, hours_to_go, max_calc_time))
-            log.info("Jobs time out in {:.2f}h."
+            logger.info("Jobs time out in {:.2f}h."
                     .format(max_calc_time - hours_to_go))
             time_spent = tick
         for grid, result in result_objects.items():
