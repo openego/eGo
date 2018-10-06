@@ -1356,7 +1356,7 @@ def parallelizer(
             ((current - start).seconds <= max_calc_time_seconds)):
         done = []
         tick = (current - start).seconds * 100 / max_calc_time_seconds
-        if tick - time_spent >= 1 or tick >= 100:
+        if tick - time_spent >= 1 or tick > 100:
             hours_to_go = (current - start).seconds / 3600
             logger.info("{:.2f}% ({:.2f}/{}h) spent"
                     .format(tick, hours_to_go, max_calc_time))
