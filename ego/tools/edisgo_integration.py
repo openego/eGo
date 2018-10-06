@@ -54,7 +54,7 @@ if not 'READTHEDOCS' in os.environ:
     import pypsa
     import csv
     import pandas as pd
-    from time import localtime, strftime
+    from time import localtime, sleep, strftime
     from datetime import datetime, timedelta as td
     import json
     from sqlalchemy.orm import sessionmaker
@@ -1383,6 +1383,7 @@ def parallelizer(
                     successes[grid] = result.get()
         for grid in done:
             del result_objects[grid]
+        sleep(1)
         current = datetime.now()
 
     # Now we know that we either reached the timeout, (x)or that all
