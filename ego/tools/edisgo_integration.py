@@ -31,6 +31,7 @@ __author__ = "wolf_bunke, maltesc"
 from traceback import TracebackException
 import os
 import logging
+import pickle
 import traceback
 if not 'READTHEDOCS' in os.environ:
 
@@ -65,6 +66,7 @@ if not 'READTHEDOCS' in os.environ:
 # Logging
 logger = logging.getLogger(__name__)
 
+pickle.DEFAULT_PROTOCOL = pickle.HIGHEST_PROTOCOL
 
 class EDisGoNetworks:
     """
@@ -1332,7 +1334,15 @@ def parallelizer(
     results = {}
     max_calc_time_seconds = max_calc_time * 3600
 
-    pool = mp2.Pool(workers, maxtasksperchild=worker_lifetime)
+    def initializer():
+        import pickle
+        pickle.DEFAULT_PROTOCOL = pickle.HIGHEST_PROTOCOL
+
+    pool = mp2.Pool(
+            workers,
+            initializer=initializer,
+            maxtasksperchild=worker_lifetime)
+
     result_objects = {}
     for ding0_id in ding0_id_list:
         edisgo_args = (ding0_id, *func_arguments)
