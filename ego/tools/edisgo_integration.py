@@ -1375,6 +1375,9 @@ def parallelizer(
             time_spent = tick
         for grid, result in result_objects.items():
             if result.ready():
+                logger.info(
+                        "MV grid {} ready. Trying to `get` the result."
+                        .format(grid))
                 done.append(grid)
                 if not result.successful():
                     try:
@@ -1391,6 +1394,9 @@ def parallelizer(
                     logger.info(
                             "MV grid {} calculated successfully.".format(grid))
                     successes[grid] = result.get()
+                logger.info(
+                        "Done `get`ting the result for MV grid {}."
+                        .format(grid))
         for grid in done:
             del result_objects[grid]
         sleep(1)
