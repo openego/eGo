@@ -30,6 +30,7 @@ __author__ = "wolf_bunke, maltesc"
 # Import
 from traceback import TracebackException
 import os
+import pickle
 import logging
 import traceback
 if not 'READTHEDOCS' in os.environ:
@@ -66,6 +67,7 @@ if not 'READTHEDOCS' in os.environ:
 # Logging
 logger = logging.getLogger(__name__)
 
+pickle.DEFAULT_PROTOCOL = 4
 dill.settings['protocol'] = 4
 
 class EDisGoNetworks:
@@ -1335,6 +1337,8 @@ def parallelizer(
     max_calc_time_seconds = max_calc_time * 3600
 
     def initializer():
+        import pickle
+        pickle.DEFAULT_PROTOCOL = 4
         import dill
         dill.settings['protocol'] = 4
 
