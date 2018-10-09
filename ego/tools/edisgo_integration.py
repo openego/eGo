@@ -31,7 +31,6 @@ __author__ = "wolf_bunke, maltesc"
 from traceback import TracebackException
 import os
 import logging
-import pickle
 import traceback
 if not 'READTHEDOCS' in os.environ:
 
@@ -54,6 +53,7 @@ if not 'READTHEDOCS' in os.environ:
 
     import pypsa
     import csv
+    import dill
     import pandas as pd
     from time import localtime, sleep, strftime
     from datetime import datetime, timedelta as td
@@ -66,7 +66,7 @@ if not 'READTHEDOCS' in os.environ:
 # Logging
 logger = logging.getLogger(__name__)
 
-pickle.DEFAULT_PROTOCOL = pickle.HIGHEST_PROTOCOL
+dill.settings['protocol'] = 4
 
 class EDisGoNetworks:
     """
@@ -1335,8 +1335,8 @@ def parallelizer(
     max_calc_time_seconds = max_calc_time * 3600
 
     def initializer():
-        import pickle
-        pickle.DEFAULT_PROTOCOL = pickle.HIGHEST_PROTOCOL
+        import dill
+        dill.settings['protocol'] = 4
 
     pool = mp2.Pool(
             workers,
