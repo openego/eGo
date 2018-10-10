@@ -716,6 +716,9 @@ class EDisGoNetworks:
         """
         parallelization = self._parallelization
 
+        if not os.path.exists(self._results):
+            os.makedirs(self._results)
+
         if parallelization is True:
             logger.info('Run eDisGo parallel')
             mv_grids = self._grid_choice['the_selected_network_id'].tolist()
@@ -992,7 +995,10 @@ class EDisGoNetworks:
 
         self._status_update(mv_grid_id, 'end')
 
-        return edisgo_grid
+        path = os.path.join(self._results, str(mv_grid_id))
+        edisgo_grid.network.results.save(path)
+
+        return path
 
     def _save_edisgo_results(self):
 
@@ -1005,21 +1011,6 @@ class EDisGoNetworks:
             json.dump(self._edisgo_args, fp)
 
         self._grid_choice.to_csv(self._results + '/grid_choice.csv')
-
-        for mv_grid_id in self._edisgo_grids:
-            print(mv_grid_id)
-
-            grid_result = os.path.join(
-                self._results,
-                str(mv_grid_id))
-
-            try:
-                self._edisgo_grids[
-                    mv_grid_id
-                ].network.results.save(grid_result)
-            except:
-                logger.warning(
-                    "MV grid {} could not be saved".format(mv_grid_id))
 
     def _laod_edisgo_results(self):
 
