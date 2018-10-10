@@ -998,7 +998,7 @@ class EDisGoNetworks:
         path = os.path.join(self._results, str(mv_grid_id))
         edisgo_grid.network.results.save(path)
 
-        return path
+        return {edisgo_grid.network.id: path}
 
     def _save_edisgo_results(self):
 
@@ -1316,7 +1316,7 @@ def parallelizer(
         ----------
         result: :class:`~.edisgo.EDisGo`
         """
-        results.update({result.network.id: result})
+        results.update(result)
 
     def error_callback(key):
 
