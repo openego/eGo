@@ -29,6 +29,12 @@ import logging
 logger = logging.getLogger(__name__)
 
 from time import localtime, strftime
+if not 'READTHEDOCS' in os.environ:
+
+    from egoio.db_tables import model_draft, grid
+    from egoio.tools import db
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import scoped_session
 
 __copyright__ = ("Flensburg University of Applied Sciences, "
                  "Europa-Universität Flensburg, "
@@ -219,3 +225,15 @@ def get_time_steps(json_file):
     time_step = end - start
 
     return time_step
+
+
+def open_oedb_session(ego):
+    """
+    """
+    _db_section = ego.json_file["eTraGo"]["db"]
+    conn = db.connection(section=_db_section)
+    session_factory = sessionmaker(bind=conn)
+    Session = scoped_session(session_factory)
+    session = Session()
+
+    return session
