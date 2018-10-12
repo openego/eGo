@@ -556,7 +556,7 @@ def prepareGD(session, subst_id=None, version=None):
 
 
 def plot_edisgo_cluster(ego, filename, region=['DE'], display=False, dpi=600,
-                        add_ehv_storage=True):
+                        add_ehv_storage=False):
     """Plot the Clustering of selected Dingo networks
 
     Parameters
@@ -643,6 +643,8 @@ def plot_edisgo_cluster(ego, filename, region=['DE'], display=False, dpi=600,
                               ax=ax, fig=fig)
 
     ax.set_title('Grid district Clustering by Number of represent Grids')
+    ax.set_ylabel("Percentage of represented girds", fontsize=12)
+    ax.yaxis.set_label_position("right")
 
     ax.autoscale(tight=True)
 
@@ -987,14 +989,19 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None, save_image=False):
                           join_axes=[mv_network.lines.index])
 
         lines = lines.loc[mv_network.lines.v_nom >= 10]
+        lines = lines.reindex()
         cols = list(lines.columns)
         res_mv = ('overnight_costs', 'capital_cost')
         unit = ('EUR', 'EUR/time step')
         cols = [x for x in cols if x not in res_mv]
 
         # color map lines
-        mv_colormap = cm.linear.YlGnBu_09.scale(
-            lines.overnight_costs.min(), lines.overnight_costs.max()).to_step(6)
+        try:
+            mv_colormap = cm.linear.YlGnBu_09.scale(
+                lines.overnight_costs.min(), lines.overnight_costs.max()).to_step(6)
+        except:
+            mv_colormap = cm.linear.YlGnBu_09.scale(
+                0, 0).to_step(6)
 
         mv_colormap.caption = 'Colormap of MV line overnight cost'
 
