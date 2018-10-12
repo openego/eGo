@@ -32,6 +32,7 @@ if not 'READTHEDOCS' in os.environ:
                                    storage_distribution,
                                    plot_voltage, plot_residual_load, coloring)
     from ego.tools.economics import etrago_convert_overnight_cost
+    from ego.tools.utilities import open_oedb_session
     import pyproj as proj
     from math import sqrt, log10
     from shapely.geometry import Polygon, Point, MultiPolygon
@@ -555,7 +556,7 @@ def prepareGD(session, subst_id=None, version=None):
 
 
 def plot_edisgo_cluster(ego, filename, region=['DE'], display=False, dpi=600,
-                        add_ehv_storage=True):
+                        add_ehv_storage=False):
     """Plot the Clustering of selected Dingo networks
 
     Parameters
@@ -590,6 +591,10 @@ def plot_edisgo_cluster(ego, filename, region=['DE'], display=False, dpi=600,
     if ego.json_file['eGo']['eDisGo'] is True:
         gridcluster = prepareGD(session, cluster_id, version)
         gridcluster = gridcluster.merge(cluster, on='subst_id')
+        # add percentage of grid representation
+        gridcluster['percentage'] = (gridcluster.no_of_points_per_cluster /
+                                     gridcluster.no_of_points_per_cluster.sum())
+        gridcluster['percentage'] = gridcluster['percentage'].round(2)
         # get represented grids
         repre_grids = pd.DataFrame(columns=['subst_id',
                                             'geometry',
@@ -603,6 +608,7 @@ def plot_edisgo_cluster(ego, filename, region=['DE'], display=False, dpi=600,
             repre_grid['cluster_id'] = gridcluster.subst_id[cluster]
 
             repre_grids = repre_grids.append(repre_grid, ignore_index=True)
+
         # add common SRID
         crs = {'init': 'epsg:4326'}
         repre_grids = gpd.GeoDataFrame(repre_grids, crs=crs)
@@ -620,15 +626,16 @@ def plot_edisgo_cluster(ego, filename, region=['DE'], display=False, dpi=600,
     mvgrids.plot(ax=ax, color='white', alpha=0.1,  linewidth=0.1)
     if ego.json_file['eGo']['eDisGo'] is True:
         repre_grids.plot(ax=ax, column='cluster_id',
-                         cmap='GnBu',
-                         edgecolor='whitesmoke',
-                         linewidth=0.1,
-                         legend=True)
-        gridcluster.plot(ax=ax, column='no_of_points_per_cluster',
                          cmap='OrRd',
                          edgecolor='whitesmoke',
                          linewidth=0.1,
-                         legend=False)
+                         alpha=0.6,
+                         legend=True)
+        gridcluster.plot(ax=ax, column='percentage',
+                         cmap='OrRd',
+                         edgecolor='black',
+                         linewidth=1,
+                         legend=True)
 
     # add storage distribution
     if add_ehv_storage:
@@ -636,6 +643,8 @@ def plot_edisgo_cluster(ego, filename, region=['DE'], display=False, dpi=600,
                               ax=ax, fig=fig)
 
     ax.set_title('Grid district Clustering by Number of represent Grids')
+    ax.set_ylabel("Percentage of represented girds", fontsize=12)
+    ax.yaxis.set_label_position("right")
 
     ax.autoscale(tight=True)
 
@@ -677,7 +686,7 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None, save_image=False):
     #     # - Map see: http://nbviewer.jupyter.org/gist/BibMartin/f153aa957ddc5fadc64929abdee9ff2e
 
     network = ego.etrago.network
-    session = ego.session
+    session = open_oedb_session(ego)
     # get scenario name from args
     scn_name = ego.json_file['eTraGo']['scn_name']
     version = ego.json_file['eTraGo']['gridversion']
@@ -726,6 +735,8 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None, save_image=False):
                     row['sub_network'], version)
         # add Popup values use HTML for formating
         folium.Marker([row["y"], row["x"]], popup=popup).add_to(bus_group)
+
+    logger.info('Added Busses')
 
     def convert_to_hex(rgba_color):
         """Convert rgba colors to hex
@@ -833,6 +844,8 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None, save_image=False):
                         color=convert_to_hex(lr_color)
                         ).add_to(line_results_group)
 
+    logger.info('Added Lines')
+
     # add grid districs
     if ego.json_file['eGo']['eDisGo'] is True:
 
@@ -908,6 +921,8 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None, save_image=False):
                            ).add_to(repgrid_group
                                     ).add_child(folium.Popup(pops))
 
+    logger.info('Added MV Grids')
+
     # Create storage expantion plot
     store_group = folium.FeatureGroup(name='Storage expantion')
 
@@ -939,6 +954,9 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None, save_image=False):
             fill_color='#3186cc',
             weight=1
         ).add_to(store_group)
+
+    logger.info('Added storages')
+
     # add MV line loading
     # Prepare MV lines
     mv_line_group = folium.FeatureGroup(name='Choosen MV Grids (>=10kV)')
@@ -971,14 +989,19 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None, save_image=False):
                           join_axes=[mv_network.lines.index])
 
         lines = lines.loc[mv_network.lines.v_nom >= 10]
+        lines = lines.reindex()
         cols = list(lines.columns)
         res_mv = ('overnight_costs', 'capital_cost')
         unit = ('EUR', 'EUR/time step')
         cols = [x for x in cols if x not in res_mv]
 
         # color map lines
-        mv_colormap = cm.linear.YlGnBu_09.scale(
-            lines.overnight_costs.min(), lines.overnight_costs.max()).to_step(6)
+        try:
+            mv_colormap = cm.linear.YlGnBu_09.scale(
+                lines.overnight_costs.min(), lines.overnight_costs.max()).to_step(6)
+        except:
+            mv_colormap = cm.linear.YlGnBu_09.scale(
+                0, 0).to_step(6)
 
         mv_colormap.caption = 'Colormap of MV line overnight cost'
 
@@ -1073,6 +1096,8 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None, save_image=False):
         outfn = os.path.join(html_dir, "outfig.png")
         subprocess.check_call(["cutycapt", "--url={}".format(url2),
                                "--out={}".format(outfn)])
+    # close oedb
+    session.close()
 
 
 def colormapper_lines(colormap, lines, line, column="s_nom"):
