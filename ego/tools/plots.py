@@ -555,8 +555,8 @@ def prepareGD(session, subst_id=None, version=None):
     return region
 
 
-def plot_edisgo_cluster(ego, filename, region=['DE'], display=False, dpi=600,
-                        add_ehv_storage=False):
+def plot_edisgo_cluster(ego, filename, region=['DE'], display=False, dpi=150,
+                        add_ehv_storage=False, grid_choice=None):
     """Plot the Clustering of selected Dingo networks
 
     Parameters
@@ -582,7 +582,12 @@ def plot_edisgo_cluster(ego, filename, region=['DE'], display=False, dpi=600,
     version = ego.json_file['eTraGo']['gridversion']
     # get cluster
     cluster = ego.edisgo.grid_choice
-    cluster = cluster.rename(columns={"the_selected_network_id": "subst_id"})
+
+    if grid_choice:
+        cluster.drop(cluster.index, inplace=True)
+        cluster = pd.read_csv(grid_choice)
+    cluster = cluster.rename(
+        columns={"the_selected_network_id": "subst_id"})
     cluster_id = list(cluster.subst_id)
 
     # get country Polygon
@@ -613,6 +618,11 @@ def plot_edisgo_cluster(ego, filename, region=['DE'], display=False, dpi=600,
         crs = {'init': 'epsg:4326'}
         repre_grids = gpd.GeoDataFrame(repre_grids, crs=crs)
 
+    # simplify geometry
+    tolerance = 0.0002
+    gridcluster.geometry = gridcluster.geometry.simplify(tolerance)
+    repre_grids.geometry = repre_grids.geometry.simplify(tolerance)
+
     # get all MV grids
     bus_id = "all"
     mvgrids = prepareGD(session, bus_id, version)
@@ -624,6 +634,7 @@ def plot_edisgo_cluster(ego, filename, region=['DE'], display=False, dpi=600,
     cnty.plot(ax=ax, color='white',
               edgecolor='whitesmoke', alpha=0.5, linewidth=0.1)
     mvgrids.plot(ax=ax, color='white', alpha=0.1,  linewidth=0.1)
+
     if ego.json_file['eGo']['eDisGo'] is True:
         repre_grids.plot(ax=ax, column='cluster_id',
                          cmap='OrRd',
