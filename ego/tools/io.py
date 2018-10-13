@@ -486,7 +486,8 @@ class eGo(eDisGoResults):
 
         # sort values
         self._total_investment_costs['voltage_level'] = pd.Categorical(
-            self._total_investment_costs['voltage_level'], ['ehv', 'mv', 'lv'])
+            self._total_investment_costs['voltage_level'], ['ehv', 'hv', 'mv',
+                                                            'lv', 'mv/lv'])
         self._total_investment_costs = (
             self._total_investment_costs.sort_values('voltage_level'))
 

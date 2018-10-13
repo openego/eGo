@@ -570,7 +570,9 @@ def plot_edisgo_cluster(ego, filename, region=['DE'], display=False, dpi=150,
     display: boolean
         True show plot false print plot as ``filename``
     add_ehv_storage: boolean
-        Display eTraGo ehv/hv storage distribution?
+        Display eTraGo ehv/hv storage distribution
+    grid_choice: str
+        path to seperate mv/lv grid choice csv file
 
     Returns
     -------
@@ -581,11 +583,13 @@ def plot_edisgo_cluster(ego, filename, region=['DE'], display=False, dpi=150,
     session = ego.session
     version = ego.json_file['eTraGo']['gridversion']
     # get cluster
-    cluster = ego.edisgo.grid_choice
-
     if grid_choice:
-        cluster.drop(cluster.index, inplace=True)
-        cluster = pd.read_csv(grid_choice)
+        cluster = pd.read_csv(grid_choice, index_col=0)
+        cluster['represented_grids'] = cluster.apply(
+            lambda x: eval(x['represented_grids']), axis=1)
+    else:
+        cluster = ego.edisgo.grid_choice
+
     cluster = cluster.rename(
         columns={"the_selected_network_id": "subst_id"})
     cluster_id = list(cluster.subst_id)
@@ -605,6 +609,7 @@ def plot_edisgo_cluster(ego, filename, region=['DE'], display=False, dpi=150,
                                             'geometry',
                                             'cluster_id',
                                             'style'])
+
         for cluster in gridcluster.index:
 
             rep_id = gridcluster.represented_grids[cluster]
@@ -617,11 +622,6 @@ def plot_edisgo_cluster(ego, filename, region=['DE'], display=False, dpi=150,
         # add common SRID
         crs = {'init': 'epsg:4326'}
         repre_grids = gpd.GeoDataFrame(repre_grids, crs=crs)
-
-    # simplify geometry
-    tolerance = 0.0002
-    gridcluster.geometry = gridcluster.geometry.simplify(tolerance)
-    repre_grids.geometry = repre_grids.geometry.simplify(tolerance)
 
     # get all MV grids
     bus_id = "all"
@@ -637,13 +637,13 @@ def plot_edisgo_cluster(ego, filename, region=['DE'], display=False, dpi=150,
 
     if ego.json_file['eGo']['eDisGo'] is True:
         repre_grids.plot(ax=ax, column='cluster_id',
-                         cmap='OrRd',
+                         cmap='YlOrRd',
                          edgecolor='whitesmoke',
                          linewidth=0.1,
                          alpha=0.6,
                          legend=True)
         gridcluster.plot(ax=ax, column='percentage',
-                         cmap='OrRd',
+                         cmap='YlOrRd',
                          edgecolor='black',
                          linewidth=1,
                          legend=True)
