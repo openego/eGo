@@ -556,7 +556,8 @@ def prepareGD(session, subst_id=None, version=None):
 
 
 def plot_edisgo_cluster(ego, filename, region=['DE'], display=False, dpi=150,
-                        add_ehv_storage=False, grid_choice=None):
+                        add_ehv_storage=False, grid_choice=None, title=""
+                        ):
     """Plot the Clustering of selected Dingo networks
 
     Parameters
@@ -601,8 +602,8 @@ def plot_edisgo_cluster(ego, filename, region=['DE'], display=False, dpi=150,
         gridcluster = prepareGD(session, cluster_id, version)
         gridcluster = gridcluster.merge(cluster, on='subst_id')
         # add percentage of grid representation
-        gridcluster['percentage'] = (gridcluster.no_of_points_per_cluster /
-                                     gridcluster.no_of_points_per_cluster.sum())
+        gridcluster['percentage'] = ((gridcluster.no_of_points_per_cluster /
+                                      gridcluster.no_of_points_per_cluster.sum())*100)
         gridcluster['percentage'] = gridcluster['percentage'].round(2)
         # get represented grids
         repre_grids = pd.DataFrame(columns=['subst_id',
@@ -636,26 +637,31 @@ def plot_edisgo_cluster(ego, filename, region=['DE'], display=False, dpi=150,
     mvgrids.plot(ax=ax, color='white', alpha=0.1,  linewidth=0.1)
 
     if ego.json_file['eGo']['eDisGo'] is True:
+
         repre_grids.plot(ax=ax, column='cluster_id',
-                         cmap='YlOrRd',
-                         edgecolor='whitesmoke',
+                         cmap='jet',
+                         edgecolor='black',
                          linewidth=0.1,
                          alpha=0.6,
-                         legend=True)
-        gridcluster.plot(ax=ax, column='percentage',
-                         cmap='YlOrRd',
-                         edgecolor='black',
-                         linewidth=1,
-                         legend=True)
+                         legend=False)
+        # subplot
+        axg = gridcluster.plot(ax=ax, column='percentage',
+                               cmap='jet',
+                               edgecolor='black',
+                               linewidth=1,
+                               legend=True)
 
     # add storage distribution
     if add_ehv_storage:
         _storage_distribution(ego.etrago.network, scaling=1, filename=None,
                               ax=ax, fig=fig)
 
-    ax.set_title('Grid district Clustering by Number of represent Grids')
-    ax.set_ylabel("Percentage of represented girds", fontsize=12)
-    ax.yaxis.set_label_position("right")
+    ax.set_title(title)
+    #ax.legend(title="id of cluster representative")
+
+    axg.set_ylabel("weighting of MV grid cluster in %",
+                   fontsize=12, rotation=270)
+    axg.yaxis.set_label_coords(1.2, 0.5)
 
     ax.autoscale(tight=True)
 
