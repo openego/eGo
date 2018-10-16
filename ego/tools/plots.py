@@ -556,7 +556,8 @@ def prepareGD(session, subst_id=None, version=None):
 
 
 def plot_edisgo_cluster(ego, filename, region=['DE'], display=False, dpi=150,
-                        add_ehv_storage=False, grid_choice=None, title=""
+                        add_ehv_storage=False, grid_choice=None, title="",
+                        cmap="jet"
                         ):
     """Plot the Clustering of selected Dingo networks
 
@@ -574,6 +575,11 @@ def plot_edisgo_cluster(ego, filename, region=['DE'], display=False, dpi=150,
         Display eTraGo ehv/hv storage distribution
     grid_choice: str
         path to seperate mv/lv grid choice csv file
+    title: str
+        Title of Plot
+    cmap: str
+        Name of colormap from
+        https://matplotlib.org/gallery/color/colormap_reference.html
 
     Returns
     -------
@@ -639,17 +645,17 @@ def plot_edisgo_cluster(ego, filename, region=['DE'], display=False, dpi=150,
     if ego.json_file['eGo']['eDisGo'] is True:
 
         repre_grids.plot(ax=ax, column='cluster_id',
-                         cmap='jet',
-                         edgecolor='black',
-                         linewidth=0.1,
-                         alpha=0.6,
+                         cmap=cmap,
+                         edgecolor='whitesmoke',
+                         linewidth=0.005,
+                         alpha=1,
                          legend=False)
         # subplot
-        axg = gridcluster.plot(ax=ax, column='percentage',
-                               cmap='jet',
-                               edgecolor='black',
-                               linewidth=1,
-                               legend=True)
+        gridcluster.plot(ax=ax, column='percentage',
+                         cmap=cmap,
+                         edgecolor='black',
+                         linewidth=1,
+                         legend=True)
 
     # add storage distribution
     if add_ehv_storage:
@@ -658,10 +664,14 @@ def plot_edisgo_cluster(ego, filename, region=['DE'], display=False, dpi=150,
 
     ax.set_title(title)
     #ax.legend(title="id of cluster representative")
+    ax.tick_params(labelsize=14)
 
-    axg.set_ylabel("weighting of MV grid cluster in %",
-                   fontsize=12, rotation=270)
-    axg.yaxis.set_label_coords(1.2, 0.5)
+    # cb = plt.colorbar(ax)
+    # cb.ax.tick_params(labelsize=17)
+
+    ax.set_ylabel("weighting of MV grid cluster in %",
+                  fontsize=17, rotation=270)
+    ax.yaxis.set_label_coords(1.2, 0.5)
 
     ax.autoscale(tight=True)
 
