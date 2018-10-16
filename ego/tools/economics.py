@@ -534,17 +534,13 @@ def get_generator_investment(network, scn_name):
     """ Get investment costs per carrier/ generator.
 
     """
-    # TODO   - change values in csv
-    #        - add values to database
-    # work around later db table ->  check capital_cost as cost input?!?
-
     etg = network
 
     try:
         dirname = os.path.dirname(__file__)
         filename = 'investment_costs.csv'
         path = os.path.join(dirname, filename)
-        invest = pd.DataFrame.from_csv(path + '~/data/'+filename)
+        invest = pd.DataFrame.from_csv(path)
     except FileNotFoundError:
         path = os.getcwd()
         filename = 'investment_costs.csv'
