@@ -22,6 +22,7 @@ which can mainly distinguished in operational and investment costs.
 """
 
 import io
+import pkgutil
 import os
 import logging
 logger = logging.getLogger('ego')
@@ -537,10 +538,12 @@ def get_generator_investment(network, scn_name):
     etg = network
 
     try:
-        dirname = os.path.dirname(__file__)
-        filename = 'investment_costs.csv'
-        path = os.path.join(dirname, filename)
-        invest = pd.DataFrame.from_csv(path)
+
+        data = pkgutil.get_data('ego', 'data/investment_costs.csv')
+        invest = pd.read_csv(io.BytesIO(data),
+                             encoding='utf8', sep=",",
+                             index_col="carriers")
+
     except FileNotFoundError:
         path = os.getcwd()
         filename = 'investment_costs.csv'
