@@ -610,7 +610,8 @@ def plot_edisgo_cluster(ego, filename, region=['DE'], display=False, dpi=150,
         # add percentage of grid representation
         gridcluster['percentage'] = ((gridcluster.no_of_points_per_cluster /
                                       gridcluster.no_of_points_per_cluster.sum())*100)
-        gridcluster['percentage'] = gridcluster['percentage'].round(2)
+        gridcluster['percentage'] = gridcluster['percentage'].astype(
+            float).round(2)
         # get represented grids
         repre_grids = pd.DataFrame(columns=['subst_id',
                                             'geometry',
