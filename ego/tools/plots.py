@@ -664,7 +664,7 @@ def plot_edisgo_cluster(ego, filename, region=['DE'], display=False, dpi=150,
                               ax=ax, fig=fig)
 
     ax.set_title(title)
-    #ax.legend(title="id of cluster representative")
+    # ax.legend(title="id of cluster representative")
     ax.tick_params(labelsize=14)
 
     # cb = plt.colorbar(ax)
@@ -1022,6 +1022,17 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None, save_image=False):
         res_mv = ('overnight_costs', 'capital_cost')
         unit = ('EUR', 'EUR/time step')
         cols = [x for x in cols if x not in res_mv]
+        # save results as csv
+
+        geo_lines2 = pd.concat([y0, x0, y1, x1],
+                               axis=1,
+                               join_axes=[y0.index])
+
+        line_export = pd.concat([lines, geo_lines2],
+                                axis=1,
+                                join_axes=[lines.index])
+
+        line_export.to_csv("results/mv_line_results_"+str(mv_grid_id)+".csv")
 
         # color map lines
         try:
@@ -1062,10 +1073,11 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None, save_image=False):
             # ToDo make it more generic
             try:
                 folium.PolyLine(([y0[line], x0[line]], [y1[line], x1[line]]),
-                                popup=popup, color=convert_to_hex(mv_color)).\
-                    add_to(mv_line_group)
+                                popup=popup, color=convert_to_hex(mv_color)).add_to(mv_line_group)
             except:
+                logger.disabled = True
                 logger.info('Cound not find a geometry')
+                logger.disabled = False
 
     mp.add_child(mv_colormap)
 
@@ -1126,6 +1138,7 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None, save_image=False):
                                "--out={}".format(outfn)])
     # close oedb
     session.close()
+    logger.info('Done')
 
 
 def colormapper_lines(colormap, lines, line, column="s_nom"):

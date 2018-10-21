@@ -57,7 +57,10 @@ if not 'READTHEDOCS' in os.environ:
                                    curtailment, gen_dist, storage_distribution,
                                    plot_voltage, plot_residual_load,
                                    plot_line_loading_diff, full_load_hours,
-                                   nodal_gen_dispatch)
+                                   nodal_gen_dispatch,
+                                   network_extension_diff, plot_q_flows,
+                                   max_load, storage_expansion,
+                                   nodal_production_balance, gen_dist_diff)
     from etrago.appl import etrago
     from importlib import import_module
     import pypsa
@@ -126,7 +129,7 @@ class eTraGoResults(egoBasic):
     Returns
     -------
     network_etrago: :class:`etrago.tools.io.NetworkScenario`
-        eTraGo network object compiled by :meth:`etrago.appl.etrago`
+        eTraGo network object compiled by :func:`etrago.appl.etrago`
     etrago: :pandas:`pandas.Dataframe<dataframe>`
         DataFrame which collects several eTraGo results
     """
@@ -291,14 +294,74 @@ class eTraGoResults(egoBasic):
         self.etrago.plot_gen_dist = self._gen_dist
         self.etrago.plot_storage_distribution = self._storage_distribution
         self.etrago.plot_line_loading_diff = self._line_loading_diff
-        self.etrago.plot_plot_residual_load = self._residual_load
+        self.etrago.plot_residual_load = self._residual_load
         self.etrago.plot_voltage = self._voltage
         self.etrago.plot_nodal_gen_dispatch = \
             self._nodal_gen_dispatch
         self.etrago.plot_full_load_hours = self._full_load_hours
+        self.etrago.plot_network_extension_diff = self._network_extension_diff
+        self.etrago.plot_q_flows = self._plot_q_flows
+        self.etrago.plot_max_load = self._max_load
+        self.etrago.plot_storage_expansion = self._storage_expansion
+        self.etrago.plot_nodal_production_balance = (
+            self._nodal_production_balance)
+        self.etrago.plot_gen_dist_diff = self._gen_dist_diff
 
     if not 'READTHEDOCS' in os.environ:
         # include eTraGo functions and methods
+        def _gen_dist_diff(self, **kwargs):
+            """
+            Integrate and use function from eTraGo.
+            For more information see:
+            """
+
+            return gen_dist_diff(networkA=self.etrago.network,
+                                 **kwargs)
+
+        def _nodal_production_balance(self, **kwargs):
+            """
+            Integrate and use function from eTraGo.
+            For more information see:
+            """
+
+            return nodal_production_balance(network=self.etrago.network,
+                                            **kwargs)
+
+        def _storage_expansion(self, **kwargs):
+            """
+            Integrate and use function from eTraGo.
+            For more information see:
+            """
+
+            return storage_expansion(network=self.etrago.network,
+                                     **kwargs)
+
+        def _max_load(self, **kwargs):
+            """
+            Integrate and use function from eTraGo.
+            For more information see:
+            """
+
+            return max_load(network=self.etrago.network,
+                            **kwargs)
+
+        def _plot_q_flows(self):
+            """
+            Integrate and use function from eTraGo.
+            For more information see:
+            """
+
+            return plot_q_flows(network=self.etrago.network)
+
+        def _network_extension_diff(self, **kwargs):
+            """
+            Integrate and use function from eTraGo.
+            For more information see:
+            """
+
+            return network_extension_diff(networkA=self.etrago.network,
+                                          **kwargs)
+
         def _line_loading(self, **kwargs):
             """
             Integrate and use function from eTraGo.
@@ -328,12 +391,13 @@ class eTraGoResults(egoBasic):
             """
             return gen_dist(network=self.etrago.network, **kwargs)
 
-        def _storage_distribution(self, **kwargs):
+        def _storage_distribution(self, scaling=1, **kwargs):
             """
             Integrate function from eTraGo.
             For more information see:
             """
-            return storage_distribution(network=self.etrago.network, **kwargs)
+            return storage_distribution(network=self.etrago.network,
+                                        scaling=1, **kwargs)
 
         def _voltage(self, **kwargs):
             """
@@ -349,13 +413,13 @@ class eTraGoResults(egoBasic):
             """
             return plot_residual_load(network=self.etrago.network, **kwargs)
 
-        def _line_loading_diff(self, networkB, **kwargs):
+        def _line_loading_diff(self, **kwargs):
             """
             Integrate function from eTraGo.
             For more information see:
             """
             return plot_line_loading_diff(networkA=self.etrago.network,
-                                          networkB=networkB, **kwargs)
+                                          **kwargs)
 
         def _nodal_gen_dispatch(self, **kwargs):
             """
