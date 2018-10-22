@@ -71,7 +71,7 @@ The file can be found on
    
 
 
-ego_main.py
+appl.py
 ===========
 
 This is the application file for the tool eGo. The application eGo calculates
@@ -82,16 +82,16 @@ the distribution and transmission grids of eTraGo and eDisGo.
           accessible API can be found on
           `openenergy-platform.org/login <http://openenergy-platform.org/login/>`_.
 
-Run the ``ego_main.py`` file with:
+Run the ``appl.py`` file with:
 
 .. code-block:: bash
 
-   >>> python3 ego_main.py
+   >>> python3 -i appl.py
    >>> ...
    >>> INFO:ego:Start calculation
    >>> ...
 
-The eGo App works like:
+The eGo application works like:
 
 .. code-block:: python
 
