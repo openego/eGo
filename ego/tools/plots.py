@@ -735,9 +735,11 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None, save_image=False):
         attr = ('&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="http://cartodb.com/attributions">CartoDB</a>')
 
         folium.raster_layers.TileLayer(tiles=tiles, attr=attr).add_to(mp)
+
     else:
-        folium.raster_layers.TileLayer('OpenStreetMap').add_to(mp)
-    # 'Stamen Toner'  OpenStreetMap
+        attr = ('&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="https://openenergy-platform.org/">OpenEnergy-Platform</a>')
+
+        folium.raster_layers.TileLayer('OpenStreetMap', attr=attr).add_to(mp)
 
     # Legend name
     bus_group = folium.FeatureGroup(name='Bus information')
@@ -826,6 +828,7 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None, save_image=False):
         lines['overnight_cost'] = etrago_convert_overnight_cost(
             lines['annuity'],
             ego.json_file, t=40, p=0.05)
+        lines['overnight_cost'] = lines['overnight_cost'].astype(float).round(0)
 
     else:
         lines['s_nom_expansion'] = 0.
@@ -834,11 +837,11 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None, save_image=False):
 
     # Prepare lines
     line_results_group = folium.FeatureGroup(
-        name='Line cost results of overnight costs')
+        name='Line results of annuity costs')
 
     # color map lines
     colormap2 = cm.linear.YlGn_09.scale(
-        lines.overnight_cost.min(), lines.overnight_cost.max()).to_step(6)
+        lines.annuity.min(), lines.annuity.max()).to_step(4)
 
     # add parameter
     cols = list(ego.etrago.network.lines.columns)
@@ -865,7 +868,7 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None, save_image=False):
 
         # change colore function
         lr_color = colormapper_lines(
-            colormap2, lines, line, column="overnight_cost")
+            colormap2, lines, line, column="annuity")
         # ToDo make it more generic
         folium.PolyLine(([y0[line], x0[line]], [y1[line], x1[line]]),
                         popup=popup,
@@ -954,34 +957,51 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None, save_image=False):
     # Create storage expantion plot
     store_group = folium.FeatureGroup(name='Storage expantion')
 
-    sto_x = network.storage_units.bus.map(network.buses.x)
-    sto_y = network.storage_units.bus.map(network.buses.y)
+    stores = network.storage_units[network.storage_units.carrier ==
+                                   'extendable_storage']
+
+    # differentiation of storage units
+    batteries = stores[stores.max_hours == 6]
+    hydrogen = stores[stores.max_hours == 168]
+
+    # sum by type and bus
+    storage_distribution = network.storage_units.p_nom_opt[stores.index].groupby(
+        network.storage_units.bus).sum().reindex(network.buses.index, fill_value=0.)
+    battery_distribution = network.storage_units.p_nom_opt[batteries.index].groupby(
+        network.storage_units.bus).sum().reindex(network.buses.index, fill_value=0.)
+    hydrogen_distribution = network.storage_units.p_nom_opt[hydrogen.index].groupby(
+        network.storage_units.bus).sum().reindex(network.buses.index, fill_value=0.)
+
+    # add Coordinates
+    sto_x = stores.bus.map(network.buses.x)
+    sto_y = stores.bus.map(network.buses.y)
+
     cols = list(network.storage_units.columns)
-    stores = network.storage_units
+
     sto_max = stores.p_nom_opt.max()
 
-    for store in network.storage_units.index:
+    for store in stores.index:
         popup = """ <b>Storage:</b> {} <br>
-                    version: {} <br>""".format(store, version)
+                    version: {} <br>
+                    <hr>
+                    <b>Parameter: </b><br>""".format(store, version)
         for col in cols:
             popup += """ {}: {} <br>""".format(col, stores[col][store])
 
-        # get storage radius by p_nom_opt
-        if (stores['p_nom_opt'][store] - stores['p_nom'][store]) > 0.:
-            radius = (9**(1+stores['p_nom_opt'][store]/sto_max))
-        if (stores['p_nom_opt'][store] - stores['p_nom'][store]) == 0.:
-            radius = 0
+        # get storage radius by p_nom_opt (MW) if lager as 1 KW
+        if ((stores['p_nom_opt'][store] > 7.4e-04) &
+                (stores['capital_cost'][store] > 10)):
 
-        # add singel storage
-        folium.CircleMarker(
-            location=([sto_y[store], sto_x[store]]),
-            radius=radius,
-            popup=popup,
-            color='#3186cc',
-            fill=True,
-            fill_color='#3186cc',
-            weight=1
-        ).add_to(store_group)
+            radius = (3**(1+stores['p_nom_opt'][store]/sto_max))
+            # add singel storage
+            folium.CircleMarker(
+                location=([sto_y[store], sto_x[store]]),
+                radius=radius,
+                popup=popup,
+                color='#3186cc',
+                fill=True,
+                fill_color='#3186cc',
+                weight=1).add_to(store_group)
 
     logger.info('Added storages')
 
@@ -1045,7 +1065,7 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None, save_image=False):
                 mv_colormap = cm.linear.YlGnBu_09.scale(
                     0, 0).to_step(6)
 
-            mv_colormap.caption = 'Colormap of MV line overnight cost'
+            mv_colormap.caption = 'Line investment of overnight cost (mv)'
 
             # add parameter
             for line in lines.index:
@@ -1090,8 +1110,8 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None, save_image=False):
     mp.add_child(mv_colormap)
 
     # add layers and others
-    colormap.caption = 'Colormap of Lines s_nom'
-    colormap2.caption = 'Colormap of Lines investment'
+    colormap.caption = 'Line loading s_nom (ehv/hv)'
+    colormap2.caption = 'Line investment of annuity costs (ehv/hv)'
     mp.add_child(colormap)
     mp.add_child(colormap2)
 
@@ -1152,22 +1172,37 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None, save_image=False):
 def colormapper_lines(colormap, lines, line, column="s_nom"):
     """ Colore Map for lines
     """
-    # TODO Update and correct mapper
+    # TODO: make it more generic
     l_color = []
-    if colormap.index[6] >= lines[column][line] > colormap.index[5]:
-        l_color = colormap.colors[5]
-    elif colormap.index[5] >= lines[column][line] > colormap.index[4]:
-        l_color = colormap.colors[4]
-    elif colormap.index[4] >= lines[column][line] > colormap.index[3]:
-        l_color = colormap.colors[3]
-    elif colormap.index[3] >= lines[column][line] > colormap.index[2]:
-        l_color = colormap.colors[2]
-    elif colormap.index[2] >= lines[column][line] > colormap.index[1]:
-        l_color = colormap.colors[1]
-    elif colormap.index[1] >= lines[column][line] >= colormap.index[0]:
-        l_color = colormap.colors[0]
-    else:
-        l_color = (0., 0., 0., 1.)
+
+    if len(colormap.index) == 7:
+        if colormap.index[6] >= lines[column][line] > colormap.index[5]:
+            l_color = colormap.colors[5]
+        elif colormap.index[5] >= lines[column][line] > colormap.index[4]:
+            l_color = colormap.colors[4]
+        elif colormap.index[4] >= lines[column][line] > colormap.index[3]:
+            l_color = colormap.colors[3]
+        elif colormap.index[3] >= lines[column][line] > colormap.index[2]:
+            l_color = colormap.colors[2]
+        elif colormap.index[2] >= lines[column][line] > colormap.index[1]:
+            l_color = colormap.colors[1]
+        elif colormap.index[1] >= lines[column][line] >= colormap.index[0]:
+            l_color = colormap.colors[0]
+        else:
+            l_color = (0., 0., 0., 1.)
+
+    if len(colormap.index) == 5:
+        if colormap.index[4] >= lines[column][line] > colormap.index[3]:
+            l_color = colormap.colors[3]
+        elif colormap.index[3] >= lines[column][line] > colormap.index[2]:
+            l_color = colormap.colors[2]
+        elif colormap.index[2] >= lines[column][line] > colormap.index[1]:
+            l_color = colormap.colors[1]
+        elif colormap.index[1] >= lines[column][line] >= colormap.index[0]:
+            l_color = colormap.colors[0]
+        else:
+            l_color = (0., 0., 0., 1.)
+
     return l_color
 
 
@@ -1267,10 +1302,10 @@ def iplot_griddistrict_legend(mp, repre_grids, start=False):
                                 });
                             }
                         });
-        });
+                    });
 
-          </script>
-          <script>
+         </script>
+         <script>
             $( function() {
               $( "#map-results-legend" ).draggable({
                               start: function (event, ui) {
@@ -1281,9 +1316,19 @@ def iplot_griddistrict_legend(mp, repre_grids, start=False):
                                   });
                               }
                           });
-          });
 
-            </script>
+               $("#button_results").click(function(){
+                   if($(this).html() == "-"){
+                       $(this).html("+");
+                   }
+                   else{
+                       $(this).html("-");
+                   }
+                   $("#box_results").slideToggle();
+               });
+          });
+        </script>
+
         </head>
         <body>
         """
@@ -1387,6 +1432,35 @@ def iplot_griddistrict_legend(mp, repre_grids, start=False):
             color: #777;
             }
         </style>
+
+        <style type='text/css'>
+        # window_results{
+            width:405px;
+            border:solid 1px;
+        }
+
+        # title_bar_results{
+            background: #A3B9C9;
+            height: 25px;
+            font-size:14px;
+            width: 100%;
+        }
+        # button_results{
+            border:solid 1px;
+            width: 25px;
+            height: 23px;
+            float:right;
+            font-size:14px;
+            cursor:pointer;
+        }
+        # box_results{
+            height: 250px;
+            background: #DFDFDF;
+        }
+
+
+        </style>
+
         """
         t = Template(temp_2)
         temp_2 = t.substitute(legend=legend)
@@ -1422,25 +1496,35 @@ def iplot_totalresults_legend(mp, ego, start=False):
 
         temp_tr = """
 
+
         <div id='map-results-legend' class='map-results-legend'
             style='position: absolute; z-index:9999; border:2px solid grey;
                    background-color:rgba(255, 255, 255, 0.8);
              border-radius:6px; padding: 10px; font-size:14px; left: 10px; bottom: 200px;'>
 
-        <div class='legend-title'>Total investment costs</div>
-          <div id="plot" style="width: 400px; height: 400px">
-             <img src= $plot height="390" />
-           </div>
+             <div id="window_results">
+                 <div id="title_bar_results">
+                     <div id="button_results" style"font-size: 300%; text-align:right;""> -  </div>
+                 </div>
+                 <div id="box_results">
 
-            <div class='legend-scale'>
-              <ul class='legend-labels'>
+                    <div class='legend-title'>Total investment costs</div>
+                      <div id="plot" style="width: 400px; height: 400px">
+                         <img src= $plot height="390" />
+                       </div>
 
-                $total
+                        <div class='legend-scale'>
+                          <ul class='legend-labels'>
 
-              </ul>
+                            $total
+
+                          </ul>
+                         </div>
+                </div>
             </div>
-
         </div>
+
+
         </body>
         </html>
         """
