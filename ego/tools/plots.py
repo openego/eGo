@@ -1318,11 +1318,11 @@ def iplot_griddistrict_legend(mp, repre_grids, start=False):
                           });
 
                $("#button_results").click(function(){
-                   if($(this).html() == "-"){
-                       $(this).html("+");
+                   if($(this).html() == "+"){
+                       $(this).html("-");
                    }
                    else{
-                       $(this).html("-");
+                       $(this).html("+");
                    }
                    $("#box_results").slideToggle();
                });
@@ -1435,7 +1435,7 @@ def iplot_griddistrict_legend(mp, repre_grids, start=False):
 
         <style type='text/css'>
         # window_results{
-            width:405px;
+            width:400px;
             border:solid 1px;
         }
 
@@ -1454,8 +1454,8 @@ def iplot_griddistrict_legend(mp, repre_grids, start=False):
             cursor:pointer;
         }
         # box_results{
-            height: 250px;
-            background: #DFDFDF;
+            height: 25px;
+            background: #A3B9C9;
         }
 
 
