@@ -31,15 +31,15 @@ __author__ = "wolf_bunke, maltesc"
 import os
 import logging
 if not 'READTHEDOCS' in os.environ:
-    
+
     from egoio.db_tables import model_draft, grid
     from egoio.tools import db
-    
+
     from edisgo.grid.network import Results, TimeSeriesControl
     from edisgo.grid import tools
-    from edisgo.tools.plots import line_loading
+    from edisgo.tools.plots import mv_grid_topology
     from edisgo.grid.network import EDisGo
-    
+
     from ego.tools.specs import (
         get_etragospecs_direct
     )
@@ -103,15 +103,15 @@ class EDisGoNetworks:
                 self,
                 self._json_file
             )
-        
+
         else:
             # Only clustering results
             if self._only_cluster:
-               self._set_grid_choice()
-               if self._results:
+                self._set_grid_choice()
+                if self._results:
                     self._save_edisgo_results()
-               self._grid_investment_costs = None 
-               
+                self._grid_investment_costs = None
+
             else:
                 # Execute Functions
                 self._set_grid_choice()
@@ -119,13 +119,13 @@ class EDisGoNetworks:
                 self._run_edisgo_pool()
                 if self._results:
                     self._save_edisgo_results()
-    
+
                 self._successfull_grids = self._successfull_grids()
-        
+
                 self._grid_investment_costs = edisgo_grid_investment(
                     self,
                     self._json_file
-            )
+                )
 
     @property
     def network(self):
@@ -234,11 +234,18 @@ class EDisGoNetworks:
 
         return bus_id
 
-    def plot_line_loading(self, mv_grid_id, time_step):
+    def plot_mv_grid_topology(self, mv_grid_id, timestep=None, line_color=None,
+                              node_color=None, line_load=None,
+                              grid_expansion_costs=None, filename=None,
+                              arrows=False, grid_district_geom=True,
+                              background_map=True, voltage=None,
+                              limits_cb_lines=None, limits_cb_nodes=None,
+                              xlim=None, ylim=None, lines_cmap='inferno_r',
+                              title=''):
         """
-        Plot line loading as color on lines
+        Plot mv grid topology of eDisGo.
 
-        Displays line loading relative to nominal capacity
+        Displays ...
         Parameters
         ----------
         mv_grid_id : int
@@ -249,11 +256,14 @@ class EDisGoNetworks:
             Time step must be included in s_res
 
         """
-        line_loading(
-            self._edisgo_grids[mv_grid_id].network.pypsa,
-            self._edisgo_grids[mv_grid_id].network.config,
-            self._edisgo_grids[mv_grid_id].network.results.s_res(),
-            time_step)
+
+        mv_grid_topology(self._edisgo_grids[mv_grid_id].network.pypsa,
+                         self._edisgo_grids[mv_grid_id].network.config,
+                         timestep, line_color, node_color, line_load,
+                         grid_expansion_costs, filename,
+                         arrows, grid_district_geom,
+                         background_map, voltage, limits_cb_lines,
+                         limits_cb_nodes, xlim, ylim, lines_cmap, title)
 
     def _init_status(self):
         """
@@ -262,31 +272,31 @@ class EDisGoNetworks:
         self._status_dir = 'status'
         if not os.path.exists(self._status_dir):
             os.makedirs(self._status_dir)
-            
-        self._status_file = 'eGo_' +  strftime("%Y-%m-%d_%H%M%S", localtime())    
-               
+
+        self._status_file = 'eGo_' + strftime("%Y-%m-%d_%H%M%S", localtime())
+
         status = self._grid_choice.copy()
         status = status.set_index('the_selected_network_id')
         status.index.names = ['MV grid']
-        
+
         tot_reprs = self._grid_choice['no_of_points_per_cluster'].sum()
-        
+
         status['cluster_perc'] = status['no_of_points_per_cluster'] / tot_reprs
-        
+
         status['start_time'] = 'Not started yet'
         status['end_time'] = 'Not finished yet'
-        
+
         status.drop(
-                ['no_of_points_per_cluster', 'represented_grids'], 
-                axis=1, 
-                inplace=True)
-        
+            ['no_of_points_per_cluster', 'represented_grids'],
+            axis=1,
+            inplace=True)
+
         self._status_path = os.path.join(
-                self._status_dir,
-                self._status_file + '.csv')
-        
+            self._status_dir,
+            self._status_file + '.csv')
+
         status.to_csv(self._status_path)
-        
+
     def _status_update(self, mv_grid_id, time, message=None, show=True):
         """
         Updtaed eDisGo's status files
@@ -294,26 +304,26 @@ class EDisGoNetworks:
         status = pd.read_csv(
             self._status_path,
             index_col=0)
-        
+
         status['start_time'] = status['start_time'].astype(str)
         status['end_time'] = status['end_time'].astype(str)
-        
+
         if message:
             now = message
         else:
             now = strftime("%Y-%m-%d_%H:%M", localtime())
-            
+
         if time == 'start':
             status.at[mv_grid_id, 'start_time'] = now
         elif time == 'end':
             status.at[mv_grid_id, 'end_time'] = now
-        if show:    
+        if show:
             logger.info("\n\neDisGo Status: \n\n"
                         + status.to_string()
                         + "\n\n")
-        
+
         status.to_csv(self._status_path)
-                
+
     def _update_edisgo_configs(self, edisgo_grid):
         """
         This function overwrites some eDisGo configurations with eGo
@@ -452,14 +462,14 @@ class EDisGoNetworks:
             )
         if self._only_cluster:
             logger.warning(
-                    "\n\nThis eDisGo run only returns cluster results\n\n")
-            
+                "\n\nThis eDisGo run only returns cluster results\n\n")
+
         # Versioning
         if self._grid_version is not None:
             self._versioned = True
         else:
             self._versioned = False
-               
+
     def _edisgo_scenario_translation(self):
 
         # Scenario translation
@@ -599,11 +609,11 @@ class EDisGoNetworks:
             stor_p_nom = self._etrago_network.storage_units.loc[
                 (self._etrago_network.storage_units['bus'] == str(bus_id))
                 & (self._etrago_network.storage_units[
-                        'p_nom_extendable'
-                        ] == True)
-                 & (self._etrago_network.storage_units[
-                         'p_nom_opt'
-                         ] > min_extended)
+                    'p_nom_extendable'
+                ] == True)
+                & (self._etrago_network.storage_units[
+                    'p_nom_opt'
+                ] > min_extended)
                 & (self._etrago_network.storage_units['max_hours'] <= 20.)
             ]['p_nom_opt']
 
@@ -697,11 +707,10 @@ class EDisGoNetworks:
             )
 
         choice_df = choice_df.sort_values(
-                'no_of_points_per_cluster', 
-                ascending=False)
-        
+            'no_of_points_per_cluster',
+            ascending=False)
+
         self._grid_choice = choice_df
-        
 
     def _run_edisgo_pool(self):
         """
@@ -709,7 +718,7 @@ class EDisGoNetworks:
 
         """
         parallelization = self._parallelization
-        
+
         if parallelization is True:
             logger.info('Run eDisGo parallel')
             mv_grids = self._grid_choice['the_selected_network_id'].tolist()
@@ -732,7 +741,7 @@ class EDisGoNetworks:
             for g in mv_grids:
                 if not g in self._edisgo_grids:
                     self._edisgo_grids[g] = 'Timeout'
-                    
+
         else:
             logger.info('Run eDisGo sequencial')
             no_grids = len(self._grid_choice)
@@ -778,7 +787,7 @@ class EDisGoNetworks:
             Returns the complete eDisGo container, also including results
         """
         self._status_update(mv_grid_id, 'start', show=False)
-        
+
         storage_integration = self._storage_distribution
         apply_curtailment = self._apply_curtailment
 
@@ -962,28 +971,28 @@ class EDisGoNetworks:
                             'battery_q_series'
                         ])  # None if no pf_post_lopf
                     costs_without_storage = (
-                edisgo_grid.network.results.storages_costs_reduction[
-                        'grid_expansion_costs_initial'].values[0])
+                        edisgo_grid.network.results.storages_costs_reduction[
+                            'grid_expansion_costs_initial'].values[0])
         else:
             logger.info('No storage integration')
 
         logger.info("MV grid {}: eDisGo grid analysis".format(mv_grid_id))
 
         edisgo_grid.reinforce(timesteps_pfa=self._timesteps_pfa)
-        
+
         if costs_without_storage is not None:
             costs_with_storage = (
-                    edisgo_grid.network.results.grid_expansion_costs[
-                            'total_costs'].sum())
+                edisgo_grid.network.results.grid_expansion_costs[
+                    'total_costs'].sum())
             if costs_with_storage >= costs_without_storage:
                 logger.warning(
-                        "Storage did not benefit MV grid {}".format(
-                                mv_grid_id))
+                    "Storage did not benefit MV grid {}".format(
+                        mv_grid_id))
                 st = edisgo_grid.network.mv_grid.graph.nodes_by_attribute(
-                        'storage')
+                    'storage')
                 for storage in st:
-                    tools.disconnect_storage(edisgo_grid.network, storage)        
-             
+                    tools.disconnect_storage(edisgo_grid.network, storage)
+
         self._status_update(mv_grid_id, 'end')
 
         return edisgo_grid
@@ -1270,12 +1279,13 @@ class _ResultsImported:
     def s_res(self):
         return self._s_res
 
+
 def parallelizer(
-        ding0_id_list, 
-        func, 
+        ding0_id_list,
+        func,
         func_arguments,
         max_calc_time,
-        workers=mp2.cpu_count(), 
+        workers=mp2.cpu_count(),
         worker_lifetime=1):
     """
     Use python multiprocessing toolbox for parallelization
@@ -1310,7 +1320,7 @@ def parallelizer(
     -------
     containers : dict of :class:`~.edisgo.EDisGo`
         Dict of EDisGo instances keyed by its ID
-    """   
+    """
     def collect_pool_results(result):
         """
         Store results from parallelized calculation in structured manner
@@ -1320,49 +1330,48 @@ def parallelizer(
         result: :class:`~.edisgo.EDisGo`
         """
         results.update({result.network.id: result})
-        
+
     def error_callback(key):
-        
-#        message='Failed'
-#        func_arguments[0]._status_update(key, 'end', message)
+
+        #        message='Failed'
+        #        func_arguments[0]._status_update(key, 'end', message)
         return lambda o: results.update({key: o})
-      
+
     results = {}
     max_calc_time_seconds = max_calc_time * 3600
-    
+
     pool = mp2.Pool(workers,
-                   maxtasksperchild=worker_lifetime)
-   
+                    maxtasksperchild=worker_lifetime)
+
     for ding0_id in ding0_id_list:
         edisgo_args = (ding0_id, *func_arguments)
 
         res = pool.apply_async(func=func,
-                         args=edisgo_args,
-                         callback=collect_pool_results,
-                         error_callback=error_callback(ding0_id))
- 
+                               args=edisgo_args,
+                               callback=collect_pool_results,
+                               error_callback=error_callback(ding0_id))
+
     t1 = datetime.now()
-    
+
     try:
         res.get(timeout=max_calc_time_seconds)
-        logger.info("All MV grids were calculated without Timeout") 
-        
+        logger.info("All MV grids were calculated without Timeout")
+
         t2 = datetime.now()
-        delta = t2 - t1        
+        delta = t2 - t1
         logger.info("Execution finished after {} hours".format(
-                delta.seconds/ 3600))
-        
+            delta.seconds / 3600))
+
     except:
         logger.warning("MV grid simulation failed (maybe timeout)")
         t2 = datetime.now()
         delta = t2 - t1
         logger.info("Execution finished after {} hours".format(
-                delta.seconds/ 3600))
-        
+            delta.seconds / 3600))
+
         pool.terminate()
- 
+
     pool.close()
     pool.join()
 
     return results
-
