@@ -995,89 +995,97 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None, save_image=False):
 
         mv_grid_id = grid
 
-        mv_network = ego.edisgo.network[mv_grid_id].network.pypsa
+        if not isinstance(ego.edisgo.network[mv_grid_id], str):
 
-        # get line Coordinates
-        x0 = mv_network.lines.bus0.loc[mv_network.lines.v_nom >= 10].map(
-            mv_network.buses.x)
-        x1 = mv_network.lines.bus1.loc[mv_network.lines.v_nom >= 10].map(
-            mv_network.buses.x)
+            mv_network = ego.edisgo.network[mv_grid_id].network.pypsa
 
-        y0 = mv_network.lines.bus0.loc[mv_network.lines.v_nom >= 10].map(
-            mv_network.buses.y)
-        y1 = mv_network.lines.bus1.loc[mv_network.lines.v_nom >= 10].map(
-            mv_network.buses.y)
+            # get line Coordinates
+            x0 = mv_network.lines.bus0.loc[mv_network.lines.v_nom >= 10].map(
+                mv_network.buses.x)
+            x1 = mv_network.lines.bus1.loc[mv_network.lines.v_nom >= 10].map(
+                mv_network.buses.x)
 
-        # get content
-        grid_expansion_costs = ego.edisgo.network[
-            mv_grid_id].network.results.grid_expansion_costs
-        lines = pd.concat([mv_network.lines,
-                           grid_expansion_costs],
-                          axis=1,
-                          join_axes=[mv_network.lines.index])
+            y0 = mv_network.lines.bus0.loc[mv_network.lines.v_nom >= 10].map(
+                mv_network.buses.y)
+            y1 = mv_network.lines.bus1.loc[mv_network.lines.v_nom >= 10].map(
+                mv_network.buses.y)
 
-        lines = lines.loc[mv_network.lines.v_nom >= 10]
-        lines = lines.reindex()
-        cols = list(lines.columns)
-        res_mv = ('overnight_costs', 'capital_cost')
-        unit = ('EUR', 'EUR/time step')
-        cols = [x for x in cols if x not in res_mv]
-        # save results as csv
+            # get content
+            grid_expansion_costs = ego.edisgo.network[
+                mv_grid_id].network.results.grid_expansion_costs
+            lines = pd.concat([mv_network.lines,
+                               grid_expansion_costs],
+                              axis=1,
+                              join_axes=[mv_network.lines.index])
 
-        geo_lines2 = pd.concat([y0, x0, y1, x1],
-                               axis=1,
-                               join_axes=[y0.index])
+            lines = lines.loc[mv_network.lines.v_nom >= 10]
+            lines = lines.reindex()
+            cols = list(lines.columns)
+            res_mv = ('overnight_costs', 'capital_cost')
+            unit = ('EUR', 'EUR/time step')
+            cols = [x for x in cols if x not in res_mv]
+            # save results as csv
 
-        line_export = pd.concat([lines, geo_lines2],
-                                axis=1,
-                                join_axes=[lines.index])
+            geo_lines2 = pd.concat([y0, x0, y1, x1],
+                                   axis=1,
+                                   join_axes=[y0.index])
 
-        line_export.to_csv("results/mv_line_results_"+str(mv_grid_id)+".csv")
+            line_export = pd.concat([lines, geo_lines2],
+                                    axis=1,
+                                    join_axes=[lines.index])
 
-        # color map lines
-        try:
-            mv_colormap = cm.linear.YlGnBu_09.scale(
-                lines.overnight_costs.min(), lines.overnight_costs.max()).to_step(6)
-        except:
-            mv_colormap = cm.linear.YlGnBu_09.scale(
-                0, 0).to_step(6)
+            line_export.to_csv("results/mv_line_results_" +
+                               str(mv_grid_id)+".csv")
 
-        mv_colormap.caption = 'Colormap of MV line overnight cost'
-
-        # add parameter
-        for line in lines.index:
-            popup = """ <b>Line:</b> {} <br>
-                        version: {} <br> <hr>""".format(line, version)
-
-            popup += """<b>MV line parameter:</b><br> """
-
-            for col in cols:
-                try:
-                    popup += """ {}: {} <br>""".format(col, lines[col][line])
-                except:
-                    popup += """ No info for:"""
-
-            popup += """<hr> <b> Results:</b> <br>"""
-
-            for idx, val in enumerate(res_mv):
-                try:
-                    popup += """{}: {} in {}<br>""".format(val,
-                                                           lines[val][line],
-                                                           unit[idx])
-                except:
-                    popup += """ No info for:"""
-
-            # change colore function
-            mv_color = colormapper_lines(
-                mv_colormap, lines, line, column="overnight_costs")
-            # ToDo make it more generic
+            # color map lines
             try:
-                folium.PolyLine(([y0[line], x0[line]], [y1[line], x1[line]]),
-                                popup=popup, color=convert_to_hex(mv_color)).add_to(mv_line_group)
+                mv_colormap = cm.linear.YlGnBu_09.scale(
+                    lines.overnight_costs.min(), lines.overnight_costs.max()).to_step(6)
             except:
-                logger.disabled = True
-                logger.info('Cound not find a geometry')
-                logger.disabled = False
+                mv_colormap = cm.linear.YlGnBu_09.scale(
+                    0, 0).to_step(6)
+
+            mv_colormap.caption = 'Colormap of MV line overnight cost'
+
+            # add parameter
+            for line in lines.index:
+                popup = """ <b>Line:</b> {} <br>
+                            version: {} <br> <hr>""".format(line, version)
+
+                popup += """<b>MV line parameter:</b><br> """
+
+                for col in cols:
+                    try:
+                        popup += """ {}: {} <br>""".format(col,
+                                                           lines[col][line])
+                    except:
+                        popup += """ No info for:"""
+
+                popup += """<hr> <b> Results:</b> <br>"""
+
+                for idx, val in enumerate(res_mv):
+                    try:
+                        popup += """{}: {} in {}<br>""".format(val,
+                                                               lines[val][line],
+                                                               unit[idx])
+                    except:
+                        popup += """ No info for:"""
+
+                # change colore function
+                mv_color = colormapper_lines(
+                    mv_colormap, lines, line, column="overnight_costs")
+                # ToDo make it more generic
+                try:
+                    folium.PolyLine(([y0[line], x0[line]], [y1[line], x1[line]]),
+                                    popup=popup, color=convert_to_hex(mv_color)
+                                    ).add_to(mv_line_group)
+                except:
+                    logger.disabled = True
+                    logger.info('Cound not find a geometry')
+                    logger.disabled = False
+        else:
+            logger.info(str(mv_grid_id)+" " +
+                        str(ego.edisgo.network[mv_grid_id]))
 
     mp.add_child(mv_colormap)
 
