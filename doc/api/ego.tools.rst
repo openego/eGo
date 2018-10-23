@@ -1,8 +1,6 @@
 ego\.tools package
 ==================
 
-Submodules
-----------
 
 ego\.tools\.economics
 ---------------------
