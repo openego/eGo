@@ -1136,7 +1136,7 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None, save_image=False):
         title_cancel='Exit me',
         force_separate_button=True).add_to(mp)
 
-    url = ('https://openegoproject.files.wordpress.com/2017/02/open_ego_logo_breit.png?w=200')
+    url = ('https://openego.readthedocs.io/en/release-v0.3.1/_images/open_ego_icon_web.png')
     FloatImage(url, bottom=0, left=3).add_to(mp)
 
     if ego.json_file['eGo']['eDisGo'] is True:
@@ -1318,11 +1318,11 @@ def iplot_griddistrict_legend(mp, repre_grids, start=False):
                           });
 
                $("#button_results").click(function(){
-                   if($(this).html() == "+"){
-                       $(this).html("-");
+                   if($(this).html() == "open"){
+                       $(this).html("close");
                    }
                    else{
-                       $(this).html("+");
+                       $(this).html("open");
                    }
                    $("#box_results").slideToggle();
                });
@@ -1504,7 +1504,7 @@ def iplot_totalresults_legend(mp, ego, start=False):
 
              <div id="window_results">
                  <div id="title_bar_results">
-                     <div id="button_results" style"font-size: 300%; text-align:right;""> -  </div>
+                     <div id="button_results" style"font-size: 300%; text-align:right;""> close  </div>
                  </div>
                  <div id="box_results">
 
