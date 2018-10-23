@@ -40,7 +40,7 @@ if not 'READTHEDOCS' in os.environ:
 
     from edisgo.grid.network import Results, TimeSeriesControl
     from edisgo.grid import tools
-    from edisgo.tools.plots import line_loading
+    from edisgo.tools.plots import mv_grid_topology
     from edisgo.grid.network import EDisGo
 
     from ego.tools.specs import (
@@ -240,11 +240,18 @@ class EDisGoNetworks:
 
         return bus_id
 
-    def plot_line_loading(self, mv_grid_id, time_step):
+    def plot_mv_grid_topology(self, mv_grid_id, timestep=None, line_color=None,
+                              node_color=None, line_load=None,
+                              grid_expansion_costs=None, filename=None,
+                              arrows=False, grid_district_geom=True,
+                              background_map=True, voltage=None,
+                              limits_cb_lines=None, limits_cb_nodes=None,
+                              xlim=None, ylim=None, lines_cmap='inferno_r',
+                              title=''):
         """
-        Plot line loading as color on lines
+        Plot mv grid topology of eDisGo.
 
-        Displays line loading relative to nominal capacity
+        Displays ...
         Parameters
         ----------
         mv_grid_id : int
@@ -255,11 +262,14 @@ class EDisGoNetworks:
             Time step must be included in s_res
 
         """
-        line_loading(
-            self._edisgo_grids[mv_grid_id].network.pypsa,
-            self._edisgo_grids[mv_grid_id].network.config,
-            self._edisgo_grids[mv_grid_id].network.results.s_res(),
-            time_step)
+
+        mv_grid_topology(self._edisgo_grids[mv_grid_id].network.pypsa,
+                         self._edisgo_grids[mv_grid_id].network.config,
+                         timestep, line_color, node_color, line_load,
+                         grid_expansion_costs, filename,
+                         arrows, grid_district_geom,
+                         background_map, voltage, limits_cb_lines,
+                         limits_cb_nodes, xlim, ylim, lines_cmap, title)
 
     def _init_status(self):
         """
