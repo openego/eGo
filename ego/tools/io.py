@@ -560,43 +560,49 @@ class eGo(eDisGoResults):
         mv_stor = self._calculate_mv_storage()
 
         integrated_share = mv_stor / total_stor
+        print(mv_stor)
 
-        if integrated_share > 0:
-            ehv_stor_idx = costs_df.index[
-                (costs_df['component'] == 'storage')
-                & (costs_df['voltage_level'] == 'ehv')][0]
+        try:
 
-            int_capital_costs = costs_df.loc[ehv_stor_idx][
-                'capital_cost'
-            ] * integrated_share
-            int_overnight_costs = costs_df.loc[ehv_stor_idx][
-                'overnight_costs'
-            ] * integrated_share
+            if integrated_share > 0:
 
-            costs_df.at[
-                ehv_stor_idx,
-                'capital_cost'
-            ] = (
-                costs_df.loc[ehv_stor_idx]['capital_cost']
-                - int_capital_costs)
+                ehv_stor_idx = costs_df.index[
+                    (costs_df['component'] == 'storage')
+                    & (costs_df['voltage_level'] == 'ehv')][0]
 
-            costs_df.at[
-                ehv_stor_idx,
-                'overnight_costs'
-            ] = (
-                costs_df.loc[ehv_stor_idx]['overnight_costs']
-                - int_overnight_costs)
+                int_capital_costs = costs_df.loc[ehv_stor_idx][
+                    'capital_cost'
+                ] * integrated_share
+                int_overnight_costs = costs_df.loc[ehv_stor_idx][
+                    'overnight_costs'
+                ] * integrated_share
 
-            new_storage_row = {
-                'component': ['storage'],
-                'voltage_level': ['mv'],
-                'capital_cost': [int_capital_costs],
-                'overnight_costs': [int_overnight_costs]}
+                costs_df.at[
+                    ehv_stor_idx,
+                    'capital_cost'
+                ] = (
+                    costs_df.loc[ehv_stor_idx]['capital_cost']
+                    - int_capital_costs)
 
-            new_storage_row = pd.DataFrame(new_storage_row)
-            costs_df = costs_df.append(new_storage_row)
+                costs_df.at[
+                    ehv_stor_idx,
+                    'overnight_costs'
+                ] = (
+                    costs_df.loc[ehv_stor_idx]['overnight_costs']
+                    - int_overnight_costs)
 
-            self._total_investment_costs = costs_df
+                new_storage_row = {
+                    'component': ['storage'],
+                    'voltage_level': ['mv'],
+                    'capital_cost': [int_capital_costs],
+                    'overnight_costs': [int_overnight_costs]}
+
+                new_storage_row = pd.DataFrame(new_storage_row)
+                costs_df = costs_df.append(new_storage_row)
+
+                self._total_investment_costs = costs_df
+        except:
+            logger.info('Something went wrong with the MV grid description')
 
     def _calculate_all_extended_storages(self):
         """
