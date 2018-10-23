@@ -57,8 +57,7 @@ if not 'READTHEDOCS' in os.environ:
                                    curtailment, gen_dist, storage_distribution,
                                    plot_voltage, plot_residual_load,
                                    plot_line_loading_diff, full_load_hours,
-                                   nodal_gen_dispatch,
-                                   network_extension_diff, plot_q_flows,
+                                   nodal_gen_dispatch, plot_q_flows,
                                    max_load, storage_expansion,
                                    nodal_production_balance, gen_dist_diff)
     from etrago.appl import etrago
@@ -299,7 +298,6 @@ class eTraGoResults(egoBasic):
         self.etrago.plot_nodal_gen_dispatch = \
             self._nodal_gen_dispatch
         self.etrago.plot_full_load_hours = self._full_load_hours
-        self.etrago.plot_network_extension_diff = self._network_extension_diff
         self.etrago.plot_q_flows = self._plot_q_flows
         self.etrago.plot_max_load = self._max_load
         self.etrago.plot_storage_expansion = self._storage_expansion
@@ -352,15 +350,6 @@ class eTraGoResults(egoBasic):
             """
 
             return plot_q_flows(network=self.etrago.network)
-
-        def _network_extension_diff(self, **kwargs):
-            """
-            Integrate and use function from eTraGo.
-            For more information see:
-            """
-
-            return network_extension_diff(networkA=self.etrago.network,
-                                          **kwargs)
 
         def _line_loading(self, **kwargs):
             """
