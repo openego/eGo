@@ -89,11 +89,8 @@ extlinks = {'pandas':('http://pandas.pydata.org/pandas-docs/stable/api.html#%s',
             'sqlalchemy':('http://docs.sqlalchemy.org/en/latest/orm/session_basics.html%s',
                       'SQLAlchemy session object'),
             'shapely':('http://toblerity.org/shapely/manual.html#%s',
-                      'Shapely object'),
-            'etrago':('https://etrago.readthedocs.io/en/latest/api/etrago.html#%s',
-                      'etrago.')
-                      
-}
+                      'Shapely object')
+                      }
 
 # test oedb implementation
 def rstjinja(app, docname, source):
