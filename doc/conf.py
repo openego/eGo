@@ -91,7 +91,7 @@ extlinks = {'pandas':('http://pandas.pydata.org/pandas-docs/stable/api.html#%s',
             'shapely':('http://toblerity.org/shapely/manual.html#%s',
                       'Shapely object'),
             'etrago':('https://etrago.readthedocs.io/en/latest/api/etrago.html#%s',
-                      'etrago.'
+                      'etrago.')
                       
 }
 
