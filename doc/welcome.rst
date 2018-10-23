@@ -104,6 +104,10 @@ Affairs and Energy (BMWI).
 License
 =======
 
+.. image:: images/open_ego_icon_web.png
+   :scale: 100%
+   :align: right
+   
 © Copyright 2015-2018
 
 Flensburg University of Applied Sciences,
