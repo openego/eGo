@@ -742,6 +742,8 @@ class EDisGoNetworks:
                 if not g in self._edisgo_grids:
                     self._edisgo_grids[g] = 'Timeout'
 
+            self._laod_edisgo_results()
+
         else:
             logger.info('Run eDisGo sequencial')
             no_grids = len(self._grid_choice)
