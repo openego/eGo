@@ -685,20 +685,21 @@ def plot_edisgo_cluster(ego, filename, region=['DE'], display=False, dpi=150,
         plt.close()
 
 
-def igeoplot(ego, tiles=None, geoloc=None, args=None, save_image=False):
+def igeoplot(ego, tiles=None, geoloc=None, save_image=False):
     """Plot function in order to display eGo results on leaflet OSM map.
-    This function will open the results in your main web browser
+    This function will open the results in your main web browser.
+
 
     Parameters
     ----------
-
-    network_etrago:: class: `etrago.tools.io.NetworkScenario`
-      eTraGo network object compiled by: meth: `etrago.appl.etrago`
+    ego:  :class:`ego.tools.io.eGo`
+      eGo class of result objects of eTraGo and eDisGo
     tiles: str
       Folium background map style `None` as OSM or `Nasa`
-    geoloc: :obj: `list`
-      Listwhich define center of map as (lon, lat)
-    save_image: :obj: `bool`
+    geoloc: :obj:`list`
+      List which define center of map as (lon, lat)
+
+    save_image: :obj:`bool`
         save iplot map as image
 
     Returns
@@ -709,8 +710,6 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None, save_image=False):
 
     #     # TODO
     #     # - use cluster or boxes to limit data volumn
-    #     # - add Legend
-    #     # - add mv tolerance
     #     # - Map see: http://nbviewer.jupyter.org/gist/BibMartin/f153aa957ddc5fadc64929abdee9ff2e
 
     network = ego.etrago.network
@@ -1170,7 +1169,7 @@ def igeoplot(ego, tiles=None, geoloc=None, args=None, save_image=False):
 
 
 def colormapper_lines(colormap, lines, line, column="s_nom"):
-    """ Colore Map for lines
+    """ Make Colore Map for lines
     """
     # TODO: make it more generic
     l_color = []
