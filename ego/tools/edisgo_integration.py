@@ -28,18 +28,21 @@ __license__ = "GNU Affero General Public License Version 3 (AGPL-3.0)"
 __author__ = "wolf_bunke, maltesc"
 
 # Import
+from traceback import TracebackException
 import os
+import pickle
 import logging
+import traceback
 if not 'READTHEDOCS' in os.environ:
-    
+
     from egoio.db_tables import model_draft, grid
     from egoio.tools import db
-    
+
     from edisgo.grid.network import Results, TimeSeriesControl
     from edisgo.grid import tools
     from edisgo.tools.plots import line_loading
     from edisgo.grid.network import EDisGo
-    
+
     from ego.tools.specs import (
         get_etragospecs_direct
     )
@@ -51,9 +54,10 @@ if not 'READTHEDOCS' in os.environ:
 
     import pypsa
     import csv
+    import dill
     import pandas as pd
-    from time import localtime, strftime
-    from datetime import datetime
+    from time import localtime, sleep, strftime
+    from datetime import datetime, timedelta as td
     import json
     from sqlalchemy.orm import sessionmaker
     from sqlalchemy.orm import scoped_session
@@ -63,6 +67,8 @@ if not 'READTHEDOCS' in os.environ:
 # Logging
 logger = logging.getLogger(__name__)
 
+pickle.DEFAULT_PROTOCOL = 4
+dill.settings['protocol'] = 4
 
 class EDisGoNetworks:
     """
@@ -103,15 +109,15 @@ class EDisGoNetworks:
                 self,
                 self._json_file
             )
-        
+
         else:
             # Only clustering results
             if self._only_cluster:
                self._set_grid_choice()
                if self._results:
                     self._save_edisgo_results()
-               self._grid_investment_costs = None 
-               
+               self._grid_investment_costs = None
+
             else:
                 # Execute Functions
                 self._set_grid_choice()
@@ -119,9 +125,9 @@ class EDisGoNetworks:
                 self._run_edisgo_pool()
                 if self._results:
                     self._save_edisgo_results()
-    
+
                 self._successfull_grids = self._successfull_grids()
-        
+
                 self._grid_investment_costs = edisgo_grid_investment(
                     self,
                     self._json_file
@@ -262,31 +268,31 @@ class EDisGoNetworks:
         self._status_dir = 'status'
         if not os.path.exists(self._status_dir):
             os.makedirs(self._status_dir)
-            
-        self._status_file = 'eGo_' +  strftime("%Y-%m-%d_%H%M%S", localtime())    
-               
+
+        self._status_file = 'eGo_' +  strftime("%Y-%m-%d_%H%M%S", localtime())
+
         status = self._grid_choice.copy()
         status = status.set_index('the_selected_network_id')
         status.index.names = ['MV grid']
-        
+
         tot_reprs = self._grid_choice['no_of_points_per_cluster'].sum()
-        
+
         status['cluster_perc'] = status['no_of_points_per_cluster'] / tot_reprs
-        
+
         status['start_time'] = 'Not started yet'
         status['end_time'] = 'Not finished yet'
-        
+
         status.drop(
-                ['no_of_points_per_cluster', 'represented_grids'], 
-                axis=1, 
+                ['no_of_points_per_cluster', 'represented_grids'],
+                axis=1,
                 inplace=True)
-        
+
         self._status_path = os.path.join(
                 self._status_dir,
                 self._status_file + '.csv')
-        
+
         status.to_csv(self._status_path)
-        
+
     def _status_update(self, mv_grid_id, time, message=None, show=True):
         """
         Updtaed eDisGo's status files
@@ -294,26 +300,26 @@ class EDisGoNetworks:
         status = pd.read_csv(
             self._status_path,
             index_col=0)
-        
+
         status['start_time'] = status['start_time'].astype(str)
         status['end_time'] = status['end_time'].astype(str)
-        
+
         if message:
             now = message
         else:
             now = strftime("%Y-%m-%d_%H:%M", localtime())
-            
+
         if time == 'start':
             status.at[mv_grid_id, 'start_time'] = now
         elif time == 'end':
             status.at[mv_grid_id, 'end_time'] = now
-        if show:    
+        if show:
             logger.info("\n\neDisGo Status: \n\n"
                         + status.to_string()
                         + "\n\n")
-        
+
         status.to_csv(self._status_path)
-                
+
     def _update_edisgo_configs(self, edisgo_grid):
         """
         This function overwrites some eDisGo configurations with eGo
@@ -453,13 +459,13 @@ class EDisGoNetworks:
         if self._only_cluster:
             logger.warning(
                     "\n\nThis eDisGo run only returns cluster results\n\n")
-            
+
         # Versioning
         if self._grid_version is not None:
             self._versioned = True
         else:
             self._versioned = False
-               
+
     def _edisgo_scenario_translation(self):
 
         # Scenario translation
@@ -697,11 +703,11 @@ class EDisGoNetworks:
             )
 
         choice_df = choice_df.sort_values(
-                'no_of_points_per_cluster', 
+                'no_of_points_per_cluster',
                 ascending=False)
-        
+
         self._grid_choice = choice_df
-        
+
 
     def _run_edisgo_pool(self):
         """
@@ -709,7 +715,10 @@ class EDisGoNetworks:
 
         """
         parallelization = self._parallelization
-        
+
+        if not os.path.exists(self._results):
+            os.makedirs(self._results)
+
         if parallelization is True:
             logger.info('Run eDisGo parallel')
             mv_grids = self._grid_choice['the_selected_network_id'].tolist()
@@ -732,7 +741,11 @@ class EDisGoNetworks:
             for g in mv_grids:
                 if not g in self._edisgo_grids:
                     self._edisgo_grids[g] = 'Timeout'
-                    
+
+            self._csv_import = self._json_file['eDisGo']['results']
+            self._save_edisgo_results()
+            self._laod_edisgo_results()
+
         else:
             logger.info('Run eDisGo sequencial')
             no_grids = len(self._grid_choice)
@@ -778,7 +791,7 @@ class EDisGoNetworks:
             Returns the complete eDisGo container, also including results
         """
         self._status_update(mv_grid_id, 'start', show=False)
-        
+
         storage_integration = self._storage_distribution
         apply_curtailment = self._apply_curtailment
 
@@ -970,7 +983,7 @@ class EDisGoNetworks:
         logger.info("MV grid {}: eDisGo grid analysis".format(mv_grid_id))
 
         edisgo_grid.reinforce(timesteps_pfa=self._timesteps_pfa)
-        
+
         if costs_without_storage is not None:
             costs_with_storage = (
                     edisgo_grid.network.results.grid_expansion_costs[
@@ -982,11 +995,14 @@ class EDisGoNetworks:
                 st = edisgo_grid.network.mv_grid.graph.nodes_by_attribute(
                         'storage')
                 for storage in st:
-                    tools.disconnect_storage(edisgo_grid.network, storage)        
-             
+                    tools.disconnect_storage(edisgo_grid.network, storage)
+
         self._status_update(mv_grid_id, 'end')
 
-        return edisgo_grid
+        path = os.path.join(self._results, str(mv_grid_id))
+        edisgo_grid.network.results.save(path)
+
+        return {edisgo_grid.network.id: path}
 
     def _save_edisgo_results(self):
 
@@ -999,21 +1015,6 @@ class EDisGoNetworks:
             json.dump(self._edisgo_args, fp)
 
         self._grid_choice.to_csv(self._results + '/grid_choice.csv')
-
-        for mv_grid_id in self._edisgo_grids:
-            print(mv_grid_id)
-
-            grid_result = os.path.join(
-                self._results,
-                str(mv_grid_id))
-
-            try:
-                self._edisgo_grids[
-                    mv_grid_id
-                ].network.results.save(grid_result)
-            except:
-                logger.warning(
-                    "MV grid {} could not be saved".format(mv_grid_id))
 
     def _laod_edisgo_results(self):
 
@@ -1271,11 +1272,11 @@ class _ResultsImported:
         return self._s_res
 
 def parallelizer(
-        ding0_id_list, 
-        func, 
+        ding0_id_list,
+        func,
         func_arguments,
         max_calc_time,
-        workers=mp2.cpu_count(), 
+        workers=mp2.cpu_count(),
         worker_lifetime=1):
     """
     Use python multiprocessing toolbox for parallelization
@@ -1310,7 +1311,7 @@ def parallelizer(
     -------
     containers : dict of :class:`~.edisgo.EDisGo`
         Dict of EDisGo instances keyed by its ID
-    """   
+    """
     def collect_pool_results(result):
         """
         Store results from parallelized calculation in structured manner
@@ -1319,48 +1320,126 @@ def parallelizer(
         ----------
         result: :class:`~.edisgo.EDisGo`
         """
-        results.update({result.network.id: result})
-        
+        results.update(result)
+
     def error_callback(key):
-        
+
 #        message='Failed'
 #        func_arguments[0]._status_update(key, 'end', message)
         return lambda o: results.update({key: o})
-      
+
     results = {}
     max_calc_time_seconds = max_calc_time * 3600
-    
-    pool = mp2.Pool(workers,
-                   maxtasksperchild=worker_lifetime)
-   
+
+    def initializer():
+        import pickle
+        pickle.DEFAULT_PROTOCOL = 4
+        import dill
+        dill.settings['protocol'] = 4
+
+    pool = mp2.Pool(
+            workers,
+            initializer=initializer,
+            maxtasksperchild=worker_lifetime)
+
+    result_objects = {}
     for ding0_id in ding0_id_list:
         edisgo_args = (ding0_id, *func_arguments)
 
-        res = pool.apply_async(func=func,
-                         args=edisgo_args,
-                         callback=collect_pool_results,
-                         error_callback=error_callback(ding0_id))
- 
-    t1 = datetime.now()
-    
-    try:
-        res.get(timeout=max_calc_time_seconds)
-        logger.info("All MV grids were calculated without Timeout") 
-        
-        t2 = datetime.now()
-        delta = t2 - t1        
-        logger.info("Execution finished after {} hours".format(
-                delta.seconds/ 3600))
-        
-    except:
-        logger.warning("MV grid simulation failed (maybe timeout)")
-        t2 = datetime.now()
-        delta = t2 - t1
-        logger.info("Execution finished after {} hours".format(
-                delta.seconds/ 3600))
-        
+        result_objects[ding0_id] = pool.apply_async(
+                func=func,
+                args=edisgo_args,
+                callback=collect_pool_results,
+                error_callback=error_callback(ding0_id))
+
+    errors = {}
+    successes = {}
+    start = datetime.now()
+    end = (start + td(hours = max_calc_time)).isoformat(' ')
+    logger.info(
+            "Jobs started. They will time out at {}."
+            .format(end[:end.index('.')]))
+    current = datetime.now()
+    time_spent = 0
+    while ( result_objects and
+            ((current - start).seconds <= max_calc_time_seconds)):
+        done = []
+        tick = (current - start).seconds * 100 / max_calc_time_seconds
+        if tick - time_spent >= 1 or tick > 100:
+            hours_to_go = (current - start).seconds / 3600
+            logger.info("{:.2f}% ({:.2f}/{}h) spent"
+                    .format(tick, hours_to_go, max_calc_time))
+            logger.info("Jobs time out in {:.2f}h."
+                    .format(max_calc_time - hours_to_go))
+            time_spent = tick
+        for grid, result in result_objects.items():
+            if result.ready():
+                logger.info(
+                        "MV grid {} ready. Trying to `get` the result."
+                        .format(grid))
+                done.append(grid)
+                if not result.successful():
+                    try:
+                        # We already know that this was not successful, so the
+                        # `get` is only here to re-raise the exception that
+                        # occurred.
+                        result.get()
+                    except Exception as e:
+                        logger.warning(
+                                "MV grid {} failed due to {e!r}: '{e}'."
+                                .format(grid, e=e))
+                        errors[grid] = e
+                else:
+                    logger.info(
+                            "MV grid {} calculated successfully.".format(grid))
+                    successes[grid] = result.get()
+                logger.info(
+                        "Done `get`ting the result for MV grid {}."
+                        .format(grid))
+        for grid in done:
+            del result_objects[grid]
+        sleep(1)
+        current = datetime.now()
+
+    # Now we know that we either reached the timeout, (x)or that all
+    # calculations are done. We just have collect what exactly is the case.
+    # This is done by `get`ting the results with a timeout of 0. If any of them
+    # are not yet done, a `TimeoutError` will be triggered, which we can
+    # collect like all other errors.
+    if not result_objects:
+        logger.info("All MV grids stopped before the timeout.")
+    else:
+        logger.warning("Some MV grid simulations timed out.")
         pool.terminate()
- 
+
+    end = datetime.now()
+    delta = end - start
+    logger.info("Execution finished after {:.2f} hours".format(
+            delta.seconds / 3600))
+
+    done = []
+    for grid, result in result_objects.items():
+        done.append(grid)
+        try:
+            successes[grid] = result.get(timeout=0)
+            logger.info("MV grid {} calculated successfully.".format(grid))
+        except Exception as e:
+            logger.warning(
+                    "MV grid {} failed due to {e!r}: '{e}'.".format(grid, e=e))
+            errors[grid] = e
+    for grid in done:
+        del result_objects[grid]
+
+    if errors:
+        logger.info("MV grid calculation error details:")
+        for grid, error in errors.items():
+            logger.info("  {}".format(grid))
+            strings = TracebackException.from_exception(error).format()
+            lines = [line for string in strings for line in string.split("\n")]
+            for line in lines:
+                logger.info("    " + line)
+
+
     pool.close()
     pool.join()
 
