@@ -170,10 +170,16 @@ def get_scenario_setting(jsonpath='scenario_setting.json'):
         if json_file['eTraGo'].get('extendable') == "['network', 'storages']":
             json_file['eTraGo'].update({'extendable': ['network', 'storages']})
 
+        if json_file['eTraGo'].get('extendable') == "['network', 'storage']":
+            json_file['eTraGo'].update({'extendable': ['network', 'storages']})
+
         if json_file['eTraGo'].get('extendable') == "['network']":
             json_file['eTraGo'].update({'extendable': ['network']})
 
         if json_file['eTraGo'].get('extendable') == "['storages']":
+            json_file['eTraGo'].update({'extendable': ['storages']})
+
+        if json_file['eTraGo'].get('extendable') == "['storage']":
             json_file['eTraGo'].update({'extendable': ['storages']})
 
     if json_file['eGo'].get('eDisGo') == True:
