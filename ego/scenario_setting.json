@@ -18,7 +18,7 @@
     "scn_extension": null,
     "scn_decommissioning": null,
     "lpfile":  false,
-    "results":  "results/your_results",
+    "csv_export":  "results/your_results",
     "db_export": false,
     "extendable": ["storages", "network"],
     "generator_noise": 789456,

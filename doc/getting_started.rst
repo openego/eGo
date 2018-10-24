@@ -9,23 +9,23 @@ Steps to run eGo
 
 1. Are you registert on the OpenEnergy-Platform?
    The registration for the public accessible API can be found on
-   `openenergy-platform.org/login <http://openenergy-platform.org/login/>`_.
+   `openenergy-platform.org/login `<http://openenergy-platform.org/login/>`_.
 
 2. You have Python 3 installed? Install for example the Python 
-   Distribution of <https://www.anaconda.com/download>`_.
+   Distribution of `<https://www.anaconda.com/download>`_.
 
 3. Install and use a virtual environment for you installation (optional). 
 
 4. Install the eGo tool ``pip3 install eGo --process-dependency-links``
 
 5. Create your distribute grids of  mid and low voltage grids with ding0. 
-   Learn more about Ding0 on <https://dingo.readthedocs.io/en/dev/index.html>`_.
+   Learn more about Ding0 on `<https://dingo.readthedocs.io/en/dev/index.html>`_.
 
 6. Check and prepare your eGo setting in ``ego/scenario_setting.json``. Add you
    local paths and prepare your parameters.
 
 7. Start your calculation and run the tool for example under
-   ``eGo/ego`` and ``>>> python3 appl.py`` . Also you can use any other Python
+   ``eGo/ego`` and ``>>> python3 appl.py`` . You can also use any other Python
    Terminal, Jupyter Notebook or Editor.
 
   
@@ -65,7 +65,7 @@ Tutorials as Jupyter Notebook
 =============================
 
 Learn more about Jupyter Notebook and how to install and use it
-on <http://jupyter.org/>`_.
+on `<http://jupyter.org/>`_.
 
 
 .. toctree::
