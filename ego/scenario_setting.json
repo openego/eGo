@@ -20,7 +20,7 @@
     "lpfile":  false,
     "csv_export":  "results/your_results",
     "db_export": false,
-    "extendable": ["storages", "network"],
+    "extendable": ["storage", "network"],
     "generator_noise": 789456,
     "minimize_loading": false,
     "ramp_limits": false,
