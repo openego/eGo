@@ -33,6 +33,14 @@ import os
 import pickle
 import logging
 import traceback
+import pypsa
+import csv
+import dill
+import pandas as pd
+from time import localtime, sleep, strftime
+from datetime import datetime, timedelta as td
+import json
+
 if not 'READTHEDOCS' in os.environ:
 
     from egoio.db_tables import model_draft, grid
@@ -52,13 +60,6 @@ if not 'READTHEDOCS' in os.environ:
     from ego.tools.economics import (
         edisgo_grid_investment)
 
-    import pypsa
-    import csv
-    import dill
-    import pandas as pd
-    from time import localtime, sleep, strftime
-    from datetime import datetime, timedelta as td
-    import json
     from sqlalchemy.orm import sessionmaker
     from sqlalchemy.orm import scoped_session
     import multiprocess as mp2
