@@ -9,3 +9,4 @@ numpydoc
 sphinxcontrib-httpdomain
 aiohttp_jinja2
 sphinx-jsondomain
+sqlalchemy
