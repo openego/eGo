@@ -89,3 +89,7 @@ Error handling
    ``~/env/lib/python3.5/site-packages/matplotlib/mpl-data$ vim matplotlibrc``.
    `Learn more here. <https://matplotlib.org/users/customizing.html#a-sample-matplotlibrc-file>`_.
 
+4. Geopandas error coursed by Rtree ``Could not find libspatialindex_c library`` 
+   Please reinstall Rtree with ``sudo pip3 install Rtree`` or install 
+   ``libspatialindex_c`` via ``sudo apt install python3-rtree``. On Windows or
+   macOS you maybe install ``libspatialindex_c`` straight from source.
