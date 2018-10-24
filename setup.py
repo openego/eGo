@@ -9,6 +9,9 @@ __copyright__ = ("Flensburg University of Applied Sciences, "
 __license__ = "GNU Affero General Public License Version 3 (AGPL-3.0)"
 __author__ = "wolf_bunke, maltesc"
 
+def read(fname):
+    return open(os.path.join(os.path.dirname(__file__), fname)).read()
+   
 
 setup(
     name='eGo',
