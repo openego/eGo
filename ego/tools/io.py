@@ -602,7 +602,8 @@ class eGo(eDisGoResults):
 
                 self._total_investment_costs = costs_df
         except:
-            logger.info('Something went wrong with the MV grid description')
+            logger.info(
+                'Something went wrong with the MV storage distribution.')
 
     def _calculate_all_extended_storages(self):
         """
