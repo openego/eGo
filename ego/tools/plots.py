@@ -352,7 +352,7 @@ def plot_grid_storage_investment(costs_df, filename, display, var=None):
                                         for key in
                                         ['egoblue1',
                                          'egoblue2',
-                                         'egoblue3']]),
+                                         'egoblue4']]),
                                 legend=False)
         ax.set_ylabel("Overnight costs of simulation")
         ax.set_title("Total costs of simulation, "
@@ -1482,6 +1482,13 @@ def iplot_totalresults_legend(mp, ego, start=False):
         # get data
         total = ego.total_investment_costs.rename(
             columns={"capital_cost": "annuity_costs"})
+        # change format
+        total['overnight_costs'] = (
+            total['overnight_costs']/1000000).map('M€ {:,.2f}'.format)
+
+        total['annuity_costs'] = (total['annuity_costs'] /
+                                  1000).map('T€ {:,.2f}'.format)
+
         total = total[['component', 'voltage_level',
                        'differentiation', 'overnight_costs',
                        'annuity_costs']].to_html(index=False)
