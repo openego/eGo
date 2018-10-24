@@ -31,7 +31,7 @@ setup(
                       'pycallgraph', 
                       'scikit-learn == 0.19.0',
                       'pandas ==0.20.3',
-                      'eDisGo == v0.0.6',
+                      'eDisGo == v0.0.7',
                       'eTraGo == 0.7.0',
                       'pypsa==0.11.0fork',
                       'sqlalchemy >= 1.0.15, <= 1.1.4',
