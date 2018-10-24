@@ -508,7 +508,7 @@ class eGo(eDisGoResults):
                 append(_grid_ehv, ignore_index=True)
 
         _storage = None
-        if 'storages' in self.json_file['eTraGo']['extendable']:
+        if 'storage' in self.json_file['eTraGo']['extendable']:
             _storage = self.etrago.storage_investment_costs
             _storage['component'] = 'storage'
 

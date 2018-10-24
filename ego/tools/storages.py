@@ -128,8 +128,8 @@ def etrago_storages_investment(network, json_file, session):
     # check settings for extendable
     if stos not in json_file['eTraGo']['extendable']:
         logger.info("The optimizition was not using parameter "
-                    " 'extendable': storages"
-                    "No storages expantion costs from etrago")
+                    " 'extendable': storage"
+                    "No storage expantion costs from etrago")
 
     if stos in json_file['eTraGo']['extendable']:
 

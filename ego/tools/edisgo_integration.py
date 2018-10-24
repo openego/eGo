@@ -458,10 +458,10 @@ class EDisGoNetworks:
         self._etrago_args = self._json_file['eTraGo']
         self._scn_name = self._etrago_args['scn_name']
         self._ext_storage = (
-            'storages' in self._etrago_args['extendable']
+            'storage' in self._etrago_args['extendable']
         )
         if self._ext_storage:
-            logger.info("eTraGo Dataset used extendable storages")
+            logger.info("eTraGo Dataset used extendable storage")
 
         self._pf_post_lopf = self._etrago_args['pf_post_lopf']
 

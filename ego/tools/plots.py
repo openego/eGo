@@ -146,7 +146,7 @@ def plot_storage_expansion(ego, filename=None, dpi=300,
     json_file = ego.json_file
 
     # get storage values
-    if 'storages' in ego.json_file['eTraGo']['extendable']:
+    if 'storage' in ego.json_file['eTraGo']['extendable']:
         storage_inv = network.storage_units[network.storage_units.
                                             capital_cost > 0.]
         storage_inv['investment_costs'] = (storage_inv.capital_cost *
