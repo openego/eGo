@@ -40,6 +40,9 @@ import pandas as pd
 from time import localtime, sleep, strftime
 from datetime import datetime, timedelta as td
 import json
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import scoped_session
+import multiprocess as mp2
 
 if not 'READTHEDOCS' in os.environ:
 
@@ -59,10 +62,6 @@ if not 'READTHEDOCS' in os.environ:
         cluster_mv_grids)
     from ego.tools.economics import (
         edisgo_grid_investment)
-
-    from sqlalchemy.orm import sessionmaker
-    from sqlalchemy.orm import scoped_session
-    import multiprocess as mp2
 
 
 # Logging
