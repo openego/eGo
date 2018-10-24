@@ -799,6 +799,8 @@ class EDisGoNetworks:
                 if not g in self._edisgo_grids:
                     self._edisgo_grids[g] = 'Timeout'
 
+            self._csv_import = self._json_file['eDisGo']['results']
+            self._save_edisgo_results()
             self._laod_edisgo_results()
 
         else:
