@@ -560,7 +560,6 @@ class eGo(eDisGoResults):
         mv_stor = self._calculate_mv_storage()
 
         integrated_share = mv_stor / total_stor
-        print(mv_stor)
 
         try:
 
@@ -594,6 +593,7 @@ class eGo(eDisGoResults):
                 new_storage_row = {
                     'component': ['storage'],
                     'voltage_level': ['mv'],
+                    'differentiation': ['domestic'],
                     'capital_cost': [int_capital_costs],
                     'overnight_costs': [int_overnight_costs]}
 
