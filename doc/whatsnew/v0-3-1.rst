@@ -1,8 +1,6 @@
 Release v0.3.1 (September 25, 2018)
 +++++++++++++++++++++++++++++++++++
 
-Documentation Release.
-
 This release contains documentation and bug fixes for the new features 
 introduced in 0.3.0.
 
@@ -12,7 +10,7 @@ Added features
 * Update of interactiv plot (iplot)
 * Update of Documentation
 * Update of eTraGo functionalities
-* Update of eTraGo functionalities
+* Update of eDisGo functionalities
 * Change and update of API file scenario_setting.json
 * Improved cluster plot of ``ego.plot_edisgo_cluster()``
 * Improved cost differentiation
