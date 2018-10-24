@@ -11,7 +11,7 @@ Welcome to eGo documentation!
 
 
 .. note:: Note, the data source of eGo relies on
-          the Open Energy Database. - The registration for the public
+          the Open Energy Database.  The registration for the public
           accessible API can be found on
           `openenergy-platform.org/login <http://openenergy-platform.org/login/>`_.
 

@@ -72,7 +72,20 @@ Please read the Developer notes of
 `eTraGo <https://etrago.readthedocs.io/en/latest/developer_notes.html>`_.
 
 
+Error handling
+--------------
 
+1. Installation Error use pip-18.1 for you installation.
+   ``pip install --upgrade pip==18.1``
 
+2. Installation Error of eTraGo, eDisGo, Pypsa fork or ding0.
+   If you have problems with one of those packages please clone it from 
+   *github.com* and install it from the master or dev branch. For example
+   ``pip3 install -e git+https://github.com/openego//PyPSA.git@master#egg=pypsafork``
 
+3. Matplotlib error on server and few other systems. Please change your settings
+   in ``matplotlibrc`` from ``backend : TkAgg`` to ``backend : PDF``. You can 
+   find the file for example in a virtual environment under
+   ``~/env/lib/python3.5/site-packages/matplotlib/mpl-data$ vim matplotlibrc``.
+   `Learn more here. <https://matplotlib.org/users/customizing.html#a-sample-matplotlibrc-file>`_.
 

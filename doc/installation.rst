@@ -11,6 +11,8 @@ command in order to install eGo:
 
   $ pip3 install eGo --process-dependency-links
 
+Please ensure, that you are using pip version 18.1. 
+Use ``pip install --upgrade pip==18.1`` to get the right pip version.
 
 
 Using virtual environment
@@ -109,3 +111,7 @@ Old developer connection
   host = oe2.iws.cs.ovgu.de
   port = 5432
   pw = YourOEDBPassword
+  
+  
+  
+Please find more information on *Developer notes*.
