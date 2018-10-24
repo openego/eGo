@@ -123,7 +123,7 @@ def etrago_storages_investment(network, json_file, session):
     # check spelling of storages and storage
     logger.info(json_file['eTraGo']['extendable'])
 
-    stos = ['storages', 'storage']
+    stos = 'storage'
 
     # check settings for extendable
     if stos not in json_file['eTraGo']['extendable']:
