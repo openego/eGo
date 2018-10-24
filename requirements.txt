@@ -11,3 +11,4 @@ aiohttp_jinja2
 sphinx-jsondomain
 sqlalchemy
 dill
+multiprocess
