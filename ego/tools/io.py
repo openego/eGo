@@ -238,6 +238,17 @@ class eTraGoResults(egoBasic):
                     etrago_args = json.load(f)
                     logger.info('Using argument file')
 
+                    if etrago_args.get('extendable') == "['network', 'storages']":
+                        etrago_args.update(
+                            {'extendable': ['network', 'storage']})
+                        logger.info(
+                            'Changed naming of storages to storage of args')
+
+                    if etrago_args.get('extendable') == "['storages']":
+                        etrago_args.update({'extendable': ['storage']})
+                        logger.info(
+                            'Changed naming of storages to storage of args')
+
                     for key in self.json_file['eTraGo'].keys():
                         try:
                             self.json_file['eTraGo'][key] = etrago_args[key]
