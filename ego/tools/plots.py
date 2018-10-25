@@ -1163,8 +1163,8 @@ def igeoplot(ego, tiles=None, geoloc=None, save_image=False):
                 logger.info(str(mv_grid_id)+" " +
                             str(ego.edisgo.network[mv_grid_id]))
 
-            mp.add_child(mv_colormap)
-            # Add MV Storage
+        mp.add_child(mv_colormap)
+        # Add MV Storage
 
     # add layers and others
     colormap.caption = 'Line loading s_nom (ehv/hv)'
