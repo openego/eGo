@@ -3,10 +3,10 @@ The eGo tool
 ============
 
 
-The python package eGo is a toolbox and application which connects the tool 
-**eTraGo** - with an optimization of flexibility options for transmission grids 
-based on PyPSA and **eDisGo** - which analysis and optimization distribution 
-grids. 
+The python package eGo is a toolbox and also an application which combines
+**eTraGo** - a tool for optimizing flexibility options for transmission grids
+based on PyPSA and **eDisGo** - a toolbox in itself capable of analyzing distribution
+grids for grid issues and evaluating measures responding these.
 
 The open_eGo project
 ====================
@@ -16,16 +16,17 @@ This software project is part of the research project
 
 The OpenEnergy Platform
 =======================
-Within this project we developed the OpenEnergy Platform which this software
-is using in order to get and store the in- and output data. Before you start to
-calculate a registration on the platform is needed. For more see
+Within this project we developed the OpenEnergy Platform which the eGo toolbox
+relies upon to get and store in- and output data. Because of this dependency
+in order to use eGo a registration on the OpenEnergy Platform is required. For more
+information see
 `openenergy-platform <https://openenergy-platform.org/>`_ and login.
 
 The OpenEnergy platform mainly addresses students, researchers and scientists in 
-the field of energy modelling and analytics as well as interested persons in 
-those fields. The platform provides great tools to make your energy system 
-modelling process transparent. All data of the open_eGo project are stored at
-this platform. 
+the field of energy modelling and analytics, but also welcomes all other interested parties.
+The platform provides great tools to make your energy system
+modelling process transparent. Data of the open_eGo project are stored on
+this platform.
 `Learn more about the database access <https://oep-data-interface.readthedocs.io>`_.
 
 
@@ -44,10 +45,10 @@ eTraGo
 ------
 
 The python package eTraGo provides an optimization of flexibility options for
-transmission grids based on PyPSA. A speciality in this context is that 
-transmission grids are described by the 380, 220 and 110 kV in Germany. 
-Conventionally the 110kV grid is part of the distribution grid. 
-The integration of the transmission and ‘upper’ distribution grid 
+transmission grids based on PyPSA. In particular transmission grids of different voltage levels
+, that is 380, 220 and 110 kV in Germany, can be handled.
+Conventionally the 110kV grid is part of the distribution grid.
+The integration of the transmission and ‘upper’ distribution grid
 is part of eTraGo.
 
 The focus of optimization are flexibility options with a special focus on
@@ -66,30 +67,30 @@ Dataprocessing
 --------------
 
 For the open_eGo project several python packages are developed which are feeded 
-by the input data of the data processing. The dataprocessing is writen in 
+by the input data of the data processing. The dataprocessing is written in
 SQL and Python. `Learn more here <https://data-processing.readthedocs.io/>`_.
 
 ego.io
 ------
 
-The ``ego.io`` is a `SQLAlchemy <https://www.sqlalchemy.org/>`_ Interface to 
-the OpenEnergy database (oedb). The oedb tables as ORM objects are defined here 
-and small helpers for I/O tasks are contained. 
+The ``ego.io`` is a `SQLAlchemy <https://www.sqlalchemy.org/>`_ interface to
+the OpenEnergy database (oedb). The module provides ORM objects mirroring oedb
+tables and additionally contains helper functions for I/O operations.
 `Learn more here <https://github.com/openego/ego.io>`_.
 
 
 Dingo
 -----
 
-The DIstribution Network GeneratOr (Ding0) is a tool to generate synthetic 
-medium and low voltage power distribution grids based on open 
-(or at least accessible) data. 
+The DIstribution Network GeneratOr (Ding0) is a tool to generate synthetic
+medium and low voltage power distribution grids based on open
+(or at least accessible) data.
 `Learn more here <https://dingo.readthedocs.io/>`_.
 
 Supported by
 ============
 
-This project is supported by the German Federal Ministry for Economic 
+This project is supported by the German Federal Ministry for Economic
 Affairs and Energy (BMWI).
 
 
