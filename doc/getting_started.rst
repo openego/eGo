@@ -2,26 +2,26 @@
 Getting started
 ===============
 
-In order to start and run the Tool eGO few steps needs to be done. 
+In order to start and run the eGo-tool a few steps needs to be done.
 
 Steps to run eGo
 ================
 
-1. Are you registert on the OpenEnergy-Platform?
+1. Are you registered on the OpenEnergy Platform?
    The registration for the public accessible API can be found on
    `openenergy-platform.org/login `<http://openenergy-platform.org/login/>`_.
 
-2. You have Python 3 installed? Install for example the Python 
-   Distribution of `<https://www.anaconda.com/download>`_.
+2. You have Python 3 installed? Install for example the Python
+   distribution of `<https://www.anaconda.com/download>`_.
 
-3. Install and use a virtual environment for you installation (optional). 
+3. Install and use a virtual environment for your installation (optional).
 
-4. Install the eGo tool ``pip3 install eGo --process-dependency-links``
+4. Install the eGo tool ``pip3 install eGo --process-dependency-links``.
 
-5. Create your distribute grids of  mid and low voltage grids with ding0. 
+5. Create mid and low voltage distribution grids with ding0.
    Learn more about Ding0 on `<https://dingo.readthedocs.io/en/dev/index.html>`_.
 
-6. Check and prepare your eGo setting in ``ego/scenario_setting.json``. Add you
+6. Check and prepare your eGo setting in ``ego/scenario_setting.json``. Add your
    local paths and prepare your parameters.
 
 7. Start your calculation and run the tool for example under
