@@ -35,10 +35,10 @@ eDisGo Cluster Method
 
 In order to achieve acceptable computation times, the problem's complexity can be reduced by applying a k-means cluster-algorithm to MV grids. The algorithm identifies a specified number of representative MV grids and assigns a weighting to each grid. As described `here <https://openego.readthedocs.io/en/dev/api/modules.html#edisgo>`_, the available clustering attributes are:
 
-* The cumulative installed **wind capacity**,
-* the cumulative installed **solar capacity**,
-* the distance between transition point and **farthest node** of the MV grid and
-* the installed **battery capacity** (as a results of eTraGo's investment optimization).
+* cumulative installed **wind capacity**,
+* cumulative installed **solar capacity**,
+* distance between transition point and **farthest node** of the MV grid
+* installed **battery capacity** (as a result of eTraGo's investment optimization)
 
 Subsequent to the MV grid simulations with the reduced number of representative grids, the cluster weighting is used to extrapolate the costs back to the original number of MV grids.
 
@@ -57,8 +57,8 @@ Overnight costs
 
 The *overnight costs* represents the investment costs of the components or 
 construction project without any interest, as if the project was completed 
-"overnight". The overnight costs (:math:`C_{\text{Overnight}}` ) of the gird measures 
-(lines and transformer) are calculated as:
+"overnight". The overnight costs (:math:`C_{\text{Overnight}}` ) of the grid measures
+(lines and transformers) are calculated as:
 
 
 .. math::
@@ -86,7 +86,7 @@ Annuity costs
 
 The *annuity costs* represents project investment costs with an interest as present
 value of an annuity. The investment years *T* and the interest rate *p* are 
-definded as default in *eGo* with an interest rate ( :math:`p`  ) of ``0.05`` 
+defined as default in *eGo* with an interest rate ( :math:`p`  ) of ``0.05``
 and a number of investment years ( :math:`T` ) of ``40 years``. The values are 
 based on the [StromNEV_A1]_ for the grid investment regulation in Germany.
 
@@ -96,9 +96,8 @@ The present value of an annuity (PVA) is calculated as:
         PVA =  \frac{1}{p}- \frac{1}{\left ( p*\left (1 + p \right )^T \right )}
 
 
-In order to calcualte the :math:`C_{annuity}` of an given period less then a 
-year and hourly basis by the optimisation the annuity costs are factorized by
-the hours of the :math:`t_{year}=8760` and the definded calculation period.
+In order to calculate the :math:`C_{annuity}` of a given period less than a
+year the annuity costs are factorized by the hours of the :math:`t_{year}=8760` and the defined calculation period.
 
 .. math::
         t_{period} =  t_{\text{end\_snapshot}} - t_{\text{start\_snapshot}} ~[h]
@@ -115,7 +114,7 @@ The annuity costs ( :math:`C_{annuity}` )  is calculated as:
 Investment costs ehv/hv
 -----------------------
 
-The investment costs of the grid and storage expantion are taken from the studies
+The investment costs of the grid and storage expansion are taken from the studies
 [NEP2015a]_ for the extra and high voltage components and the [Dena]_. The 
 given costs are transformed in respect to PyPSA *[€/MVA]* format [PyPSA]_ 
 components for the optimisation.
@@ -131,7 +130,7 @@ calculation with *eTraGo*.
    :delim: ,
    :header-rows: 1
 
-The *eTraGo* calculation of the annuity costs per simulation periode is defined 
+The *eTraGo* calculation of the annuity costs per simulation period is defined
 in :func:`~etrago.tools.utilities.set_line_costs` and 
 :func:`~etrago.tools.utilities.set_trafo_costs`. 
 
@@ -148,8 +147,8 @@ The tool *eDisGO* is calculating all grid expansion measures as capital or
 *overnight* costs. In order to get the annuity costs of eDisGo's optimisation 
 results the function :func:`~ego.tools.economics.edisgo_convert_capital_costs`
 is used. The cost assumption of [eDisGo]_ are taken from the [Dena]_ 
-and [CONSENTEC]_ study. Depents on the component the costs including earthwork 
-costs depend on population density according to [Dena]_.
+and [CONSENTEC]_ study. Based on the component the costs including earthwork
+costs can depend on population density according to [Dena]_.
 
 
 
