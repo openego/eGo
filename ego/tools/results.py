@@ -101,29 +101,5 @@ def create_etrago_results(network, scn_name):  # rename function
     return etrago
 
 
-def results_per_voltage(network):
-    """Get eTraGo results per voltage level
-
-    Parameters
-    ----------
-    network : :class:`etrago.tools.io.NetworkScenario`
-        eTraGo ``NetworkScenario`` based on PyPSA Network. See also
-        `pypsa.network <https://pypsa.org/doc/components.html#network>`_
-
-    Returns
-    -------
-
-    """
-
-
-def ego_results_to_oedb(ego):
-    """ Function to upload results into oedb database
-
-    """
-    # TODO
-
-    pass
-
-
 if __name__ == '__main__':
     pass
