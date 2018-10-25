@@ -30,7 +30,7 @@ setup(
                       'ding0 == v0.1.9',
                       'pycallgraph', 
                       'eDisGo == v0.0.7',
-                      'eTraGo == 0.7.0',
+                      'eTraGo == 0.7.1',
                       'scikit-learn == 0.19.0',
                       'pandas ==0.20.3',
                       'pypsa==0.11.0fork',
