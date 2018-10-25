@@ -105,7 +105,7 @@ def ego_colore():
     Returns
     -------
     colors :  :obj:`dict`
-        List of eGo matplotlib colores
+        List of eGo matplotlib hex colores
     """
     colors = {'egoblue1': '#1F567D',
               'egoblue2': '#84A2B8',
@@ -124,8 +124,8 @@ def plot_storage_expansion(ego, filename=None, dpi=300,
     Parameters
     ----------
     ego : :class:`ego.tools.io.eGo`
-        eGo ``eGo`` inclueds on eTraGo and eDisGo
-    filename: list
+        eGo ``eGo`` inclueds eTraGo and eDisGo results
+    filename: str
         Filename and/or path of location to store graphic
     dpi: int
         dpi value of graphic
@@ -245,15 +245,15 @@ def plot_line_expansion(ego, filename=None, dpi=300, column='overnight_costs'):
     Parameters
     ----------
     ego : :class:`ego.tools.io.eGo`
-        eGo  ``eGo`` inclueds on eTraGo and eDisGo
-    filename: list
+        eGo ``eGo`` inclueds eTraGo and eDisGo results
+    filename: str
         Filename and or path of location to store graphic
     dpi: int
         dpi value of graphic
     column: str
-        column name of eTraGo's line costs. Default: ``overnight_costs`` in EURO.
+        column name of eTraGo's line costs. Default: ``overnight_costs`` in EUR.
         Also available ``s_nom_expansion`` in MVA or
-        annualized ``investment_costs`` in EURO
+        annualized ``investment_costs`` in EUR
 
     Returns
     -------
@@ -331,7 +331,26 @@ def plot_line_expansion(ego, filename=None, dpi=300, column='overnight_costs'):
 
 
 def plot_grid_storage_investment(costs_df, filename, display, var=None):
-    """
+    """Plot total grid and storage investment.
+
+    Parameters
+    ----------
+    costs_df:  :pandas:`pandas.DataFrame<dataframe>`
+        Dataframe containing total_investment_costs of ego
+    filename: str
+        Filename and or path of location to store graphic
+    display: bool
+        Display plot
+    var: str
+        Cost variable of ``overnight_cost`` by default displays annualized
+        costs of timesteps
+
+    Returns
+    -------
+    plot :obj:`matplotlib.pyplot.show`
+            https://matplotlib.org/api/pyplot_api.html#matplotlib.pyplot.show
+
+
     """
     colors = ego_colore()
     bar_width = 0.35
@@ -399,7 +418,12 @@ def power_price_plot(ego, filename, display):
 
     Parameters
     ----------
-    ego :class:`ego.io.eGo`
+    ego : :class:`ego.tools.io.eGo`
+        eGo ``eGo`` inclueds eTraGo and eDisGo results
+    filename: str
+        Filename and or path of location to store graphic
+    display: bool
+        Display plot
 
     Returns
     -------
@@ -446,7 +470,12 @@ def plot_storage_use(ego, filename, display):
 
     Parameters
     ----------
-    ego :class:`ego.io.eGo`
+    ego : :class:`ego.tools.io.eGo`
+        eGo ``eGo`` inclueds eTraGo and eDisGo results
+    filename: str
+        Filename and or path of location to store graphic
+    display: bool
+        Display plot
 
     Returns
     -------
@@ -481,7 +510,20 @@ def plot_storage_use(ego, filename, display):
 
 
 def get_country(session, region=None):
-    """Get Geometries of scenario Countries
+    """Get Geometries of scenario Countries.
+
+    Parameters
+    ----------
+    session : :sqlalchemy:`sqlalchemy.orm.session.Session<orm/session_basics.html>`
+        SQLAlchemy session to the OEDB
+    region: list
+        List of background countries e.g. ['DE', 'DK']
+
+    Returns
+    -------
+    country: ``geopandas.GeoDataFrame``
+        GeoDataFrame inclueds MultiPolygon of selected regions or countries
+
     """
 
     if region is None:
@@ -514,7 +556,21 @@ def get_country(session, region=None):
 
 
 def prepareGD(session, subst_id=None, version=None):
-    """ Get MV grid districts for plotting
+    """ Get MV grid districts for plotting form oedb.
+
+    Parameters
+    ----------
+    session : :sqlalchemy:`sqlalchemy.orm.session.Session<orm/session_basics.html>`
+        SQLAlchemy session to the OEDB
+    subst_id: list
+        List of integer ids of substation of the pf ehv/hv grid model_draft
+    version: str
+        Name of data version saved in the OEDB
+
+    Returns
+    -------
+    region: ``geopandas.GeoDataFrame``
+        GeoDataFrame inclueds MultiPolygon of selected MV grids
     """
 
     if version:
@@ -563,15 +619,15 @@ def plot_edisgo_cluster(ego, filename, region=['DE'], display=False, dpi=150,
 
     Parameters
     ----------
-    ego :class:`ego.io.eGo`
-        self class object of eGo()
+    ego : :class:`ego.tools.io.eGo`
+        eGo ``eGo`` inclueds on eTraGo and eDisGo results
     filename: str
-        file name for plot ``cluster_plot.pdf``
+        file name for plot e.g. ``cluster_plot.pdf``
     region: list
         List of background countries e.g. ['DE', 'DK']
-    display: boolean
+    display: bool
         True show plot false print plot as ``filename``
-    add_ehv_storage: boolean
+    add_ehv_storage: bool
         Display eTraGo ehv/hv storage distribution
     grid_choice: str
         path to seperate mv/lv grid choice csv file
@@ -692,14 +748,13 @@ def igeoplot(ego, tiles=None, geoloc=None, save_image=False):
 
     Parameters
     ----------
-    ego:  :class:`ego.tools.io.eGo`
-      eGo class of result objects of eTraGo and eDisGo
+    ego : :class:`ego.tools.io.eGo`
+        eGo ``eGo`` inclueds eTraGo and eDisGo results
     tiles: str
       Folium background map style `None` as OSM or `Nasa`
-    geoloc: :obj:`list`
+    geoloc: list
       List which define center of map as (lon, lat)
-
-    save_image: :obj:`bool`
+    save_image: bool
         save iplot map as image
 
     Returns
@@ -748,6 +803,7 @@ def igeoplot(ego, tiles=None, geoloc=None, save_image=False):
         # get information of buses
         popup = """ <b> Bus: </b> {} <br>
      					Scenario: {} <br>
+                        <hr>
                         Carrier: {} <br>
      					Control: {} <br>
      					type: {} <br>
@@ -951,9 +1007,9 @@ def igeoplot(ego, tiles=None, geoloc=None, save_image=False):
                            ).add_to(repgrid_group
                                     ).add_child(folium.Popup(pops))
 
-    logger.info('Added MV Grids')
+        logger.info('Added MV Grids')
 
-    # Create storage expantion plot
+    # Create ehv/hv storage expantion plot
     store_group = folium.FeatureGroup(name='Storage expantion')
 
     stores = network.storage_units[network.storage_units.carrier ==
@@ -1005,108 +1061,114 @@ def igeoplot(ego, tiles=None, geoloc=None, save_image=False):
     logger.info('Added storages')
 
     # add MV line loading
-    # Prepare MV lines
-    mv_line_group = folium.FeatureGroup(name='Choosen MV Grids (>=10kV)')
+    # add grid districs
+    if ego.json_file['eGo']['eDisGo'] is True:
+        # Prepare MV lines
+        mv_line_group = folium.FeatureGroup(name='Choosen MV Grids (>=10kV)')
 
-    mv_list = ego.edisgo.grid_choice.the_selected_network_id
+        mv_list = ego.edisgo.grid_choice.the_selected_network_id
 
-    for grid in mv_list:
+        for grid in mv_list:
 
-        mv_grid_id = grid
+            mv_grid_id = grid
 
-        if not isinstance(ego.edisgo.network[mv_grid_id], str):
+            if not isinstance(ego.edisgo.network[mv_grid_id], str):
 
-            mv_network = ego.edisgo.network[mv_grid_id].network.pypsa
+                mv_network = ego.edisgo.network[mv_grid_id].network.pypsa
 
-            # get line Coordinates
-            x0 = mv_network.lines.bus0.loc[mv_network.lines.v_nom >= 10].map(
-                mv_network.buses.x)
-            x1 = mv_network.lines.bus1.loc[mv_network.lines.v_nom >= 10].map(
-                mv_network.buses.x)
+                # get line Coordinates
+                x0 = mv_network.lines.bus0.loc[mv_network.lines.v_nom >= 10].map(
+                    mv_network.buses.x)
+                x1 = mv_network.lines.bus1.loc[mv_network.lines.v_nom >= 10].map(
+                    mv_network.buses.x)
 
-            y0 = mv_network.lines.bus0.loc[mv_network.lines.v_nom >= 10].map(
-                mv_network.buses.y)
-            y1 = mv_network.lines.bus1.loc[mv_network.lines.v_nom >= 10].map(
-                mv_network.buses.y)
+                y0 = mv_network.lines.bus0.loc[mv_network.lines.v_nom >= 10].map(
+                    mv_network.buses.y)
+                y1 = mv_network.lines.bus1.loc[mv_network.lines.v_nom >= 10].map(
+                    mv_network.buses.y)
 
-            # get content
-            grid_expansion_costs = ego.edisgo.network[
-                mv_grid_id].network.results.grid_expansion_costs
-            lines = pd.concat([mv_network.lines,
-                               grid_expansion_costs],
-                              axis=1,
-                              join_axes=[mv_network.lines.index])
+                # get content
+                grid_expansion_costs = ego.edisgo.network[
+                    mv_grid_id].network.results.grid_expansion_costs
+                lines = pd.concat([mv_network.lines,
+                                   grid_expansion_costs],
+                                  axis=1,
+                                  join_axes=[mv_network.lines.index])
 
-            lines = lines.loc[mv_network.lines.v_nom >= 10]
-            lines = lines.reindex()
-            cols = list(lines.columns)
-            res_mv = ('overnight_costs', 'capital_cost')
-            unit = ('EUR', 'EUR/time step')
-            cols = [x for x in cols if x not in res_mv]
-            # save results as csv
+                lines = lines.loc[mv_network.lines.v_nom >= 10]
+                lines = lines.reindex()
+                cols = list(lines.columns)
+                res_mv = ('overnight_costs', 'capital_cost')
+                unit = ('EUR', 'EUR/time step')
+                cols = [x for x in cols if x not in res_mv]
+                # save results as csv
 
-            geo_lines2 = pd.concat([y0, x0, y1, x1],
-                                   axis=1,
-                                   join_axes=[y0.index])
+                geo_lines2 = pd.concat([y0, x0, y1, x1],
+                                       axis=1,
+                                       join_axes=[y0.index])
 
-            line_export = pd.concat([lines, geo_lines2],
-                                    axis=1,
-                                    join_axes=[lines.index])
+                line_export = pd.concat([lines, geo_lines2],
+                                        axis=1,
+                                        join_axes=[lines.index])
 
-            line_export.to_csv("results/mv_line_results_" +
-                               str(mv_grid_id)+".csv")
+                line_export.to_csv("results/mv_line_results_" +
+                                   str(mv_grid_id)+".csv")
 
-            # color map lines
-            try:
-                mv_colormap = cm.linear.YlGnBu_09.scale(
-                    lines.overnight_costs.min(), lines.overnight_costs.max()).to_step(6)
-            except:
-                mv_colormap = cm.linear.YlGnBu_09.scale(
-                    0, 0).to_step(6)
-
-            mv_colormap.caption = 'Line investment of overnight cost (mv)'
-
-            # add parameter
-            for line in lines.index:
-                popup = """ <b>Line:</b> {} <br>
-                            version: {} <br> <hr>""".format(line, version)
-
-                popup += """<b>MV line parameter:</b><br> """
-
-                for col in cols:
-                    try:
-                        popup += """ {}: {} <br>""".format(col,
-                                                           lines[col][line])
-                    except:
-                        popup += """ No info for:"""
-
-                popup += """<hr> <b> Results:</b> <br>"""
-
-                for idx, val in enumerate(res_mv):
-                    try:
-                        popup += """{}: {} in {}<br>""".format(val,
-                                                               lines[val][line],
-                                                               unit[idx])
-                    except:
-                        popup += """ No info for:"""
-
-                # change colore function
-                mv_color = colormapper_lines(
-                    mv_colormap, lines, line, column="overnight_costs")
-                # ToDo make it more generic
+                # color map lines
                 try:
-                    folium.PolyLine(([y0[line], x0[line]], [y1[line], x1[line]]),
-                                    popup=popup, color=convert_to_hex(mv_color)
-                                    ).add_to(mv_line_group)
+                    mv_colormap = cm.linear.YlGnBu_09.scale(
+                        lines.overnight_costs.min(),
+                        lines.overnight_costs.max()).to_step(6)
                 except:
-                    logger.disabled = True
-                    logger.info('Cound not find a geometry')
-                    logger.disabled = False
-        else:
-            logger.info(str(mv_grid_id)+" " +
-                        str(ego.edisgo.network[mv_grid_id]))
+                    mv_colormap = cm.linear.YlGnBu_09.scale(
+                        0, 0).to_step(6)
 
-    mp.add_child(mv_colormap)
+                mv_colormap.caption = 'Line investment of overnight cost (mv)'
+
+                # add parameter
+                for line in lines.index:
+                    popup = """ <b>Line:</b> {} <br>
+                                version: {} <br> <hr>""".format(line, version)
+
+                    popup += """<b>MV line parameter:</b><br> """
+
+                    for col in cols:
+                        try:
+                            popup += """ {}: {} <br>""".format(col,
+                                                               lines[col][line])
+                        except:
+                            popup += """ No info for:"""
+
+                    popup += """<hr> <b> Results:</b> <br>"""
+
+                    for idx, val in enumerate(res_mv):
+                        try:
+                            popup += """{}: {} in {}<br>""".format(val,
+                                                                   lines[val][line],
+                                                                   unit[idx])
+                        except:
+                            popup += """ No info for:"""
+
+                    # change colore function
+                    mv_color = colormapper_lines(
+                        mv_colormap, lines, line, column="overnight_costs")
+                    # ToDo make it more generic
+                    try:
+                        folium.PolyLine(([y0[line], x0[line]],
+                                         [y1[line], x1[line]]),
+                                        popup=popup, color=convert_to_hex(
+                            mv_color)
+                        ).add_to(mv_line_group)
+                    except:
+                        logger.disabled = True
+                        logger.info('Cound not find a geometry')
+                        logger.disabled = False
+            else:
+                logger.info(str(mv_grid_id)+" " +
+                            str(ego.edisgo.network[mv_grid_id]))
+
+        mp.add_child(mv_colormap)
+        # Add MV Storage
 
     # add layers and others
     colormap.caption = 'Line loading s_nom (ehv/hv)'
@@ -1121,9 +1183,9 @@ def igeoplot(ego, tiles=None, geoloc=None, save_image=False):
 
     if ego.json_file['eGo']['eDisGo'] is True:
 
+        mv_line_group.add_to(mp)
         repgrid_group.add_to(mp)
         grid_group.add_to(mp)
-        mv_line_group.add_to(mp)
 
     line_results_group.add_to(mp)
     store_group.add_to(mp)
@@ -1169,7 +1231,7 @@ def igeoplot(ego, tiles=None, geoloc=None, save_image=False):
 
 
 def colormapper_lines(colormap, lines, line, column="s_nom"):
-    """ Make Colore Map for lines
+    """ Make Colore Map for lines.
     """
     # TODO: make it more generic
     l_color = []
@@ -1255,7 +1317,7 @@ def _storage_distribution(network, ax, fig, scaling=1, filename=None):
 
 
 def iplot_griddistrict_legend(mp, repre_grids, start=False):
-    """ Add legend to iplot function.
+    """Add legend to iplot function of mv grids.
 
     """
     # from branca.element import Template, MacroElement
