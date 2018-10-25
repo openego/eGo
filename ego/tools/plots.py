@@ -763,10 +763,6 @@ def igeoplot(ego, tiles=None, geoloc=None, save_image=False):
       HTML file with .js plot
      """
 
-    #     # TODO
-    #     # - use cluster or boxes to limit data volumn
-    #     # - Map see: http://nbviewer.jupyter.org/gist/BibMartin/f153aa957ddc5fadc64929abdee9ff2e
-
     network = ego.etrago.network
     session = open_oedb_session(ego)
     # get scenario name from args

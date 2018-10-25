@@ -635,7 +635,7 @@ class EDisGoNetworks:
             )
             if 'extended_storage' in missing_atts:
                 logger.info('Hint: eTraGo dataset must contain '
-                            'extendable storages in order to include '
+                            'extendable storage in order to include '
                             'storage extension in MV grid clustering.')
 
         return cluster_mv_grids(
@@ -655,7 +655,7 @@ class EDisGoNetworks:
             index=all_mv_grids,
             columns=['storage_p_nom'])
 
-        logger.info('Identifying extended storages')
+        logger.info('Identifying extended storage')
         for mv_grid in all_mv_grids:
             bus_id = self._get_bus_id_from_mv_grid(session, mv_grid)
 
