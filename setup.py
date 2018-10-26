@@ -15,7 +15,7 @@ def read(fname):
 
 setup(
     name='eGo',
-    version='0.3.1dev',
+    version='0.3.1',
     author='wolfbunke, maltesc',
     author_email='wolf-dieter.bunke@uni-flensburg.de',
     description=("A cross-grid-level electricity grid and storage "
@@ -67,22 +67,4 @@ setup(
         'ego.data': ['*.csv']
     }
     )
-   
 
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-  
