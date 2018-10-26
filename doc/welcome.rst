@@ -52,6 +52,7 @@ is part of eTraGo.
 
 The focus of optimization are flexibility options with a special focus on
 energy storages and grid expansion measures.
+`Learn more here <http://etrago.readthedocs.io>`_.
 
 
 eDisGo
