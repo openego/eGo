@@ -1012,16 +1012,18 @@ def igeoplot(ego, tiles=None, geoloc=None, save_image=False):
                 """.format(row['subst_id'])
 
                 for idxs in mv.index:
-                    pop += """<br>
+                    pop += """
                             {} : {}  € <br>
-                       """.format(idxs, lv[0][idxs])
+                       """.format(idxs, lv[0][idxs].astype(
+                           float).round(2))
 
                 pop += """<b>LV results:</b> <br> """
 
                 for idxs in lv.index:
-                    pop += """<br>
+                    pop += """
                             {} : {}  € <br>
-                       """.format(idxs, lv[0][idxs])
+                       """.format(idxs, lv[0][idxs].astype(
+                           float).round(2))
 
             else:
                 pop = """<b>Grid district:</b> {} <br>
