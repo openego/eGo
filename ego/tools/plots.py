@@ -33,6 +33,7 @@ if not 'READTHEDOCS' in os.environ:
                                    plot_voltage, plot_residual_load, coloring)
     from ego.tools.economics import etrago_convert_overnight_cost
     from ego.tools.utilities import open_oedb_session
+    from pypsa import Network as PyPSANetwork
     import pyproj as proj
     from math import sqrt, log10
     from shapely.geometry import Polygon, Point, MultiPolygon
@@ -792,7 +793,8 @@ def igeoplot(ego, tiles=None, geoloc=None, save_image=False):
         folium.raster_layers.TileLayer('OpenStreetMap', attr=attr).add_to(mp)
 
     # Legend name
-    bus_group = folium.FeatureGroup(name='Bus information')
+    bus_group = folium.FeatureGroup(
+        name='Bus information (ehv/hv)', show=True)
     # add buses
 
     for name, row in network.buses.iterrows():
@@ -815,7 +817,8 @@ def igeoplot(ego, tiles=None, geoloc=None, save_image=False):
                     row['v_mag_pu_min'], row['v_mag_pu_max'],
                     row['sub_network'], version)
         # add Popup values use HTML for formating
-        folium.Marker([row["y"], row["x"]], popup=popup).add_to(bus_group)
+        folium.Marker([row["y"], row["x"]], popup=popup,
+                      icon=folium.Icon(color='green')).add_to(bus_group)
 
     logger.info('Added Busses')
 
@@ -836,7 +839,7 @@ def igeoplot(ego, tiles=None, geoloc=None, save_image=False):
         return '#' + red + green + blue
 
     # Prepare lines
-    line_group = folium.FeatureGroup(name='Line information')
+    line_group = folium.FeatureGroup(name='Line Loading (ehv/hv)', show=False)
 
     # get line Coordinates
     x0 = network.lines.bus0.map(network.buses.x)
@@ -888,7 +891,7 @@ def igeoplot(ego, tiles=None, geoloc=None, save_image=False):
 
     # Prepare lines
     line_results_group = folium.FeatureGroup(
-        name='Line results of annuity costs')
+        name='Line costs by annuity costs (ehv/hv)')
 
     # color map lines
     colormap2 = cm.linear.YlGn_09.scale(
@@ -928,85 +931,9 @@ def igeoplot(ego, tiles=None, geoloc=None, save_image=False):
 
     logger.info('Added Lines')
 
-    # add grid districs
-    if ego.json_file['eGo']['eDisGo'] is True:
-
-        grid_group = folium.FeatureGroup(name='Choosen MV Grid district')
-        # list(network.buses.index) # change to selected grids
-
-        subst_id = list(ego.edisgo.grid_choice.the_selected_network_id)
-        district = prepareGD(session, subst_id, version)
-
-        # todo does not work with k-mean Cluster
-        # Add for loop
-        crs = {'init': 'epsg:4326'}
-
-        for name, row in district.iterrows():
-            pop = """<b>Grid district:</b> {} <br>
-                """.format(row['subst_id'])
-
-            folium.GeoJson(row['geometry']).add_to(
-                grid_group).add_child(folium.Popup(pop))
-
-        # Add cluster grids
-        repgrid_group = folium.FeatureGroup(
-            name='Represented MV Grids per Cluster')
-        cluster = ego.edisgo.grid_choice
-        cluster = cluster.rename(
-            columns={"the_selected_network_id": "subst_id"})
-
-        repre_grids = pd.DataFrame(columns=['subst_id',
-                                            'geometry',
-                                            'cluster_id',
-                                            'color'])
-
-        style_function = (lambda x: {
-                          'fillColor':  x['properties']['color'],
-                          'weight': 0.5, 'color': 'black'})
-        # simplify MultiPolygon
-        tolerance = 0.002
-
-        for idx in cluster.index:
-
-            cluster_id = list(cluster.represented_grids[idx])
-            # represented_grids
-            repre_grid = prepareGD(session, cluster_id, version)
-            repre_grid['cluster_id'] = cluster.subst_id[idx]
-
-            repre_grids = repre_grids.append(repre_grid, ignore_index=True)
-
-        # prepare cluster colore
-        normal = mpl.colors.Normalize(vmin=repre_grids.cluster_id.min(),
-                                      vmax=repre_grids.cluster_id.max(),
-                                      clip=True)
-
-        mapper = plt.cm.ScalarMappable(norm=normal, cmap=plt.cm.viridis)
-        # add colors to column
-        repre_grids['color'] = repre_grids['cluster_id'].apply(
-            lambda x: mcolors.to_hex(mapper.to_rgba(x)))
-
-        repre_grids = gpd.GeoDataFrame(
-            repre_grids, geometry='geometry', crs=crs)
-
-        # simplify Polygon geometry
-        repre_grids.geometry = repre_grids.geometry.simplify(tolerance)
-
-        # add popup
-        for name, row in repre_grids.iterrows():
-
-            pops = """<b>Represented Grid:</b> {} <br>""".format(
-                row['cluster_id'])
-
-            folium.GeoJson(repre_grids[name:name+1],
-                           style_function=style_function,
-                           name='represented grids'
-                           ).add_to(repgrid_group
-                                    ).add_child(folium.Popup(pops))
-
-        logger.info('Added MV Grids')
-
     # Create ehv/hv storage expantion plot
-    store_group = folium.FeatureGroup(name='Storage expantion')
+    store_group = folium.FeatureGroup(
+        name='Storage expantion (ehv/hv)', show=True)
 
     stores = network.storage_units[network.storage_units.carrier ==
                                    'extendable_storage']
@@ -1056,11 +983,119 @@ def igeoplot(ego, tiles=None, geoloc=None, save_image=False):
 
     logger.info('Added storages')
 
+    ######################
     # add MV line loading
     # add grid districs
     if ego.json_file['eGo']['eDisGo'] is True:
+
+        grid_group = folium.FeatureGroup(
+            name='Represented MV Grid district', show=False)
+
+        subst_id = list(ego.edisgo.grid_choice.the_selected_network_id)
+        district = prepareGD(session, subst_id, version)
+
+        # Add for loop
+        crs = {'init': 'epsg:4326'}
+
+        for name, row in district.iterrows():
+
+            mv_grid_id = row['subst_id']
+
+            if not isinstance(ego.edisgo.network[mv_grid_id], str):
+                lv, mv = _get_mv_plot_res(ego, mv_grid_id)
+                lv_col = lv.columns
+                mv_col = mv.columns
+
+                pop = """<b>Grid district:</b> {} <br>
+                    <hr>
+                    <b>MV results:</b><br>
+                """.format(row['subst_id'])
+
+                for idxs in mv.index:
+                    pop += """<br>
+                            {} : {}  € <br>
+                       """.format(idxs, lv[0][idxs])
+
+                pop += """<b>LV results:</b> <br> """
+
+                for idxs in lv.index:
+                    pop += """<br>
+                            {} : {}  € <br>
+                       """.format(idxs, lv[0][idxs])
+
+            else:
+                pop = """<b>Grid district:</b> {} <br>
+                        <hr>
+                    """.format(row['subst_id'])
+
+            # folium.GeoJson(row['geometry']).add_to(
+            #    grid_group).add_child(folium.Popup(pop))
+
+            geojson = folium.GeoJson(row['geometry'])
+            popup = folium.Popup(pop)
+            popup.add_to(geojson)
+            geojson.add_to(grid_group)
+
+        # Add cluster grids
+        repgrid_group = folium.FeatureGroup(
+            name='Represented MV Grids per Cluster', show=False)
+        cluster = ego.edisgo.grid_choice
+        cluster = cluster.rename(
+            columns={"the_selected_network_id": "subst_id"})
+
+        repre_grids = pd.DataFrame(columns=['subst_id',
+                                            'geometry',
+                                            'cluster_id',
+                                            'color'])
+
+        style_function = (lambda x: {
+            'fillColor':  x['properties']['color'],
+            'weight': 0.5, 'color': 'black'})
+        # simplify MultiPolygon
+        tolerance = 0.002
+
+        for idx in cluster.index:
+
+            cluster_id = list(cluster.represented_grids[idx])
+            # represented_grids
+            repre_grid = prepareGD(session, cluster_id, version)
+            repre_grid['cluster_id'] = cluster.subst_id[idx]
+
+            repre_grids = repre_grids.append(repre_grid, ignore_index=True)
+
+        # prepare cluster colore
+        normal = mpl.colors.Normalize(vmin=repre_grids.cluster_id.min(),
+                                      vmax=repre_grids.cluster_id.max(),
+                                      clip=True)
+
+        mapper = plt.cm.ScalarMappable(norm=normal, cmap=plt.cm.viridis)
+        # add colors to column
+        repre_grids['color'] = repre_grids['cluster_id'].apply(
+            lambda x: mcolors.to_hex(mapper.to_rgba(x)))
+
+        repre_grids = gpd.GeoDataFrame(
+            repre_grids, geometry='geometry', crs=crs)
+
+        # simplify Polygon geometry
+        repre_grids.geometry = repre_grids.geometry.simplify(tolerance)
+
+        # add popup
+        for name, row in repre_grids.iterrows():
+
+            pops = """<b>Represented Grid:</b> {} <br>""".format(
+                row['cluster_id'])
+
+            folium.GeoJson(repre_grids[name:name+1],
+                           style_function=style_function,
+                           name='represented grids'
+                           ).add_to(repgrid_group
+                                    ).add_child(folium.Popup(pops))
+
+        logger.info('Added MV Grids')
+
         # Prepare MV lines
-        mv_line_group = folium.FeatureGroup(name='Choosen MV Grids (>=10kV)')
+        mv_line_group = folium.FeatureGroup(
+            name='MV Grids (>=10kV)', show=False)
 
         mv_list = ego.edisgo.grid_choice.the_selected_network_id
 
@@ -1165,6 +1200,48 @@ def igeoplot(ego, tiles=None, geoloc=None, save_image=False):
 
         mp.add_child(mv_colormap)
         # Add MV Storage
+        # Legend name
+        mv_sto_group = folium.FeatureGroup(name='MV storages',  show=False)
+        # add mv storages
+        mv_grid_id = list(ego.edisgo.grid_choice.the_selected_network_id)
+
+        for mv_id in mv_grid_id:
+
+            if not isinstance(ego.edisgo.network[mv_id], str):
+
+                pypsa_network = ego.edisgo.network[mv_id].network.pypsa
+
+                # create pypsa network only containing MV buses and lines
+                pypsa_plot = PyPSANetwork()
+                pypsa_plot.buses = pypsa_network.buses.loc[pypsa_network.buses.v_nom >= 10]
+
+                # add Coordinates
+                sto_x = pypsa_plot.storage_units.bus.map(pypsa_plot.buses.x)
+                sto_y = pypsa_plot.storage_units.bus.map(pypsa_plot.buses.y)
+                # sto_x = pypsa_plot.buses.x
+                # sto_y = pypsa_plot.buses.y
+
+                sto_cols = list(pypsa_plot.storage_units.columns)
+
+                for store in pypsa_plot.storage_units.index:
+                    popup = """ <b>Storage:</b> {} <br>
+                                <hr>
+                                <b>Parameter: </b><br>""".format(store,)
+                    for col in sto_cols:
+                        popup += """ {}: {} <br>
+                        """.format(col,
+                                   pypsa_plot.storage_units[col][store])
+
+                    folium.CircleMarker(
+                        location=([sto_y[store], sto_x[store]]),
+                        radius=pypsa_plot.storage_units['p_nom'],
+                        popup=popup,
+                        color='#3186cc',
+                        fill=True,
+                        fill_color='#3186cc',
+                        weight=1).add_to(mv_sto_group)
+
+                logger.info('Added MV stores')
 
     # add layers and others
     colormap.caption = 'Line loading s_nom (ehv/hv)'
@@ -1174,17 +1251,18 @@ def igeoplot(ego, tiles=None, geoloc=None, save_image=False):
 
     # add legend
     # add layer groups
-    bus_group.add_to(mp)
-    line_group.add_to(mp)
-
     if ego.json_file['eGo']['eDisGo'] is True:
 
-        mv_line_group.add_to(mp)
         repgrid_group.add_to(mp)
         grid_group.add_to(mp)
+        mv_line_group.add_to(mp)
+        mv_sto_group.add_to(mp)
 
+    bus_group.add_to(mp)
+    line_group.add_to(mp)
     line_results_group.add_to(mp)
     store_group.add_to(mp)
+
     folium.LayerControl().add_to(mp)
 
     plugins.Fullscreen(
@@ -1194,7 +1272,7 @@ def igeoplot(ego, tiles=None, geoloc=None, save_image=False):
         force_separate_button=True).add_to(mp)
 
     url = ('https://openego.readthedocs.io/en/release-v0.3.1/_images/open_ego_icon_web.png')
-    FloatImage(url, bottom=0, left=3).add_to(mp)
+    FloatImage(url, bottom=0, left=5).add_to(mp)
 
     if ego.json_file['eGo']['eDisGo'] is True:
         mp = iplot_griddistrict_legend(
@@ -1568,7 +1646,7 @@ def iplot_totalresults_legend(mp, ego, start=False):
 
              <div id="window_results">
                  <div id="title_bar_results">
-                     <div id="button_results" style"font-size: 300%; text-align:right;""> close  </div>
+                     <div id="button_results" style"font-size: 300%; text-align:right; float: right;"> close  </div>
                  </div>
                  <div id="box_results">
 
@@ -1600,3 +1678,48 @@ def iplot_totalresults_legend(mp, ego, start=False):
         temps = temp_tr  # +temp_tmp
 
         return mp.get_root().html.add_child(folium.Element(temps))
+
+
+def _get_mv_plot_res(ego, mv_grid_id):
+    """ Prepare mv results.
+    """
+    pypsa_network = ego.edisgo.network[mv_grid_id].network.pypsa
+
+    # create pypsa network only containing MV buses and lines
+    pypsa_plot = PyPSANetwork()
+    pypsa_plot.buses = pypsa_network.buses.loc[pypsa_network.buses.v_nom >= 10]
+    # filter buses of aggregated loads and generators
+    pypsa_plot.buses = pypsa_plot.buses[
+        ~pypsa_plot.buses.index.str.contains("agg")]
+    pypsa_plot.lines = pypsa_network.lines[
+        pypsa_network.lines.bus0.isin(pypsa_plot.buses.index)][
+        pypsa_network.lines.bus1.isin(pypsa_plot.buses.index)]
+
+    grid_expansion_costs = ego.edisgo.network[mv_grid_id].network.results.grid_expansion_costs
+
+    bus_cost = pd.concat([pypsa_plot.buses, grid_expansion_costs], axis=1,
+                         join_axes=[pypsa_plot.buses.index])
+
+    costs_lv_stations = grid_expansion_costs[
+        grid_expansion_costs.index.str.contains("LVStation")]
+    costs_lv_stations['station'] = \
+        costs_lv_stations.reset_index()['index'].apply(
+            lambda _: '_'.join(_.split('_')[0:2])).values
+    costs_lv_stations = costs_lv_stations.groupby('station').sum()
+    costs_mv_station = grid_expansion_costs[
+        grid_expansion_costs.index.str.contains("MVStation")]
+    costs_mv_station['station'] = \
+        costs_mv_station.reset_index()['index'].apply(
+            lambda _: '_'.join(_.split('_')[0:2])).values
+    costs_mv_station = costs_mv_station.groupby('station').sum()
+
+    costs_lv_stations_total = costs_lv_stations[['overnight_costs',
+                                                 'capital_cost']].sum()
+
+    costs_mv_station_total = costs_mv_station[['overnight_costs',
+                                               'capital_cost']].sum()
+
+    costs_lv_stations_total = pd.DataFrame(costs_lv_stations_total)
+    costs_mv_station_total = pd.DataFrame(costs_mv_station_total)
+
+    return costs_lv_stations_total,  costs_mv_station_total
