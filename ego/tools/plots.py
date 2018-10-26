@@ -1133,7 +1133,7 @@ def igeoplot(ego, tiles=None, geoloc=None, save_image=False):
                             popup += """ {}: {} <br>""".format(col,
                                                                lines[col][line])
                         except:
-                            popup += """ No info for:"""
+                            popup += """ """
 
                     popup += """<hr> <b> Results:</b> <br>"""
 
@@ -1143,7 +1143,7 @@ def igeoplot(ego, tiles=None, geoloc=None, save_image=False):
                                                                    lines[val][line],
                                                                    unit[idx])
                         except:
-                            popup += """ No info for:"""
+                            popup += """ """
 
                     # change colore function
                     mv_color = colormapper_lines(
