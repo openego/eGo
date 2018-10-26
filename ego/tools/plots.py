@@ -1014,7 +1014,7 @@ def igeoplot(ego, tiles=None, geoloc=None, save_image=False):
                 for idxs in mv.index:
                     pop += """
                             {} : {}  € <br>
-                       """.format(idxs, lv[0][idxs].astype(
+                       """.format(idxs, mv[0][idxs].astype(
                            float).round(2))
 
                 pop += """<b>LV results:</b> <br> """
