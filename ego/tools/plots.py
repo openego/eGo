@@ -1243,7 +1243,7 @@ def igeoplot(ego, tiles=None, geoloc=None, save_image=False):
                         fill_color='#3186cc',
                         weight=1).add_to(mv_sto_group)
 
-                logger.info('Added MV stores')
+        logger.info('Added MV stores')
 
     # add layers and others
     colormap.caption = 'Line loading s_nom (ehv/hv)'
@@ -1685,6 +1685,8 @@ def iplot_totalresults_legend(mp, ego, start=False):
 def _get_mv_plot_res(ego, mv_grid_id):
     """ Prepare mv results.
     """
+    logger.disabled = True
+
     pypsa_network = ego.edisgo.network[mv_grid_id].network.pypsa
 
     # create pypsa network only containing MV buses and lines
@@ -1723,5 +1725,7 @@ def _get_mv_plot_res(ego, mv_grid_id):
 
     costs_lv_stations_total = pd.DataFrame(costs_lv_stations_total)
     costs_mv_station_total = pd.DataFrame(costs_mv_station_total)
+
+    logger.disabled = False
 
     return costs_lv_stations_total,  costs_mv_station_total
