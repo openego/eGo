@@ -798,8 +798,8 @@ def igeoplot(ego, tiles=None, geoloc=None, save_image=False):
         name='Bus information (ehv/hv)', show=True)
 
     # create icon
-    url = 'https://raw.githubusercontent.com/openego/eGo/release/v0.3.1/doc/images/{}'.format
-    icon_image = url('battery.png')
+    url = 'https://raw.githubusercontent.com/openego/eGo/master/doc/images/{}'.format
+    icon_image = url('trafo.png')
     bus_icon = CustomIcon(icon_image,
                           icon_size=(27, 47))
 

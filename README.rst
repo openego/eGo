@@ -73,6 +73,7 @@ this program. If not, see https://www.gnu.org/licenses/.
     :target: https://github.com/openego/eGo/
     :alt: GitHub stars
 
+
 .. |readthedocs| image:: https://readthedocs.org/projects/openego/badge/?version=master
     :target: http://openego.readthedocs.io/en/latest/?badge=master
     :alt: Documentation Status
