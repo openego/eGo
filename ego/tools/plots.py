@@ -1145,7 +1145,7 @@ def igeoplot(ego, tiles=None, geoloc=None, save_image=False):
                 # save results as csv
                 csv_print = False
 
-                if csv_print = True:
+                if csv_print == True:
                     geo_lines2 = pd.concat([y0, x0, y1, x1],
                                            axis=1,
                                            join_axes=[y0.index])
