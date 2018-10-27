@@ -1,4 +1,4 @@
-Release v0.3.1 (September 26, 2018)
+Release v0.3.1 (September 27, 2018)
 +++++++++++++++++++++++++++++++++++
 
 This release contains documentation and bug fixes for the new features 
