@@ -28,6 +28,7 @@ Installation
 
 .. code-block::
 
+   $ pip3 install -e git+https://github.com/openego/PyPSA@master#egg=0.11.0fork 
    $ pip3 install eGo --process-dependency-links
 
 
