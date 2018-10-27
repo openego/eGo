@@ -1143,17 +1143,19 @@ def igeoplot(ego, tiles=None, geoloc=None, save_image=False):
                 unit = ('EUR', 'EUR/time step')
                 cols = [x for x in cols if x not in res_mv]
                 # save results as csv
+                csv_print = False
 
-                geo_lines2 = pd.concat([y0, x0, y1, x1],
-                                       axis=1,
-                                       join_axes=[y0.index])
+                if csv_print == True:
+                    geo_lines2 = pd.concat([y0, x0, y1, x1],
+                                           axis=1,
+                                           join_axes=[y0.index])
 
-                line_export = pd.concat([lines, geo_lines2],
-                                        axis=1,
-                                        join_axes=[lines.index])
+                    line_export = pd.concat([lines, geo_lines2],
+                                            axis=1,
+                                            join_axes=[lines.index])
 
-                line_export.to_csv("results/mv_line_results_" +
-                                   str(mv_grid_id)+".csv")
+                    line_export.to_csv("results/mv_line_results_" +
+                                       str(mv_grid_id)+".csv")
 
                 # color map lines
                 try:

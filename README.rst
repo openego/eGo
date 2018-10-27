@@ -1,4 +1,4 @@
-|readthedocs| |badge_githubstars|
+|readthedocs| |badge_githubstars| |zenodo|
 
 -----
 
@@ -18,7 +18,7 @@ Integrated optimization of flexibility options and grid extension measures
 for power grids based on `eTraGo <http://eTraGo.readthedocs.io/>`_ and
 `eDisGo <http://edisgo.readthedocs.io/>`_. The Documentation of the eGo tool 
 can be found on 
-`openego.readthedocs.io <https://openego.readthedocs.io/en/dev/>`_ .
+`openego.readthedocs.io <https://openego.readthedocs.io/>`_ .
 
 .. contents::
 
@@ -28,6 +28,8 @@ Installation
 
 .. code-block::
 
+
+   $ pip3 install -e git+https://github.com/openego/PyPSA@master#egg=0.11.0fork 
    $ pip3 install eGo --process-dependency-links
 
 
@@ -77,3 +79,6 @@ this program. If not, see https://www.gnu.org/licenses/.
 .. |readthedocs| image:: https://readthedocs.org/projects/openego/badge/?version=master
     :target: http://openego.readthedocs.io/en/latest/?badge=master
     :alt: Documentation Status
+    
+.. |zenodo| image:: https://zenodo.org/badge/87306120.svg
+    :target: https://zenodo.org/badge/latestdoi/87306120
