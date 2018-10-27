@@ -43,6 +43,7 @@ if not 'READTHEDOCS' in os.environ:
         import folium
         from folium import plugins
         from folium.plugins import FloatImage
+        from folium.features import CustomIcon
         import branca.colormap as cm
     except:
         geopandas = False
@@ -795,6 +796,13 @@ def igeoplot(ego, tiles=None, geoloc=None, save_image=False):
     # Legend name
     bus_group = folium.FeatureGroup(
         name='Bus information (ehv/hv)', show=True)
+
+    # create icon
+    url = 'https://raw.githubusercontent.com/openego/eGo/release/v0.3.1/doc/images/{}'.format
+    icon_image = url('battery.png')
+    bus_icon = CustomIcon(icon_image,
+                          icon_size=(27, 47))
+
     # add buses
 
     for name, row in network.buses.iterrows():
@@ -818,7 +826,7 @@ def igeoplot(ego, tiles=None, geoloc=None, save_image=False):
                     row['sub_network'], version)
         # add Popup values use HTML for formating
         folium.Marker([row["y"], row["x"]], popup=popup,
-                      icon=folium.Icon(color='green')).add_to(bus_group)
+                      icon=bus_icon).add_to(bus_group)
 
     logger.info('Added Busses')
 
