@@ -1,4 +1,4 @@
-|readthedocs| |badge_githubstars|
+|readthedocs| |badge_githubstars| |zenodo|
 
 -----
 
