@@ -22,6 +22,15 @@ can be found on
 
 .. contents::
 
+------------
+Installation
+------------
+
+.. code-block::
+
+   $ pip3 eGo --process-dependency-links
+
+
 ----------------------------
 Installing Developer Version
 ----------------------------

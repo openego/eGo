@@ -120,13 +120,18 @@ def etrago_storages_investment(network, json_file, session):
         Storage costs of selected snapshots in [EUR]
 
     """
-    # check settings for extendable
-    if 'storages' not in json_file['eTraGo']['extendable']:
-        logger.info("The optimizition was not using parameter "
-                    " 'extendable': storages"
-                    "No storages expantion costs from etrago")
+    # check spelling of storages and storage
+    logger.info(json_file['eTraGo']['extendable'])
 
-    if 'storages' in json_file['eTraGo']['extendable']:
+    stos = 'storage'
+
+    # check settings for extendable
+    if stos not in json_file['eTraGo']['extendable']:
+        logger.info("The optimizition was not using parameter "
+                    " 'extendable': storage"
+                    "No storage expantion costs from etrago")
+
+    if stos in json_file['eTraGo']['extendable']:
 
         network = geolocation_buses(network, session)
         # get v_nom

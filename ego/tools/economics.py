@@ -22,6 +22,7 @@ which can mainly distinguished in operational and investment costs.
 """
 
 import io
+import pkgutil
 import os
 import logging
 logger = logging.getLogger('ego')
@@ -318,13 +319,13 @@ def etrago_grid_investment(network, json_file, session):
            >>> ego = eGo(jsonpath='scenario_setting.json')
            >>> ego.etrago.grid_investment_costs
 
-    +--------------+-------------------+--------------+
-    | voltage_level|number_of_expansion|  capital_cost|
-    +==============+===================+==============+
-    |  ehv         |   27.0            | 31514.1305   |
-    +--------------+-------------------+--------------+
-    |  hv          |    0.0            |      0.0     |
-    +--------------+-------------------+--------------+
+    +---------------+---------------+-------------------+--------------+
+    |differentiation| voltage_level |number_of_expansion|  capital_cost|
+    +===============+===============+===================+==============+
+    | cross-border  |  ehv          |   27.0            | 31514.1305   |
+    +---------------+---------------+-------------------+--------------+
+    |  domestic     |  hv           |    0.0            |      0.0     |
+    +---------------+---------------+-------------------+--------------+
     """
 
     # check settings for extendable
@@ -534,17 +535,15 @@ def get_generator_investment(network, scn_name):
     """ Get investment costs per carrier/ generator.
 
     """
-    # TODO   - change values in csv
-    #        - add values to database
-    # work around later db table ->  check capital_cost as cost input?!?
-
     etg = network
 
     try:
-        dirname = os.path.dirname(__file__)
-        filename = 'investment_costs.csv'
-        path = os.path.join(dirname, filename)
-        invest = pd.DataFrame.from_csv(path + '~/data/'+filename)
+
+        data = pkgutil.get_data('ego', 'data/investment_costs.csv')
+        invest = pd.read_csv(io.BytesIO(data),
+                             encoding='utf8', sep=",",
+                             index_col="carriers")
+
     except FileNotFoundError:
         path = os.getcwd()
         filename = 'investment_costs.csv'

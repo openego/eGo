@@ -11,13 +11,11 @@ __author__ = "wolf_bunke, maltesc"
 
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
-
-
-requirements = parse_requirements("ego_dependencies.txt", session="")
+   
 
 setup(
     name='eGo',
-    version='0.3.0.24',
+    version='0.3.1',
     author='wolfbunke, maltesc',
     author_email='wolf-dieter.bunke@uni-flensburg.de',
     description=("A cross-grid-level electricity grid and storage "
@@ -28,13 +26,41 @@ setup(
     packages=find_packages(),
     package_dir={'ego': 'ego'},
     include_package_data=True,
-    install_requires=[str(b.req) for b in requirements],
-    dependency_links=[str(c._link) for c in requirements if c._link],
+    install_requires=['matplotlib == 3.0.0',
+                      'egoio == 0.4.5',
+                      'ding0 == v0.1.9',
+                      'pycallgraph', 
+                      'eDisGo == v0.0.7',
+                      'eTraGo == 0.7.1',
+                      'scikit-learn == 0.19.0',
+                      'pandas ==0.20.3',
+                      'pypsa==0.11.0fork',
+                      'sqlalchemy == 1.2.0',
+                      'geoalchemy2 >= 0.3.0, <=0.4.0',
+                      'matplotlib >= 1.5.3, <=1.5.3',
+                      'tsam==0.9.9',
+                      'geopandas',
+                      'matplotlib == 3.0.0',
+                      'Rtree',
+                      'descartes',
+                      'pyproj',
+                      'plotly==2.2.3',
+                      'shapely',
+                      'multiprocess',
+                      'folium',
+                      'oedialect'
+                      ],
+    dependency_links=[
+        ('git+https://git@github.com/openego/PyPSA.git'
+         '@master#egg=pypsa-0.11.0fork')],
     extras_require={
         'doc': [
             'sphinx >= 1.4',
             'sphinx_rtd_theme',
-            'sphinxcontrib-httpdomain']},
+            'sphinxcontrib-httpdomain',
+            'numpydoc == 0.7.0',
+            'aiohttp_jinja2',
+            'sphinx-jsondomain']},
     package_data={
         'ego': [os.path.join('tools', '*.csv')],
         'ego': [os.path.join('tools', '*.json')],
@@ -42,5 +68,4 @@ setup(
         'ego.data': ['*.csv']
     }
     )
-    
-  
+

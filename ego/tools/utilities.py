@@ -168,13 +168,19 @@ def get_scenario_setting(jsonpath='scenario_setting.json'):
             json_file['eTraGo']['gridversion'] = None
 
         if json_file['eTraGo'].get('extendable') == "['network', 'storages']":
-            json_file['eTraGo'].update({'extendable': ['network', 'storages']})
+            json_file['eTraGo'].update({'extendable': ['network', 'storage']})
+
+        if json_file['eTraGo'].get('extendable') == "['network', 'storage']":
+            json_file['eTraGo'].update({'extendable': ['network', 'storage']})
 
         if json_file['eTraGo'].get('extendable') == "['network']":
             json_file['eTraGo'].update({'extendable': ['network']})
 
         if json_file['eTraGo'].get('extendable') == "['storages']":
-            json_file['eTraGo'].update({'extendable': ['storages']})
+            json_file['eTraGo'].update({'extendable': ['storage']})
+
+        if json_file['eTraGo'].get('extendable') == "['storage']":
+            json_file['eTraGo'].update({'extendable': ['storage']})
 
     if json_file['eGo'].get('eDisGo') == True:
         logger.info('Using and importing eDisGo settings')
