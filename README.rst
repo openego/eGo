@@ -28,7 +28,7 @@ Installation
 
 .. code-block::
 
-   $ pip3 eGo --process-dependency-links
+   $ pip3 install eGo --process-dependency-links
 
 
 ----------------------------
