@@ -22,6 +22,7 @@ which can mainly distinguished in operational and investment costs.
 """
 
 import io
+import pkgutil
 import os
 import logging
 logger = logging.getLogger('ego')
@@ -30,6 +31,7 @@ if not 'READTHEDOCS' in os.environ:
     import pandas as pd
     import numpy as np
     from ego.tools.utilities import get_time_steps
+    from etrago.tools.utilities import geolocation_buses
 
 __copyright__ = "Flensburg University of Applied Sciences, Europa-Universität"\
     "Flensburg, Centre for Sustainable Energy Systems"
@@ -291,7 +293,7 @@ def etrago_operating_costs(network):
     return operating_costs
 
 
-def etrago_grid_investment(network, json_file):
+def etrago_grid_investment(network, json_file, session):
     """ Function to get grid expantion costs from eTraGo
 
     Parameters
@@ -317,13 +319,13 @@ def etrago_grid_investment(network, json_file):
            >>> ego = eGo(jsonpath='scenario_setting.json')
            >>> ego.etrago.grid_investment_costs
 
-    +--------------+-------------------+--------------+
-    | voltage_level|number_of_expansion|  capital_cost|
-    +==============+===================+==============+
-    |  ehv         |   27.0            | 31514.1305   |
-    +--------------+-------------------+--------------+
-    |  hv          |    0.0            |      0.0     |
-    +--------------+-------------------+--------------+
+    +---------------+---------------+-------------------+--------------+
+    |differentiation| voltage_level |number_of_expansion|  capital_cost|
+    +===============+===============+===================+==============+
+    | cross-border  |  ehv          |   27.0            | 31514.1305   |
+    +---------------+---------------+-------------------+--------------+
+    |  domestic     |  hv           |    0.0            |      0.0     |
+    +---------------+---------------+-------------------+--------------+
     """
 
     # check settings for extendable
@@ -334,8 +336,30 @@ def etrago_grid_investment(network, json_file):
 
     if 'network' in json_file['eTraGo']['extendable']:
 
+        network = geolocation_buses(network, session)
+        # differentiation by country_code
+
+        network.lines['differentiation'] = 'none'
+
+        network.lines['bus0_c'] = network.lines.bus0.map(
+            network.buses.country_code)
+        network.lines['bus1_c'] = network.lines.bus1.map(
+            network.buses.country_code)
+
+        for idx, val in network.lines.iterrows():
+
+            check = val['bus0_c'] + val['bus1_c']
+
+            if "DE" in check:
+                network.lines['differentiation'][idx] = 'cross-border'
+            if "DEDE" in check:
+                network.lines['differentiation'][idx] = 'domestic'
+            if "DE" not in check:
+                network.lines['differentiation'][idx] = 'foreign'
+
         lines = network.lines[['v_nom', 'capital_cost', 's_nom',
-                               's_nom_min', 's_nom_opt']].reset_index()
+                               's_nom_min', 's_nom_opt', 'differentiation']
+                              ].reset_index()
 
         lines['s_nom_expansion'] = lines.s_nom_opt.subtract(
             lines.s_nom, axis='index')
@@ -360,6 +384,8 @@ def etrago_grid_investment(network, json_file):
         trafo = pd.DataFrame()
         # get costs of transfomers
         if json_file['eTraGo']['network_clustering_kmeans'] == False:
+
+            network.transformers['differentiation'] = 'none'
 
             trafos = network.transformers[['v_nom0', 'v_nom1', 'capital_cost',
                                            's_nom_extendable', 's_nom',
@@ -388,13 +414,17 @@ def etrago_grid_investment(network, json_file):
             trafos.set_value(ix_hv, 'voltage_level', 'hv')
             # aggregate trafo
             trafo = trafos[['voltage_level',
-                            'capital_cost']].groupby('voltage_level'
-                                                     ).sum().reset_index()
+                            'capital_cost',
+                            'differentiation']].groupby(['differentiation',
+                                                         'voltage_level']
+                                                        ).sum().reset_index()
 
         # aggregate lines
         line = lines[['voltage_level',
-                      'capital_cost']].groupby('voltage_level'
-                                               ).sum().reset_index()
+                      'capital_cost',
+                      'differentiation']].groupby(['differentiation',
+                                                   'voltage_level']
+                                                  ).sum().reset_index()
 
         # merge trafos and line
         frames = [line, trafo]
@@ -505,17 +535,15 @@ def get_generator_investment(network, scn_name):
     """ Get investment costs per carrier/ generator.
 
     """
-    # TODO   - change values in csv
-    #        - add values to database
-    # work around later db table ->  check capital_cost as cost input?!?
-
     etg = network
 
     try:
-        dirname = os.path.dirname(__file__)
-        filename = 'investment_costs.csv'
-        path = os.path.join(dirname, filename)
-        invest = pd.DataFrame.from_csv(path + '~/data/'+filename)
+
+        data = pkgutil.get_data('ego', 'data/investment_costs.csv')
+        invest = pd.read_csv(io.BytesIO(data),
+                             encoding='utf8', sep=",",
+                             index_col="carriers")
+
     except FileNotFoundError:
         path = os.getcwd()
         filename = 'investment_costs.csv'

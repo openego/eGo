@@ -2,7 +2,6 @@
   "eGo": {
     "eTraGo": true,
     "eDisGo": true,
-    "result_id": null,
     "csv_import_eTraGo": false,
     "csv_import_eDisGo": false
   },
@@ -19,12 +18,13 @@
     "scn_extension": null,
     "scn_decommissioning": null,
     "lpfile":  false,
-    "results":  "results/your_results",
-    "export": false,
-    "extendable": ["storages", "network"],
+    "csv_export":  "results/your_results",
+    "db_export": false,
+    "extendable": ["storage", "network"],
     "generator_noise": 789456,
     "minimize_loading": false,
     "ramp_limits": false,
+    "extra_functionality": null,
     "network_clustering_kmeans": 10,
     "load_cluster": false,
     "network_clustering_ehv": false,
@@ -33,7 +33,7 @@
     "parallelisation": false,
     "skip_snapshots": false,
     "line_grouping": false,
-    "branch_capacity_factor": 0.7,
+    "branch_capacity_factor": {"HV": 0.5, "eHV" : 0.7},
     "load_shedding": false,
     "foreign_lines" :{"carrier": "AC", "capacity": "osmTGmod"},
     "comments": ""

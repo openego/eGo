@@ -57,7 +57,9 @@ if not 'READTHEDOCS' in os.environ:
                                    curtailment, gen_dist, storage_distribution,
                                    plot_voltage, plot_residual_load,
                                    plot_line_loading_diff, full_load_hours,
-                                   nodal_gen_dispatch)
+                                   nodal_gen_dispatch, plot_q_flows,
+                                   max_load, storage_expansion,
+                                   nodal_production_balance, gen_dist_diff)
     from etrago.appl import etrago
     from importlib import import_module
     import pypsa
@@ -126,7 +128,7 @@ class eTraGoResults(egoBasic):
     Returns
     -------
     network_etrago: :class:`etrago.tools.io.NetworkScenario`
-        eTraGo network object compiled by :meth:`etrago.appl.etrago`
+        eTraGo network object compiled by :func:`etrago.appl.etrago`
     etrago: :pandas:`pandas.Dataframe<dataframe>`
         DataFrame which collects several eTraGo results
     """
@@ -236,6 +238,17 @@ class eTraGoResults(egoBasic):
                     etrago_args = json.load(f)
                     logger.info('Using argument file')
 
+                    if etrago_args.get('extendable') == ['network', 'storages']:
+                        etrago_args.update(
+                            {'extendable': ['network', 'storage']})
+                        logger.info(
+                            'Changed naming of storages to storage of args')
+
+                    if etrago_args.get('extendable') == ['storages']:
+                        etrago_args.update({'extendable': ['storage']})
+                        logger.info(
+                            'Changed naming of storages to storage of args')
+
                     for key in self.json_file['eTraGo'].keys():
                         try:
                             self.json_file['eTraGo'][key] = etrago_args[key]
@@ -272,7 +285,7 @@ class eTraGoResults(egoBasic):
 
         # Add function
         self.etrago.storage_investment_costs = etrago_storages_investment(
-            self.etrago.network, self.json_file)
+            self.etrago.network, self.json_file, self.session)
         self.etrago.storage_charges = etrago_storages(self.etrago.network)
 
         self.etrago.operating_costs = etrago_operating_costs(
@@ -281,7 +294,7 @@ class eTraGoResults(egoBasic):
                                                       self.scn_name)
         self.etrago.grid_investment_costs = \
             etrago_grid_investment(self.etrago.network,
-                                   self.json_file)
+                                   self.json_file, self.session)
 
         # add functions direct
         # self._etrago_network.etrago_line_loading = etrago_line_loading
@@ -291,14 +304,64 @@ class eTraGoResults(egoBasic):
         self.etrago.plot_gen_dist = self._gen_dist
         self.etrago.plot_storage_distribution = self._storage_distribution
         self.etrago.plot_line_loading_diff = self._line_loading_diff
-        self.etrago.plot_plot_residual_load = self._residual_load
+        self.etrago.plot_residual_load = self._residual_load
         self.etrago.plot_voltage = self._voltage
         self.etrago.plot_nodal_gen_dispatch = \
             self._nodal_gen_dispatch
         self.etrago.plot_full_load_hours = self._full_load_hours
+        self.etrago.plot_q_flows = self._plot_q_flows
+        self.etrago.plot_max_load = self._max_load
+        self.etrago.plot_storage_expansion = self._storage_expansion
+        self.etrago.plot_nodal_production_balance = (
+            self._nodal_production_balance)
+        self.etrago.plot_gen_dist_diff = self._gen_dist_diff
 
     if not 'READTHEDOCS' in os.environ:
         # include eTraGo functions and methods
+        def _gen_dist_diff(self, **kwargs):
+            """
+            Integrate and use function from eTraGo.
+            For more information see:
+            """
+
+            return gen_dist_diff(networkA=self.etrago.network,
+                                 **kwargs)
+
+        def _nodal_production_balance(self, **kwargs):
+            """
+            Integrate and use function from eTraGo.
+            For more information see:
+            """
+
+            return nodal_production_balance(network=self.etrago.network,
+                                            **kwargs)
+
+        def _storage_expansion(self, **kwargs):
+            """
+            Integrate and use function from eTraGo.
+            For more information see:
+            """
+
+            return storage_expansion(network=self.etrago.network,
+                                     **kwargs)
+
+        def _max_load(self, **kwargs):
+            """
+            Integrate and use function from eTraGo.
+            For more information see:
+            """
+
+            return max_load(network=self.etrago.network,
+                            **kwargs)
+
+        def _plot_q_flows(self):
+            """
+            Integrate and use function from eTraGo.
+            For more information see:
+            """
+
+            return plot_q_flows(network=self.etrago.network)
+
         def _line_loading(self, **kwargs):
             """
             Integrate and use function from eTraGo.
@@ -328,12 +391,13 @@ class eTraGoResults(egoBasic):
             """
             return gen_dist(network=self.etrago.network, **kwargs)
 
-        def _storage_distribution(self, **kwargs):
+        def _storage_distribution(self, scaling=1, **kwargs):
             """
             Integrate function from eTraGo.
             For more information see:
             """
-            return storage_distribution(network=self.etrago.network, **kwargs)
+            return storage_distribution(network=self.etrago.network,
+                                        scaling=1, **kwargs)
 
         def _voltage(self, **kwargs):
             """
@@ -349,13 +413,13 @@ class eTraGoResults(egoBasic):
             """
             return plot_residual_load(network=self.etrago.network, **kwargs)
 
-        def _line_loading_diff(self, networkB, **kwargs):
+        def _line_loading_diff(self, **kwargs):
             """
             Integrate function from eTraGo.
             For more information see:
             """
             return plot_line_loading_diff(networkA=self.etrago.network,
-                                          networkB=networkB, **kwargs)
+                                          **kwargs)
 
         def _nodal_gen_dispatch(self, **kwargs):
             """
@@ -455,7 +519,7 @@ class eGo(eDisGoResults):
                 append(_grid_ehv, ignore_index=True)
 
         _storage = None
-        if 'storages' in self.json_file['eTraGo']['extendable']:
+        if 'storage' in self.json_file['eTraGo']['extendable']:
             _storage = self.etrago.storage_investment_costs
             _storage['component'] = 'storage'
 
@@ -468,6 +532,7 @@ class eGo(eDisGoResults):
             _grid_mv_lv = self.edisgo.grid_investment_costs
             if _grid_mv_lv is not None:
                 _grid_mv_lv['component'] = 'grid'
+                _grid_mv_lv['differentiation'] = 'domestic'
 
                 self._total_inv_cost = self._total_inv_cost.\
                     append(_grid_mv_lv, ignore_index=True)
@@ -482,6 +547,13 @@ class eGo(eDisGoResults):
         if storage_mv_integration is True:
             if _grid_mv_lv is not None:
                 self._integrate_mv_storage_investment()
+
+        # sort values
+        self._total_investment_costs['voltage_level'] = pd.Categorical(
+            self._total_investment_costs['voltage_level'], ['ehv', 'hv', 'mv',
+                                                            'lv', 'mv/lv'])
+        self._total_investment_costs = (
+            self._total_investment_costs.sort_values('voltage_level'))
 
         self._storage_costs = _storage
         self._ehv_grid_costs = _grid_ehv
@@ -500,42 +572,49 @@ class eGo(eDisGoResults):
 
         integrated_share = mv_stor / total_stor
 
-        if integrated_share > 0:
-            ehv_stor_idx = costs_df.index[
-                (costs_df['component'] == 'storage')
-                & (costs_df['voltage_level'] == 'ehv')][0]
+        try:
 
-            int_capital_costs = costs_df.loc[ehv_stor_idx][
-                'capital_cost'
-            ] * integrated_share
-            int_overnight_costs = costs_df.loc[ehv_stor_idx][
-                'overnight_costs'
-            ] * integrated_share
+            if integrated_share > 0:
 
-            costs_df.at[
-                ehv_stor_idx,
-                'capital_cost'
-            ] = (
-                costs_df.loc[ehv_stor_idx]['capital_cost']
-                - int_capital_costs)
+                ehv_stor_idx = costs_df.index[
+                    (costs_df['component'] == 'storage')
+                    & (costs_df['voltage_level'] == 'ehv')][0]
 
-            costs_df.at[
-                ehv_stor_idx,
-                'overnight_costs'
-            ] = (
-                costs_df.loc[ehv_stor_idx]['overnight_costs']
-                - int_overnight_costs)
+                int_capital_costs = costs_df.loc[ehv_stor_idx][
+                    'capital_cost'
+                ] * integrated_share
+                int_overnight_costs = costs_df.loc[ehv_stor_idx][
+                    'overnight_costs'
+                ] * integrated_share
 
-            new_storage_row = {
-                'component': ['storage'],
-                'voltage_level': ['mv'],
-                'capital_cost': [int_capital_costs],
-                'overnight_costs': [int_overnight_costs]}
+                costs_df.at[
+                    ehv_stor_idx,
+                    'capital_cost'
+                ] = (
+                    costs_df.loc[ehv_stor_idx]['capital_cost']
+                    - int_capital_costs)
 
-            new_storage_row = pd.DataFrame(new_storage_row)
-            costs_df = costs_df.append(new_storage_row)
+                costs_df.at[
+                    ehv_stor_idx,
+                    'overnight_costs'
+                ] = (
+                    costs_df.loc[ehv_stor_idx]['overnight_costs']
+                    - int_overnight_costs)
 
-            self._total_investment_costs = costs_df
+                new_storage_row = {
+                    'component': ['storage'],
+                    'voltage_level': ['mv'],
+                    'differentiation': ['domestic'],
+                    'capital_cost': [int_capital_costs],
+                    'overnight_costs': [int_overnight_costs]}
+
+                new_storage_row = pd.DataFrame(new_storage_row)
+                costs_df = costs_df.append(new_storage_row)
+
+                self._total_investment_costs = costs_df
+        except:
+            logger.info(
+                'Something went wrong with the MV storage distribution.')
 
     def _calculate_all_extended_storages(self):
         """

@@ -28,6 +28,7 @@ logger = logging.getLogger('ego')
 if not 'READTHEDOCS' in os.environ:
     import pandas as pd
     import numpy as np
+    from etrago.tools.utilities import geolocation_buses
 
 __copyright__ = ("Europa-Universität Flensburg, "
                  "Centre for Sustainable Energy Systems")
@@ -103,7 +104,7 @@ def etrago_storages(network):
     return results
 
 
-def etrago_storages_investment(network, json_file):
+def etrago_storages_investment(network, json_file, session):
     """Calculate storage investment costs of eTraGo
 
     Parameters
@@ -119,20 +120,27 @@ def etrago_storages_investment(network, json_file):
         Storage costs of selected snapshots in [EUR]
 
     """
+    # check spelling of storages and storage
+    logger.info(json_file['eTraGo']['extendable'])
+
+    stos = 'storage'
+
     # check settings for extendable
-    if 'storages' not in json_file['eTraGo']['extendable']:
+    if stos not in json_file['eTraGo']['extendable']:
         logger.info("The optimizition was not using parameter "
-                    " 'extendable': storages"
-                    "No storages expantion costs from etrago")
+                    " 'extendable': storage"
+                    "No storage expantion costs from etrago")
 
-    if 'storages' in json_file['eTraGo']['extendable']:
+    if stos in json_file['eTraGo']['extendable']:
 
+        network = geolocation_buses(network, session)
         # get v_nom
-        _bus = pd.DataFrame(network.buses['v_nom'])
+        _bus = pd.DataFrame(network.buses[['v_nom', 'country_code']])
         _bus.index.name = "name"
         _bus.reset_index(level=0, inplace=True)
 
-        _storage = network.storage_units[network.storage_units.p_nom_opt != 0]
+        _storage = network.storage_units[
+            network.storage_units.p_nom_extendable == True]
         _storage.reset_index(level=0, inplace=True)
         # provide storage installation costs per voltage level
         installed_storages = \
@@ -152,9 +160,24 @@ def etrago_storages_investment(network, json_file):
                                    (installed_storages['v_nom'] >= 110)].index
         installed_storages.set_value(ix_hv, 'voltage_level', 'hv')
 
+        # add country differentiation
+        installed_storages['differentiation'] = 'none'
+
+        for idx, val in installed_storages.iterrows():
+
+            check = val['country_code']
+
+            if "DE" in check:
+                installed_storages['differentiation'][idx] = 'domestic'
+            if "DE" not in check:
+                installed_storages['differentiation'][idx] = 'foreign'
+
         storages_investment = installed_storages[
-            ['voltage_level', 'investment_costs']].groupby('voltage_level').\
-            sum().reset_index()
+            ['voltage_level', 'investment_costs',
+             'differentiation']].groupby(['differentiation',
+                                          'voltage_level']
+                                         ).sum().reset_index()
+
         storages_investment = storages_investment.\
             rename(columns={'investment_costs': 'capital_cost'})
 

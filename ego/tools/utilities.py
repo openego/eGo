@@ -29,6 +29,12 @@ import logging
 logger = logging.getLogger(__name__)
 
 from time import localtime, strftime
+if not 'READTHEDOCS' in os.environ:
+
+    from egoio.db_tables import model_draft, grid
+    from egoio.tools import db
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import scoped_session
 
 __copyright__ = ("Flensburg University of Applied Sciences, "
                  "Europa-Universität Flensburg, "
@@ -53,7 +59,7 @@ def define_logging(name):
 
     # ToDo: Logger should be set up more specific
     #       add pypsa and other logger INFO to ego.log
-    now = strftime("%Y-%m-%d_%H%M", localtime())
+    now = strftime("%Y-%m-%d_%H%M%S", localtime())
 
     log_dir = 'logs'
     if not os.path.exists(log_dir):
@@ -103,6 +109,9 @@ def get_scenario_setting(jsonpath='scenario_setting.json'):
 
     with open(path + '/' + jsonpath) as f:
         json_file = json.load(f)
+
+    # fix remove result_id
+    json_file['eGo'].update({'result_id': None})
 
     # check settings
     if (json_file['eGo']['eTraGo'] is False and json_file['eGo']['eDisGo']
@@ -159,13 +168,19 @@ def get_scenario_setting(jsonpath='scenario_setting.json'):
             json_file['eTraGo']['gridversion'] = None
 
         if json_file['eTraGo'].get('extendable') == "['network', 'storages']":
-            json_file['eTraGo'].update({'extendable': ['network', 'storages']})
+            json_file['eTraGo'].update({'extendable': ['network', 'storage']})
+
+        if json_file['eTraGo'].get('extendable') == "['network', 'storage']":
+            json_file['eTraGo'].update({'extendable': ['network', 'storage']})
 
         if json_file['eTraGo'].get('extendable') == "['network']":
             json_file['eTraGo'].update({'extendable': ['network']})
 
         if json_file['eTraGo'].get('extendable') == "['storages']":
-            json_file['eTraGo'].update({'extendable': ['storages']})
+            json_file['eTraGo'].update({'extendable': ['storage']})
+
+        if json_file['eTraGo'].get('extendable') == "['storage']":
+            json_file['eTraGo'].update({'extendable': ['storage']})
 
     if json_file['eGo'].get('eDisGo') == True:
         logger.info('Using and importing eDisGo settings')
@@ -216,3 +231,15 @@ def get_time_steps(json_file):
     time_step = end - start
 
     return time_step
+
+
+def open_oedb_session(ego):
+    """
+    """
+    _db_section = ego.json_file["eTraGo"]["db"]
+    conn = db.connection(section=_db_section)
+    session_factory = sessionmaker(bind=conn)
+    Session = scoped_session(session_factory)
+    session = Session()
+
+    return session

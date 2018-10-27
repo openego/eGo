@@ -22,6 +22,15 @@ can be found on
 
 .. contents::
 
+------------
+Installation
+------------
+
+.. code-block::
+
+   $ pip3 eGo --process-dependency-links
+
+
 ----------------------------
 Installing Developer Version
 ----------------------------
@@ -41,7 +50,7 @@ License
 
 © Europa-Universität Flensburg,
 © Flensburg University of Applied Sciences,
-  Centre for Sustainable Energy Systems
+*Centre for Sustainable Energy Systems*
 © DLR Institute for Networked Energy Systems,
 © Reiner-Lemoine-Institute"
 
