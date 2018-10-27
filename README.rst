@@ -77,3 +77,6 @@ this program. If not, see https://www.gnu.org/licenses/.
 .. |readthedocs| image:: https://readthedocs.org/projects/openego/badge/?version=master
     :target: http://openego.readthedocs.io/en/latest/?badge=master
     :alt: Documentation Status
+    
+.. |zenodo| image:: https://zenodo.org/badge/87306120.svg
+    :target: https://zenodo.org/badge/latestdoi/87306120
