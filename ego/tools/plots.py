@@ -615,8 +615,7 @@ def prepareGD(session, subst_id=None, version=None):
 
 def plot_edisgo_cluster(ego, filename, region=['DE'], display=False, dpi=150,
                         add_ehv_storage=False, grid_choice=None, title="",
-                        cmap="jet"
-                        ):
+                        cmap="jet", labelsize=10):
     """Plot the Clustering of selected Dingo networks
 
     Parameters
@@ -723,7 +722,7 @@ def plot_edisgo_cluster(ego, filename, region=['DE'], display=False, dpi=150,
 
     ax.set_title(title)
     # ax.legend(title="id of cluster representative")
-    ax.tick_params(labelsize=14)
+    ax.tick_params(labelsize=labelsize)
 
     # cb = plt.colorbar(ax)
     # cb.ax.tick_params(labelsize=17)
