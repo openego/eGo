@@ -1,5 +1,5 @@
-Release v0.3.3 (September 29, 2018)
-+++++++++++++++++++++++++++++++++++
+Release v0.3.3 (October 29, 2018)
++++++++++++++++++++++++++++++++++
 
 Add interactive map for documentation.
 

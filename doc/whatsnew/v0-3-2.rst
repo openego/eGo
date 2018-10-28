@@ -1,5 +1,5 @@
-Release v0.3.2 (September 27, 2018)
-+++++++++++++++++++++++++++++++++++
+Release v0.3.2 (October 27, 2018)
++++++++++++++++++++++++++++++++++
 
 Making eGo quotable with zenodo.
 
