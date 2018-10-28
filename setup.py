@@ -15,7 +15,7 @@ def read(fname):
 
 setup(
     name='eGo',
-    version='0.3.2',
+    version='0.3.3',
     author='wolfbunke, maltesc',
     author_email='wolf-dieter.bunke@uni-flensburg.de',
     description=("A cross-grid-level electricity grid and storage "
@@ -26,8 +26,7 @@ setup(
     packages=find_packages(),
     package_dir={'ego': 'ego'},
     include_package_data=True,
-    install_requires=['matplotlib == 3.0.0',
-                      'egoio == 0.4.5',
+    install_requires=['egoio == 0.4.5',
                       'ding0 == v0.1.9',
                       'pycallgraph', 
                       'eDisGo == v0.0.7',

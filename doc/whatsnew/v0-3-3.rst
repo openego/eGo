@@ -1,0 +1,16 @@
+Release v0.3.3 (September 29, 2018)
++++++++++++++++++++++++++++++++++++
+
+Add interactive map for documentation.
+
+Added features
+--------------
+
+* Create and add interactive result map
+
+Fixes
+-----
+
+* Fix bug of period calculation
+* removed duplicate matplotlib from setup.py 
+
