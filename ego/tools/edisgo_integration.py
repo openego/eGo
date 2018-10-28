@@ -800,9 +800,7 @@ class EDisGoNetworks:
                     self._edisgo_grids[g] = 'Timeout'
 
             self._csv_import = self._json_file['eDisGo']['results']
-            self._save_edisgo_results()
-            self._laod_edisgo_results()
-
+            
         else:
             logger.info('Run eDisGo sequencial')
             no_grids = len(self._grid_choice)
@@ -828,7 +826,9 @@ class EDisGoNetworks:
                         'MV grid {} failed: \n'.format(mv_grid_id)
                     )
                 count += 1
-
+                
+        self._save_edisgo_results()
+        self._laod_edisgo_results()
         self._run_finished = True
 
     def _run_edisgo(
