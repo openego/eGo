@@ -1642,7 +1642,7 @@ def iplot_totalresults_legend(mp, ego, start=False):
                        'annuity_costs']].to_html(index=False)
 
         # inclued grafic
-        filepath = "results/total_investment_costs_map.png"
+        filepath = "results/html/total_investment_costs_map.png"
         ego.plot_total_investment_costs(filename=filepath)
 
         url = "file://{}/{}".format(os.getcwd(), filepath)
