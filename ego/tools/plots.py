@@ -615,7 +615,7 @@ def prepareGD(session, subst_id=None, version=None):
 
 def plot_edisgo_cluster(ego, filename, region=['DE'], display=False, dpi=150,
                         add_ehv_storage=False, grid_choice=None, title="",
-                        cmap="jet", labelsize=10):
+                        cmap="jet", labelsize=10, fontsize=10):
     """Plot the Clustering of selected Dingo networks
 
     Parameters
@@ -728,7 +728,7 @@ def plot_edisgo_cluster(ego, filename, region=['DE'], display=False, dpi=150,
     # cb.ax.tick_params(labelsize=17)
 
     ax.set_ylabel("weighting of MV grid cluster in %",
-                  fontsize=17, rotation=270)
+                  fontsize=fontsize, rotation=270)
     ax.yaxis.set_label_coords(1.2, 0.5)
 
     ax.autoscale(tight=True)
