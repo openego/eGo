@@ -7,6 +7,7 @@ Added features
 --------------
 
 * Create and add interactive result map
+* Add workshop jupyter notebook to docs
 
 Fixes
 -----
