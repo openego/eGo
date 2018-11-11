@@ -101,7 +101,7 @@ def edisgo_convert_capital_costs(overnight_cost, t, p, json_file):
 
     year = 8760
     # get period of calculation
-    period = (json_file['eTraGo']['start_snapshot']
+    period = (json_file['eTraGo']['end_snapshot']
               - json_file['eTraGo']['start_snapshot'])
 
     # calculation of capital_cost
