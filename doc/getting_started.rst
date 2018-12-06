@@ -9,7 +9,7 @@ Steps to run eGo
 
 1. Are you registered on the OpenEnergy Platform?
    The registration for the public accessible API can be found on
-   `openenergy-platform.org/login `<http://openenergy-platform.org/login/>`_.
+   `openenergy-platform.org/login <http://openenergy-platform.org/login/>`_.
 
 2. You have Python 3 installed? Install for example the Python
    distribution of `<https://www.anaconda.com/download>`_.
