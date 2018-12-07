@@ -8,6 +8,12 @@ The python package eGo is a toolbox and also an application which combines
 based on PyPSA and **eDisGo** - a toolbox in itself capable of analyzing distribution
 grids for grid issues and evaluating measures responding these.
 
+.. figure:: images/eGo_integration.png
+   :width: 1055px
+   :height: 423px
+   :scale: 90%
+
+
 The open_eGo project
 ====================
 This software project is part of the research project

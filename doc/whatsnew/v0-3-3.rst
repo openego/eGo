@@ -1,0 +1,18 @@
+Release v0.3.3 (December 7, 2018)
++++++++++++++++++++++++++++++++++
+
+Add interactive map for documentation.
+
+Added features
+--------------
+
+* Create and add interactive result map
+* Add workshop jupyter notebook to docs
+
+Fixes
+-----
+
+* Fix bug of period calculation
+* removed duplicate matplotlib from setup.py 
+* fixed csv import
+

@@ -9,7 +9,7 @@ Steps to run eGo
 
 1. Are you registered on the OpenEnergy Platform?
    The registration for the public accessible API can be found on
-   `openenergy-platform.org/login `<http://openenergy-platform.org/login/>`_.
+   `openenergy-platform.org/login <http://openenergy-platform.org/login/>`_.
 
 2. You have Python 3 installed? Install for example the Python
    distribution of `<https://www.anaconda.com/download>`_.
@@ -65,21 +65,40 @@ Tutorials as Jupyter Notebook
 =============================
 
 Learn more about Jupyter Notebook and how to install and use it
-on `<http://jupyter.org/>`_.
+on `jupyter.org <http://jupyter.org/>`_.
 
 
-.. toctree::
-   :maxdepth: 2
-   
-   `OpenMod eTraGo Tutorial <https://github.com/openego/eGo/blob/master/ego/examples/tutorials/etrago_OpenMod_Zuerich18.ipynb>`_
+    `Workshop open_eGo Session eGo (in German) <https://nbviewer.jupyter.org/gist/wolfbunke/7659fbc22b9d72f0cda8dc544d1f537e>`_
+
+    `Workshop open_eGo Session eTraGo (in German) <https://nbviewer.jupyter.org/gist/ulfmueller/2c1fd6c4c29d606b313ab32bc0391dd2/eTraGo_Session_Workshop2018.ipynb>`_
+    
+    `Workshop open_eGo Session DinGo (in German) <https://nbviewer.jupyter.org/gist/nesnoj/6ee605cd3494fa6e3e848385c4afbe19/dingo_session.ipynb>`_
+
+    `Workshop open_eGo Session eDisGo (in German) <https://nbviewer.jupyter.org/gist/birgits/46aafa9d9bc860a47b18b0a1100d7dd7/edisgo_session.ipynb>`_
+    
+    `OpenMod eTraGo Tutorial (in English) <https://github.com/openego/eGo/blob/master/ego/examples/tutorials/etrago_OpenMod_Zuerich18.ipynb>`_
+    
 
 
 
-Example Cluster of Germany
-==========================
+eGo Result Example of Germany
+=============================
 
+
+A small example of the eGo results is displayed below. The full page can be found `here <https://openego.readthedocs.io/en/dev/_static/ego_example_iplot_map.html>`_
 
 
 .. raw:: html
-   :file: images/iplot_cluster.html
+   
+    <iframe src="_static/ego_example_iplot_map.html" height="450px" width="100%"></iframe>
+
+
+
+
+
+The plot is created by the eGo function:
+
+.. code-block:: python
+
+    ego.iplot
 

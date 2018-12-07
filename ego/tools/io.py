@@ -749,7 +749,8 @@ class eGo(eDisGoResults):
 
         return plot_storage_use(self, filename=filename, display=display)
 
-    def plot_edisgo_cluster(self, filename=None, display=False, **kwargs):
+    def plot_edisgo_cluster(self, filename=None, display=False,
+                            **kwargs):
         """ Plot the Clustering of selected Dingo networks
         """
         if filename is None:

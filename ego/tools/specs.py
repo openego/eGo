@@ -126,15 +126,15 @@ def get_etragospecs_direct(session,
     performance.update({'Generator Data Processing': t1-t0})
 
     conv_df = all_gens_df[~all_gens_df.name.isin(weather_dpdnt)]
-    
+
     conv_dsptch = pd.DataFrame(0.0,
                                index=snap_idx,
-                               columns=list(set(conv_df['name'])))    
+                               columns=list(set(conv_df['name'])))
     conv_reactive_power = pd.DataFrame(0.0,
-                                   index=snap_idx,
-                                   columns=list(set(conv_df['name'])))
-            
-    if not conv_df.empty:    
+                                       index=snap_idx,
+                                       columns=list(set(conv_df['name'])))
+
+    if not conv_df.empty:
         conventionals = True
         conv_cap = conv_df[['p_nom', 'name']].groupby('name').sum().T
 
@@ -146,23 +146,23 @@ def get_etragospecs_direct(session,
             conv_dsptch[source] = conv_dsptch[source] + p_norm
             if pf_post_lopf:
                 q = etrago_network.generators_t.q[str(generator_id)]
-                q_norm = q / conv_cap[source]['p_nom']  # q normalized with p_nom
+                # q normalized with p_nom
+                q_norm = q / conv_cap[source]['p_nom']
                 conv_reactive_power[source] = (
                     conv_reactive_power[source]
                     + q_norm)
-    
+
         if pf_post_lopf:
             new_columns = [
                 (col, '') for col in conv_reactive_power.columns
             ]
             conv_reactive_power.columns = pd.MultiIndex.from_tuples(
-                    new_columns)
+                new_columns)
 
     else:
         conventionals = False
         logger.warning('No conventional generators at bus {}'.format(bus_id))
 
-        
     # Renewables
     t2 = time.perf_counter()
     performance.update({'Conventional Dispatch': t2-t1})
@@ -170,7 +170,7 @@ def get_etragospecs_direct(session,
     ren_df = all_gens_df[all_gens_df.name.isin(weather_dpdnt)]
     if ren_df.empty:
         logger.warning('No renewable generators at bus {}'.format(bus_id))
-        
+
     for index, row in ren_df.iterrows():
         aggr_id = row['generator_id']
         if grid_version is None:
@@ -185,7 +185,7 @@ def get_etragospecs_direct(session,
                 ormclass_aggr_w.w_id
             ).filter(
                 ormclass_aggr_w.aggr_id == aggr_id,
-                ormclass_aggr_w.scn_name == scn_name,
+                #ormclass_aggr_w.scn_name == scn_name,
                 ormclass_aggr_w.version == grid_version
             ).limit(1).scalar()
 
@@ -336,7 +336,7 @@ def get_etragospecs_direct(session,
 
     if ext_found == False:
         logger.info(
-                "No extendable storage unit found at bus {}".format(bus_id))
+            "No extendable storage unit found at bus {}".format(bus_id))
 
     t4 = time.perf_counter()
     performance.update({'Storage Data Processing and Dispatch': t4-t3})

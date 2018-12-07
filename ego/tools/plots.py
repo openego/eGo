@@ -615,8 +615,7 @@ def prepareGD(session, subst_id=None, version=None):
 
 def plot_edisgo_cluster(ego, filename, region=['DE'], display=False, dpi=150,
                         add_ehv_storage=False, grid_choice=None, title="",
-                        cmap="jet"
-                        ):
+                        cmap="jet", labelsize=10, fontsize=10):
     """Plot the Clustering of selected Dingo networks
 
     Parameters
@@ -723,13 +722,13 @@ def plot_edisgo_cluster(ego, filename, region=['DE'], display=False, dpi=150,
 
     ax.set_title(title)
     # ax.legend(title="id of cluster representative")
-    ax.tick_params(labelsize=14)
+    ax.tick_params(labelsize=labelsize)
 
     # cb = plt.colorbar(ax)
     # cb.ax.tick_params(labelsize=17)
 
     ax.set_ylabel("weighting of MV grid cluster in %",
-                  fontsize=17, rotation=270)
+                  fontsize=fontsize, rotation=270)
     ax.yaxis.set_label_coords(1.2, 0.5)
 
     ax.autoscale(tight=True)
@@ -795,13 +794,13 @@ def igeoplot(ego, tiles=None, geoloc=None, save_image=False):
 
     # Legend name
     bus_group = folium.FeatureGroup(
-        name='Bus information (ehv/hv)', show=True)
+        name='Bus information (ehv/hv)')  # , show=True
 
     # create icon
-    url = 'https://raw.githubusercontent.com/openego/eGo/master/doc/images/{}'.format
-    icon_image = url('trafo.png')
-    bus_icon = CustomIcon(icon_image,
-                          icon_size=(27, 47))
+    #url = 'https://raw.githubusercontent.com/openego/eGo/master/doc/images/{}'.format
+    #icon_image = url('trafo.png')
+    # bus_icon = CustomIcon(icon_image,
+    #                      icon_size=(27, 47))
 
     # add buses
 
@@ -825,8 +824,8 @@ def igeoplot(ego, tiles=None, geoloc=None, save_image=False):
                     row['v_mag_pu_min'], row['v_mag_pu_max'],
                     row['sub_network'], version)
         # add Popup values use HTML for formating
-        folium.Marker([row["y"], row["x"]], popup=popup,
-                      icon=bus_icon).add_to(bus_group)
+        folium.Marker([row["y"], row["x"]], popup=popup
+                      ).add_to(bus_group)  # icon=bus_icon
 
     logger.info('Added Busses')
 
@@ -847,7 +846,8 @@ def igeoplot(ego, tiles=None, geoloc=None, save_image=False):
         return '#' + red + green + blue
 
     # Prepare lines
-    line_group = folium.FeatureGroup(name='Line Loading (ehv/hv)', show=False)
+    line_group = folium.FeatureGroup(
+        name='Line Loading (ehv/hv)')  # , show=False
 
     # get line Coordinates
     x0 = network.lines.bus0.map(network.buses.x)
@@ -941,7 +941,7 @@ def igeoplot(ego, tiles=None, geoloc=None, save_image=False):
 
     # Create ehv/hv storage expantion plot
     store_group = folium.FeatureGroup(
-        name='Storage expantion (ehv/hv)', show=True)
+        name='Storage expantion (ehv/hv)')  # , show=True
 
     stores = network.storage_units[network.storage_units.carrier ==
                                    'extendable_storage']
@@ -997,7 +997,7 @@ def igeoplot(ego, tiles=None, geoloc=None, save_image=False):
     if ego.json_file['eGo']['eDisGo'] is True:
 
         grid_group = folium.FeatureGroup(
-            name='Represented MV Grid district', show=False)
+            name='Represented MV Grid district')  # , show=False
 
         subst_id = list(ego.edisgo.grid_choice.the_selected_network_id)
         district = prepareGD(session, subst_id, version)
@@ -1048,7 +1048,7 @@ def igeoplot(ego, tiles=None, geoloc=None, save_image=False):
 
         # Add cluster grids
         repgrid_group = folium.FeatureGroup(
-            name='Represented MV Grids per Cluster', show=False)
+            name='Represented MV Grids per Cluster')  # , show=False
         cluster = ego.edisgo.grid_choice
         cluster = cluster.rename(
             columns={"the_selected_network_id": "subst_id"})
@@ -1105,7 +1105,7 @@ def igeoplot(ego, tiles=None, geoloc=None, save_image=False):
 
         # Prepare MV lines
         mv_line_group = folium.FeatureGroup(
-            name='MV Grids (>=10kV)', show=False)
+            name='MV Grids (>=10kV)')  # show=False
 
         mv_list = ego.edisgo.grid_choice.the_selected_network_id
 
@@ -1213,7 +1213,7 @@ def igeoplot(ego, tiles=None, geoloc=None, save_image=False):
         mp.add_child(mv_colormap)
         # Add MV Storage
         # Legend name
-        mv_sto_group = folium.FeatureGroup(name='MV storages',  show=False)
+        mv_sto_group = folium.FeatureGroup(name='MV storages')  # ,show=False
         # add mv storages
         mv_grid_id = list(ego.edisgo.grid_choice.the_selected_network_id)
 
@@ -1283,7 +1283,7 @@ def igeoplot(ego, tiles=None, geoloc=None, save_image=False):
         title_cancel='Exit me',
         force_separate_button=True).add_to(mp)
 
-    url = ('https://openego.readthedocs.io/en/release-v0.3.1/_images/open_ego_icon_web.png')
+    url = ('https://openego.readthedocs.io/en/master/_images/open_ego_icon_web.png')
     FloatImage(url, bottom=0, left=5).add_to(mp)
 
     if ego.json_file['eGo']['eDisGo'] is True:
@@ -1642,7 +1642,11 @@ def iplot_totalresults_legend(mp, ego, start=False):
                        'annuity_costs']].to_html(index=False)
 
         # inclued grafic
-        filepath = "results/total_investment_costs_map.png"
+        html_dir = 'results/html'
+        if not os.path.exists(html_dir):
+            os.makedirs(html_dir)
+
+        filepath = "results/html/total_investment_costs_map.png"
         ego.plot_total_investment_costs(filename=filepath)
 
         url = "file://{}/{}".format(os.getcwd(), filepath)
@@ -1664,7 +1668,7 @@ def iplot_totalresults_legend(mp, ego, start=False):
 
                     <div class='legend-title'>Total investment costs</div>
                       <div id="plot" style="width: 400px; height: 400px">
-                         <img src= $plot height="390" />
+                         <img src= $plot width="390" />
                        </div>
 
                         <div class='legend-scale'>
