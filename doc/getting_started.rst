@@ -85,7 +85,7 @@ eGo Result Example of Germany
 =============================
 
 
-A small example of the eGo results is displayed below. 
+A small example of the eGo results is displayed below. The full page can be found `here <https://openego.readthedocs.io/en/dev/_static/ego_example_iplot_map.html>`_
 
 
 .. raw:: html
@@ -93,7 +93,7 @@ A small example of the eGo results is displayed below.
     <iframe src="_static/ego_example_iplot_map.html" height="450px" width="100%"></iframe>
 
 
-The full page can be found `here <https://openego.readthedocs.io/en/dev/_static/ego_example_iplot_map.html>`_
+
 
 
 The plot is created by the eGo function:
