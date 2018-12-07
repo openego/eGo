@@ -1283,7 +1283,7 @@ def igeoplot(ego, tiles=None, geoloc=None, save_image=False):
         title_cancel='Exit me',
         force_separate_button=True).add_to(mp)
 
-    url = ('https://openego.readthedocs.io/en/release-v0.3.1/_images/open_ego_icon_web.png')
+    url = ('https://openego.readthedocs.io/en/master/_images/open_ego_icon_web.png')
     FloatImage(url, bottom=0, left=5).add_to(mp)
 
     if ego.json_file['eGo']['eDisGo'] is True:
@@ -1668,7 +1668,7 @@ def iplot_totalresults_legend(mp, ego, start=False):
 
                     <div class='legend-title'>Total investment costs</div>
                       <div id="plot" style="width: 400px; height: 400px">
-                         <img src= $plot height="390" />
+                         <img src= $plot width="390" />
                        </div>
 
                         <div class='legend-scale'>
