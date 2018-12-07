@@ -87,5 +87,5 @@ Example Cluster of Germany
 
 
 .. raw:: html
-   :file: images/iplot_cluster.html
+   :file: _static/ego_example_iplot_map.html
 
