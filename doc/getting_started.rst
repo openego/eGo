@@ -81,15 +81,24 @@ on `jupyter.org <http://jupyter.org/>`_.
 
 
 
-Example Cluster of Germany
-==========================
+eGo Result Example of Germany
+=============================
+
+
+A small example of the eGo results is displayed below. 
 
 
 .. raw:: html
    
-    <iframe src="_static/ego_example_iplot_map.html" height="345px" width="100%"></iframe>
+    <iframe src="_static/ego_example_iplot_map.html" height="450px" width="100%"></iframe>
 
 
+The full page can be found `here <https://openego.readthedocs.io/en/dev/_static/ego_example_iplot_map.html>`_
 
 
+The plot is created by the eGo function:
+
+.. code-block:: python
+
+    ego.iplot
 
