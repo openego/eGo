@@ -85,7 +85,11 @@ Example Cluster of Germany
 ==========================
 
 
-
 .. raw:: html
-   :file: _static/ego_example_iplot_map.html
+   
+    <iframe src="_static/ego_example_iplot_map.html" height="345px" width="100%"></iframe>
+
+
+
+
 
