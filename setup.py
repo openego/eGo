@@ -29,7 +29,7 @@ setup(
     install_requires=['egoio == 0.4.5',
                       'ding0 == v0.1.9',
                       'pycallgraph', 
-                      'eDisGo == v0.0.8',
+                      'eDisGo == v0.0.9',
                       'eTraGo == 0.7.1',
                       'scikit-learn == 0.19.0',
                       'pandas ==0.20.3',
