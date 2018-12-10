@@ -15,7 +15,7 @@ def read(fname):
 
 setup(
     name='eGo',
-    version='0.3.3',
+    version='0.3.4',
     author='wolfbunke, maltesc',
     author_email='wolf-dieter.bunke@uni-flensburg.de',
     description=("A cross-grid-level electricity grid and storage "
