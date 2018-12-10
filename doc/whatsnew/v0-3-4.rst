@@ -1,0 +1,10 @@
+Release v0.3.4 (December 10, 2018)
+++++++++++++++++++++++++++++++++++
+
+Update eDisGo release.
+
+Added features
+--------------
+
+* Update eDisGo version from 0.0.8 to 0.0.9
+
