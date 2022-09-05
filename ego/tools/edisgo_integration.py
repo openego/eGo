@@ -94,9 +94,6 @@ class EDisGoNetworks:
         self._etrago_network = _ETraGoData(etrago_network)
         del etrago_network
 
-        # eDisGo specific naming
-        self._edisgo_scenario_translation()
-
         # Program information
         self._run_finished = False
 
@@ -523,16 +520,6 @@ class EDisGoNetworks:
             self._versioned = True
         else:
             self._versioned = False
-
-    def _edisgo_scenario_translation(self):
-
-        # Scenario translation
-        if self._scn_name == 'Status Quo':
-            self._generator_scn = None
-        elif self._scn_name == 'NEP 2035':
-            self._generator_scn = 'nep2035'
-        elif self._scn_name == 'eGo 100':
-            self._generator_scn = 'ego100'
 
     def _successfull_grids(self):
         """
