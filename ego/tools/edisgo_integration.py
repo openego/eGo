@@ -49,10 +49,10 @@ if not 'READTHEDOCS' in os.environ:
     from egoio.db_tables import model_draft, grid
     from egoio.tools import db
 
-    from edisgo.grid.network import Results, TimeSeriesControl
-    from edisgo.grid import tools
+    from edisgo.edisgo import import_edisgo_from_files, EDisGo
+    from edisgo.network.results import Results
+    from edisgo.tools import tools
     from edisgo.tools.plots import mv_grid_topology
-    from edisgo.grid.network import EDisGo
 
     from ego.tools.specs import (
         get_etragospecs_direct
