@@ -1246,23 +1246,33 @@ class EDisGoNetworks:
 
 class _ETraGoData:
     """
-    Container for minimal eTraGo network. This minimal network is required
-    for the parallelization of eDisGo.
+    Container for minimal eTraGo network.
+
+    This minimal network only contains information relevant for eDisGo.
+
+    Parameters
+    ----------
+    etrago_network : :pypsa:`PyPSA.Network<network>`
 
     """
 
     def __init__(self, etrago_network):
 
-        self.snapshots = getattr(
-            etrago_network, "snapshots")
-        self.storage_units = getattr(
-            etrago_network, "storage_units")
-        self.storage_units_t = getattr(
-            etrago_network, "storage_units_t")
-        self.generators = getattr(
-            etrago_network, "generators")
-        self.generators_t = getattr(
-            etrago_network, "generators_t")
+        # define needed attributes
+        # ToDo Further attributes needed? Only _t.p?
+        attr_list = [
+            "snapshots",  # nichts filtern
+            "storage_units",  # Batteriekapazität pro MV grid, filter battery (eTraGo function filter_by_carrier)
+            "storage_units_t",  # Batterie dispatch, p, battery
+            "stores",  # thermal storage capacity
+            "generators",
+            "generators_t",  # Info über Abregelung und Einsatz von regelbaren Kraftwerken
+            "links",
+            "links_t",  #  DSM, HP (eTraGo function filter_by_carrier)
+            "loads_t",
+        ]
+        for attr in attr_list:
+            setattr(self, attr, getattr(etrago_network, attr))
 
 
 class _EDisGoImported:
