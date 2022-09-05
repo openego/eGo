@@ -86,6 +86,7 @@ napoleon_use_keyword = False
 # Dictionary of external links
 extlinks = {'pandas':('http://pandas.pydata.org/pandas-docs/stable/api.html#%s',
                       'pandas.'),
+            "pypsa": ("https://pypsa.readthedocs.io/en/latest/components.html#%s", "pypsa"),
             'sqlalchemy':('http://docs.sqlalchemy.org/en/latest/orm/session_basics.html%s',
                       'SQLAlchemy session object'),
             'shapely':('http://toblerity.org/shapely/manual.html#%s',

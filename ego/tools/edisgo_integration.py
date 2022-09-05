@@ -104,7 +104,7 @@ class EDisGoNetworks:
         self._edisgo_grids = {}
 
         if self._csv_import:
-            self._laod_edisgo_results()
+            self._load_edisgo_results()
             self._successfull_grids = self._successfull_grids()
             self._grid_investment_costs = edisgo_grid_investment(
                 self,
@@ -353,7 +353,7 @@ class EDisGoNetworks:
 
     def _status_update(self, mv_grid_id, time, message=None, show=True):
         """
-        Updtaed eDisGo's status files
+        Updated eDisGo's status files
         """
         status = pd.read_csv(
             self._status_path,
@@ -827,7 +827,7 @@ class EDisGoNetworks:
 
         self._csv_import = self._json_file['eDisGo']['results']
         self._save_edisgo_results()
-        self._laod_edisgo_results()
+        self._load_edisgo_results()
         self._run_finished = True
 
     def _run_edisgo(
@@ -1072,7 +1072,7 @@ class EDisGoNetworks:
 
         self._grid_choice.to_csv(self._results + '/grid_choice.csv')
 
-    def _laod_edisgo_results(self):
+    def _load_edisgo_results(self):
 
         # Load the grid choice form CSV
         self._grid_choice = pd.read_csv(
@@ -1085,72 +1085,19 @@ class EDisGoNetworks:
             mv_grid_id = int(row['the_selected_network_id'])
 
             try:
-                # Grid expansion costs
-                file_path = os.path.join(
-                    self._csv_import,
-                    str(mv_grid_id),
-                    'grid_expansion_results',
-                    'grid_expansion_costs.csv')
-
-                grid_expansion_costs = pd.read_csv(
-                    file_path,
-                    index_col=0)
-
-                # powerflow results
-                pf_path = os.path.join(
-                    self._csv_import,
-                    str(mv_grid_id),
-                    'powerflow_results',
-                    'apparent_powers.csv')
-
-                s_res = pd.read_csv(
-                    pf_path,
-                    index_col=0,
-                    parse_dates=True)
-
-                # Configs
-                config_path = os.path.join(
-                    self._csv_import,
-                    str(mv_grid_id),
-                    'configs.csv')
-
-                edisgo_config = {}
-                with open(config_path, 'r') as f:
-                    reader = csv.reader(f)
-                    for row in reader:
-                        a = iter(row[1:])
-                        edisgo_config[row[0]] = dict(zip(a, a))
-
-                # PyPSA network
-                pypsa_path = os.path.join(
-                    self._csv_import,
-                    str(mv_grid_id),
-                    'pypsa_network')
-
-                imported_pypsa = pypsa.Network()
-                imported_pypsa.import_from_csv_folder(pypsa_path)
-
-                # Storages
-                storage_path = os.path.join(
-                    self._csv_import,
-                    str(mv_grid_id),
-                    'storage_integration_results',
-                    'storages.csv')
-
-                if os.path.exists(storage_path):
-                    storages = pd.read_csv(
-                        storage_path,
-                        index_col=0)
-                else:
-                    storages = pd.DataFrame(
-                        columns=['nominal_power', 'voltage_level'])
-
-                edisgo_grid = _EDisGoImported(
-                    grid_expansion_costs,
-                    s_res,
-                    storages,
-                    imported_pypsa,
-                    edisgo_config)
+                edisgo_grid = import_edisgo_from_files(
+                    edisgo_path=os.path.join(
+                        self._csv_import,
+                        str(mv_grid_id)),
+                    import_topology=True,
+                    import_timeseries=False,
+                    import_results=True,
+                    import_electromobility=False,
+                    from_zip_archive=True,
+                    dtype="float32",
+                    parameters={"powerflow_results": ["pfa_p", "pfa_q"],
+                                "grid_expansion_results": ["grid_expansion_costs"]}
+                )
 
                 self._edisgo_grids[
                     mv_grid_id
@@ -1273,69 +1220,6 @@ class _ETraGoData:
         ]
         for attr in attr_list:
             setattr(self, attr, getattr(etrago_network, attr))
-
-
-class _EDisGoImported:
-    """
-    Imported (reduced) eDisGo class.
-    This class allows the import reduction to only the attributes used in eGo
-    """
-
-    def __init__(
-            self,
-            grid_expansion_costs,
-            s_res,
-            storages,
-            pypsa,
-            edisgo_config):
-
-        self.network = _NetworkImported(
-            grid_expansion_costs,
-            s_res,
-            storages,
-            pypsa,
-            edisgo_config)
-
-
-class _NetworkImported:
-    """
-    Reduced eDisG network class, used of eGo's reimport
-    """
-
-    def __init__(
-            self,
-            grid_expansion_costs,
-            s_res,
-            storages,
-            pypsa,
-            edisgo_config):
-
-        self.results = _ResultsImported(
-            grid_expansion_costs,
-            s_res,
-            storages)
-
-        self.pypsa = pypsa
-        self.config = edisgo_config
-
-
-class _ResultsImported:
-    """
-    Reduced eDisG results class, used of eGo's reimport
-    """
-
-    def __init__(
-            self,
-            grid_expansion_costs,
-            s_res,
-            storages):
-
-        self.grid_expansion_costs = grid_expansion_costs
-        self.storages = storages
-        self._s_res = s_res
-
-    def s_res(self):
-        return self._s_res
 
 
 def parallelizer(
