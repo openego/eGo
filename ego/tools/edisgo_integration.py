@@ -1391,69 +1391,6 @@ class _ETraGoData:
         )
 
 
-class _EDisGoImported:
-    """
-    Imported (reduced) eDisGo class.
-    This class allows the import reduction to only the attributes used in eGo
-    """
-
-    def __init__(
-            self,
-            grid_expansion_costs,
-            s_res,
-            storages,
-            pypsa,
-            edisgo_config):
-
-        self.network = _NetworkImported(
-            grid_expansion_costs,
-            s_res,
-            storages,
-            pypsa,
-            edisgo_config)
-
-
-class _NetworkImported:
-    """
-    Reduced eDisG network class, used of eGo's reimport
-    """
-
-    def __init__(
-            self,
-            grid_expansion_costs,
-            s_res,
-            storages,
-            pypsa,
-            edisgo_config):
-
-        self.results = _ResultsImported(
-            grid_expansion_costs,
-            s_res,
-            storages)
-
-        self.pypsa = pypsa
-        self.config = edisgo_config
-
-
-class _ResultsImported:
-    """
-    Reduced eDisG results class, used of eGo's reimport
-    """
-
-    def __init__(
-            self,
-            grid_expansion_costs,
-            s_res,
-            storages):
-
-        self.grid_expansion_costs = grid_expansion_costs
-        self.storages = storages
-        self._s_res = s_res
-
-    def s_res(self):
-        return self._s_res
-
-
 def parallelizer(
         ding0_id_list,
         func,
