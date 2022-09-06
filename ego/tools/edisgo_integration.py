@@ -860,28 +860,32 @@ class EDisGoNetworks:
             self._max_cos_phi_renewable)
         Session.remove()
 
-        # Get ding0 (MV grid) form folder
-        ding0_filepath = (
-            self._ding0_files
-            + '/ding0_grids__'
-            + str(mv_grid_id)
-            + '.pkl')
+        # get ding0 MV grid path
+        ding0_grid_path = os.path.join(
+            self._ding0_path,
+            str(mv_grid_id))
 
-        if not os.path.isfile(ding0_filepath):
-            msg = 'No MV grid file for MV grid {}'.format(mv_grid_id)
+        if not os.path.isdir(ding0_grid_path):
+            msg = 'No grid data for MV grid {}'.format(mv_grid_id)
             logger.error(msg)
             raise Exception(msg)
 
-        # Initalize eDisGo with this MV grid
-        logger.info(("MV grid {}: Initialize MV grid").format(mv_grid_id))
 
-        edisgo_grid = EDisGo(ding0_grid=ding0_filepath,
-                             worst_case_analysis='worst-case')
+
+        # Initialize MV grid
+        logger.info(f"MV grid {mv_grid_id}: Initialize MV grid")
+
+        edisgo_grid = EDisGo(
+            ding0_grid=ding0_grid_path
+        )
+
+        # ##################### Conduct initial grid reinforcement ####################
+        edisgo_grid.set_time_series_worst_case_analysis()
 
         logger.info(("MV grid {}: Changing eDisGo's voltage configurations "
                      + "for initial reinforcement").format(mv_grid_id))
 
-        edisgo_grid.network.config[
+        edisgo_grid.config[
             'grid_expansion_allowed_voltage_deviations'] = {
             'hv_mv_trafo_offset': 0.04,
                 'hv_mv_trafo_control_deviation': 0.0,
@@ -902,12 +906,12 @@ class EDisGoNetworks:
         # Get costs for initial reinforcement
         # TODO: Implement a separate cost function
         costs_grouped = \
-            edisgo_grid.network.results.grid_expansion_costs.groupby(
+            edisgo_grid.results.grid_expansion_costs.groupby(
                 ['type']).sum()
         costs = pd.DataFrame(
             costs_grouped.values,
             columns=costs_grouped.columns,
-            index=[[edisgo_grid.network.id] * len(costs_grouped),
+            index=[[edisgo_grid.topology.id] * len(costs_grouped),
                    costs_grouped.index]).reset_index()
         costs.rename(columns={'level_0': 'grid'}, inplace=True)
 
@@ -923,10 +927,14 @@ class EDisGoNetworks:
         logger.info((
             "MV grid {}: Resetting grid after initial reinforcement"
         ).format(mv_grid_id))
-        edisgo_grid.network.results = Results(edisgo_grid.network)
+        edisgo_grid.results = Results(edisgo_grid)
         # Reload the (original) eDisGo configs
-        edisgo_grid.network.config = None
+        edisgo_grid.config = "default"
+        edisgo_grid.timeseries = TimeSeries(
+            timeindex=specs['conv_dispatch'].index
+        )
 
+        # ###########################################################################
         # eTraGo case begins here
         logger.info("MV grid {}: eTraGo feed-in case".format(mv_grid_id))
 
@@ -936,7 +944,18 @@ class EDisGoNetworks:
         # Update configs with eGo's scenario settings
         self._update_edisgo_configs(edisgo_grid)
 
-        # Generator import for NEP 2035 and eGo 100 scenarios
+        # Set conventional load time series (active and reactive power)
+        edisgo_grid.set_time_series_active_power_predefined(
+            conventional_loads_ts="oedb"
+        )
+        edisgo_grid.set_time_series_reactive_power_control(
+            control="fixed_cosphi",
+            generators_parametrisation=None,
+            loads_parametrisation="default",
+            storage_units_parametrisation=None
+        )
+
+        # Generator import for future scenario
         if self._generator_scn:
             logger.info(
                 'Importing generators for scenario {}'.format(
@@ -949,61 +968,85 @@ class EDisGoNetworks:
                 'No generators imported for scenario {}'.format(
                     self._scn_name)
             )
-            edisgo_grid.network.pypsa = None
 
-        # Time Series from eTraGo
-        logger.info('Updating eDisGo timeseries with eTraGo values')
+        # Set dispatchable generator time series
+        # Active power
+        edisgo_grid.set_time_series_active_power_predefined(
+            dispatchable_generators_ts=specs['conv_dispatch'],
+        )
+        # Reactive power
+        gens = edisgo_grid.topology.generators_df[
+            ~edisgo_grid.topology.generators_df.type.isin(["solar", "wind"])
+        ].index
         if self._pf_post_lopf:
-            logger.info('(Including reactive power)')
-            edisgo_grid.network.timeseries = TimeSeriesControl(
-                network=edisgo_grid.network,
-                timeseries_generation_fluctuating=specs['ren_potential'],
-                timeseries_generation_dispatchable=specs['conv_dispatch'],
-                timeseries_generation_reactive_power=specs['reactive_power'],
-                timeseries_load='demandlib',
-                timeindex=specs['conv_dispatch'].index).timeseries
+            # ToDo Use eTraGo time series to set reactive power (scale by nominal power)
+            edisgo_grid.set_time_series_manual(
+                generators_q=specs['reactive_power'].loc[:, []],
+            )
+            pass
         else:
-            logger.info('(Only active power)')
-            edisgo_grid.network.timeseries = TimeSeriesControl(
-                network=edisgo_grid.network,
-                timeseries_generation_fluctuating=specs['ren_potential'],
-                timeseries_generation_dispatchable=specs['conv_dispatch'],
-                timeseries_load='demandlib',
-                timeindex=specs['conv_dispatch'].index).timeseries
+            edisgo_grid.set_time_series_reactive_power_control(
+                generators_parametrisation=pd.DataFrame(
+                    {
+                        "components": [[gens]],
+                        "mode": ["default"],
+                        "power_factor": ["default"],
+                    },
+                    index=[1],
+                ),
+                loads_parametrisation=None,
+                storage_units_parametrisation=None
+            )
 
-        # Curtailment
-        if apply_curtailment:
-            logger.info('Including Curtailment')
-
-            gens_df = tools.get_gen_info(edisgo_grid.network)
-            solar_wind_capacities = gens_df.groupby(
-                by=['type', 'weather_cell_id']
-            )['nominal_capacity'].sum()
-
-            curt_cols = [
-                i for i in specs['ren_curtailment'].columns
-                if i in solar_wind_capacities.index
-            ]
-
-            if not curt_cols:
-                raise ImportError(
-                    ("MV grid {}: Data doesn't match").format(mv_grid_id))
-
-            curt_abs = pd.DataFrame(
-                columns=pd.MultiIndex.from_tuples(curt_cols))
-
-            for col in curt_abs:
-                curt_abs[col] = (
-                    specs['ren_curtailment'][col]
-                    * solar_wind_capacities[col])
-
-            edisgo_grid.curtail(
-                curtailment_timeseries=curt_abs,
-                methodology='voltage-based',
-                solver=self._solver,
-                voltage_threshold=self._curtailment_voltage_threshold)
+        # Set fluctuating generator time series
+        # Active power
+        edisgo_grid.set_time_series_active_power_predefined(
+            fluctuating_generators_ts=specs['ren_potential'],
+        )
+        # Reactive power
+        gens = edisgo_grid.topology.generators_df[
+            ~edisgo_grid.topology.generators_df.type.isin(["solar", "wind"])
+        ].index
+        if self._pf_post_lopf:
+            # ToDo Use eTraGo time series to set reactive power (scale by nominal power)
+            edisgo_grid.set_time_series_manual(
+                generators_q=specs['reactive_power'].loc[:, []]
+            )
+            pass
         else:
-            logger.info('No curtailment applied')
+
+            edisgo_grid.set_time_series_reactive_power_control(
+                generators_parametrisation=pd.DataFrame(
+                    {
+                        "components": [[gens]],
+                        "mode": ["default"],
+                        "power_factor": ["default"],
+                    },
+                    index=[1],
+                ),
+                loads_parametrisation=None,
+                storage_units_parametrisation=None
+            )
+
+        # Get curtailment requirements
+        gens_df = edisgo_grid.topology.generators_df
+        solar_wind_capacities = gens_df.groupby(
+            by=['type', 'weather_cell_id']
+        )['nominal_capacity'].sum()
+        curt_cols = [
+            i for i in specs['ren_curtailment'].columns
+            if i in solar_wind_capacities.index
+        ]
+        if not curt_cols:
+            raise ImportError(
+                f"MV grid {mv_grid_id}: Data doesn't match"
+            )
+        curt_abs = pd.DataFrame(
+            columns=pd.MultiIndex.from_tuples(curt_cols))
+        for col in curt_abs:
+            curt_abs[col] = (
+                specs['ren_curtailment'][col]
+                * solar_wind_capacities[col])
 
         # Storage Integration
         costs_without_storage = None
@@ -1023,29 +1066,41 @@ class EDisGoNetworks:
         else:
             logger.info('No storage integration')
 
-        logger.info("MV grid {}: eDisGo grid analysis".format(mv_grid_id))
-
+        # ToDo Call optimisation
         edisgo_grid.reinforce(timesteps_pfa=self._timesteps_pfa)
 
+        # ToDo Is the following still necessary?
         if costs_without_storage is not None:
             costs_with_storage = (
-                edisgo_grid.network.results.grid_expansion_costs[
+                edisgo_grid.results.grid_expansion_costs[
                     'total_costs'].sum())
             if costs_with_storage >= costs_without_storage:
                 logger.warning(
                     "Storage did not benefit MV grid {}".format(
                         mv_grid_id))
-                st = edisgo_grid.network.mv_grid.graph.nodes_by_attribute(
-                    'storage')
-                for storage in st:
-                    tools.disconnect_storage(edisgo_grid.network, storage)
+                storage_units = edisgo_grid.topology.storage_units_df
+                for storage in storage_units.index:
+                    edisgo_grid.topology.remove_storage_unit(storage)
 
         self._status_update(mv_grid_id, 'end')
 
         path = os.path.join(self._results, str(mv_grid_id))
-        edisgo_grid.network.results.save(path)
+        edisgo_grid.save(
+            directory=path,
+            save_topology=True,
+            save_timeseries=True,
+            save_results=True,
+            save_electromobility=False,
+            reduce_memory=True,
+            archive=True,
+            archive_type="zip",
+            parameters={
+                "powerflow_results": ["pfa_p", "pfa_q", "v_res"],
+                "grid_expansion_results": ["grid_expansion_costs", "equipment_changes"]
+            }
+        )
 
-        return {edisgo_grid.network.id: path}
+        return {edisgo_grid.topology.id: path}
 
     def _save_edisgo_results(self):
 
