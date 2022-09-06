@@ -41,18 +41,22 @@ if not 'READTHEDOCS' in os.environ:
     
 logger = logging.getLogger(__name__)
 
-def analyze_attributes(ding0_files):
+
+def analyze_attributes(ding0_path):
     """
     Calculates the attributes wind and solar capacity and farthest node
-    for all files in ding0_files. Results are written to ding0_files
-    
+    for all grids in ding0_path. Results are written to ding0_path
+
+    # ToDo Revise! Which attributes do we want to cluster by and where can they be
+    #  obtained from? eGon_data needs to be finished for this.
+
     Parameters
     ----------
-    ding0_files : :obj:`str`
+    ding0_path : :obj:`str`
         Path to ding0 files
         
     """
-    base_path = ding0_files
+    base_path = ding0_path
 
     not_found = []
     tccs = []  # Total Cumulative Capacity of Solar
@@ -197,8 +201,6 @@ def cluster_mv_grids(
     
     Parameters
     ----------
-    ding0_files : :obj:`str`
-        Path to ding0 files
     no_grids : int
         Desired number of clusters (of MV grids)
         

@@ -548,7 +548,7 @@ class EDisGoNetworks:
         These are considered the "standard" attributes for the MV grid
         clustering.
         """
-        analyze_attributes(self._ding0_files)
+        analyze_attributes(self._ding0_path)
 
     def _cluster_mv_grids(
             self,
@@ -572,14 +572,14 @@ class EDisGoNetworks:
         # TODO: This first dataframe contains the standard attributes...
         # ...Create an Interface in order to use attributes more flexibly.
         # Make this function more generic.
-        attributes_path = self._ding0_files + '/attributes.csv'
+        attributes_path = self._ding0_path + '/attributes.csv'
 
         if not os.path.isfile(attributes_path):
             logger.info('Attributes file is missing')
             logger.info('Attributes will be calculated')
             self._analyze_cluster_attributes()
 
-        df = pd.read_csv(self._ding0_files + '/attributes.csv')
+        df = pd.read_csv(self._ding0_path + '/attributes.csv')
         df = df.set_index('id')
         df.drop(['Unnamed: 0'], inplace=True, axis=1)
         df.rename(
@@ -682,7 +682,7 @@ class EDisGoNetworks:
 
         """
         mv_grids = []
-        for file in os.listdir(self._ding0_files):
+        for file in os.listdir(self._ding0_path):
             if file.endswith('.pkl'):
                 mv_grids.append(
                     int(file.replace(

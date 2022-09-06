@@ -41,7 +41,7 @@
   "eDisGo": {
     "db": "oedb",
     "gridversion": "v0.4.5",
-    "ding0_files": "/path/to_your/.dingo/grids",
+    "ding0_path": "/path/to_your/.dingo/grids",
     "choice_mode": "cluster",
     "cluster_attributes":["farthest_node", "wind_cap", "solar_cap", "extended_storage"],
     "only_cluster": false,
