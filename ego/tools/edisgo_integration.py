@@ -102,7 +102,7 @@ class EDisGoNetworks:
 
         if self._csv_import:
             self._load_edisgo_results()
-            self._successfull_grids = self._successfull_grids()
+            self._successful_grids = self._successful_grids()
             self._grid_investment_costs = edisgo_grid_investment(
                 self,
                 self._json_file
@@ -124,7 +124,7 @@ class EDisGoNetworks:
                 if self._results:
                     self._save_edisgo_results()
 
-                self._successfull_grids = self._successfull_grids()
+                self._successful_grids = self._successful_grids()
 
                 self._grid_investment_costs = edisgo_grid_investment(
                     self,
@@ -158,7 +158,7 @@ class EDisGoNetworks:
         return self._grid_choice
 
     @property
-    def successfull_grids(self):
+    def successful_grids(self):
         """
         Relative number of successfully calculated MV grids
         (Includes clustering weighting)
@@ -169,7 +169,7 @@ class EDisGoNetworks:
             Relative number of grids
 
         """
-        return self._successfull_grids
+        return self._successful_grids
 
     @property
     def grid_investment_costs(self):
