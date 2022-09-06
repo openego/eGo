@@ -1192,21 +1192,182 @@ class _ETraGoData:
 
     def __init__(self, etrago_network):
 
-        # define needed attributes
-        # ToDo Further attributes needed? Only _t.p?
-        attr_list = [
-            "snapshots",  # nichts filtern
-            "storage_units",  # Batteriekapazität pro MV grid, filter battery (eTraGo function filter_by_carrier)
-            "storage_units_t",  # Batterie dispatch, p, battery
-            "stores",  # thermal storage capacity
-            "generators",
-            "generators_t",  # Info über Abregelung und Einsatz von regelbaren Kraftwerken
+        def filter_by_carrier(
+            etrago_network_obj, component, carrier, like=True, timeseries=True
+        ):
+            def filter_df_by_carrier(df):
+                if isinstance(carrier, str):
+                    if like:
+                        return df[df.carrier.str.contains(carrier)]
+                    else:
+                        return df[df.carrier == carrier]
+                elif isinstance(carrier, list):
+                    return df[df.carrier.isin(carrier)]
+                elif carrier is None:
+                    return df
+
+            if timeseries:
+                attribute_to_save = {
+                    "links": "p0",
+                    "generators": "p",
+                    "stores": "p",
+                    "storage_units": "p",
+                }
+                attribute_to_save = attribute_to_save[component]
+
+                df_to_filter = getattr(
+                    getattr(etrago_network_obj, component + "_t"), attribute_to_save
+                )
+                df = df_to_filter.loc[
+                    :,
+                    filter_df_by_carrier(getattr(etrago_network_obj, component)).index,
+                ]
+            else:
+                columns_to_save = {
+                    "links": ["carrier", "p_nom"],
+                    "generators": ["carrier", "p_nom"],
+                    "stores": ["carrier", "e_nom"],
+                    "storage_units": ["carrier", "p_nom", "max_hours"],
+                }
+                columns_to_save = columns_to_save[component]
+
+                df_to_filter = getattr(etrago_network_obj, component)
+                df = filter_df_by_carrier(df_to_filter)
+                df = df[columns_to_save]
+
+            logger.debug(
+                f"{component}, {carrier}, {timeseries}, {df.shape}, "
+                f"{filter_df_by_carrier(getattr(etrago_network_obj, component)).carrier.unique()}"
+            )
+
+            return df
+
+        logger.debug(
+            f"Carriers in links {etrago_network.network.links.carrier.unique()}"
+        )
+        logger.debug(
+            f"Carriers in generators {etrago_network.network.generators.carrier.unique()}"
+        )
+        logger.debug(
+            f"Carriers in stores {etrago_network.network.stores.carrier.unique()}"
+        )
+        logger.debug(
+            f"Carriers in storage_units {etrago_network.network.storage_units.carrier.unique()}"
+        )
+
+        self.snapshots = etrago_network.network.snapshots
+
+        self.bev_charger = filter_by_carrier(
+            etrago_network.network, "links", "BEV", timeseries=False
+        )
+        self.bev_charger_t = filter_by_carrier(
+            etrago_network.network, "links", "BEV", timeseries=True
+        )
+        self.dsm = filter_by_carrier(
+            etrago_network.network, "links", "dsm", timeseries=False
+        )
+        self.dsm_t = filter_by_carrier(
+            etrago_network.network, "links", "dsm", timeseries=True
+        )
+
+        self.rural_heat_t = filter_by_carrier(
+            etrago_network.network, "links", "rural_heat_pump", timeseries=True
+        )
+        self.rural_heat_store = filter_by_carrier(
+            etrago_network.network, "stores", "rural_heat_store", timeseries=False
+        )
+
+        self.central_heat_t = filter_by_carrier(
+            etrago_network.network,
             "links",
-            "links_t",  #  DSM, HP (eTraGo function filter_by_carrier)
-            "loads_t",
-        ]
-        for attr in attr_list:
-            setattr(self, attr, getattr(etrago_network, attr))
+            ["central_heat_pump", "central_resistive_heater"],
+            timeseries=True,
+        )
+        self.central_heat_store = filter_by_carrier(
+            etrago_network.network, "stores", "central_heat_store", timeseries=False
+        )
+
+        self.central_gas_chp_t = filter_by_carrier(
+            etrago_network.network, "links", "central_gas_chp_t", timeseries=True
+        )
+
+        #
+        self.generators = filter_by_carrier(
+            etrago_network.network, "generators", None, timeseries=False
+        )
+        self.generators_t = filter_by_carrier(
+            etrago_network.network, "generators", None, timeseries=True
+        )
+
+        self.battery_storage_units = filter_by_carrier(
+            etrago_network.network, "storage_units", "battery", timeseries=False
+        )
+        self.battery_storage_units_t = filter_by_carrier(
+            etrago_network.network, "storage_units", "battery", timeseries=True
+        )
+
+
+class _EDisGoImported:
+    """
+    Imported (reduced) eDisGo class.
+    This class allows the import reduction to only the attributes used in eGo
+    """
+
+    def __init__(
+            self,
+            grid_expansion_costs,
+            s_res,
+            storages,
+            pypsa,
+            edisgo_config):
+
+        self.network = _NetworkImported(
+            grid_expansion_costs,
+            s_res,
+            storages,
+            pypsa,
+            edisgo_config)
+
+
+class _NetworkImported:
+    """
+    Reduced eDisG network class, used of eGo's reimport
+    """
+
+    def __init__(
+            self,
+            grid_expansion_costs,
+            s_res,
+            storages,
+            pypsa,
+            edisgo_config):
+
+        self.results = _ResultsImported(
+            grid_expansion_costs,
+            s_res,
+            storages)
+
+        self.pypsa = pypsa
+        self.config = edisgo_config
+
+
+class _ResultsImported:
+    """
+    Reduced eDisG results class, used of eGo's reimport
+    """
+
+    def __init__(
+            self,
+            grid_expansion_costs,
+            s_res,
+            storages):
+
+        self.grid_expansion_costs = grid_expansion_costs
+        self.storages = storages
+        self._s_res = s_res
+
+    def s_res(self):
+        return self._s_res
 
 
 def parallelizer(
