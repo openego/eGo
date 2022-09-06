@@ -51,6 +51,7 @@ if not 'READTHEDOCS' in os.environ:
 
     from edisgo.edisgo import import_edisgo_from_files, EDisGo
     from edisgo.network.results import Results
+    from edisgo.network.timeseries import TimeSeries
     from edisgo.tools import tools
     from edisgo.tools.plots import mv_grid_topology
 
@@ -134,12 +135,12 @@ class EDisGoNetworks:
     @property
     def network(self):
         """
-        Container for eDisGo grids, including all results
+        Container for EDisGo objects, including all results
 
         Returns
         -------
-        :obj:`dict` of :class:`edisgo.grid.network.EDisGo`
-            Dictionary of eDisGo objects, keyed by MV grid ID
+        dict[int, :class:`edisgo.EDisGo`]
+            Dictionary of EDisGo objects, keyed by MV grid ID
 
         """
         return self._edisgo_grids
@@ -153,6 +154,7 @@ class EDisGoNetworks:
         -------
         :pandas:`pandas.DataFrame<dataframe>`
             Dataframe containing the chosen grids and their weightings
+            'no_of_points_per_cluster', 'the_selected_network_id', 'represented_grids'
 
         """
         return self._grid_choice
@@ -318,21 +320,31 @@ class EDisGoNetworks:
 
     def _init_status(self):
         """
-        Creates a Status file where all eDisGo statuses are tracked...
+        Creates a status csv file where statuses of MV grid calculations are tracked.
+
+        The file is saved to the directory 'status'. Filename indicates date and time
+        the file was created.
+
+        File contains the following information:
+
+        * 'MV grid id' (index)
+        * 'cluster_perc' - percentage of grids represented by this grid
+        * 'start_time' - start time of calculation
+        * 'end_time' - end time of calculation
+
         """
         self._status_dir = 'status'
         if not os.path.exists(self._status_dir):
             os.makedirs(self._status_dir)
 
-        self._status_file = 'eGo_' + strftime("%Y-%m-%d_%H%M%S", localtime())
+        self._status_file_name = 'eGo_' + strftime("%Y-%m-%d_%H%M%S", localtime())
 
         status = self._grid_choice.copy()
         status = status.set_index('the_selected_network_id')
-        status.index.names = ['MV grid']
+        status.index.names = ['MV grid id']
 
-        tot_reprs = self._grid_choice['no_of_points_per_cluster'].sum()
-
-        status['cluster_perc'] = status['no_of_points_per_cluster'] / tot_reprs
+        status['cluster_perc'] = (status['no_of_points_per_cluster'] /
+                                  self._grid_choice['no_of_points_per_cluster'].sum())
 
         status['start_time'] = 'Not started yet'
         status['end_time'] = 'Not finished yet'
@@ -342,18 +354,34 @@ class EDisGoNetworks:
             axis=1,
             inplace=True)
 
-        self._status_path = os.path.join(
+        self._status_file_path = os.path.join(
             self._status_dir,
-            self._status_file + '.csv')
+            self._status_file_name + '.csv')
 
-        status.to_csv(self._status_path)
+        status.to_csv(self._status_file_path)
 
     def _status_update(self, mv_grid_id, time, message=None, show=True):
         """
-        Updated eDisGo's status files
+        Updates status csv file where statuses of MV grid calculations are tracked.
+
+        Parameters
+        ----------
+        mv_grid_id : int
+            MV grid ID of the ding0 grid.
+        time : str
+            Can be either 'start' to set information on when the calculation started
+            or 'end' to set information on when the calculation ended. In case a
+            message is provided through parameter `message`, the message instead of the
+            time is set.
+        message : str or None (optional)
+            Message to set for 'start_time' or 'end_time'. If None, the current time
+            is set. Default: None.
+        show : bool (optional)
+            If True, shows a logging message with the status information. Default: True.
+
         """
         status = pd.read_csv(
-            self._status_path,
+            self._status_file_path,
             index_col=0)
 
         status['start_time'] = status['start_time'].astype(str)
@@ -369,16 +397,23 @@ class EDisGoNetworks:
         elif time == 'end':
             status.at[mv_grid_id, 'end_time'] = now
         if show:
-            logger.info("\n\neDisGo Status: \n\n"
+            logger.info("\n\neDisGo status: \n\n"
                         + status.to_string()
                         + "\n\n")
 
-        status.to_csv(self._status_path)
+        status.to_csv(self._status_file_path)
 
     def _update_edisgo_configs(self, edisgo_grid):
         """
         This function overwrites some eDisGo configurations with eGo
         settings.
+
+        The overwritten configs are:
+
+        * config['db_connection']['section']
+        * config['data_source']['oedb_data_source']
+        * config['versioned']['version']
+
         """
         # Info and Warning handling
         if not hasattr(self, '_suppress_log'):
@@ -401,7 +436,7 @@ class EDisGoNetworks:
 
         # Versioned
         ego_gridversion = self._grid_version
-        if ego_gridversion == None:
+        if ego_gridversion is None:
             ego_versioned = 'model_draft'
             if not self._suppress_log:
                 logger.info("eGo's grid_version == None is "
@@ -486,15 +521,11 @@ class EDisGoNetworks:
         self._grid_version = self._edisgo_args['gridversion']
         self._timesteps_pfa = self._edisgo_args['timesteps_pfa']
         self._solver = self._edisgo_args['solver']
-        self._curtailment_voltage_threshold = self._edisgo_args[
-            'curtailment_voltage_threshold']
-        self._ding0_files = self._edisgo_args['ding0_files']
+        self._ding0_path = self._edisgo_args['ding0_path']
         self._choice_mode = self._edisgo_args['choice_mode']
         self._parallelization = self._edisgo_args['parallelization']
         self._initial_reinforcement = self._edisgo_args[
             'initial_reinforcement']
-        self._storage_distribution = self._edisgo_args['storage_distribution']
-        self._apply_curtailment = self._edisgo_args['apply_curtailment']
         self._cluster_attributes = self._edisgo_args['cluster_attributes']
         self._only_cluster = self._edisgo_args['only_cluster']
         self._max_workers = self._edisgo_args['max_workers']
@@ -504,9 +535,6 @@ class EDisGoNetworks:
         self._max_calc_time = self._edisgo_args['max_calc_time']
 
         # Some basic checks
-        if (self._storage_distribution is True) & (self._ext_storage is False):
-            logger.warning("Storage distribution (MV grids) is active, "
-                           + "but eTraGo dataset has no extendable storages")
         if not self._initial_reinforcement:
             raise NotImplementedError(
                 "Skipping the initial reinforcement is not yet implemented"
@@ -521,7 +549,7 @@ class EDisGoNetworks:
         else:
             self._versioned = False
 
-    def _successfull_grids(self):
+    def _successful_grids(self):
         """
         Calculates the relative number of successfully calculated grids,
         including the cluster weightings
@@ -835,9 +863,6 @@ class EDisGoNetworks:
         """
         self._status_update(mv_grid_id, 'start', show=False)
 
-        storage_integration = self._storage_distribution
-        apply_curtailment = self._apply_curtailment
-
         logger.info(
             'MV grid {}: Calculating interface values'.format(mv_grid_id))
 
@@ -1115,8 +1140,16 @@ class EDisGoNetworks:
         self._grid_choice.to_csv(self._results + '/grid_choice.csv')
 
     def _load_edisgo_results(self):
+        """
+        Loads eDisGo data for all specified grids
 
-        # Load the grid choice form CSV
+        Returns
+        --------
+        dict[]
+
+        """
+
+        # Load the grid choice from CSV
         self._grid_choice = pd.read_csv(
             os.path.join(self._csv_import, 'grid_choice.csv'),
             index_col=0)
