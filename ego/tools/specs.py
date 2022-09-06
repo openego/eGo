@@ -50,7 +50,7 @@ def get_etragospecs_direct(session,
                            pf_post_lopf,
                            max_cos_phi_renewable):
     """
-    Reads eTraGo Results from Database and returns and returns
+    Reads eTraGo Results from Database and returns
     the interface values as a dictionary of corresponding dataframes
 
     Parameters
@@ -64,13 +64,36 @@ def get_etragospecs_direct(session,
     scn_name : str
         Name of used scenario 'Status Quo', 'NEP 2035' or 'eGo 100'
 
-
     Returns
     -------
     :obj:`dict` of :pandas:`pandas.DataFrame<dataframe>`
-        Dataframes used as eDisGo inputs
+        Dataframes used as eDisGo inputs.
+
+        * 'conv_dispatch'
+            Normalised dispatch of dispatchable generators per technology in p.u.
+            at the given bus.
+        * 'ren_dispatch'
+            Normalised dispatch of fluctuating generators per technology and weather
+            cell ID in p.u. at the given bus.
+        * 'ren_potential'
+            Normalised weather dependent feed-in potential of fluctuating generators
+            per technology and weather cell ID in p.u. at the given bus.
+        * 'ren_curtailment'
+            Normalised curtailment of fluctuating generators
+            per technology and weather cell ID in p.u. at the given bus.
+        * 'reactive_power'
+            Normalised reactive power time series of dispatchable and fluctuating
+            generators per technology (and weather cell ID) in p.u. at the given bus.
+        * 'battery_p_series'
+            Normalised dispatch of battery storage units in p.u.
+            at the given bus.
+        * 'battery_q_series'
+            Normalised reactive power time series of battery storage units in p.u. at
+            the given bus.
+
 
     """
+
     logger.info('Specs for bus {}'.format(bus_id))
     if pf_post_lopf:
         logger.info('Active and reactive power interface')
@@ -115,17 +138,14 @@ def get_etragospecs_direct(session,
     all_gens_df = all_gens_df.rename(columns={"carrier": "name"})
 
     all_gens_df = all_gens_df[all_gens_df['name'] != 'wind_offshore']
-
-    for index, row in all_gens_df.iterrows():
-        name = row['name']
-        if name == 'wind_onshore':
-            all_gens_df.at[index, 'name'] = 'wind'
+    all_gens_df.loc[
+        all_gens_df["name"] == "wind_onshore", "name"] = "wind"
 
     # Conventionals
     t1 = time.perf_counter()
     performance.update({'Generator Data Processing': t1-t0})
 
-    conv_df = all_gens_df[~all_gens_df.name.isin(weather_dpdnt)]
+    conv_df = all_gens_df[~all_gens_df['name'].isin(weather_dpdnt)]
 
     conv_dsptch = pd.DataFrame(0.0,
                                index=snap_idx,
@@ -209,9 +229,6 @@ def get_etragospecs_direct(session,
     dispatch = pd.DataFrame(0.0,
                             index=snap_idx,
                             columns=aggr_gens['ren_id'])
-    curtailment = pd.DataFrame(0.0,
-                               index=snap_idx,
-                               columns=aggr_gens['ren_id'])
     if pf_post_lopf:
         reactive_power = pd.DataFrame(0.0,
                                       index=snap_idx,
