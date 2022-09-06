@@ -32,9 +32,6 @@ from traceback import TracebackException
 import os
 import pickle
 import logging
-import traceback
-import pypsa
-import csv
 import dill
 import pandas as pd
 from time import localtime, sleep, strftime
@@ -52,7 +49,6 @@ if not 'READTHEDOCS' in os.environ:
     from edisgo.edisgo import import_edisgo_from_files, EDisGo
     from edisgo.network.results import Results
     from edisgo.network.timeseries import TimeSeries
-    from edisgo.tools import tools
     from edisgo.tools.plots import mv_grid_topology
 
     from ego.tools.specs import (
