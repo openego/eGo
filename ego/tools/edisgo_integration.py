@@ -841,7 +841,7 @@ class EDisGoNetworks:
         logger.info(
             'MV grid {}: Calculating interface values'.format(mv_grid_id))
 
-        conn = db.connection(section=self._db_section)
+        conn = db.connection(readonly=True)
         session_factory = sessionmaker(bind=conn)
         Session = scoped_session(session_factory)
         session = Session()
