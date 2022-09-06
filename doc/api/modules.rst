@@ -61,9 +61,6 @@ The file can be found on
    :property float max_calc_time: Maximum calculation time in hours for eDisGo simulations. The calculation is terminated after this time and all costs are extrapolated based on the unfinished simulation. Please note that this parameter is only used if **parallelization** = ``true``.
    :property ing max_workers: Number of workers (cpus) that are allocated to the simulation. If the given value exceeds the number of available workers, it is reduced to the number of available workers. Please note that this parameter is only used if **parallelization** = ``true``.
    :property bool initial_reinforcement: This parameter must be set ``true``.
-   :property bool apply_curtailment: If ``true``, eDisGo applies and optimizes the curtailment (as calculated by eTraGo) within each MV grid. 
-   :property float curtailment_voltage_threshold: p.u. overvoltage limit (e.g. ``0.05``). If this p.u. overvoltage is exceeded at any bus, curtailment is applied.
-   :property bool storage_distribution: If ``true``, eDisGo attempts to integrate battery storages (as calculated by eTraGo) into MV grids in order to reduce grid reinforcement. 
    :property float max_cos_phi_renewable: Maximum power factor for wind and solar generators in MV grids (e.g. ``0.9``). If the reactive power (as calculated by eTraGo) exceeds this power factor, the reactive power is reduced in order to reach the power factor conditions.
    :property string solver: Solver eDisGo uses to optimize the curtailment and storage integration (e.g. ``''gurobi''``).
    :property string timesteps_pfa: Method eDisGo uses for the storage integration (e.g. ``''snapshot_analysis''``).
