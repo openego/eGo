@@ -954,7 +954,7 @@ class EDisGoNetworks:
         # Reload the (original) eDisGo configs
         edisgo_grid.config = "default"
         edisgo_grid.timeseries = TimeSeries(
-            timeindex=specs['conv_dispatch'].index
+            timeindex=specs['dispatchable_generators_active_power'].index
         )
 
         # ###########################################################################
@@ -995,7 +995,7 @@ class EDisGoNetworks:
         # Set dispatchable generator time series
         # Active power
         edisgo_grid.set_time_series_active_power_predefined(
-            dispatchable_generators_ts=specs['conv_dispatch'],
+            dispatchable_generators_ts=specs['dispatchable_generators_active_power'],
         )
         # Reactive power
         gens = edisgo_grid.topology.generators_df[
@@ -1004,7 +1004,7 @@ class EDisGoNetworks:
         if self._pf_post_lopf:
             # ToDo Use eTraGo time series to set reactive power (scale by nominal power)
             edisgo_grid.set_time_series_manual(
-                generators_q=specs['reactive_power'].loc[:, []],
+                generators_q=specs['generators_reactive_power'].loc[:, []],
             )
             pass
         else:
@@ -1024,7 +1024,7 @@ class EDisGoNetworks:
         # Set fluctuating generator time series
         # Active power
         edisgo_grid.set_time_series_active_power_predefined(
-            fluctuating_generators_ts=specs['ren_potential'],
+            fluctuating_generators_ts=specs['renewables_potential'],
         )
         # Reactive power
         gens = edisgo_grid.topology.generators_df[
@@ -1033,7 +1033,7 @@ class EDisGoNetworks:
         if self._pf_post_lopf:
             # ToDo Use eTraGo time series to set reactive power (scale by nominal power)
             edisgo_grid.set_time_series_manual(
-                generators_q=specs['reactive_power'].loc[:, []]
+                generators_q=specs['generators_reactive_power'].loc[:, []]
             )
             pass
         else:
@@ -1056,7 +1056,7 @@ class EDisGoNetworks:
             by=['type', 'weather_cell_id']
         )['nominal_capacity'].sum()
         curt_cols = [
-            i for i in specs['ren_curtailment'].columns
+            i for i in specs['renewables_curtailment'].columns
             if i in solar_wind_capacities.index
         ]
         if not curt_cols:
@@ -1067,21 +1067,20 @@ class EDisGoNetworks:
             columns=pd.MultiIndex.from_tuples(curt_cols))
         for col in curt_abs:
             curt_abs[col] = (
-                specs['ren_curtailment'][col]
+                specs['renewables_curtailment'][col]
                 * solar_wind_capacities[col])
 
         # Get storage information
-        storage_capacity = specs["battery_capacity"]
-        storage_dispatch_active_power = specs['battery_p_series']
+        storage_units_capacity = specs["storage_units_capacity"]
+        storage_units_active_power = specs['storage_units_active_power']
         if self._pf_post_lopf:
-            storage_dispatch_reactive_power = specs['battery_q_series']
+            storage_units_reactive_power = specs['storage_units_reactive_power']
         else:
             q_sign = q_control.get_q_sign_generator(
                 edisgo_grid.config["reactive_power_mode"]["mv_storage"])
-            power_factor = q_control.get_q_sign_generator(
-                edisgo_grid.config["reactive_power_factor"]["mv_storage"])
-            storage_dispatch_reactive_power = q_control.fixed_cosphi(
-                storage_dispatch_active_power, q_sign, power_factor
+            power_factor = edisgo_grid.config["reactive_power_factor"]["mv_storage"]
+            storage_units_reactive_power = q_control.fixed_cosphi(
+                storage_units_active_power, q_sign, power_factor
             )
 
         # DSM
@@ -1091,32 +1090,42 @@ class EDisGoNetworks:
         # Heat pumps
         # Import heat pumps - also gets heat demand and COP time series per heat pump
         edisgo_grid.import_heat_pumps(scenario=self._scn_name)
-        heat_pump_rural_active_power = specs["rural_heat_t"]
-        heat_pump_central_active_power = specs["central_heat_t"]
-        # thermal storage units
-        heat_pump_rural_capacity = specs["rural_heat_store"]
-        heat_pump_central_capacity = specs["central_heat_store"]
+        # Active power
+        heat_pump_rural_active_power = specs["heat_pump_rural_active_power"]
+        heat_pump_central_active_power = specs["heat_pump_central_active_power"]
+        # Reactive power
+        if self._pf_post_lopf:
+            heat_pump_rural_reactive_power = specs["heat_pump_rural_reactive_power"]
+            heat_pump_central_reactive_power = specs["heat_pump_central_reactive_power"]
+        else:
+            q_sign = q_control.get_q_sign_load(
+                edisgo_grid.config["reactive_power_mode"]["mv_hp"])
+            power_factor = edisgo_grid.config["reactive_power_factor"]["mv_hp"]
+            heat_pump_rural_reactive_power = q_control.fixed_cosphi(
+                heat_pump_rural_active_power, q_sign, power_factor
+            )
+            heat_pump_central_reactive_power = q_control.fixed_cosphi(
+                heat_pump_central_active_power, q_sign, power_factor
+            )
+
+        # Thermal storage units
+        thermal_storage_rural_capacity = specs["thermal_storage_rural_capacity"]
+        thermal_storage_central_capacity = specs["thermal_storage_central_capacity"]
         # ToDo: Distribute total thermal storage capacity to heat pumps (needs to be
         #  added as a function to eDisGo) and write storage capacity to
         #  thermal_storage_units_df
 
         # ToDo BEV
+        # Import charging points with standing times, etc.
+        edisgo_grid.import_electromobility(
+            simbev_directory="oedb",
+            tracbev_directory="oedb"
+        )
+        electromobility_active_power = specs["electromobility_active_power"]
 
         # ToDo Call optimisation
+        edisgo_grid.check_integrity()
         edisgo_grid.reinforce(timesteps_pfa=self._timesteps_pfa)
-
-        # ToDo Is the following still necessary?
-        if costs_without_storage is not None:
-            costs_with_storage = (
-                edisgo_grid.results.grid_expansion_costs[
-                    'total_costs'].sum())
-            if costs_with_storage >= costs_without_storage:
-                logger.warning(
-                    "Storage did not benefit MV grid {}".format(
-                        mv_grid_id))
-                storage_units = edisgo_grid.topology.storage_units_df
-                for storage in storage_units.index:
-                    edisgo_grid.topology.remove_storage_unit(storage)
 
         self._status_update(mv_grid_id, 'end')
 
