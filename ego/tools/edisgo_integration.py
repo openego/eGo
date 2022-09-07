@@ -1115,7 +1115,12 @@ class EDisGoNetworks:
         #  added as a function to eDisGo) and write storage capacity to
         #  thermal_storage_units_df
 
-        # ToDo BEV
+        # Solar- and geothermal energy (district heating)
+        geothermal_energy_feedin_district_heating = specs[
+            "geothermal_energy_feedin_district_heating"]
+        solarthermal_energy_feedin_district_heating = specs[
+            "solarthermal_energy_feedin_district_heating"]
+
         # Import charging points with standing times, etc.
         edisgo_grid.import_electromobility(
             simbev_directory="oedb",
