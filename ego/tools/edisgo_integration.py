@@ -50,6 +50,7 @@ if not 'READTHEDOCS' in os.environ:
     from edisgo.network.results import Results
     from edisgo.network.timeseries import TimeSeries
     from edisgo.tools.plots import mv_grid_topology
+    from edisgo.flex_opt import q_control
 
     from ego.tools.specs import (
         get_etragospecs_direct
@@ -854,8 +855,9 @@ class EDisGoNetworks:
 
         Returns
         -------
-        :class:`edisgo.grid.network.EDisGo`
+        :class:`edisgo.EDisGo`
             Returns the complete eDisGo container, also including results
+
         """
         self._status_update(mv_grid_id, 'start', show=False)
 
@@ -1035,7 +1037,6 @@ class EDisGoNetworks:
             )
             pass
         else:
-
             edisgo_grid.set_time_series_reactive_power_control(
                 generators_parametrisation=pd.DataFrame(
                     {
@@ -1069,23 +1070,37 @@ class EDisGoNetworks:
                 specs['ren_curtailment'][col]
                 * solar_wind_capacities[col])
 
-        # Storage Integration
-        costs_without_storage = None
-        if storage_integration:
-            if self._ext_storage:
-                if not specs['battery_p_series'] is None:
-                    logger.info('Integrating storages in MV grid')
-                    edisgo_grid.integrate_storage(
-                        timeseries=specs['battery_p_series'],
-                        position='distribute_storages_mv',
-                        timeseries_reactive_power=specs[
-                            'battery_q_series'
-                        ])  # None if no pf_post_lopf
-                    costs_without_storage = (
-                        edisgo_grid.network.results.storages_costs_reduction[
-                            'grid_expansion_costs_initial'].values[0])
+        # Get storage information
+        storage_capacity = specs["battery_capacity"]
+        storage_dispatch_active_power = specs['battery_p_series']
+        if self._pf_post_lopf:
+            storage_dispatch_reactive_power = specs['battery_q_series']
         else:
-            logger.info('No storage integration')
+            q_sign = q_control.get_q_sign_generator(
+                edisgo_grid.config["reactive_power_mode"]["mv_storage"])
+            power_factor = q_control.get_q_sign_generator(
+                edisgo_grid.config["reactive_power_factor"]["mv_storage"])
+            storage_dispatch_reactive_power = q_control.fixed_cosphi(
+                storage_dispatch_active_power, q_sign, power_factor
+            )
+
+        # DSM
+        dsm_active_power = specs["dsm_active_power"]
+        # ToDo: Get DSM potential per load (needs to be added as a function to eDisGo)
+
+        # Heat pumps
+        # Import heat pumps - also gets heat demand and COP time series per heat pump
+        edisgo_grid.import_heat_pumps(scenario=self._scn_name)
+        heat_pump_rural_active_power = specs["rural_heat_t"]
+        heat_pump_central_active_power = specs["central_heat_t"]
+        # thermal storage units
+        heat_pump_rural_capacity = specs["rural_heat_store"]
+        heat_pump_central_capacity = specs["central_heat_store"]
+        # ToDo: Distribute total thermal storage capacity to heat pumps (needs to be
+        #  added as a function to eDisGo) and write storage capacity to
+        #  thermal_storage_units_df
+
+        # ToDo BEV
 
         # ToDo Call optimisation
         edisgo_grid.reinforce(timesteps_pfa=self._timesteps_pfa)
