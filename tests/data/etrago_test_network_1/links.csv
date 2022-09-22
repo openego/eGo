@@ -1,0 +1,18 @@
+name,bus0,bus1,carrier,p_nom_opt
+0,1,0,central_gas_CHP,1.0
+1,10,10,central_gas_CHP,10.0
+2,0,3,dsm,1.0
+3,10,10,dsm,10.0
+4,0,4,central_heat_pump,1.0
+5,10,10,central_heat_pump,10.0
+6,0,4,central_resistive_heater,1.0
+7,10,10,central_resistive_heater,10.0
+8,4,5,central_heat_store_charger,1.0
+9,10,10,central_heat_store_charger,10.0
+10,0,6,rural_heat_pump,1.0
+11,10,10,rural_heat_pump,10.0
+12,6,7,rural_heat_store_charger,1.0
+13,10,10,rural_heat_store_charger,10.0
+14,0,3,BEV charger,1.0
+15,10,10,BEV charger,10.0
+16,10,10,junk,100.0

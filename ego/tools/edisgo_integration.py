@@ -52,9 +52,8 @@ if not 'READTHEDOCS' in os.environ:
     from edisgo.tools.plots import mv_grid_topology
     from edisgo.flex_opt import q_control
 
-    from ego.tools.specs import (
-        get_etragospecs_direct
-    )
+    from ego.tools.interface import ETraGoMinimalData
+    from ego.tools.interface import get_etrago_results_per_bus
     from ego.tools.mv_cluster import (
         analyze_attributes,
         cluster_mv_grids)
@@ -89,7 +88,7 @@ class EDisGoNetworks:
         self._set_scenario_settings()
 
         # Create reduced eTraGo network
-        self._etrago_network = _ETraGoData(etrago_network)
+        self._etrago_network = ETraGoMinimalData(etrago_network)
         del etrago_network
 
         # Program information
@@ -873,7 +872,7 @@ class EDisGoNetworks:
         bus_id = self._get_bus_id_from_mv_grid(session, mv_grid_id)
 
         # Calculate Interface values for this MV grid
-        specs = get_etragospecs_direct(
+        specs = get_etrago_results_per_bus(
             session,
             bus_id,
             self._etrago_network,
@@ -954,7 +953,7 @@ class EDisGoNetworks:
         # Reload the (original) eDisGo configs
         edisgo_grid.config = "default"
         edisgo_grid.timeseries = TimeSeries(
-            timeindex=specs['dispatchable_generators_active_power'].index
+            timeindex=specs['timeindex']
         )
 
         # ###########################################################################

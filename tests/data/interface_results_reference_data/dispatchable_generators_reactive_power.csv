@@ -1,0 +1,4 @@
+snapshot,biomass,central_biomass_CHP,run_of_river,gas,other_non_renewable,reservoir,central_gas_CHP
+2011-01-01 00:00:00,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+2011-01-01 12:00:00,0.5,0.5,0.5,0.5,0.5,0.5,0.0
+2011-01-02 00:00:00,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,0.0
