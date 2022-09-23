@@ -48,7 +48,7 @@ Create a virtualenvironment and activate it:
 
    $ virtualenv venv --clear -p python3.8
    $ source venv/bin/activate
-   $ cd venv
+   $ cd path/to/eGo
    $ python -m pip install -e .[full]
    $ pre-commit install  # install pre-commit hooks
 
