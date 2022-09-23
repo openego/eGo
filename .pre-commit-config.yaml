@@ -9,10 +9,6 @@ repos:
   rev: 22.8.0
   hooks:
     - id: black
-- repo: https://github.com/pycqa/flake8
-  rev: 5.0.4
-  hooks:
-    - id: flake8
 - repo: https://github.com/pycqa/isort
   rev: 5.10.1
   hooks:
@@ -22,7 +18,7 @@ repos:
   rev: v2.38.0
   hooks:
     - id: pyupgrade
-#- repo: https://github.com/pycqa/pylint
-#  rev: pylint-2.6.0
-#  hooks:
-#    - id: pylint
+- repo: https://github.com/pycqa/flake8
+  rev: 5.0.4
+  hooks:
+    - id: flake8
