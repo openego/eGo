@@ -1,32 +1,37 @@
 # -*- coding: utf-8 -*-
-from datetime import datetime
-from tools.io import eGo
-import sys
-from pycallgraph import PyCallGraph
-from pycallgraph.output import GraphvizOutput
-from pycallgraph import Config
-import pandas as pd
-import matplotlib.pyplot as plt
 import os
+import sys
+
+from datetime import datetime
+
+import matplotlib.pyplot as plt
+import pandas as pd
+
+from pycallgraph import Config, PyCallGraph
+from pycallgraph.output import GraphvizOutput
+from tools.io import eGo
 from tools.utilities import define_logging
-logger = define_logging(name='ego')
+
+logger = define_logging(name="ego")
 
 
 def ego_testing(ego):
-    """ Call and test all ego Funktion
-    """
+    """Call and test all ego Funktion"""
     # full networks
     try:
         logger.info("ego.etrago.network: {} ".format(ego.etrago.network))
-        logger.info("ego.etrago.disaggregated_network: {} ".format(
-            ego.etrago.disaggregated_network))
+        logger.info(
+            "ego.etrago.disaggregated_network: {} ".format(
+                ego.etrago.disaggregated_network
+            )
+        )
 
         # aggregated results
         logger.info("Testing of aggregated results ego.etrago. ")
-        logger.info("storage_investment_costs: {} ".format(
-            ego.etrago.storage_investment_costs))
-        logger.info("storage_charges: {} ".format(
-            ego.etrago.storage_charges))
+        logger.info(
+            "storage_investment_costs: {} ".format(ego.etrago.storage_investment_costs)
+        )
+        logger.info("storage_charges: {} ".format(ego.etrago.storage_charges))
 
         ego.etrago.operating_costs
         ego.etrago.generator
@@ -50,39 +55,39 @@ def ego_testing(ego):
         logger.info("eTraGo failed testing")
     # eDisGo
     try:
-        logger.info("ego.edisgo: {} ".format(
-            ego.edisgo))
+        logger.info("ego.edisgo: {} ".format(ego.edisgo))
     except:
         logger.info("ego.ego.edisgo failed testing")
     try:
-        logger.info("ego.edisgo.network: {} ".format(
-            ego.edisgo.network))
+        logger.info("ego.edisgo.network: {} ".format(ego.edisgo.network))
     except:
         logger.info("ego.edisgo.network failed testing")
     try:
-        logger.info("ego.edisgo.grid_investment_costs: {} ".format(
-            ego.edisgo.grid_investment_costs))
+        logger.info(
+            "ego.edisgo.grid_investment_costs: {} ".format(
+                ego.edisgo.grid_investment_costs
+            )
+        )
     except:
         logger.info("ego.edisgo.grid_investment_costs failed testing")
     try:
-        logger.info("ego.edisgo.grid_choice: {} ".format(
-            ego.edisgo.grid_choice))
+        logger.info("ego.edisgo.grid_choice: {} ".format(ego.edisgo.grid_choice))
     except:
         logger.info("ego.edisgo.grid_choice failed testing")
     try:
-        logger.info("ego.edisgo.successfull_grids: {} ".format(
-            ego.edisgo.successfull_grids))
+        logger.info(
+            "ego.edisgo.successfull_grids: {} ".format(ego.edisgo.successfull_grids)
+        )
     except:
         logger.info("ego.edisgo.successfull_grids failed testing")
     # eGo
-    logger.info("ego.total_investment_costs: {} ".format(
-        ego.total_investment_costs))
-    logger.info("ego.total_operation_costs: {} ".format(
-        ego.total_operation_costs))
+    logger.info("ego.total_investment_costs: {} ".format(ego.total_investment_costs))
+    logger.info("ego.total_operation_costs: {} ".format(ego.total_operation_costs))
     # ego plot  functions
     try:
         ego.plot_total_investment_costs(
-            filename="results/plot_total_investment_costs.pdf")
+            filename="results/plot_total_investment_costs.pdf"
+        )
     except:
         logger.info("ego.plot_total_investment_costs failed testing")
     try:
@@ -102,39 +107,43 @@ def ego_testing(ego):
     except:
         logger.info(" plot_edisgo_cluster failed testing")
     try:
-        ego.plot_line_expansion(column='investment_costs',
-                                filename="results/investment_costs.pdf")
+        ego.plot_line_expansion(
+            column="investment_costs", filename="results/investment_costs.pdf"
+        )
     except:
         logger.info(" plot_line_expansion failed testing")
     try:
-        ego.plot_line_expansion(column='overnight_costs',
-                                filename="results/overnight_costs.pdf")
+        ego.plot_line_expansion(
+            column="overnight_costs", filename="results/overnight_costs.pdf"
+        )
     except:
         logger.info(" plot_line_expansion failed testing")
     try:
-        ego.plot_line_expansion(column='s_nom_expansion',
-                                filename="results/s_nom_expansion.pdf")
+        ego.plot_line_expansion(
+            column="s_nom_expansion", filename="results/s_nom_expansion.pdf"
+        )
     except:
         logger.info(" plot_line_expansion failed testing")
     try:
-        ego.plot_storage_expansion(column='overnight_costs',
-                                   filename="results/storage_capital_investment.pdf")
+        ego.plot_storage_expansion(
+            column="overnight_costs", filename="results/storage_capital_investment.pdf"
+        )
     except:
         logger.info(" plot_storage_expansion failed testing")
 
 
 def main():
-    logger.info('Start calculation')
+    logger.info("Start calculation")
     graphviz = GraphvizOutput()
     date = str(datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
 
-    graphviz.output_file = 'results/'+str(date)+'_basic_process_plot.png'
+    graphviz.output_file = "results/" + str(date) + "_basic_process_plot.png"
     logger.info("Time: {} ".format(date))
 
     with PyCallGraph(output=graphviz, config=Config(groups=True)):
 
-        ego = eGo(jsonpath='scenario_setting_local.json')
-        logger.info('Start testing')
+        ego = eGo(jsonpath="scenario_setting_local.json")
+        logger.info("Start testing")
         ego_testing(ego)
 
         # object size
@@ -143,5 +152,5 @@ def main():
     logger.info("Time: {} ".format(str(datetime.now())))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -29,23 +29,26 @@ the distribution and transmission grids of eTraGo and eDisGo.
 
 import os
 
-if not 'READTHEDOCS' in os.environ:
+if not "READTHEDOCS" in os.environ:
     from tools.io import eGo
     from tools.utilities import define_logging
-    logger = define_logging(name='ego')
 
-__copyright__ = ("Flensburg University of Applied Sciences, "
-                 "Europa-Universität Flensburg, "
-                 "Centre for Sustainable Energy Systems")
+    logger = define_logging(name="ego")
+
+__copyright__ = (
+    "Flensburg University of Applied Sciences, "
+    "Europa-Universität Flensburg, "
+    "Centre for Sustainable Energy Systems"
+)
 __license__ = "GNU Affero General Public License Version 3 (AGPL-3.0)"
 __author__ = "wolf_bunke, maltesc"
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
-    logger.info('Start calculation')
+    logger.info("Start calculation")
 
-    ego = eGo(jsonpath='scenario_setting.json')
+    ego = eGo(jsonpath="scenario_setting.json")
 #    logger.info('Print results')
 #    ego.etrago_line_loading()
 #    print(ego.etrago.generator)

@@ -21,34 +21,39 @@
 This files contains all eGo interface functions
 """
 
-__copyright__ = ("Europa-Universität Flensburg, "
-                 "Centre for Sustainable Energy Systems")
+__copyright__ = "Europa-Universität Flensburg, " "Centre for Sustainable Energy Systems"
 __license__ = "GNU Affero General Public License Version 3 (AGPL-3.0)"
 __author__ = "wolf_bunke,maltesc"
 
 # Import
 # General Packages
 import os
-import pandas as pd
 import time
-if not 'READTHEDOCS' in os.environ:
+
+import pandas as pd
+
+if "READTHEDOCS" not in os.environ:
     from egoio.db_tables import model_draft
     from egoio.db_tables import supply
     import math
 
 import logging
+
 logger = logging.getLogger(__name__)
 
 
 # Functions
 
-def get_etragospecs_direct(session,
-                           bus_id,
-                           etrago_network,
-                           scn_name,
-                           grid_version,
-                           pf_post_lopf,
-                           max_cos_phi_renewable):
+
+def get_etragospecs_direct(
+    session,
+    bus_id,
+    etrago_network,
+    scn_name,
+    grid_version,
+    pf_post_lopf,
+    max_cos_phi_renewable,
+):
     """
     Reads eTraGo Results from Database and returns and returns
     the interface values as a dictionary of corresponding dataframes
@@ -71,163 +76,146 @@ def get_etragospecs_direct(session,
         Dataframes used as eDisGo inputs
 
     """
-    logger.info('Specs for bus {}'.format(bus_id))
+    logger.info("Specs for bus {}".format(bus_id))
     if pf_post_lopf:
-        logger.info('Active and reactive power interface')
+        logger.info("Active and reactive power interface")
     else:
-        logger.info('Only active power interface')
+        logger.info("Only active power interface")
 
     specs_meta_data = {}
     performance = {}
 
-    specs_meta_data.update({'TG Bus ID': bus_id})
+    specs_meta_data.update({"TG Bus ID": bus_id})
 
     if grid_version is None:
-        logger.warning('Weather_id taken from model_draft (not tested)')
+        logger.warning("Weather_id taken from model_draft (not tested)")
 
-        ormclass_gen_single = model_draft.__getattribute__(
-            'EgoSupplyPfGeneratorSingle')
+        ormclass_gen_single = model_draft.__getattribute__("EgoSupplyPfGeneratorSingle")
     else:
-        ormclass_aggr_w = supply.__getattribute__(
-            'EgoAggrWeather')
+        ormclass_aggr_w = supply.__getattribute__("EgoAggrWeather")
 
     snap_idx = etrago_network.snapshots
 
     # Generators
     t0 = time.perf_counter()
 
-    weather_dpdnt = ['wind', 'solar', 'wind_onshore', 'wind_offshore']
+    weather_dpdnt = ["wind", "solar", "wind_onshore", "wind_offshore"]
 
     # DF procesing
     all_gens_df = etrago_network.generators[
-        etrago_network.generators['bus'] == str(bus_id)
+        etrago_network.generators["bus"] == str(bus_id)
     ]
-    all_gens_df.index.name = 'generator_id'
+    all_gens_df.index.name = "generator_id"
 
     all_gens_df.reset_index(inplace=True)
 
-    all_gens_df = all_gens_df[[
-        'generator_id',
-        'p_nom',
-        'p_nom_opt',
-        'carrier']]
+    all_gens_df = all_gens_df[["generator_id", "p_nom", "p_nom_opt", "carrier"]]
 
     all_gens_df = all_gens_df.rename(columns={"carrier": "name"})
 
-    all_gens_df = all_gens_df[all_gens_df['name'] != 'wind_offshore']
+    all_gens_df = all_gens_df[all_gens_df["name"] != "wind_offshore"]
 
     for index, row in all_gens_df.iterrows():
-        name = row['name']
-        if name == 'wind_onshore':
-            all_gens_df.at[index, 'name'] = 'wind'
+        name = row["name"]
+        if name == "wind_onshore":
+            all_gens_df.at[index, "name"] = "wind"
 
     # Conventionals
     t1 = time.perf_counter()
-    performance.update({'Generator Data Processing': t1-t0})
+    performance.update({"Generator Data Processing": t1 - t0})
 
     conv_df = all_gens_df[~all_gens_df.name.isin(weather_dpdnt)]
 
-    conv_dsptch = pd.DataFrame(0.0,
-                               index=snap_idx,
-                               columns=list(set(conv_df['name'])))
-    conv_reactive_power = pd.DataFrame(0.0,
-                                       index=snap_idx,
-                                       columns=list(set(conv_df['name'])))
+    conv_dsptch = pd.DataFrame(0.0, index=snap_idx, columns=list(set(conv_df["name"])))
+    conv_reactive_power = pd.DataFrame(
+        0.0, index=snap_idx, columns=list(set(conv_df["name"]))
+    )
 
     if not conv_df.empty:
         conventionals = True
-        conv_cap = conv_df[['p_nom', 'name']].groupby('name').sum().T
+        conv_cap = conv_df[["p_nom", "name"]].groupby("name").sum().T
 
         for index, row in conv_df.iterrows():
-            generator_id = row['generator_id']
-            source = row['name']
+            generator_id = row["generator_id"]
+            source = row["name"]
             p = etrago_network.generators_t.p[str(generator_id)]
-            p_norm = p / conv_cap[source]['p_nom']
+            p_norm = p / conv_cap[source]["p_nom"]
             conv_dsptch[source] = conv_dsptch[source] + p_norm
             if pf_post_lopf:
                 q = etrago_network.generators_t.q[str(generator_id)]
                 # q normalized with p_nom
-                q_norm = q / conv_cap[source]['p_nom']
-                conv_reactive_power[source] = (
-                    conv_reactive_power[source]
-                    + q_norm)
+                q_norm = q / conv_cap[source]["p_nom"]
+                conv_reactive_power[source] = conv_reactive_power[source] + q_norm
 
         if pf_post_lopf:
-            new_columns = [
-                (col, '') for col in conv_reactive_power.columns
-            ]
-            conv_reactive_power.columns = pd.MultiIndex.from_tuples(
-                new_columns)
+            new_columns = [(col, "") for col in conv_reactive_power.columns]
+            conv_reactive_power.columns = pd.MultiIndex.from_tuples(new_columns)
 
     else:
         conventionals = False
-        logger.warning('No conventional generators at bus {}'.format(bus_id))
+        logger.warning("No conventional generators at bus {}".format(bus_id))
 
     # Renewables
     t2 = time.perf_counter()
-    performance.update({'Conventional Dispatch': t2-t1})
+    performance.update({"Conventional Dispatch": t2 - t1})
     # Capacities
     ren_df = all_gens_df[all_gens_df.name.isin(weather_dpdnt)]
     if ren_df.empty:
-        logger.warning('No renewable generators at bus {}'.format(bus_id))
+        logger.warning("No renewable generators at bus {}".format(bus_id))
 
     for index, row in ren_df.iterrows():
-        aggr_id = row['generator_id']
+        aggr_id = row["generator_id"]
         if grid_version is None:
-            w_id = session.query(
-                ormclass_gen_single.w_id
-            ).filter(
-                ormclass_gen_single.aggr_id == aggr_id,
-                ormclass_gen_single.scn_name == scn_name
-            ).limit(1).scalar()
+            w_id = (
+                session.query(ormclass_gen_single.w_id)
+                .filter(
+                    ormclass_gen_single.aggr_id == aggr_id,
+                    ormclass_gen_single.scn_name == scn_name,
+                )
+                .limit(1)
+                .scalar()
+            )
         else:
-            w_id = session.query(
-                ormclass_aggr_w.w_id
-            ).filter(
-                ormclass_aggr_w.aggr_id == aggr_id,
-                #ormclass_aggr_w.scn_name == scn_name,
-                ormclass_aggr_w.version == grid_version
-            ).limit(1).scalar()
+            w_id = (
+                session.query(ormclass_aggr_w.w_id)
+                .filter(
+                    ormclass_aggr_w.aggr_id == aggr_id,
+                    # ormclass_aggr_w.scn_name == scn_name,
+                    ormclass_aggr_w.version == grid_version,
+                )
+                .limit(1)
+                .scalar()
+            )
 
-        ren_df.at[index, 'w_id'] = w_id
+        ren_df.at[index, "w_id"] = w_id
 
     ren_df.dropna(inplace=True)
 
-    aggr_gens = ren_df.groupby([
-        'name',
-        'w_id'
-    ]).agg({'p_nom': 'sum'}).reset_index()
+    aggr_gens = ren_df.groupby(["name", "w_id"]).agg({"p_nom": "sum"}).reset_index()
 
-    aggr_gens.rename(columns={'p_nom': 'p_nom_aggr'}, inplace=True)
+    aggr_gens.rename(columns={"p_nom": "p_nom_aggr"}, inplace=True)
 
-    aggr_gens['ren_id'] = aggr_gens.index
+    aggr_gens["ren_id"] = aggr_gens.index
 
-    ### Dispatch and Curteilment
-    potential = pd.DataFrame(0.0,
-                             index=snap_idx,
-                             columns=aggr_gens['ren_id'])
-    dispatch = pd.DataFrame(0.0,
-                            index=snap_idx,
-                            columns=aggr_gens['ren_id'])
-    curtailment = pd.DataFrame(0.0,
-                               index=snap_idx,
-                               columns=aggr_gens['ren_id'])
+    # Dispatch and Curteilment
+    potential = pd.DataFrame(0.0, index=snap_idx, columns=aggr_gens["ren_id"])
+    dispatch = pd.DataFrame(0.0, index=snap_idx, columns=aggr_gens["ren_id"])
+    curtailment = pd.DataFrame(0.0, index=snap_idx, columns=aggr_gens["ren_id"])
     if pf_post_lopf:
-        reactive_power = pd.DataFrame(0.0,
-                                      index=snap_idx,
-                                      columns=aggr_gens['ren_id'])
+        reactive_power = pd.DataFrame(0.0, index=snap_idx, columns=aggr_gens["ren_id"])
 
     for index, row in ren_df.iterrows():
-        gen_id = row['generator_id']
-        name = row['name']
-        w_id = row['w_id']
-        ren_id = int(aggr_gens[
-            (aggr_gens['name'] == name) &
-            (aggr_gens['w_id'] == w_id)]['ren_id'])
+        gen_id = row["generator_id"]
+        name = row["name"]
+        w_id = row["w_id"]
+        ren_id = int(
+            aggr_gens[(aggr_gens["name"] == name) & (aggr_gens["w_id"] == w_id)][
+                "ren_id"
+            ]
+        )
 
-        p_nom_aggr = float(
-            aggr_gens[aggr_gens['ren_id'] == ren_id]['p_nom_aggr'])
-        p_nom = row['p_nom']
+        p_nom_aggr = float(aggr_gens[aggr_gens["ren_id"] == ren_id]["p_nom_aggr"])
+        p_nom = row["p_nom"]
 
         p_series = etrago_network.generators_t.p[str(gen_id)]
         p_norm_tot_series = p_series / p_nom_aggr
@@ -241,41 +229,52 @@ def get_etragospecs_direct(session,
         if pf_post_lopf:
             q_series = etrago_network.generators_t.q[str(gen_id)]
             q_norm_tot_series = q_series / p_nom_aggr
-            reactive_power[ren_id] = (
-                reactive_power[ren_id]
-                + q_norm_tot_series)
+            reactive_power[ren_id] = reactive_power[ren_id] + q_norm_tot_series
 
     curtailment = potential.sub(dispatch)
 
     new_columns = [
-        (aggr_gens[aggr_gens.ren_id == col].name.iloc[0],
-         aggr_gens[aggr_gens.ren_id == col].w_id.iloc[0])
-        for col in potential.columns]
+        (
+            aggr_gens[aggr_gens.ren_id == col].name.iloc[0],
+            aggr_gens[aggr_gens.ren_id == col].w_id.iloc[0],
+        )
+        for col in potential.columns
+    ]
     potential.columns = pd.MultiIndex.from_tuples(new_columns)
 
     new_columns = [
-        (aggr_gens[aggr_gens.ren_id == col].name.iloc[0],
-         aggr_gens[aggr_gens.ren_id == col].w_id.iloc[0])
-        for col in dispatch.columns]
+        (
+            aggr_gens[aggr_gens.ren_id == col].name.iloc[0],
+            aggr_gens[aggr_gens.ren_id == col].w_id.iloc[0],
+        )
+        for col in dispatch.columns
+    ]
     dispatch.columns = pd.MultiIndex.from_tuples(new_columns)
 
     new_columns = [
-        (aggr_gens[aggr_gens.ren_id == col].name.iloc[0],
-         aggr_gens[aggr_gens.ren_id == col].w_id.iloc[0])
-        for col in curtailment.columns]
+        (
+            aggr_gens[aggr_gens.ren_id == col].name.iloc[0],
+            aggr_gens[aggr_gens.ren_id == col].w_id.iloc[0],
+        )
+        for col in curtailment.columns
+    ]
     curtailment.columns = pd.MultiIndex.from_tuples(new_columns)
 
     if pf_post_lopf:
         new_columns = [
-            (aggr_gens[aggr_gens.ren_id == col].name.iloc[0],
-             aggr_gens[aggr_gens.ren_id == col].w_id.iloc[0])
-            for col in reactive_power.columns]
+            (
+                aggr_gens[aggr_gens.ren_id == col].name.iloc[0],
+                aggr_gens[aggr_gens.ren_id == col].w_id.iloc[0],
+            )
+            for col in reactive_power.columns
+        ]
         reactive_power.columns = pd.MultiIndex.from_tuples(new_columns)
 
         # Q limit calculation
         if max_cos_phi_renewable:
-            logger.info('Applying Q limit (max cos(phi)={})'.format(
-                max_cos_phi_renewable))
+            logger.info(
+                "Applying Q limit (max cos(phi)={})".format(max_cos_phi_renewable)
+            )
 
             phi = math.acos(max_cos_phi_renewable)
 
@@ -295,72 +294,70 @@ def get_etragospecs_direct(session,
 
         # Reactive Power concat
         if conventionals:
-            all_reactive_power = pd.concat([
-                conv_reactive_power,
-                reactive_power], axis=1)
+            all_reactive_power = pd.concat(
+                [conv_reactive_power, reactive_power], axis=1
+            )
         else:
             all_reactive_power = reactive_power
 
     # Storage
     t3 = time.perf_counter()
-    performance.update({'Renewable Dispatch and Curt.': t3-t2})
+    performance.update({"Renewable Dispatch and Curt.": t3 - t2})
     # Capactiy
     min_extended = 0.3
     stor_df = etrago_network.storage_units.loc[
-        (etrago_network.storage_units['bus'] == str(bus_id))
-        & (etrago_network.storage_units['p_nom_extendable'] == True)
-        & (etrago_network.storage_units['p_nom_opt'] > min_extended)
-        & (etrago_network.storage_units['max_hours'] <= 20.)]  # Only batteries
+        (etrago_network.storage_units["bus"] == str(bus_id))
+        & (etrago_network.storage_units["p_nom_extendable"] == True)
+        & (etrago_network.storage_units["p_nom_opt"] > min_extended)
+        & (etrago_network.storage_units["max_hours"] <= 20.0)
+    ]  # Only batteries
 
-    logger.warning('Minimum storage of {} MW'.format(min_extended))
+    logger.warning("Minimum storage of {} MW".format(min_extended))
 
     ext_found = False
     if len(stor_df) == 1:
-        logger.info('Extendable storage unit found')
+        logger.info("Extendable storage unit found")
         ext_found = True
 
         stor_id = stor_df.index[0]
 
-        stor_p_series_kW = etrago_network.storage_units_t.p[
-            str(stor_id)] * 1000
+        stor_p_series_kW = etrago_network.storage_units_t.p[str(stor_id)] * 1000
 
         if pf_post_lopf:
             try:
-                stor_q_series_kvar = etrago_network.storage_units_t.q[
-                    str(stor_id)] * 1000
-            except:
-                logger.warning("No Q series found for storage unit {}".format(
-                    stor_id))
-                stor_q_series_kvar = etrago_network.storage_units_t.p[
-                    str(stor_id)] * 0
+                stor_q_series_kvar = (
+                    etrago_network.storage_units_t.q[str(stor_id)] * 1000
+                )
+            except Exception:
+                logger.warning("No Q series found for storage unit {}".format(stor_id))
+                stor_q_series_kvar = etrago_network.storage_units_t.p[str(stor_id)] * 0
 
-    if ext_found == False:
-        logger.info(
-            "No extendable storage unit found at bus {}".format(bus_id))
+    if ext_found is False:
+        logger.info("No extendable storage unit found at bus {}".format(bus_id))
 
     t4 = time.perf_counter()
-    performance.update({'Storage Data Processing and Dispatch': t4-t3})
+    performance.update({"Storage Data Processing and Dispatch": t4 - t3})
 
     specs = {
-        'conv_dispatch': conv_dsptch,
-        'ren_dispatch': dispatch,
-        'ren_potential': potential,
-        'ren_curtailment': curtailment
+        "conv_dispatch": conv_dsptch,
+        "ren_dispatch": dispatch,
+        "ren_potential": potential,
+        "ren_curtailment": curtailment,
     }
 
     if ext_found:
-        specs['battery_p_series'] = stor_p_series_kW
+        specs["battery_p_series"] = stor_p_series_kW
 
         if pf_post_lopf:
-            specs['battery_q_series'] = stor_q_series_kvar
+            specs["battery_q_series"] = stor_q_series_kvar
 
     else:
-        specs['battery_p_series'] = specs['battery_q_series'] = None
+        specs["battery_p_series"] = specs["battery_q_series"] = None
 
     if pf_post_lopf:
-        specs['reactive_power'] = all_reactive_power
+        specs["reactive_power"] = all_reactive_power
 
     t5 = time.perf_counter()
-    performance.update({'Overall time': t5-t0})
+    performance.update({"Overall time": t5 - t0})
 
     return specs
