@@ -42,9 +42,7 @@ setup(
     version="0.3.4",
     author="wolfbunke, maltesc",
     author_email="wolf-dieter.bunke@uni-flensburg.de",
-    description=(
-        "A cross-grid-level electricity grid and storage " "optimization tool "
-    ),
+    description=("A cross-grid-level electricity grid and storage optimization tool."),
     long_description=read("README.rst"),
     url="https://github.com/openego/eGo",
     license="GNU Affero General Public License Version 3 (AGPL-3.0)",
