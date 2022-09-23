@@ -46,10 +46,12 @@ Create a virtualenvironment and activate it:
 
 .. code-block::
 
-   $ virtualenv venv --clear -p python3.5
+   $ virtualenv venv --clear -p python3.8
    $ source venv/bin/activate
-   $ cd venv
-   $ pip3 install -e git+https://github.com/openego/eGo@dev#egg=eGo --process-dependency-links
+   $ cd path/to/eGo
+   $ python -m pip install -e .[full]
+   $ pre-commit install  # install pre-commit hooks
+
 
 -------
 License
