@@ -4,7 +4,7 @@
 
 
 .. image:: https://openegoproject.files.wordpress.com/2017/02/open_ego_logo_breit.png?w=400
- 
+
 
 *A cross-grid-level electricity grid and storage optimization tool*
 | `openegoproject.wordpress.com <https://openegoproject.wordpress.com/>`_
@@ -16,8 +16,8 @@ eGo
 
 Integrated optimization of flexibility options and grid extension measures
 for power grids based on `eTraGo <http://eTraGo.readthedocs.io/>`_ and
-`eDisGo <http://edisgo.readthedocs.io/>`_. The Documentation of the eGo tool 
-can be found on 
+`eDisGo <http://edisgo.readthedocs.io/>`_. The Documentation of the eGo tool
+can be found on
 `openego.readthedocs.io <https://openego.readthedocs.io/>`_ .
 
 .. contents::
@@ -35,7 +35,7 @@ In case of installation errors of pypsa-fork use:
 
 ..  code-block::
 
-   $ pip3 install -e git+https://github.com/openego/PyPSA@master#egg=0.11.0fork 
+   $ pip3 install -e git+https://github.com/openego/PyPSA@master#egg=0.11.0fork
 
 
 ----------------------------
@@ -84,6 +84,6 @@ this program. If not, see https://www.gnu.org/licenses/.
 .. |readthedocs| image:: https://readthedocs.org/projects/openego/badge/?version=master
     :target: http://openego.readthedocs.io/en/latest/?badge=master
     :alt: Documentation Status
-    
+
 .. |zenodo| image:: https://zenodo.org/badge/87306120.svg
     :target: https://zenodo.org/badge/latestdoi/87306120

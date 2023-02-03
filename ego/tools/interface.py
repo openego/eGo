@@ -25,13 +25,14 @@ __copyright__ = "Europa-Universität Flensburg, " "Centre for Sustainable Energy
 __license__ = "GNU Affero General Public License Version 3 (AGPL-3.0)"
 __author__ = "wolf_bunke,maltesc,mltja"
 
+import math
+
 # Import
 # General Packages
 import os
-import pandas as pd
 import time
-import math
 
+import pandas as pd
 
 if not "READTHEDOCS" in os.environ:
     from egoio.db_tables import model_draft

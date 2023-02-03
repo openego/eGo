@@ -1,6 +1,7 @@
 import os
 
 from pypsa import Network as PyPSANetwork
+
 from ego.tools.edisgo_integration import EDisGoNetworks
 from ego.tools.utilities import get_scenario_setting
 
@@ -13,9 +14,6 @@ etrago_network.generators.loc[etrago_network.generators.bus == "16", "bus"] = "2
 
 json_file = get_scenario_setting()
 
-edisgo_networks = EDisGoNetworks(
-    json_file=json_file,
-    etrago_network=etrago_network
-)
+edisgo_networks = EDisGoNetworks(json_file=json_file, etrago_network=etrago_network)
 
 print("x")

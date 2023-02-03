@@ -1,13 +1,13 @@
+import logging
+import os
 import random
 
-import pytest
-from pypsa import Network as PyPSANetwork
-from ego.tools.interface import ETraGoMinimalData, get_etrago_results_per_bus
-
-
 import pandas as pd
-import os
-import logging
+import pytest
+
+from pypsa import Network as PyPSANetwork
+
+from ego.tools.interface import ETraGoMinimalData, get_etrago_results_per_bus
 
 logger = logging.getLogger(__name__)
 

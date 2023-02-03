@@ -12,12 +12,12 @@ Overview of modules
    :maxdepth: 7
 
    ego.tools
-   
+
 scenario_settings.json
 ======================
 
-With the ``scenario_settings.json`` file you set up your calcualtion. 
-The file can be found on 
+With the ``scenario_settings.json`` file you set up your calcualtion.
+The file can be found on
 `github <https://github.com/openego/eGo/blob/master/ego/scenario_setting.json>`_.
 
 .. json:object:: scenario_setting.json
@@ -33,24 +33,24 @@ The file can be found on
 
 
 .. json:object:: global
-   
+
    :property bool eTraGo: Decide if you want to run the eTraGo tool (HV/EHV grid optimization).
    :property bool eDisGo: Decide if you want to run the eDisGo tool (MV grid optimiztaion). Please note: eDisGo requires eTraGo= ``true``.
-   :property string csv_import_eTraGo: ``false`` or path to previously calculated eTraGo results (in order to reload the results instead of performing a new run). 
-   :property string csv_import_eDisGo: ``false`` or path to previously calculated eDisGo results (in order to reload the results instead of performing a new run). 
+   :property string csv_import_eTraGo: ``false`` or path to previously calculated eTraGo results (in order to reload the results instead of performing a new run).
+   :property string csv_import_eDisGo: ``false`` or path to previously calculated eDisGo results (in order to reload the results instead of performing a new run).
 
-   
+
 .. json:object:: eTraGo
 
    This section of :json:object:`scenario_setting.json` contains all input parameters for the eTraGo tool. A description of the parameters can be found `here. <https://etrago.readthedocs.io/en/dev/api/etrago.html#module-etrago.appl>`_
-	
+
 
 .. json:object:: eDisGo
 
    This section of :json:object:`scenario_setting.json` contains all input parameters for the eDisGo tool and the clustering of MV grids.
 
-   :property string db: Name of your database (e.g.``''oedb''``). eDisGo queries generator data from this database. Please note that this parameters is automatically overwritten in eDisGo's configuration files. 
-   :property string gridversion: ``null`` or *open_eGo* dataset version (e.g. ``''v0.4.5''``). If ``null``, *open_eGo*'s model_draft is used. Please note that this parameters is automatically overwritten in eDisGo's configuration files. 
+   :property string db: Name of your database (e.g.``''oedb''``). eDisGo queries generator data from this database. Please note that this parameters is automatically overwritten in eDisGo's configuration files.
+   :property string gridversion: ``null`` or *open_eGo* dataset version (e.g. ``''v0.4.5''``). If ``null``, *open_eGo*'s model_draft is used. Please note that this parameters is automatically overwritten in eDisGo's configuration files.
    :property string ding0_path: Path to the MV grid files (created by `ding0 <https://readthedocs.org/projects/dingo/>`_) (e.g. ``''data/MV_grids/20180713110719''``)
    :property string choice_mode: Mode that eGo uses to chose MV grids out of the files in **ding0_path** (e.g. ``''manual''``, ``''cluster''`` or ``''all''``). If ``''manual''`` is chosen, the parameter **manual_grids** must contain a list of the desired grids. If ``''cluster''`` is chosen, **no_grids** must specify the desired number of clusters and **cluster_attributes** must specify the applied cluster attributes. If ``''all''`` is chosen, all MV grids from **ding0_path** are calculated.
    :property list cluster_attributes: List of strings containing the desired cluster attributes. Available attributes are: ``''farthest_node''``, ``''wind_cap''``, ``''solar_cap''`` and ``''extended_storage''``, thus an exemplary list looks like ``["farthest_node", "wind_cap", "solar_cap", "extended_storage"]``. ``''farthest_node''`` represents the longest path within each grid, ``''wind_cap''`` the installed wind capacity within each grid, ``''solar_cap''`` the installed solar capacity within each grid and ``''extended_storage''`` the installed storage units (as calculated by eTraGo). Please note that ``''extended_storage''`` is only available in combination with eTraGo datasets that optimized storage extension. Otherwise this attribute is ignored.
@@ -65,7 +65,7 @@ The file can be found on
    :property string solver: Solver eDisGo uses to optimize the curtailment and storage integration (e.g. ``''gurobi''``).
    :property string timesteps_pfa: Method eDisGo uses for the storage integration (e.g. ``''snapshot_analysis''``).
    :property string results: Path to folder where eDisGo's results will be saved.
-   
+
 
 
 appl.py

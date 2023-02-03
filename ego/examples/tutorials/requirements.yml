@@ -25,4 +25,3 @@ dependencies:
     - "--editable=git+git@github.com:openego/eTraGo.git@0.5.1#egg=etrago" #  eTraGo==0.5.1
     - "--editable=git+git@github.com:openego/tsam.git@master#egg=tsam"
     - "--editable=git+git@github.com:openego/eDisGo.git@dev#egg=edisgo"
-    
