@@ -259,7 +259,7 @@ class eGo(eDisGoResults):
         # add total results here
         self._total_investment_costs = None
         self._total_operation_costs = None
-        self._calculate_investment_cost()
+        #self._calculate_investment_cost()
         self._storage_costs = None
         self._ehv_grid_costs = None
         self._mv_grid_costs = None
