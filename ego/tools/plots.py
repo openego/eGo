@@ -27,10 +27,6 @@ import os
 geopandas = True
 
 if not 'READTHEDOCS' in os.environ:
-    from etrago.tools.plot import (plot_line_loading, plot_stacked_gen,
-                                   add_coordinates, curtailment, gen_dist,
-                                   storage_distribution,
-                                   plot_voltage, plot_residual_load, coloring)
     from ego.tools.economics import etrago_convert_overnight_cost
     from ego.tools.utilities import open_oedb_session
     from pypsa import Network as PyPSANetwork
