@@ -34,7 +34,7 @@ import time
 
 import pandas as pd
 
-if not "READTHEDOCS" in os.environ:
+if "READTHEDOCS" not in os.environ:
     from egoio.db_tables import model_draft
     from egoio.db_tables import supply
 
@@ -356,405 +356,449 @@ def get_etrago_results_per_bus(
         (etrago_network.links["bus0"] == str(bus_id))
         | (etrago_network.links["bus1"] == str(bus_id))
     ]
-    t1 = time.perf_counter()
-    performance.update({"General Data Processing": t1 - t0})
 
-    # Dispatchable generators
-    dispatchable_generators_df_p = pd.DataFrame(index=timeseries_index)
-    if pf_post_lopf:
+    def dispatchable_generators():
+        # Dispatchable generators
+        dispatchable_generators_df_p = pd.DataFrame(index=timeseries_index)
         dispatchable_generators_df_q = pd.DataFrame(index=timeseries_index)
 
-    dispatchable_generators = [
-        "biomass",
-        "central_biomass_CHP",
-        "industrial_biomass_CHP",
-        "run_of_river",
-        "gas",
-        "other_non_renewable",
-        "reservoir",
-        "oil",
-        "other_renewable",
-        "coal",
-        "nuclear",
-        "lignite",
-        "CH4",
-        "central_biomass_CHP_heat",
-    ]
-    dispatchable_generators_df = generators_df[
-        generators_df["carrier"].isin(dispatchable_generators)
-    ]
-    if not dispatchable_generators_df.empty:
-        # technology_dict = {
-        #     "biomass": ["biomass", "central_biomass_CHP"],
-        #     "run_of_river": ["run_of_river"],
-        #     "gas": ["gas"],
-        #     "other_non_renewable": ["other_non_renewable"],
-        #     "reservoir": ["reservoir"],
-        # }
-        # for key, item in technology_dict.items():
-        #     for carrier in item:
-        #         dispatchable_generators_df.loc[dispatchable_generators_df["carrier"] == carrier, "carrier"] = key
+        dispatchable_generators = [
+            # "CH4",
+            # "CH4_NG",
+            # "CH4_biogas",
+            "biomass",
+            "central_biomass_CHP",
+            "central_biomass_CHP_heat",
+            # "coal",
+            # "geo_thermal",
+            "industrial_biomass_CHP",
+            # "lignite",
+            # "nuclear",
+            # "oil",
+            "others",
+            "reservoir",
+            "run_of_river",
+            # "solar",
+            # "solar_rooftop",
+            # "solar_thermal_collector",
+            # "wind_offshore",
+            # "wind_onshore",
+        ]
+        dispatchable_generators_df = generators_df[
+            generators_df["carrier"].isin(dispatchable_generators)
+        ]
+        if not dispatchable_generators_df.empty:
+            for carrier in dispatchable_generators_df["carrier"].unique():
+                p_nom = dispatchable_generators_df.loc[
+                    dispatchable_generators_df["carrier"] == carrier, "p_nom"
+                ].sum()
+                columns_to_aggregate = dispatchable_generators_df[
+                    dispatchable_generators_df["carrier"] == carrier
+                ].index
 
-        for carrier in dispatchable_generators_df["carrier"].unique():
-            p_nom = dispatchable_generators_df.loc[
-                dispatchable_generators_df["carrier"] == carrier, "p_nom"
-            ].sum()
-            columns_to_aggregate = dispatchable_generators_df[
-                dispatchable_generators_df["carrier"] == carrier
-            ].index
-
-            dispatchable_generators_df_p[carrier] = (
-                etrago_network.generators_t["p"][columns_to_aggregate].sum(
-                    axis="columns"
-                )
-                / p_nom
-            )
-            if pf_post_lopf:
-                dispatchable_generators_df_q[carrier] = (
-                    etrago_network.generators_t["q"][columns_to_aggregate].sum(
+                dispatchable_generators_df_p[carrier] = (
+                    etrago_network.generators_t["p"][columns_to_aggregate].sum(
                         axis="columns"
                     )
                     / p_nom
                 )
+                if pf_post_lopf:
+                    dispatchable_generators_df_q[carrier] = (
+                        etrago_network.generators_t["q"][columns_to_aggregate].sum(
+                            axis="columns"
+                        )
+                        / p_nom
+                    )
+                else:
+                    dispatchable_generators_df_q[carrier] = (
+                        etrago_network.generators_t["q"][columns_to_aggregate].sum(
+                            axis="columns"
+                        )
+                        / p_nom
+                    )
 
-    # Add CHP to conventional generators
-    chp_df = links_df[links_df["carrier"] == "central_gas_CHP"]
-    if not chp_df.empty:
-        p_nom = chp_df["p_nom_opt"].sum()
-        dispatchable_generators_df_p["central_gas_CHP"] = (
-            etrago_network.links_t["p1"][chp_df.index].sum(axis="columns") / p_nom
-        )
-        if pf_post_lopf:
-            dispatchable_generators_df_q["central_gas_CHP"] = (
-                0 * dispatchable_generators_df_p["central_gas_CHP"]
+        # Add CHP to conventional generators
+        chp_df = links_df[links_df["carrier"] == "central_gas_CHP"]
+        if not chp_df.empty:
+            p_nom = chp_df["p_nom"].sum()
+            dispatchable_generators_df_p["central_gas_CHP"] = (
+                etrago_network.links_t["p1"][chp_df.index].sum(axis="columns") / p_nom
             )
+            if not pf_post_lopf:
+                dispatchable_generators_df_q["central_gas_CHP"] = (
+                    0 * dispatchable_generators_df_p["central_gas_CHP"]
+                )
+            else:
+                dispatchable_generators_df_q["central_gas_CHP"] = (
+                    0 * dispatchable_generators_df_p["central_gas_CHP"]
+                )
 
-        etrago_results_per_bus[
-            "dispatchable_generators_active_power"
-        ] = dispatchable_generators_df_p
-        if pf_post_lopf:
             etrago_results_per_bus[
-                "dispatchable_generators_reactive_power"
-            ] = dispatchable_generators_df_q
+                "dispatchable_generators_active_power"
+            ] = dispatchable_generators_df_p
+            if pf_post_lopf:
+                etrago_results_per_bus[
+                    "dispatchable_generators_reactive_power"
+                ] = dispatchable_generators_df_q
 
-    t2 = time.perf_counter()
-    performance.update({"Dispatchable generators": t2 - t1})
+    def renewable_generators():
+        # Renewables
+        weather_dependent_generators = [
+            # "CH4",
+            # "CH4_NG",
+            # "CH4_biogas",
+            # "biomass",
+            # "central_biomass_CHP",
+            # "central_biomass_CHP_heat",
+            # "coal",
+            # "geo_thermal",
+            # "industrial_biomass_CHP",
+            # "lignite",
+            # "nuclear",
+            # "oil",
+            # "others",
+            # "reservoir",
+            # "run_of_river",
+            "solar",
+            "solar_rooftop",
+            # "solar_thermal_collector",
+            # "wind_offshore",
+            "wind_onshore",
+        ]
+        weather_dependent_generators_df = generators_df[
+            generators_df.carrier.isin(weather_dependent_generators)
+        ]
+        if not weather_dependent_generators_df.empty:
+            for generator_index in weather_dependent_generators_df.index:
+                weather_id = get_weather_id_for_generator(
+                    grid_version, session, generator_index, scn_name
+                )
+                weather_dependent_generators_df.loc[generator_index, "w_id"] = str(
+                    weather_id
+                )
 
-    # Renewables
-    weather_dependent_generators = [
-        "solar",
-        "solar_rooftop",
-        "wind_onshore",
-    ]
-    weather_dependent_generators_df = generators_df[
-        generators_df.carrier.isin(weather_dependent_generators)
-    ]
-    if not weather_dependent_generators_df.empty:
-        for generator_index in weather_dependent_generators_df.index:
-            weather_id = get_weather_id_for_generator(
-                grid_version, session, generator_index, scn_name
+            technology_dict = {
+                "solar": ["solar", "solar_rooftop"],
+            }
+            for key, item in technology_dict.items():
+                for carrier in item:
+                    weather_dependent_generators_df.loc[
+                        weather_dependent_generators_df["carrier"] == carrier, "carrier"
+                    ] = key
+
+            # Aggregation of p_nom
+            aggregated_weather_dependent_generators_df = (
+                weather_dependent_generators_df.groupby(["carrier", "w_id"])
+                .agg({"p_nom": "sum"})
+                .reset_index()
             )
-            weather_dependent_generators_df.loc[generator_index, "w_id"] = str(
-                weather_id
-            )
 
-        technology_dict = {
-            "solar": ["solar", "solar_rooftop"],
-        }
-        for key, item in technology_dict.items():
-            for carrier in item:
-                weather_dependent_generators_df.loc[
-                    weather_dependent_generators_df["carrier"] == carrier, "carrier"
-                ] = key
-
-        # Aggregation of p_nom
-        aggregated_weather_dependent_generators_df = (
-            weather_dependent_generators_df.groupby(["carrier", "w_id"])
-            .agg({"p_nom": "sum"})
-            .reset_index()
-        )
-
-        # Dispatch and Curtailment
-        weather_dependent_generators_df_potential_p = pd.DataFrame(
-            0.0,
-            index=timeseries_index,
-            columns=aggregated_weather_dependent_generators_df.index,
-        )
-        weather_dependent_generators_df_dispatch_p = pd.DataFrame(
-            0.0,
-            index=timeseries_index,
-            columns=aggregated_weather_dependent_generators_df.index,
-        )
-        if pf_post_lopf:
-            weather_dependent_generators_df_dispatch_q = pd.DataFrame(
+            # Dispatch and Curtailment
+            weather_dependent_generators_df_potential_p = pd.DataFrame(
                 0.0,
                 index=timeseries_index,
                 columns=aggregated_weather_dependent_generators_df.index,
             )
-
-        for index, carrier, w_id, p_nom in weather_dependent_generators_df[
-            ["carrier", "w_id", "p_nom"]
-        ].itertuples():
-            aggregated_idx = aggregated_weather_dependent_generators_df[
-                (aggregated_weather_dependent_generators_df["carrier"] == carrier)
-                & (aggregated_weather_dependent_generators_df["w_id"] == w_id)
-            ].index.values[0]
-            p_nom_aggregated = aggregated_weather_dependent_generators_df.loc[
-                aggregated_idx, "p_nom"
-            ]
-
-            p_series = etrago_network.generators_t["p"][index]
-            p_normed_series = p_series / p_nom_aggregated
-
-            p_max_pu_series = etrago_network.generators_t["p_max_pu"][index]
-            p_max_pu_normed_series = p_max_pu_series * p_nom / p_nom_aggregated
-
-            if pf_post_lopf:
-                if max_cos_phi_renewable:
-                    logger.info(
-                        "Applying Q limit (max cos(phi)={})".format(
-                            max_cos_phi_renewable
-                        )
-                    )
-
-                    phi = math.acos(max_cos_phi_renewable)
-
-                    q_series = pd.Series(0, index=timeseries_index)
-
-                    for timestep in timeseries_index:
-                        p = etrago_network.generators_t["p"].loc[timestep, index]
-                        q = etrago_network.generators_t["q"].loc[timestep, index]
-
-                        q_max = p * math.tan(phi)
-                        q_min = -p * math.tan(phi)
-
-                        if q > q_max:
-                            q = q_max
-                        elif q < q_min:
-                            q = q_min
-
-                        q_series[timestep] = q
-                else:
-                    q_series = etrago_network.generators_t["q"][index]
-
-                q_normed_series = q_series / p_nom_aggregated
-
-            weather_dependent_generators_df_dispatch_p[aggregated_idx] = (
-                weather_dependent_generators_df_dispatch_p[aggregated_idx]
-                + p_normed_series
-            )
-            weather_dependent_generators_df_potential_p[aggregated_idx] = (
-                weather_dependent_generators_df_potential_p[aggregated_idx]
-                + p_max_pu_normed_series
+            weather_dependent_generators_df_dispatch_p = pd.DataFrame(
+                0.0,
+                index=timeseries_index,
+                columns=aggregated_weather_dependent_generators_df.index,
             )
             if pf_post_lopf:
-                weather_dependent_generators_df_dispatch_q[aggregated_idx] = (
-                    weather_dependent_generators_df_dispatch_q[aggregated_idx]
-                    + q_normed_series
+                weather_dependent_generators_df_dispatch_q = pd.DataFrame(
+                    0.0,
+                    index=timeseries_index,
+                    columns=aggregated_weather_dependent_generators_df.index,
                 )
 
-        weather_dependent_generators_df_curtailment_p = (
-            weather_dependent_generators_df_potential_p
-            - weather_dependent_generators_df_dispatch_p
-        )
+            for index, carrier, w_id, p_nom in weather_dependent_generators_df[
+                ["carrier", "w_id", "p_nom"]
+            ].itertuples():
+                aggregated_idx = aggregated_weather_dependent_generators_df[
+                    (aggregated_weather_dependent_generators_df["carrier"] == carrier)
+                    & (aggregated_weather_dependent_generators_df["w_id"] == w_id)
+                ].index.values[0]
+                p_nom_aggregated = aggregated_weather_dependent_generators_df.loc[
+                    aggregated_idx, "p_nom"
+                ]
 
-        # Renaming columns
-        new_columns = [
-            (
-                aggregated_weather_dependent_generators_df.at[column, "carrier"],
-                aggregated_weather_dependent_generators_df.at[column, "w_id"],
+                p_series = etrago_network.generators_t["p"][index]
+                p_normed_series = p_series / p_nom_aggregated
+
+                p_max_pu_series = etrago_network.generators_t["p_max_pu"][index]
+                p_max_pu_normed_series = p_max_pu_series * p_nom / p_nom_aggregated
+
+                if pf_post_lopf:
+                    if max_cos_phi_renewable:
+                        logger.info(
+                            "Applying Q limit (max cos(phi)={})".format(
+                                max_cos_phi_renewable
+                            )
+                        )
+
+                        phi = math.acos(max_cos_phi_renewable)
+
+                        q_series = pd.Series(0, index=timeseries_index)
+
+                        for timestep in timeseries_index:
+                            p = etrago_network.generators_t["p"].loc[timestep, index]
+                            q = etrago_network.generators_t["q"].loc[timestep, index]
+
+                            q_max = p * math.tan(phi)
+                            q_min = -p * math.tan(phi)
+
+                            if q > q_max:
+                                q = q_max
+                            elif q < q_min:
+                                q = q_min
+
+                            q_series[timestep] = q
+                    else:
+                        q_series = etrago_network.generators_t["q"][index]
+
+                    q_normed_series = q_series / p_nom_aggregated
+
+                weather_dependent_generators_df_dispatch_p[aggregated_idx] = (
+                    weather_dependent_generators_df_dispatch_p[aggregated_idx]
+                    + p_normed_series
+                )
+                weather_dependent_generators_df_potential_p[aggregated_idx] = (
+                    weather_dependent_generators_df_potential_p[aggregated_idx]
+                    + p_max_pu_normed_series
+                )
+                if pf_post_lopf:
+                    weather_dependent_generators_df_dispatch_q[aggregated_idx] = (
+                        weather_dependent_generators_df_dispatch_q[aggregated_idx]
+                        + q_normed_series
+                    )
+
+            weather_dependent_generators_df_curtailment_p = (
+                weather_dependent_generators_df_potential_p
+                - weather_dependent_generators_df_dispatch_p
             )
-            for column in weather_dependent_generators_df_potential_p.columns
-        ]
-        new_columns = pd.MultiIndex.from_tuples(new_columns)
-        weather_dependent_generators_df_potential_p.columns = new_columns
-        weather_dependent_generators_df_dispatch_p.columns = new_columns
-        weather_dependent_generators_df_curtailment_p.columns = new_columns
-        if pf_post_lopf:
-            weather_dependent_generators_df_dispatch_q.columns = new_columns
 
-        etrago_results_per_bus[
-            "renewables_potential"
-        ] = weather_dependent_generators_df_potential_p
-        etrago_results_per_bus[
-            "renewables_curtailment"
-        ] = weather_dependent_generators_df_curtailment_p
-        if pf_post_lopf:
+            # Renaming columns
+            new_columns = [
+                (
+                    aggregated_weather_dependent_generators_df.at[column, "carrier"],
+                    aggregated_weather_dependent_generators_df.at[column, "w_id"],
+                )
+                for column in weather_dependent_generators_df_potential_p.columns
+            ]
+            new_columns = pd.MultiIndex.from_tuples(new_columns)
+            weather_dependent_generators_df_potential_p.columns = new_columns
+            weather_dependent_generators_df_dispatch_p.columns = new_columns
+            weather_dependent_generators_df_curtailment_p.columns = new_columns
+            if pf_post_lopf:
+                weather_dependent_generators_df_dispatch_q.columns = new_columns
+
             etrago_results_per_bus[
-                "renewables_dispatch_reactive_power"
-            ] = weather_dependent_generators_df_dispatch_q
+                "renewables_potential"
+            ] = weather_dependent_generators_df_potential_p
+            etrago_results_per_bus[
+                "renewables_curtailment"
+            ] = weather_dependent_generators_df_curtailment_p
+            if pf_post_lopf:
+                etrago_results_per_bus[
+                    "renewables_dispatch_reactive_power"
+                ] = weather_dependent_generators_df_dispatch_q
 
+    def storages():
+        # Storage
+        # Filter batteries
+        min_extended = 0
+        logger.info(f"Minimum storage of {min_extended} MW")
+
+        storages_df = etrago_network.storage_units.loc[
+            (etrago_network.storage_units["carrier"] == "battery")
+            & (etrago_network.storage_units["bus"] == str(bus_id))
+            & (etrago_network.storage_units["p_nom_extendable"])
+            & (etrago_network.storage_units["p_nom_opt"] > min_extended)
+            # & (etrago_network.storage_units["max_hours"] <= 20.0)
+        ]
+        if not storages_df.empty:
+            # Capactiy
+            storages_df_capacity = (
+                storages_df["p_nom_opt"] * storages_df["max_hours"]
+            ).values[0]
+
+            storages_df_p = etrago_network.storage_units_t["p"][storages_df.index]
+            storages_df_p.columns = storages_df["carrier"]
+            if pf_post_lopf:
+                storages_df_q = etrago_network.storage_units_t["q"][storages_df.index]
+                storages_df_q.columns = storages_df["carrier"]
+
+            etrago_results_per_bus["storage_units_capacity"] = storages_df_capacity
+            etrago_results_per_bus["storage_units_active_power"] = storages_df_p
+            if pf_post_lopf:
+                etrago_results_per_bus["storage_units_reactive_power"] = storages_df_q
+
+    def dsm():
+        # DSM
+        dsm_df = links_df.loc[
+            (links_df["carrier"] == "dsm") & (links_df["bus0"] == str(bus_id))
+        ]
+        if not dsm_df.empty:
+            if dsm_df.shape[0] > 1:
+                raise ValueError(f"More than one dsm link at bus {bus_id}")
+            dsm_df_p = etrago_network.links_t["p0"][dsm_df.index]
+            dsm_df_p.columns = dsm_df["carrier"]
+            if pf_post_lopf:
+                dsm_df_q = 0 * dsm_df_p
+
+            etrago_results_per_bus["dsm_active_power"] = dsm_df_p
+            if pf_post_lopf:
+                etrago_results_per_bus["dsm_reactive_power"] = dsm_df_q
+
+    def central_heat():
+        # Heat
+        # Central heat
+        # Power2Heat
+        central_heat_carriers = ["central_heat_pump", "central_resistive_heater"]
+        central_heat_df = links_df.loc[
+            links_df["carrier"].isin(central_heat_carriers)
+            & (links_df["bus0"] == str(bus_id))
+        ]
+        if not central_heat_df.empty:
+            # Timeseries
+            central_heat_df_p = etrago_network.links_t["p0"][central_heat_df.index]
+            central_heat_df_p.columns = central_heat_df["carrier"]
+            if pf_post_lopf:
+                central_heat_df_q = 0 * central_heat_df_p
+
+            etrago_results_per_bus["heat_central_active_power"] = central_heat_df_p
+            if pf_post_lopf:
+                etrago_results_per_bus[
+                    "heat_central_reactive_power"
+                ] = central_heat_df_q
+
+            # Stores
+            central_heat_bus = central_heat_df["bus1"].values[0]
+            central_heat_store_bus = etrago_network.links.loc[
+                etrago_network.links["bus0"] == central_heat_bus, "bus1"
+            ].values[0]
+            central_heat_store_capacity = etrago_network.stores.loc[
+                (etrago_network.stores["carrier"] == "central_heat_store")
+                & (etrago_network.stores["bus"] == central_heat_store_bus),
+                "e_nom_opt",
+            ].values[0]
+
+            etrago_results_per_bus[
+                "thermal_storage_central_capacity"
+            ] = central_heat_store_capacity
+
+            # Feedin
+            geothermal_feedin_df = etrago_network.generators[
+                (etrago_network.generators["carrier"] == "geo_thermal")
+                & (etrago_network.generators["bus"] == central_heat_bus)
+            ]
+            geothermal_feedin_df_p = etrago_network.generators_t["p"][
+                geothermal_feedin_df.index
+            ]
+            geothermal_feedin_df_p.columns = geothermal_feedin_df["carrier"]
+            etrago_results_per_bus[
+                "geothermal_energy_feedin_district_heating"
+            ] = geothermal_feedin_df_p
+
+            solarthermal_feedin_df = etrago_network.generators[
+                (etrago_network.generators["carrier"] == "solar_thermal_collector")
+                & (etrago_network.generators["bus"] == central_heat_bus)
+            ]
+            solarthermal_feedin_df_p = etrago_network.generators_t["p"][
+                solarthermal_feedin_df.index
+            ]
+            solarthermal_feedin_df_p.columns = solarthermal_feedin_df["carrier"]
+            etrago_results_per_bus[
+                "solarthermal_energy_feedin_district_heating"
+            ] = solarthermal_feedin_df_p
+
+    def rural_heat():
+        # Rural heat
+        # Power2Heat
+        rural_heat_carriers = ["rural_heat_pump"]
+        rural_heat_df = links_df.loc[
+            links_df["carrier"].isin(rural_heat_carriers)
+            & (links_df["bus0"] == str(bus_id))
+        ]
+        if not rural_heat_df.empty:
+            # Timeseries
+            rural_heat_df_p = etrago_network.links_t["p0"][rural_heat_df.index]
+            rural_heat_df_p.columns = rural_heat_df["carrier"]
+            if pf_post_lopf:
+                rural_heat_df_q = 0 * rural_heat_df_p
+
+            etrago_results_per_bus["heat_pump_rural_active_power"] = rural_heat_df_p
+            if pf_post_lopf:
+                etrago_results_per_bus[
+                    "heat_pump_rural_reactive_power"
+                ] = rural_heat_df_q
+
+            # Stores
+            rural_heat_bus = rural_heat_df["bus1"].values[0]
+            rural_heat_store_bus = etrago_network.links.loc[
+                etrago_network.links["bus0"] == rural_heat_bus, "bus1"
+            ].values[0]
+            rural_heat_store_capacity = etrago_network.stores.loc[
+                (etrago_network.stores["carrier"] == "rural_heat_store")
+                & (etrago_network.stores["bus"] == rural_heat_store_bus),
+                "e_nom_opt",
+            ].values[0]
+
+            etrago_results_per_bus[
+                "thermal_storage_rural_capacity"
+            ] = rural_heat_store_capacity
+
+    def bev_charger():
+        # BEV charger
+        bev_charger_df = links_df.loc[
+            (links_df["carrier"] == "BEV charger") & (links_df["bus0"] == str(bus_id))
+        ]
+        if not bev_charger_df.empty:
+            if bev_charger_df.shape[0] > 1:
+                raise ValueError(f"More than one dsm link at bus {bus_id}")
+
+            bev_charger_df_p = etrago_network.links_t["p0"][bev_charger_df.index]
+            bev_charger_df_p.columns = bev_charger_df["carrier"]
+            if pf_post_lopf:
+                bev_charger_df_q = 0 * bev_charger_df_p
+
+            etrago_results_per_bus["electromobility_active_power"] = bev_charger_df_p
+            if pf_post_lopf:
+                etrago_results_per_bus[
+                    "electromobility_reactive_power"
+                ] = bev_charger_df_q
+
+    t1 = time.perf_counter()
+    performance.update({"General Data Processing": t1 - t0})
+
+    dispatchable_generators()
+    t2 = time.perf_counter()
+    performance.update({"Dispatchable generators": t2 - t1})
+
+    renewable_generators()
     t3 = time.perf_counter()
     performance.update({"Renewable Dispatch and Curt.": t3 - t2})
 
-    # Storage
-    # Filter batteries
-    min_extended = 0
-    logger.info(f"Minimum storage of {min_extended} MW")
-
-    storages_df = etrago_network.storage_units.loc[
-        (etrago_network.storage_units["carrier"] == "battery")
-        & (etrago_network.storage_units["bus"] == str(bus_id))
-        & (etrago_network.storage_units["p_nom_extendable"] == True)
-        & (etrago_network.storage_units["p_nom_opt"] > min_extended)
-        # & (etrago_network.storage_units["max_hours"] <= 20.0)
-    ]
-    if not storages_df.empty:
-        # Capactiy
-        storages_df_capacity = (
-            storages_df["p_nom_opt"] * storages_df["max_hours"]
-        ).values[0]
-
-        storages_df_p = etrago_network.storage_units_t["p"][storages_df.index]
-        storages_df_p.columns = storages_df["carrier"]
-        if pf_post_lopf:
-            storages_df_q = etrago_network.storage_units_t["q"][storages_df.index]
-            storages_df_q.columns = storages_df["carrier"]
-
-        etrago_results_per_bus["storage_units_capacity"] = storages_df_capacity
-        etrago_results_per_bus["storage_units_active_power"] = storages_df_p
-        if pf_post_lopf:
-            etrago_results_per_bus["storage_units_reactive_power"] = storages_df_q
-
+    storages()
     t4 = time.perf_counter()
     performance.update({"Storage Data Processing": t4 - t3})
 
-    # DSM
-    dsm_df = links_df.loc[
-        (links_df["carrier"] == "dsm") & (links_df["bus0"] == str(bus_id))
-    ]
-    if not dsm_df.empty:
-        if dsm_df.shape[0] > 1:
-            raise ValueError(f"More than one dsm link at bus {bus_id}")
-        dsm_df_p = etrago_network.links_t["p0"][dsm_df.index]
-        dsm_df_p.columns = dsm_df["carrier"]
-        if pf_post_lopf:
-            dsm_df_q = 0 * dsm_df_p
-
-        etrago_results_per_bus["dsm_active_power"] = dsm_df_p
-        if pf_post_lopf:
-            etrago_results_per_bus["dsm_reactive_power"] = dsm_df_q
-
+    dsm()
     t5 = time.perf_counter()
     performance.update({"DSM Data Processing": t5 - t4})
 
-    # Heat
-    # Central heat
-    # Power2Heat
-    central_heat_carriers = ["central_heat_pump", "central_resistive_heater"]
-    central_heat_df = links_df.loc[
-        links_df["carrier"].isin(central_heat_carriers)
-        & (links_df["bus0"] == str(bus_id))
-    ]
-    if not central_heat_df.empty:
-        # Timeseries
-        central_heat_df_p = etrago_network.links_t["p0"][central_heat_df.index]
-        central_heat_df_p.columns = central_heat_df["carrier"]
-        if pf_post_lopf:
-            central_heat_df_q = 0 * central_heat_df_p
-
-        etrago_results_per_bus["heat_central_active_power"] = central_heat_df_p
-        if pf_post_lopf:
-            etrago_results_per_bus["heat_central_reactive_power"] = central_heat_df_q
-
-        # Stores
-        central_heat_bus = central_heat_df["bus1"].values[0]
-        central_heat_store_bus = etrago_network.links.loc[
-            etrago_network.links["bus0"] == central_heat_bus, "bus1"
-        ].values[0]
-        central_heat_store_capacity = etrago_network.stores.loc[
-            (etrago_network.stores["carrier"] == "central_heat_store")
-            & (etrago_network.stores["bus"] == central_heat_store_bus),
-            "e_nom_opt",
-        ].values[0]
-
-        etrago_results_per_bus[
-            "thermal_storage_central_capacity"
-        ] = central_heat_store_capacity
-
-        # Feedin
-        geothermal_feedin_df = etrago_network.generators[
-            (etrago_network.generators["carrier"] == "geo_thermal")
-            & (etrago_network.generators["bus"] == central_heat_bus)
-        ]
-        geothermal_feedin_df_p = etrago_network.generators_t["p"][
-            geothermal_feedin_df.index
-        ]
-        geothermal_feedin_df_p.columns = geothermal_feedin_df["carrier"]
-        etrago_results_per_bus[
-            "geothermal_energy_feedin_district_heating"
-        ] = geothermal_feedin_df_p
-
-        solarthermal_feedin_df = etrago_network.generators[
-            (etrago_network.generators["carrier"] == "solar_thermal_collector")
-            & (etrago_network.generators["bus"] == central_heat_bus)
-        ]
-        solarthermal_feedin_df_p = etrago_network.generators_t["p"][
-            solarthermal_feedin_df.index
-        ]
-        solarthermal_feedin_df_p.columns = solarthermal_feedin_df["carrier"]
-        etrago_results_per_bus[
-            "solarthermal_energy_feedin_district_heating"
-        ] = solarthermal_feedin_df_p
-
+    central_heat()
     t6 = time.perf_counter()
     performance.update({"Central Heat Data Processing": t6 - t5})
 
-    # Rural heat
-    # Power2Heat
-    rural_heat_carriers = ["rural_heat_pump"]
-    rural_heat_df = links_df.loc[
-        links_df["carrier"].isin(rural_heat_carriers)
-        & (links_df["bus0"] == str(bus_id))
-    ]
-    if not rural_heat_df.empty:
-        # Timeseries
-        rural_heat_df_p = etrago_network.links_t["p0"][rural_heat_df.index]
-        rural_heat_df_p.columns = rural_heat_df["carrier"]
-        if pf_post_lopf:
-            rural_heat_df_q = 0 * rural_heat_df_p
-
-        etrago_results_per_bus["heat_pump_rural_active_power"] = rural_heat_df_p
-        if pf_post_lopf:
-            etrago_results_per_bus["heat_pump_rural_reactive_power"] = rural_heat_df_q
-
-        # Stores
-        rural_heat_bus = rural_heat_df["bus1"].values[0]
-        rural_heat_store_bus = etrago_network.links.loc[
-            etrago_network.links["bus0"] == rural_heat_bus, "bus1"
-        ].values[0]
-        rural_heat_store_capacity = etrago_network.stores.loc[
-            (etrago_network.stores["carrier"] == "rural_heat_store")
-            & (etrago_network.stores["bus"] == rural_heat_store_bus),
-            "e_nom_opt",
-        ].values[0]
-
-        etrago_results_per_bus[
-            "thermal_storage_rural_capacity"
-        ] = rural_heat_store_capacity
-
+    rural_heat()
     t7 = time.perf_counter()
     performance.update({"Rural Heat Data Processing": t7 - t6})
 
-    # BEV charger
-    bev_charger_df = links_df.loc[
-        (links_df["carrier"] == "BEV charger") & (links_df["bus0"] == str(bus_id))
-    ]
-    if not bev_charger_df.empty:
-        if bev_charger_df.shape[0] > 1:
-            raise ValueError(f"More than one dsm link at bus {bus_id}")
-
-        bev_charger_df_p = etrago_network.links_t["p0"][bev_charger_df.index]
-        bev_charger_df_p.columns = bev_charger_df["carrier"]
-        if pf_post_lopf:
-            bev_charger_df_q = 0 * bev_charger_df_p
-
-        etrago_results_per_bus["electromobility_active_power"] = bev_charger_df_p
-        if pf_post_lopf:
-            etrago_results_per_bus["electromobility_reactive_power"] = bev_charger_df_q
-
+    bev_charger()
     t8 = time.perf_counter()
     performance.update({"BEV Data Processing": t8 - t7})
+
     performance.update({"Overall time": t8 - t0})
     logger.info(performance)
 
