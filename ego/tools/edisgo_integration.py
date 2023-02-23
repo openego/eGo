@@ -27,7 +27,7 @@ __copyright__ = (
     "Centre for Sustainable Energy Systems"
 )
 __license__ = "GNU Affero General Public License Version 3 (AGPL-3.0)"
-__author__ = "wolf_bunke, maltesc"
+__author__ = "wolf_bunke, maltesc, mltja"
 
 import json
 import logging
@@ -47,7 +47,7 @@ import pandas as pd
 
 from sqlalchemy.orm import scoped_session, sessionmaker
 
-if not "READTHEDOCS" in os.environ:
+if "READTHEDOCS" not in os.environ:
 
     from edisgo.edisgo import EDisGo, import_edisgo_from_files
     from edisgo.flex_opt import q_control
@@ -57,9 +57,9 @@ if not "READTHEDOCS" in os.environ:
     from egoio.db_tables import grid, model_draft
     from egoio.tools import db
 
+    from ego.mv_clustering import cluster_workflow
     from ego.tools.economics import edisgo_grid_investment
     from ego.tools.interface import ETraGoMinimalData, get_etrago_results_per_bus
-    from ego.tools.mv_cluster import analyze_attributes, cluster_mv_grids
 
 
 # Logging
@@ -568,24 +568,10 @@ class EDisGoNetworks:
                 fail += weight
         return success / total
 
-    def _analyze_cluster_attributes(self):
-        """
-        Analyses the attributes wind and solar capacity and farthest node
-        for clustering.
-        These are considered the "standard" attributes for the MV grid
-        clustering.
-        """
-        analyze_attributes(self._ding0_path)
-
-    def _cluster_mv_grids(self, no_grids):
+    def _cluster_mv_grids(self):
         """
         Clusters the MV grids based on the attributes, for a given number
         of MV grids
-
-        Parameters
-        ----------
-        no_grids : int
-            Desired number of clusters (of MV grids)
 
         Returns
         -------
@@ -593,60 +579,10 @@ class EDisGoNetworks:
             Dataframe containing the clustered MV grids and their weightings
 
         """
-
-        # TODO: This first dataframe contains the standard attributes...
-        # ...Create an Interface in order to use attributes more flexibly.
-        # Make this function more generic.
-        attributes_path = self._ding0_path + "/attributes.csv"
-
-        if not os.path.isfile(attributes_path):
-            logger.info("Attributes file is missing")
-            logger.info("Attributes will be calculated")
-            self._analyze_cluster_attributes()
-
-        df = pd.read_csv(self._ding0_path + "/attributes.csv")
-        df = df.set_index("id")
-        df.drop(["Unnamed: 0"], inplace=True, axis=1)
-        df.rename(
-            columns={
-                "Solar_cumulative_capacity": "solar_cap",
-                "Wind_cumulative_capacity": "wind_cap",
-                "The_Farthest_node": "farthest_node",
-            },
-            inplace=True,
-        )
-
-        if "extended_storage" in self._cluster_attributes:
-            if self._ext_storage:
-                storages = self._identify_extended_storages()
-                if not (storages.max().values[0] == 0.0):
-                    df = pd.concat([df, storages], axis=1)
-                    df.rename(
-                        columns={"storage_p_nom": "extended_storage"}, inplace=True
-                    )
-                else:
-                    logger.warning(
-                        "Extended storages all 0. \
-                                   Therefore, extended storages \
-                                   are excluded from clustering"
-                    )
-
-        found_atts = [i for i in self._cluster_attributes if i in df.columns]
-        missing_atts = [i for i in self._cluster_attributes if i not in df.columns]
-
-        logger.info("Available attributes are: {}".format(df.columns.tolist()))
-        logger.info("Chosen/found attributes are: {}".format(found_atts))
-
-        if len(missing_atts) > 0:
-            logger.warning("Missing attributes: {}".format(missing_atts))
-            if "extended_storage" in missing_atts:
-                logger.info(
-                    "Hint: eTraGo dataset must contain "
-                    "extendable storage in order to include "
-                    "storage extension in MV grid clustering."
-                )
-
-        return cluster_mv_grids(no_grids, cluster_base=df)
+        cluster_df = cluster_workflow(config=self._json_file)
+        # Filter for clusters with representatives.
+        cluster_df = cluster_df[cluster_df["representative"].astype(bool)]
+        return cluster_df
 
     def _identify_extended_storages(self):
 
@@ -666,7 +602,10 @@ class EDisGoNetworks:
             min_extended = 0.3
             stor_p_nom = self._etrago_network.storage_units.loc[
                 (self._etrago_network.storage_units["bus"] == str(bus_id))
-                & (self._etrago_network.storage_units["p_nom_extendable"] == True)
+                & (
+                    self._etrago_network.storage_units["p_nom_extendable"]
+                    == True  # noqa: E712
+                )
                 & (self._etrago_network.storage_units["p_nom_opt"] > min_extended)
                 & (self._etrago_network.storage_units["max_hours"] <= 20.0)
             ]["p_nom_opt"]
@@ -718,14 +657,20 @@ class EDisGoNetworks:
         )
 
         if self._choice_mode == "cluster":
-            no_grids = self._edisgo_args["no_grids"]
-            logger.info("Clustering to {} MV grids".format(no_grids))
+            cluster_df = self._cluster_mv_grids()
 
-            cluster_df = self._cluster_mv_grids(no_grids)
-            choice_df["the_selected_network_id"] = cluster_df["the_selected_network_id"]
-            choice_df["no_of_points_per_cluster"] = cluster_df[
-                "no_of_points_per_cluster"
-            ]
+            n_clusters = self._json_file["eDisGo"]["n_clusters"]
+            n_clusters_found = cluster_df.shape[0]
+            if n_clusters != n_clusters_found:
+                logger.info(f"Clustering to {n_clusters} MV grids")
+            else:
+                logger.warning(
+                    f"For {n_clusters} only for {n_clusters_found} clusters "
+                    f"found working grids."
+                )
+
+            choice_df["the_selected_network_id"] = cluster_df["representative"]
+            choice_df["no_of_points_per_cluster"] = cluster_df["n_grids_per_cluster"]
             choice_df["represented_grids"] = cluster_df["represented_grids"]
 
         elif self._choice_mode == "manual":
@@ -785,7 +730,7 @@ class EDisGoNetworks:
             )
 
             for g in mv_grids:
-                if not g in self._edisgo_grids:
+                if g not in self._edisgo_grids:
                     self._edisgo_grids[g] = "Timeout"
 
         else:
@@ -1159,7 +1104,7 @@ class EDisGoNetworks:
                 self._edisgo_grids[mv_grid_id] = edisgo_grid
 
                 logger.info("Imported MV grid {}".format(mv_grid_id))
-            except:
+            except:  # noqa: E722
                 self._edisgo_grids[mv_grid_id] = "This grid failed to reimport"
 
                 logger.warning("MV grid {} could not be loaded".format(mv_grid_id))
@@ -1295,24 +1240,28 @@ class _ETraGoData:
                 df = filter_df_by_carrier(df_to_filter)
                 df = df[columns_to_save]
 
+            unique_carriers = filter_df_by_carrier(
+                getattr(etrago_network_obj, component)
+            ).carrier.unique()
             logger.debug(
-                f"{component}, {carrier}, {timeseries}, {df.shape}, "
-                f"{filter_df_by_carrier(getattr(etrago_network_obj, component)).carrier.unique()}"
+                f"{component}, {carrier}, {timeseries}, {df.shape}, {unique_carriers}"
             )
 
             return df
 
         logger.debug(
-            f"Carriers in links {etrago_network.network.links.carrier.unique()}"
+            f"Carriers in links " f"{etrago_network.network.links.carrier.unique()}"
         )
         logger.debug(
-            f"Carriers in generators {etrago_network.network.generators.carrier.unique()}"
+            f"Carriers in generators "
+            f"{etrago_network.network.generators.carrier.unique()}"
         )
         logger.debug(
-            f"Carriers in stores {etrago_network.network.stores.carrier.unique()}"
+            f"Carriers in stores " f"{etrago_network.network.stores.carrier.unique()}"
         )
         logger.debug(
-            f"Carriers in storage_units {etrago_network.network.storage_units.carrier.unique()}"
+            f"Carriers in storage_units "
+            f"{etrago_network.network.storage_units.carrier.unique()}"
         )
 
         self.snapshots = etrago_network.network.snapshots
@@ -1467,12 +1416,12 @@ def parallelizer(
             )
             logger.info("Jobs time out in {:.2f}h.".format(max_calc_time - hours_to_go))
             time_spent = tick
-        for grid, result in result_objects.items():
+        for grid_id, result in result_objects.items():
             if result.ready():
                 logger.info(
-                    "MV grid {} ready. Trying to `get` the result.".format(grid)
+                    "MV grid {} ready. Trying to `get` the result.".format(grid_id)
                 )
-                done.append(grid)
+                done.append(grid_id)
                 if not result.successful():
                     try:
                         # We already know that this was not successful, so the
@@ -1481,15 +1430,17 @@ def parallelizer(
                         result.get()
                     except Exception as e:
                         logger.warning(
-                            "MV grid {} failed due to {e!r}: '{e}'.".format(grid, e=e)
+                            "MV grid {} failed due to {e!r}: '{e}'.".format(
+                                grid_id, e=e
+                            )
                         )
-                        errors[grid] = e
+                        errors[grid_id] = e
                 else:
-                    logger.info("MV grid {} calculated successfully.".format(grid))
-                    successes[grid] = result.get()
-                logger.info("Done `get`ting the result for MV grid {}.".format(grid))
-        for grid in done:
-            del result_objects[grid]
+                    logger.info("MV grid {} calculated successfully.".format(grid_id))
+                    successes[grid_id] = result.get()
+                logger.info("Done `get`ting the result for MV grid {}.".format(grid_id))
+        for grid_id in done:
+            del result_objects[grid_id]
         sleep(1)
         current = datetime.now()
 
@@ -1509,21 +1460,23 @@ def parallelizer(
     logger.info("Execution finished after {:.2f} hours".format(delta.seconds / 3600))
 
     done = []
-    for grid, result in result_objects.items():
-        done.append(grid)
+    for grid_id, result in result_objects.items():
+        done.append(grid_id)
         try:
-            successes[grid] = result.get(timeout=0)
-            logger.info("MV grid {} calculated successfully.".format(grid))
+            successes[grid_id] = result.get(timeout=0)
+            logger.info("MV grid {} calculated successfully.".format(grid_id))
         except Exception as e:
-            logger.warning("MV grid {} failed due to {e!r}: '{e}'.".format(grid, e=e))
-            errors[grid] = e
-    for grid in done:
-        del result_objects[grid]
+            logger.warning(
+                "MV grid {} failed due to {e!r}: '{e}'.".format(grid_id, e=e)
+            )
+            errors[grid_id] = e
+    for grid_id in done:
+        del result_objects[grid_id]
 
     if errors:
         logger.info("MV grid calculation error details:")
-        for grid, error in errors.items():
-            logger.info("  {}".format(grid))
+        for grid_id, error in errors.items():
+            logger.info("  {}".format(grid_id))
             strings = TracebackException.from_exception(error).format()
             lines = [line for string in strings for line in string.split("\n")]
             for line in lines:
