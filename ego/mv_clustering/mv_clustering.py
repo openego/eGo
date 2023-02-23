@@ -169,9 +169,9 @@ def mv_grid_clustering(data_df, working_grids=None, config=None):
 
 
 def cluster_workflow(config=None):
-    attributes_path = os.path.join(config["eDisGo"]["ding0_path"], "attributes.csv")
+    attributes_path = os.path.join(config["eDisGo"]["grid_path"], "attributes.csv")
     working_grids_path = os.path.join(
-        config["eDisGo"]["ding0_path"], "working_grids.csv"
+        config["eDisGo"]["grid_path"], "working_grids.csv"
     )
 
     if not os.path.isfile(attributes_path):

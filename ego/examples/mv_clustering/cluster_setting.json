@@ -42,7 +42,7 @@
   "eDisGo": {
     "db": "oedb",
     "gridversion": "v0.5.0",
-    "ding0_path": "/home/local/RL-INSTITUT/malte.jahn/git-repos/data/ego/ding0_path",
+    "grid_path": "/home/local/RL-INSTITUT/malte.jahn/git-repos/data/ego/grids",
     "choice_mode": "cluster",
     "cluster_attributes":["wind_cap", "solar_cap", "emob_cap"],
     "only_cluster": false,

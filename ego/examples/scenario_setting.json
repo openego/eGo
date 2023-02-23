@@ -41,7 +41,7 @@
   "eDisGo": {
     "db": "oedb",
     "gridversion": "v0.4.5",
-    "ding0_path": "/home/birgit/virtualenvs/eGo_interface_development/git_repos/data/ding0_grids",
+    "grid_path": "/home/birgit/virtualenvs/eGo_interface_development/git_repos/data/ding0_grids",
     "choice_mode": "manual",
     "cluster_attributes":["farthest_node", "wind_cap", "solar_cap", "extended_storage"],
     "only_cluster": false,

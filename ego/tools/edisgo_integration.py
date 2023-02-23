@@ -49,7 +49,7 @@ from sqlalchemy.orm import scoped_session, sessionmaker
 
 if "READTHEDOCS" not in os.environ:
 
-    from edisgo.edisgo import EDisGo, import_edisgo_from_files
+    from edisgo.edisgo import import_edisgo_from_files
     from edisgo.flex_opt import q_control
     from edisgo.network.results import Results
     from edisgo.network.timeseries import TimeSeries
@@ -523,7 +523,7 @@ class EDisGoNetworks:
         self._grid_version = self._edisgo_args["gridversion"]
         self._timesteps_pfa = self._edisgo_args["timesteps_pfa"]
         self._solver = self._edisgo_args["solver"]
-        self._ding0_path = self._edisgo_args["ding0_path"]
+        self._grid_path = self._edisgo_args["grid_path"]
         self._choice_mode = self._edisgo_args["choice_mode"]
         self._parallelization = self._edisgo_args["parallelization"]
         self._initial_reinforcement = self._edisgo_args["initial_reinforcement"]
@@ -634,7 +634,7 @@ class EDisGoNetworks:
 
         """
         mv_grids = []
-        for file in os.listdir(self._ding0_path):
+        for file in os.listdir(self._grid_path):
             if file.endswith(".pkl"):
                 mv_grids.append(
                     int(file.replace("ding0_grids__", "").replace(".pkl", ""))
@@ -796,9 +796,9 @@ class EDisGoNetworks:
         Session.remove()
 
         # get ding0 MV grid path
-        ding0_grid_path = os.path.join(self._ding0_path, str(mv_grid_id))
+        grid_path = os.path.join(self._grid_path, "working_grids", str(mv_grid_id))
 
-        if not os.path.isdir(ding0_grid_path):
+        if not os.path.isdir(grid_path):
             msg = "No grid data for MV grid {}".format(mv_grid_id)
             logger.error(msg)
             raise Exception(msg)
@@ -806,8 +806,7 @@ class EDisGoNetworks:
         # Initialize MV grid
         logger.info(f"MV grid {mv_grid_id}: Initialize MV grid")
 
-        edisgo_grid = EDisGo(ding0_grid=ding0_grid_path)
-
+        edisgo_grid = import_edisgo_from_files(edisgo_path=grid_path)
         # ##################### Conduct initial grid reinforcement ####################
         edisgo_grid.set_time_series_worst_case_analysis()
 

@@ -20,7 +20,7 @@ setup_logger(
 
 base_path = os.path.join(os.path.expanduser("~"), "git-repos", "data", "ego")
 
-os.remove(os.path.join(base_path, "ding0_path", "attributes.csv"))
+os.remove(os.path.join(base_path, "grids", "attributes.csv"))
 
 config = get_scenario_setting(jsonpath="cluster_setting.json")
 
