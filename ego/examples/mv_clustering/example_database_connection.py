@@ -31,7 +31,7 @@ with sshtunnel(config=config):
     grid_ids_df = db_io.get_grid_ids(engine=engine, orm=orm)
     solar_capacity_df = db_io.get_solar_capacity(engine=engine, orm=orm)
     wind_capacity_df = db_io.get_wind_capacity(engine=engine, orm=orm)
-    emobility_capacity_df = db_io.get_emobility_capacity(engine=engine, orm=orm)
+    emobility_capacity_df = db_io.get_emob_capacity(engine=engine, orm=orm)
 
     df = pd.concat(
         [grid_ids_df, solar_capacity_df, wind_capacity_df, emobility_capacity_df],

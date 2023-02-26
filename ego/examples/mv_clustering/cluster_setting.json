@@ -71,7 +71,8 @@
         "generators_pv_rooftop": "supply.egon_power_plants_pv_roof_building",
         "generators_wind": "supply.egon_power_plants_wind",
         "etrago_load": "grid.egon_etrago_load",
-        "etrago_load_timeseries": "grid.egon_etrago_load_timeseries"
+        "etrago_load_timeseries": "grid.egon_etrago_load_timeseries",
+        "weather_cells": "supply.egon_era5_weather_cells"
       },
       "ssh": {
         "enabled": true,

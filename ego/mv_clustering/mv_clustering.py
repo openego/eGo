@@ -69,10 +69,10 @@ def cluster_attributes_to_csv(attributes_path, config=None):
         grid_ids_df = db_io.get_grid_ids(engine=engine, orm=orm)
         solar_capacity_df = db_io.get_solar_capacity(engine=engine, orm=orm)
         wind_capacity_df = db_io.get_wind_capacity(engine=engine, orm=orm)
-        emobility_capacity_df = db_io.get_emobility_capacity(engine=engine, orm=orm)
+        emob_capacity_df = db_io.get_emob_capacity(engine=engine, orm=orm)
 
     df = pd.concat(
-        [grid_ids_df, solar_capacity_df, wind_capacity_df, emobility_capacity_df],
+        [grid_ids_df, solar_capacity_df, wind_capacity_df, emob_capacity_df],
         axis="columns",
     )
     df.fillna(0, inplace=True)
@@ -87,12 +87,15 @@ def mv_grid_clustering(data_df, working_grids=None, config=None):
 
     Parameters
     ----------
-    n_cluster : int
-        Desired number of clusters (of MV grids)
-
+    config : dict
+        Config dict.
+    working_grids : pandas.DataFrame
+        DataFrame of working grids, only working grids are used as cluster centers.
+    data_df : pandas.DataFrame
+        Attributes to cluster.
     Returns
     -------
-    :pandas:`pandas.DataFrame<dataframe>`
+    pandas.DataFrame
         Dataframe containing the clustered MV grids and their weightings
 
     """

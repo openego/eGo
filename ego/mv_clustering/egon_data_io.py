@@ -108,7 +108,7 @@ def get_wind_capacity(orm=None, session=None):
 
 
 @session_decorator
-def get_emobility_capacity(orm=None, session=None):
+def get_emob_capacity(orm=None, session=None):
     load_timeseries_nested = (
         session.query(
             orm["etrago_load_timeseries"].scn_name,
@@ -155,13 +155,32 @@ def get_emobility_capacity(orm=None, session=None):
     ).group_by(
         load_timeseries_maximal.c.bus_id,
     )
-    emobility_capacity_df = pd.read_sql(
+    emob_capacity_df = pd.read_sql(
         sql=load_p_nom.statement, con=session.bind, index_col=None
     )
-    emobility_capacity_df.set_index("bus_id", inplace=True)
-    return emobility_capacity_df
+    emob_capacity_df.set_index("bus_id", inplace=True)
+    return emob_capacity_df
 
 
 @session_decorator
 def get_cummulative_storage_capacity(bus_id_list, orm=None, session=None):
     return
+
+
+@session_decorator
+def get_weather_id_for_generator(bus_id, orm=None, session=None):
+    query = (
+        session.query(
+            orm["egon_hvmv_substation"].bus_id,
+            orm["weather_cells"].w_id,
+        )
+        .join(
+            orm["egon_hvmv_substation"],
+            func_within(orm["egon_hvmv_substation"].point, orm["weather_cells"].geom),
+        )
+        .filter(
+            orm["egon_hvmv_substation"].bus_id == bus_id,
+        )
+    )
+    weather_id = query.all()[0][1]
+    return weather_id

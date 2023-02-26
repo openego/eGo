@@ -58,9 +58,9 @@ if "READTHEDOCS" not in os.environ:
     from egoio.tools import db
 
     from ego.mv_clustering import cluster_workflow
+    from ego.mv_clustering.database import get_engine, register_tables_in_saio
     from ego.tools.economics import edisgo_grid_investment
     from ego.tools.interface import ETraGoMinimalData, get_etrago_results_per_bus
-
 
 # Logging
 logger = logging.getLogger(__name__)
@@ -775,25 +775,18 @@ class EDisGoNetworks:
 
         logger.info("MV grid {}: Calculating interface values".format(mv_grid_id))
 
-        conn = db.connection(readonly=True)
-        session_factory = sessionmaker(bind=conn)
-        Session = scoped_session(session_factory)
-        session = Session()
-
-        # Query bus ID for this MV grid
-        bus_id = self._get_bus_id_from_mv_grid(session, mv_grid_id)
-
+        config = self._json_file
+        engine = get_engine(config=config)
+        orm = register_tables_in_saio(engine, config=config)
         # Calculate Interface values for this MV grid
         specs = get_etrago_results_per_bus(
-            session,
-            bus_id,
+            mv_grid_id,
             self._etrago_network,
-            self._scn_name,
-            self._grid_version,
             self._pf_post_lopf,
             self._max_cos_phi_renewable,
+            engine=engine,
+            orm=orm,
         )
-        Session.remove()
 
         # get ding0 MV grid path
         grid_path = os.path.join(self._grid_path, "working_grids", str(mv_grid_id))
@@ -1144,43 +1137,6 @@ class EDisGoNetworks:
             )
 
         return subst_id
-
-    def _get_bus_id_from_mv_grid(self, session, subst_id):
-        """
-        Queries the eTraGo bus ID for given MV grid (ding0) ID
-
-        Parameters
-        ----------
-        subst_id : int
-            MV grid (ding0) ID
-
-        Returns
-        -------
-        int
-            eTraGo bus ID
-
-        """
-
-        if self._versioned is True:
-            ormclass_hvmv_subst = grid.__getattribute__("EgoDpHvmvSubstation")
-            bus_id = (
-                session.query(ormclass_hvmv_subst.otg_id)
-                .filter(
-                    ormclass_hvmv_subst.subst_id == subst_id,
-                    ormclass_hvmv_subst.version == self._grid_version,
-                )
-                .scalar()
-            )
-
-        if self._versioned is False:
-            ormclass_hvmv_subst = model_draft.__getattribute__("EgoGridHvmvSubstation")
-            bus_id = (
-                session.query(ormclass_hvmv_subst.otg_id)
-                .filter(ormclass_hvmv_subst.subst_id == subst_id)
-                .scalar()
-            )
-
-        return bus_id
 
 
 class _ETraGoData:

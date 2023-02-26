@@ -32,7 +32,7 @@ class TestSpecs:
 
     def test_class_etrago_minimal_data(self):
         etrago_network = ETraGoMinimalData(self.etrago_network)
-        assert not "p_min_pu" in etrago_network.generators_t
+        assert "p_min_pu" not in etrago_network.generators_t
 
     def test_get_etrago_results_per_bus(self, monkeypatch):
         monkeypatch.setattr(
@@ -49,13 +49,12 @@ class TestSpecs:
         max_cos_phi_renewable = False
 
         etrago_results_per_bus = get_etrago_results_per_bus(
-            session,
             bus_id,
             etrago_network,
             grid_version,
             scn_name,
             pf_post_lopf,
-            max_cos_phi_renewable,
+            session=session,
         )
 
         for key, value in etrago_results_per_bus.items():
@@ -117,13 +116,12 @@ class TestSpecs:
         max_cos_phi_renewable = False
 
         etrago_results_per_bus = get_etrago_results_per_bus(
-            session,
             bus_id,
             etrago_network,
             grid_version,
             scn_name,
             pf_post_lopf,
-            max_cos_phi_renewable,
+            session=session,
         )
 
         none_results = [
@@ -157,13 +155,12 @@ class TestSpecs:
         max_cos_phi_renewable = False
 
         etrago_results_per_bus = get_etrago_results_per_bus(
-            session,
             bus_id,
             etrago_network,
             grid_version,
             scn_name,
             pf_post_lopf,
-            max_cos_phi_renewable,
+            session=session,
         )
 
         none_results = [
@@ -210,13 +207,12 @@ class TestSpecs:
         max_cos_phi_renewable = 0.9
 
         etrago_results_per_bus = get_etrago_results_per_bus(
-            session,
             bus_id,
             etrago_network,
             grid_version,
             scn_name,
             pf_post_lopf,
-            max_cos_phi_renewable,
+            session=session,
         )
 
         for key, value in etrago_results_per_bus.items():
