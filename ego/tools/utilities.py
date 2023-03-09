@@ -25,18 +25,15 @@ import logging
 import os
 import sys
 
-import pandas as pd
+from time import localtime, strftime
+
+from sqlalchemy.orm import scoped_session, sessionmaker
+
+if "READTHEDOCS" not in os.environ:
+    from egoio.tools import db
 
 logger = logging.getLogger(__name__)
 
-from time import localtime, strftime
-
-if not "READTHEDOCS" in os.environ:
-
-    from egoio.db_tables import model_draft, grid
-    from egoio.tools import db
-
-from sqlalchemy.orm import scoped_session, sessionmaker
 
 __copyright__ = (
     "Flensburg University of Applied Sciences, "
@@ -160,7 +157,7 @@ def get_scenario_setting(jsonpath="scenario_setting.json"):
     if json_file["eGo"]["csv_import_eTraGo"] and json_file["eGo"]["csv_import_eDisGo"]:
         logger.info("eDisGo and eTraGo results will be imported from csv\n")
 
-    if json_file["eGo"].get("eTraGo") == True:
+    if json_file["eGo"].get("eTraGo") is True:
 
         logger.info("Using and importing eTraGo settings")
 
@@ -188,7 +185,7 @@ def get_scenario_setting(jsonpath="scenario_setting.json"):
         if json_file["eTraGo"].get("extendable") == "['storage']":
             json_file["eTraGo"].update({"extendable": ["storage"]})
 
-    if json_file["eGo"].get("eDisGo") == True:
+    if json_file["eGo"].get("eDisGo") is True:
         logger.info("Using and importing eDisGo settings")
 
     return json_file
@@ -212,9 +209,9 @@ def fix_leading_separator(csv_file, **kwargs):
                 writer = csv.writer(out, **kwargs)
                 writer.writerow(first_line[1:])
                 for line in lines:
-                    l = line[2:]
-                    l.insert(0, line[0])
-                    writer.writerow(l, **kwargs)
+                    line_selection = line[2:]
+                    line_selection.insert(0, line[0])
+                    writer.writerow(line_selection, **kwargs)
             os.rename(tmp_file, csv_file)
 
 
