@@ -57,32 +57,30 @@
     "solver": "glpk",
     "timesteps_pfa": "snapshot_analysis"
   },
-  "enable_external_config":true,
-  "mv_clustering": {
-    "database": {
-      "database_name": "egon-data",
-      "host": "127.0.0.1",
-      "port": "port",
-      "user": "username",
-      "password": "password",
-      "tables": {
-        "egon_mv_grid_district": "grid.egon_mv_grid_district",
-        "egon_hvmv_substation": "grid.egon_hvmv_substation",
-        "generators_pv": "supply.egon_power_plants_pv",
-        "generators_pv_rooftop": "supply.egon_power_plants_pv_roof_building",
-        "generators_wind": "supply.egon_power_plants_wind",
-        "etrago_load": "grid.egon_etrago_load",
-        "etrago_load_timeseries": "grid.egon_etrago_load_timeseries",
-        "weather_cells": "supply.egon_era5_weather_cells"
-      },
-      "ssh": {
-        "enabled": true,
-        "user": "username",
-        "ip": "ip",
-        "port": "port",
-        "local_address": "127.0.0.1",
-        "local_port": "local_port"
-      }
+  "database": {
+    "database_name": "egon-data",
+    "host": "127.0.0.1",
+    "port": "port",
+    "user": "username",
+    "password": "password",
+    "tables": {
+      "egon_mv_grid_district": "grid.egon_mv_grid_district",
+      "egon_hvmv_substation": "grid.egon_hvmv_substation",
+      "generators_pv": "supply.egon_power_plants_pv",
+      "generators_pv_rooftop": "supply.egon_power_plants_pv_roof_building",
+      "generators_wind": "supply.egon_power_plants_wind",
+      "etrago_load": "grid.egon_etrago_load",
+      "etrago_load_timeseries": "grid.egon_etrago_load_timeseries",
+      "weather_cells": "supply.egon_era5_weather_cells"
     }
-  }
+  },
+  "ssh": {
+    "enabled": false,
+    "user": "username",
+    "ip": "ip",
+    "port": "port",
+    "local_address": "127.0.0.1",
+    "local_port": "local_port"
+  },
+  "external_config": "~/.ego/secondary_ego_config.json"
 }
