@@ -205,6 +205,15 @@ def get_scenario_setting(jsonpath="scenario_setting.json"):
     for key in ["data_dir", "results_dir"]:
         json_file["eGo"][key] = os.path.expanduser(json_file["eGo"][key])
 
+    # Serializing json
+    json_object = json.dumps(json_file, indent=4)
+
+    # Writing to sample.json
+    with open(
+        os.path.join(json_file["eGo"]["results_dir"], "config.json"), "w"
+    ) as outfile:
+        outfile.write(json_object)
+
     return json_file
 
 
