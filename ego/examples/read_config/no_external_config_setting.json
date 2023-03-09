@@ -4,6 +4,8 @@
     "eDisGo": true,
     "csv_import_eTraGo": false,
     "csv_import_eDisGo": false,
+    "data_dir": ".../data_in",
+    "results_dir": ".../data_out",
     "random_seed": 42
   },
   "eTraGo": {

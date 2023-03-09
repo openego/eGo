@@ -4,6 +4,8 @@
     "eDisGo": true,
     "csv_import_eTraGo": false,
     "csv_import_eDisGo": false,
+    "data_dir": ".../data_in",
+    "results_dir": ".../data_out",
     "random_seed": 42
   },
   "eTraGo": {
@@ -58,11 +60,6 @@
     "timesteps_pfa": "snapshot_analysis"
   },
   "database": {
-    "database_name": "egon-data",
-    "host": "127.0.0.1",
-    "port": "port",
-    "user": "username",
-    "password": "password",
     "tables": {
       "egon_mv_grid_district": "grid.egon_mv_grid_district",
       "egon_hvmv_substation": "grid.egon_hvmv_substation",
@@ -73,14 +70,6 @@
       "etrago_load_timeseries": "grid.egon_etrago_load_timeseries",
       "weather_cells": "supply.egon_era5_weather_cells"
     }
-  },
-  "ssh": {
-    "enabled": false,
-    "user": "username",
-    "ip": "ip",
-    "port": "port",
-    "local_address": "127.0.0.1",
-    "local_port": "local_port"
   },
   "external_config": "~/.ego/secondary_ego_config.json"
 }

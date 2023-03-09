@@ -190,13 +190,20 @@ def get_scenario_setting(jsonpath="scenario_setting.json"):
 
     if isinstance(json_file["external_config"], str):
         path_external_config = os.path.expanduser(json_file["external_config"])
-        logger.info(f"Load external config with path: {path_external_config}.")
+        logger.info(f"Load external config with path: {path_external_config}")
         with open(path_external_config) as f:
             external_config = json.load(f)
-        for key in ["database", "ssh"]:
-            json_file[key].update(external_config[key])
+        for key in external_config.keys():
+            try:
+                json_file[key].update(external_config[key])
+            except KeyError:
+                json_file[key] = external_config[key]
     else:
         logger.info("Don't load external config.")
+
+    # expand directories
+    for key in ["data_dir", "results_dir"]:
+        json_file["eGo"][key] = os.path.expanduser(json_file["eGo"][key])
 
     return json_file
 
