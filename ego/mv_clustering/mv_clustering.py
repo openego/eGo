@@ -172,9 +172,9 @@ def mv_grid_clustering(data_df, working_grids=None, config=None):
 
 
 def cluster_workflow(config=None):
-    attributes_path = os.path.join(config["eDisGo"]["grid_path"], "attributes.csv")
+    attributes_path = os.path.join(config["eGo"]["results_dir"], "attributes.csv")
     working_grids_path = os.path.join(
-        config["eDisGo"]["grid_path"], "working_grids.csv"
+        config["eGo"]["data_dir"], config["eDisGo"]["grid_path"], "working_grids.csv"
     )
 
     if not os.path.isfile(attributes_path):
@@ -187,8 +187,9 @@ def cluster_workflow(config=None):
     if os.path.isfile(working_grids_path):
         working_grids = pd.read_csv(working_grids_path, index_col=0)
     else:
-        logger.info("'working_grids.csv' is missing, select representative grids.")
-        working_grids = None
+        raise FileNotFoundError("Working_grids aure missing.")
+        # logger.info("'working_grids.csv' is missing, select representative grids.")
+        # working_grids = None
 
     return mv_grid_clustering(
         data_to_cluster, working_grids=working_grids, config=config

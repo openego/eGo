@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 def get_engine(config=None):
-    config = config["mv_clustering"]["database"]
+    config = config["database"]
     engine = create_engine(
         f"postgresql+psycopg2://{config['user']}:"
         f"{config['password']}@{config['host']}:"
@@ -28,7 +28,7 @@ def get_engine(config=None):
 
 @contextmanager
 def sshtunnel(config=None):
-    ssh_config = config["mv_clustering"]["database"]["ssh"]
+    ssh_config = config["ssh"]
     if ssh_config["enabled"]:
         try:
             logger.info("Open ssh tunnel.")
@@ -52,7 +52,8 @@ def sshtunnel(config=None):
             proc.kill()
             outs, errs = proc.communicate()
             logger.info(
-                f"SSH process output {outs.decode('utf-8')=}, {errs.decode('utf-8')=}"
+                f"SSH process output STDOUT:{outs.decode('utf-8')}, "
+                f"STDERR:{errs.decode('utf-8')}"
             )
     else:
         try:
@@ -89,7 +90,7 @@ def session_decorator(f):
 
 
 def register_tables_in_saio(engine, config=None):
-    db_tables = config["mv_clustering"]["database"]["tables"]
+    db_tables = config["database"]["tables"]
     orm = {}
 
     for name, table_str in db_tables.items():

@@ -53,6 +53,7 @@ if "READTHEDOCS" not in os.environ:
     from edisgo.flex_opt import q_control
     from edisgo.network.results import Results
     from edisgo.network.timeseries import TimeSeries
+    from edisgo.tools.logger import setup_logger
     from edisgo.tools.plots import mv_grid_topology
     from egoio.db_tables import grid, model_draft
     from egoio.tools import db
@@ -336,7 +337,7 @@ class EDisGoNetworks:
         * 'end_time' - end time of calculation
 
         """
-        self._status_dir = "status"
+        self._status_dir = os.path.join(self._json_file["eGo"]["results_dir"], "status")
         if not os.path.exists(self._status_dir):
             os.makedirs(self._status_dir)
 
@@ -661,7 +662,7 @@ class EDisGoNetworks:
 
             n_clusters = self._json_file["eDisGo"]["n_clusters"]
             n_clusters_found = cluster_df.shape[0]
-            if n_clusters != n_clusters_found:
+            if n_clusters == n_clusters_found:
                 logger.info(f"Clustering to {n_clusters} MV grids")
             else:
                 logger.warning(
@@ -707,8 +708,9 @@ class EDisGoNetworks:
         """
         parallelization = self._parallelization
 
-        if not os.path.exists(self._results):
-            os.makedirs(self._results)
+        results_dir = os.path.join(self._json_file["eGo"]["results_dir"], self._results)
+        if not os.path.exists(results_dir):
+            os.makedirs(results_dir)
 
         if parallelization is True:
             logger.info("Run eDisGo parallel")
@@ -771,6 +773,25 @@ class EDisGoNetworks:
             Returns the complete eDisGo container, also including results
 
         """
+        results_dir = os.path.join(
+            self._json_file["eGo"]["results_dir"], self._results, str(mv_grid_id)
+        )
+        if not os.path.exists(results_dir):
+            os.makedirs(results_dir)
+        if self._parallelization:
+            stream_level = None
+        else:
+            stream_level = "debug"
+        setup_logger(
+            loggers=[
+                # {"name": "root", "file_level": None, "stream_level": None},
+                # {"name": "ego", "file_level": None, "stream_level": None},
+                {"name": "edisgo", "file_level": "debug", "stream_level": stream_level},
+            ],
+            file_name=f"run_edisgo_{mv_grid_id}.log",
+            log_dir=results_dir,
+        )
+        logger = logging.getLogger("edisgo.external.ego._run_edisgo")
         self._status_update(mv_grid_id, "start", show=False)
 
         logger.info("MV grid {}: Calculating interface values".format(mv_grid_id))
@@ -789,7 +810,12 @@ class EDisGoNetworks:
         )
 
         # get ding0 MV grid path
-        grid_path = os.path.join(self._grid_path, "working_grids", str(mv_grid_id))
+        grid_path = os.path.join(
+            config["eGo"]["data_dir"],
+            config["eDisGo"]["grid_path"],
+            "working_grids",
+            str(mv_grid_id),
+        )
 
         if not os.path.isdir(grid_path):
             msg = "No grid data for MV grid {}".format(mv_grid_id)
@@ -799,7 +825,11 @@ class EDisGoNetworks:
         # Initialize MV grid
         logger.info(f"MV grid {mv_grid_id}: Initialize MV grid")
 
-        edisgo_grid = import_edisgo_from_files(edisgo_path=grid_path)
+        edisgo_grid = import_edisgo_from_files(
+            edisgo_path=grid_path, import_config=False
+        )
+        # Reload the original/default eDisGo configs
+        edisgo_grid.config = {"from_json": False}
         # ##################### Conduct initial grid reinforcement ####################
         edisgo_grid.set_time_series_worst_case_analysis()
 
@@ -810,16 +840,17 @@ class EDisGoNetworks:
             ).format(mv_grid_id)
         )
 
-        edisgo_grid.config["grid_expansion_allowed_voltage_deviations"] = {
-            "hv_mv_trafo_offset": 0.04,
-            "hv_mv_trafo_control_deviation": 0.0,
-            "mv_load_case_max_v_deviation": 0.055,
-            "mv_feedin_case_max_v_deviation": 0.02,
-            "lv_load_case_max_v_deviation": 0.065,
-            "lv_feedin_case_max_v_deviation": 0.03,
-            "mv_lv_station_load_case_max_v_deviation": 0.02,
-            "mv_lv_station_feedin_case_max_v_deviation": 0.01,
-        }
+        # ToDo: Not complete missing "feed-in_case_lower" and "load_case_upper"
+        # edisgo_grid.config["grid_expansion_allowed_voltage_deviations"] = {
+        #     "hv_mv_trafo_offset": 0.04,
+        #     "hv_mv_trafo_control_deviation": 0.0,
+        #     "mv_load_case_max_v_deviation": 0.055,
+        #     "mv_feedin_case_max_v_deviation": 0.02,
+        #     "lv_load_case_max_v_deviation": 0.065,
+        #     "lv_feedin_case_max_v_deviation": 0.03,
+        #     "mv_lv_station_load_case_max_v_deviation": 0.02,
+        #     "mv_lv_station_feedin_case_max_v_deviation": 0.01,
+        # }
 
         # Inital grid reinforcements
         logger.info(
@@ -855,8 +886,7 @@ class EDisGoNetworks:
             )
         )
         edisgo_grid.results = Results(edisgo_grid)
-        # Reload the (original) eDisGo configs
-        edisgo_grid.config = "default"
+
         edisgo_grid.timeseries = TimeSeries(timeindex=specs["timeindex"])
 
         # ###########################################################################
@@ -1029,9 +1059,8 @@ class EDisGoNetworks:
 
         self._status_update(mv_grid_id, "end")
 
-        path = os.path.join(self._results, str(mv_grid_id))
         edisgo_grid.save(
-            directory=path,
+            directory=results_dir,
             save_topology=True,
             save_timeseries=True,
             save_results=True,
@@ -1045,17 +1074,17 @@ class EDisGoNetworks:
             },
         )
 
-        return {edisgo_grid.topology.id: path}
+        return {edisgo_grid.topology.id: results_dir}
 
     def _save_edisgo_results(self):
+        results_dir = os.path.join(self._json_file["eGo"]["results_dir"], self._results)
+        if not os.path.exists(results_dir):
+            os.makedirs(results_dir)
 
-        if not os.path.exists(self._results):
-            os.makedirs(self._results)
-
-        with open(os.path.join(self._results, "edisgo_args.json"), "w") as fp:
+        with open(os.path.join(results_dir, "edisgo_args.json"), "w") as fp:
             json.dump(self._edisgo_args, fp)
 
-        self._grid_choice.to_csv(self._results + "/grid_choice.csv")
+        self._grid_choice.to_csv(os.path.join(results_dir, "grid_choice.csv"))
 
     def _load_edisgo_results(self):
         """
@@ -1068,8 +1097,9 @@ class EDisGoNetworks:
         """
 
         # Load the grid choice from CSV
+        results_dir = os.path.join(self._json_file["eGo"]["results_dir"], self._results)
         self._grid_choice = pd.read_csv(
-            os.path.join(self._csv_import, "grid_choice.csv"), index_col=0
+            os.path.join(results_dir, "grid_choice.csv"), index_col=0
         )
         self._grid_choice["represented_grids"] = self._grid_choice.apply(
             lambda x: eval(x["represented_grids"]), axis=1
