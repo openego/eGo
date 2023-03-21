@@ -551,6 +551,13 @@ def get_etrago_results_per_bus(
     def storages():
         # Storage
         # Filter batteries
+        # ToDo @Malte subtract p_min from p_nom_opt in order to determine additional
+        #  storage capacity from optimisation - hab ich unten schon gemacht, aber p_min
+        #  fehlt noch im storages_df
+        # ToDo @Malte add 'storage_units_p_nom' (with p_nom_opt - p_min in MW) to
+        #  results dictionary - hab ich schon gemacht, bitte prüfen und docstring anpassen
+        # ToDo @Malte return max_hours instead of capacity - hab ich schon gemacht,
+        #  bitte prüfen und docstring anpassen
         min_extended = 0
         logger.info(f"Minimum storage of {min_extended} MW")
 
@@ -562,9 +569,13 @@ def get_etrago_results_per_bus(
             # & (etrago_obj.storage_units["max_hours"] <= 20.0)
         ]
         if not storages_df.empty:
+            # p_nom
+            storages_df_p_nom = (
+                    storages_df["p_nom_opt"]# - storages_df["p_min"]
+            ).values[0]
             # Capacity
-            storages_df_capacity = (
-                storages_df["p_nom_opt"] * storages_df["max_hours"]
+            storages_df_max_hours = (
+                storages_df["max_hours"]
             ).values[0]
 
             storages_df_p = etrago_obj.storage_units_t["p"][storages_df.index]
@@ -581,7 +592,8 @@ def get_etrago_results_per_bus(
                     0.0, index=timeseries_index, columns=[storages_df["carrier"]]
                 )
         else:
-            storages_df_capacity = 0
+            storages_df_p_nom = 0
+            storages_df_max_hours = 0
             storages_df_p = pd.DataFrame(
                 0.0, index=timeseries_index, columns=[storages_df["carrier"]]
             )
@@ -589,7 +601,8 @@ def get_etrago_results_per_bus(
                 0.0, index=timeseries_index, columns=[storages_df["carrier"]]
             )
 
-        results["storage_units_capacity"] = storages_df_capacity
+        results["storage_units_p_nom"] = storages_df_p_nom
+        results["storage_units_max_hours"] = storages_df_max_hours
         results["storage_units_active_power"] = storages_df_p
         results["storage_units_reactive_power"] = storages_df_q
 
