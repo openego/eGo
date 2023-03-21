@@ -984,7 +984,8 @@ class EDisGoNetworks:
         # time series
         edisgo_grid.apply_charging_strategy(strategy="dumb")
         # get flexibility bands for home and work charging points
-        edisgo_grid.electromobility.get_flexibility_bands(use_case=["home", "work"])
+        edisgo_grid.electromobility.get_flexibility_bands(
+            edisgo_obj=edisgo_grid, use_case=["home", "work"])
 
         # requirements overlying grid
         edisgo_grid.overlying_grid.electromobility_active_power = specs[
