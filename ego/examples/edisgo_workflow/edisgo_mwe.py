@@ -1,5 +1,3 @@
-import os
-
 from edisgo.tools.logger import setup_logger
 from pypsa import Network as PyPSANetwork
 
@@ -8,10 +6,7 @@ from ego.tools.edisgo_integration import EDisGoNetworks
 from ego.tools.utilities import get_scenario_setting
 
 config = get_scenario_setting()
-
-data_dir = config["eGo"]["data_dir"]
 results_dir = config["eGo"]["results_dir"]
-
 setup_logger(
     loggers=[
         {"name": "root", "file_level": "warning", "stream_level": "warning"},
@@ -22,11 +17,8 @@ setup_logger(
     log_dir=results_dir,
 )
 
-base_path = os.path.join(os.path.expanduser("~"), "git-repos", "data", "ego")
-data_dir = config["eGo"]["data_dir"]
-
 etrago_network = PyPSANetwork(
-    os.path.join(data_dir, "etrago_disaggregated_pf_post_lopf_false")
+    config["eGo"]["csv_import_eTraGo"]
 )
 
 with sshtunnel(config=config):
