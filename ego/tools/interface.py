@@ -412,14 +412,15 @@ def get_etrago_results_per_bus(
             generators_df.carrier.isin(weather_dep_gens)
         ]
 
-        # Add weather ids
-        for gens_index in weather_dep_gens_df.index:
-            weather_id = db_io.get_weather_id_for_generator(
-                bus_id, engine=engine, orm=orm
-            )
-            weather_dep_gens_df.loc[gens_index, "w_id"] = str(weather_id)
-        # Rename carrier to aggregate to carriers
+        # ToDo @Malte please check
+        # # Add weather ids
+        # for gens_index in weather_dep_gens_df.index:
+        #     weather_id = db_io.get_weather_id_for_generator(
+        #         bus_id, engine=engine, orm=orm
+        #     )
+        #     weather_dep_gens_df.loc[gens_index, "w_id"] = str(weather_id)
 
+        # Rename carrier to aggregate to carriers
         for new_carrier_name, item in renaming_carrier_dict.items():
             for carrier in item:
                 weather_dep_gens_df.loc[
@@ -428,7 +429,7 @@ def get_etrago_results_per_bus(
 
         # Aggregation of p_nom
         agg_weather_dep_gens_df = (
-            weather_dep_gens_df.groupby(["carrier", "w_id"])
+            weather_dep_gens_df.groupby(["carrier"])
             .agg({"p_nom": "sum"})
             .reset_index()
         )
@@ -455,12 +456,11 @@ def get_etrago_results_per_bus(
             columns=agg_weather_dep_gens_df.index,
         )
 
-        for index, carrier, w_id, p_nom in weather_dep_gens_df[
-            ["carrier", "w_id", "p_nom"]
+        for index, carrier, p_nom in weather_dep_gens_df[
+            ["carrier", "p_nom"]
         ].itertuples():
             agg_idx = agg_weather_dep_gens_df[
-                (agg_weather_dep_gens_df["carrier"] == carrier)
-                & (agg_weather_dep_gens_df["w_id"] == w_id)
+                agg_weather_dep_gens_df["carrier"] == carrier
             ].index.values[0]
             p_nom_agg = agg_weather_dep_gens_df.loc[agg_idx, "p_nom"]
 
@@ -510,12 +510,11 @@ def get_etrago_results_per_bus(
         # Renaming columns
         new_columns = [
             (
-                agg_weather_dep_gens_df.at[column, "carrier"],
-                agg_weather_dep_gens_df.at[column, "w_id"],
+                agg_weather_dep_gens_df.at[column, "carrier"]
             )
             for column in weather_dep_gens_df_pot_p.columns
         ]
-        new_columns = pd.MultiIndex.from_tuples(new_columns)
+        #new_columns = pd.MultiIndex.from_tuples(new_columns)
         weather_dep_gens_df_pot_p.columns = new_columns
         weather_dep_gens_df_dis_p.columns = new_columns
         weather_dep_gens_df_curt_p.columns = new_columns
@@ -523,26 +522,24 @@ def get_etrago_results_per_bus(
 
         # Add zero for empty carriers
         for carrier in renaming_carrier_dict.keys():
-            for w_id in set(weather_dep_gens_df["w_id"]):
-                column = [(carrier, w_id)]
-                if column[0] not in new_columns:
-                    empty_df = pd.DataFrame(
-                        0.0,
-                        index=timeseries_index,
-                        columns=pd.MultiIndex.from_tuples(column),
-                    )
-                    weather_dep_gens_df_pot_p = pd.concat(
-                        [weather_dep_gens_df_pot_p, empty_df.copy()], axis="columns"
-                    )
-                    weather_dep_gens_df_dis_p = pd.concat(
-                        [weather_dep_gens_df_dis_p, empty_df.copy()], axis="columns"
-                    )
-                    weather_dep_gens_df_curt_p = pd.concat(
-                        [weather_dep_gens_df_curt_p, empty_df.copy()], axis="columns"
-                    )
-                    weather_dep_gens_df_dis_q = pd.concat(
-                        [weather_dep_gens_df_dis_q, empty_df.copy()], axis="columns"
-                    )
+            if carrier not in weather_dep_gens_df_pot_p.columns:
+                empty_df = pd.DataFrame(
+                    0.0,
+                    index=timeseries_index,
+                    columns=[carrier],
+                )
+                weather_dep_gens_df_pot_p = pd.concat(
+                    [weather_dep_gens_df_pot_p, empty_df.copy()], axis="columns"
+                )
+                weather_dep_gens_df_dis_p = pd.concat(
+                    [weather_dep_gens_df_dis_p, empty_df.copy()], axis="columns"
+                )
+                weather_dep_gens_df_curt_p = pd.concat(
+                    [weather_dep_gens_df_curt_p, empty_df.copy()], axis="columns"
+                )
+                weather_dep_gens_df_dis_q = pd.concat(
+                    [weather_dep_gens_df_dis_q, empty_df.copy()], axis="columns"
+                )
 
         results["renewables_potential"] = weather_dep_gens_df_pot_p
         results["renewables_curtailment"] = weather_dep_gens_df_curt_p
