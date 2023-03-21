@@ -208,13 +208,13 @@ def get_etrago_results_per_bus(
             Columns: Carrier
             Unit: MVar
 
-        * 'heat_central_active_power'
+        * 'heat_pump_central_active_power'
             Active power time series of central heat units at the given bus.
             Type: pd.DataFrame
             Columns: Carrier
             Unit: MW
 
-        * 'heat_central_reactive_power'
+        * 'heat_pump_central_reactive_power'
             Reactive power time series of central heat units at the given bus.
             Type: pd.DataFrame
             Columns: Carrier
@@ -696,8 +696,8 @@ def get_etrago_results_per_bus(
                 0.0, index=timeseries_index, columns=["solar_thermal_collector"]
             )
         # ToDo: Overlying grid no resistive heater
-        results["heat_central_active_power"] = central_heat_df_p
-        results["heat_central_reactive_power"] = central_heat_df_q
+        results["heat_pump_central_active_power"] = central_heat_df_p
+        results["heat_pump_central_reactive_power"] = central_heat_df_q
         results["thermal_storage_central_capacity"] = central_heat_store_capacity
         results["geothermal_energy_feedin_district_heating"] = geothermal_feedin_df_p
         results[
@@ -790,8 +790,8 @@ def get_etrago_results_per_bus(
         "storage_units_reactive_power",
         "dsm_active_power",
         "dsm_reactive_power",
-        "heat_central_active_power",
-        "heat_central_reactive_power",
+        "heat_pump_central_active_power",
+        "heat_pump_central_reactive_power",
         "thermal_storage_central_capacity",
         "geothermal_energy_feedin_district_heating",
         "solarthermal_energy_feedin_district_heating",
