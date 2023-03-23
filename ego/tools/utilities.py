@@ -204,6 +204,16 @@ def get_scenario_setting(jsonpath="scenario_setting.json"):
     # expand directories
     for key in ["data_dir", "results_dir"]:
         json_file["eGo"][key] = os.path.expanduser(json_file["eGo"][key])
+    # map dirs with "." into data_dir
+    for key in ["csv_import_eTraGo", "csv_import_eDisGo"]:
+        if json_file["eGo"][key]:
+            path = json_file["eGo"][key]
+            if path[0] == ".":
+                json_file["eGo"][key] = os.path.join(
+                    json_file["eGo"]["data_dir"], json_file["eGo"][key][2:]
+                )
+            elif path[0] == "~":
+                json_file["eGo"][key] = os.path.expanduser(json_file["eGo"][key])
 
     # Serializing json
     json_object = json.dumps(json_file, indent=4)
@@ -212,9 +222,7 @@ def get_scenario_setting(jsonpath="scenario_setting.json"):
     results_dir = os.path.join(json_file["eGo"]["results_dir"])
     if not os.path.exists(results_dir):
         os.makedirs(results_dir)
-    with open(
-        os.path.join(results_dir, "config.json"), "w"
-    ) as outfile:
+    with open(os.path.join(results_dir, "config.json"), "w") as outfile:
         outfile.write(json_object)
 
     return json_file

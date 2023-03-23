@@ -2,7 +2,7 @@
   "eGo": {
     "eTraGo": true,
     "eDisGo": true,
-    "csv_import_eTraGo": true,
+    "csv_import_eTraGo": false,
     "csv_import_eDisGo": false,
     "data_dir": ".../data_in",
     "results_dir": ".../data_out",
@@ -69,7 +69,20 @@
       "etrago_load": "grid.egon_etrago_load",
       "etrago_load_timeseries": "grid.egon_etrago_load_timeseries",
       "weather_cells": "supply.egon_era5_weather_cells"
-    }
+    },
+    "database_name": "<database_name>",
+    "host": "127.0.0.1",
+    "port": "59700",
+    "user": "<database_user>",
+    "password": "<database_password>"
+  },
+  "ssh": {
+    "enabled": true,
+    "user": "<server_user>",
+    "ip": "<server_ip>",
+    "port": "<server_port>",
+    "local_address": "127.0.0.1",
+    "local_port": "59700"
   },
   "external_config": "~/.ego/secondary_ego_config.json"
 }
