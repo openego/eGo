@@ -27,13 +27,9 @@ __author__ = "wolf_bunke,maltesc,mltja"
 
 import logging
 import math
-import os
 import time
 
 import pandas as pd
-
-if "READTHEDOCS" not in os.environ:
-    import ego.mv_clustering.egon_data_io as db_io
 
 logger = logging.getLogger(__name__)
 
@@ -62,6 +58,7 @@ class ETraGoMinimalData:
                     "bus",
                     "carrier",
                     "p_nom_opt",
+                    "p_nom_min",
                     "p_nom_extendable",
                     "max_hours",
                 ],
@@ -82,7 +79,7 @@ class ETraGoMinimalData:
                 "links": ["p0", "p1"],
                 "generators": ["p", "p_max_pu", "q"],
                 "stores": ["p"],
-                "storage_units": ["p", "q"],
+                "storage_units": ["p", "q", "state_of_charge"],
                 "loads": ["p"],
             }
             attribute_to_save = attribute_to_save[component]
@@ -107,14 +104,7 @@ class ETraGoMinimalData:
         logger.info(f"Data selection time {time.perf_counter() - t_start}")
 
 
-def get_etrago_results_per_bus(
-    bus_id,
-    etrago_obj,
-    pf_post_lopf,
-    max_cos_phi_ren,
-    engine=None,
-    orm=None,
-):
+def get_etrago_results_per_bus(bus_id, etrago_obj, pf_post_lopf, max_cos_phi_ren):
     """
     Reads eTraGo Results from Database and returns
     the interface values as a dictionary of corresponding dataframes
@@ -160,29 +150,34 @@ def get_etrago_results_per_bus(
 
         * 'renewables_potential'
             Normalised weather dependent feed-in potential of fluctuating generators
-            per technology and weather cell ID in p.u. at the given bus.
+            per technology in p.u. at the given bus.
             Type: pd.DataFrame
-            Columns: Carrier / Weather Cell ID
+            Columns: Carrier
             Unit: pu
 
         * 'renewables_curtailment'
             Normalised curtailment of fluctuating generators per
-            technology and weather cell ID in p.u. at the given bus.
+            technology in p.u. at the given bus.
             Type: pd.DataFrame
-            Columns: Carrier / Weather Cell ID
+            Columns: Carrier
             Unit: pu
 
         * 'renewables_dispatch_reactive_power'
             Normalised reactive power time series of fluctuating generators per
-            technology and weather cell ID in p.u. at the given bus.
+            technology in p.u. at the given bus.
             Type: pd.DataFrame
-            Columns: Carrier / Weather Cell ID
+            Columns: Carrier
             Unit: pu
 
-        * 'storage_units_capacity'
-            Storage unit capacity at the given bus.
+        * 'storage_units_p_nom'
+            Storage unit nominal power.
             Type: float
-            Unit: MWh
+            Unit: MW
+
+        * 'storage_units_max_hours'
+            Storage units maximal discharge with p_nom starting by a soc of 1.
+            Type: float
+            Unit: h
 
         * 'storage_units_active_power'
             Active power time series of battery storage units at the given bus.
@@ -195,6 +190,12 @@ def get_etrago_results_per_bus(
             Type: pd.DataFrame
             Columns: Carrier
             Unit: MVar
+
+        * 'storage_units_soc'
+            Reactive power time series of battery storage units at the given bus.
+            Type: pd.DataFrame
+            Columns: Carrier
+            Unit: pu
 
         * 'dsm_active_power'
             Active power time series of DSM units at the given bus.
@@ -429,9 +430,7 @@ def get_etrago_results_per_bus(
 
         # Aggregation of p_nom
         agg_weather_dep_gens_df = (
-            weather_dep_gens_df.groupby(["carrier"])
-            .agg({"p_nom": "sum"})
-            .reset_index()
+            weather_dep_gens_df.groupby(["carrier"]).agg({"p_nom": "sum"}).reset_index()
         )
 
         # Initialize dfs
@@ -509,12 +508,10 @@ def get_etrago_results_per_bus(
 
         # Renaming columns
         new_columns = [
-            (
-                agg_weather_dep_gens_df.at[column, "carrier"]
-            )
+            (agg_weather_dep_gens_df.at[column, "carrier"])
             for column in weather_dep_gens_df_pot_p.columns
         ]
-        #new_columns = pd.MultiIndex.from_tuples(new_columns)
+        # new_columns = pd.MultiIndex.from_tuples(new_columns)
         weather_dep_gens_df_pot_p.columns = new_columns
         weather_dep_gens_df_dis_p.columns = new_columns
         weather_dep_gens_df_curt_p.columns = new_columns
@@ -548,13 +545,6 @@ def get_etrago_results_per_bus(
     def storages():
         # Storage
         # Filter batteries
-        # ToDo @Malte subtract p_min from p_nom_opt in order to determine additional
-        #  storage capacity from optimisation - hab ich unten schon gemacht, aber p_min
-        #  fehlt noch im storages_df
-        # ToDo @Malte add 'storage_units_p_nom' (with p_nom_opt - p_min in MW) to
-        #  results dictionary - hab ich schon gemacht, bitte prüfen und docstring anpassen
-        # ToDo @Malte return max_hours instead of capacity - hab ich schon gemacht,
-        #  bitte prüfen und docstring anpassen
         min_extended = 0
         logger.info(f"Minimum storage of {min_extended} MW")
 
@@ -563,18 +553,14 @@ def get_etrago_results_per_bus(
             & (etrago_obj.storage_units["bus"] == str(bus_id))
             & (etrago_obj.storage_units["p_nom_extendable"])
             & (etrago_obj.storage_units["p_nom_opt"] > min_extended)
-            # & (etrago_obj.storage_units["max_hours"] <= 20.0)
         ]
         if not storages_df.empty:
             # p_nom
             storages_df_p_nom = (
-                    storages_df["p_nom_opt"]# - storages_df["p_min"]
+                storages_df["p_nom_opt"] - storages_df["p_nom_min"]
             ).values[0]
             # Capacity
-            storages_df_max_hours = (
-                storages_df["max_hours"]
-            ).values[0]
-
+            storages_df_max_hours = (storages_df["max_hours"]).values[0]
             storages_df_p = etrago_obj.storage_units_t["p"][storages_df.index]
             storages_df_p.columns = storages_df["carrier"]
             if pf_post_lopf:
@@ -588,6 +574,11 @@ def get_etrago_results_per_bus(
                 storages_df_q = pd.DataFrame(
                     0.0, index=timeseries_index, columns=[storages_df["carrier"]]
                 )
+            storages_df_soc = etrago_obj.storage_units_t["state_of_charge"][
+                storages_df.index
+            ]
+            storages_df_soc.columns = storages_df["carrier"]
+
         else:
             storages_df_p_nom = 0
             storages_df_max_hours = 0
@@ -597,11 +588,14 @@ def get_etrago_results_per_bus(
             storages_df_q = pd.DataFrame(
                 0.0, index=timeseries_index, columns=[storages_df["carrier"]]
             )
-
+            storages_df_soc = pd.DataFrame(
+                0.0, index=timeseries_index, columns=[storages_df["carrier"]]
+            )
         results["storage_units_p_nom"] = storages_df_p_nom
         results["storage_units_max_hours"] = storages_df_max_hours
         results["storage_units_active_power"] = storages_df_p
         results["storage_units_reactive_power"] = storages_df_q
+        results["storage_units_soc"] = storages_df_soc
 
     def dsm():
         # DSM
@@ -780,14 +774,17 @@ def get_etrago_results_per_bus(
     results["timeindex"] = timeseries_index
     # Prefill dict with None
     result_keys = [
+        "timeindex",
         "dispatchable_generators_active_power",
         "dispatchable_generators_reactive_power",
         "renewables_potential",
         "renewables_curtailment",
         "renewables_dispatch_reactive_power",
-        "storage_units_capacity",
+        "storage_units_p_nom",
+        "storage_units_max_hours",
         "storage_units_active_power",
         "storage_units_reactive_power",
+        "storage_units_soc",
         "dsm_active_power",
         "dsm_reactive_power",
         "heat_pump_central_active_power",
