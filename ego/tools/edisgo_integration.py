@@ -824,7 +824,7 @@ class EDisGoNetworks:
             raise Exception(msg)
 
         edisgo_grid = import_edisgo_from_files(
-            edisgo_path=grid_path
+            edisgo_path=grid_path, legacy_ding0_grids=False
         )
         edisgo_grid.set_timeindex(specs["timeindex"])
         # self._update_edisgo_configs(edisgo_grid)
@@ -973,7 +973,7 @@ class EDisGoNetworks:
         edisgo_grid.overlying_grid.solarthermal_energy_feedin_district_heating = specs[
             "solarthermal_energy_feedin_district_heating"
         ]
-        # ToDo CHP
+        # ToDo CHP + resistive heaters
 
         # ########################## electromobility ##########################
         logger.info("Set up electromobility data.")
