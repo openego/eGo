@@ -775,7 +775,6 @@ class EDisGoNetworks:
         # ##################### general settings ####################
         config = self._json_file
         engine = get_engine(config=config)
-        orm = register_tables_in_saio(engine, config=config)
         scenario = config["eTraGo"]["scn_name"]
 
         # results directory
@@ -824,13 +823,9 @@ class EDisGoNetworks:
             logger.error(msg)
             raise Exception(msg)
 
-        # ToDo change back
-        # edisgo_grid = import_edisgo_from_files(
-        #     edisgo_path=grid_path
-        # )
-        from edisgo import EDisGo
-
-        edisgo_grid = EDisGo(ding0_grid=grid_path, legacy_ding0_grids=False)
+        edisgo_grid = import_edisgo_from_files(
+            edisgo_path=grid_path
+        )
         edisgo_grid.set_timeindex(specs["timeindex"])
         # self._update_edisgo_configs(edisgo_grid)
 
@@ -903,9 +898,12 @@ class EDisGoNetworks:
         )
 
         # ################################# DSM ##################################
-        # logger.info("Set up DSM data.")
-        # dsm_active_power = specs["dsm_active_power"]
-        # ToDo: Get DSM potential per load (needs to be added as a function to eDisGo)
+        logger.info("Set up DSM data.")
+        # import DSM data
+        edisgo_grid.import_dsm(scenario=scenario, engine=engine)
+
+        # requirements overlying grid
+        edisgo_grid.overlying_grid.dsm_active_power = specs["dsm_active_power"]
 
         # ####################### district and individual heating #####################
         logger.info("Set up heat supply and demand data.")
@@ -975,6 +973,7 @@ class EDisGoNetworks:
         edisgo_grid.overlying_grid.solarthermal_energy_feedin_district_heating = specs[
             "solarthermal_energy_feedin_district_heating"
         ]
+        # ToDo CHP
 
         # ########################## electromobility ##########################
         logger.info("Set up electromobility data.")
@@ -1002,7 +1001,7 @@ class EDisGoNetworks:
             save_timeseries=True,
             save_results=False,
             save_electromobility=True,
-            # save_dsm=True,
+            save_dsm=True,
             save_heatpump=True,
             save_overlying_grid=True,
             reduce_memory=True,
