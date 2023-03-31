@@ -770,8 +770,6 @@ def get_etrago_results_per_bus(bus_id, etrago_obj, pf_post_lopf, max_cos_phi_ren
         logger.info("Only active power interface")
 
     results = {}
-    timeseries_index = etrago_obj.snapshots
-    results["timeindex"] = timeseries_index
     # Prefill dict with None
     result_keys = [
         "timeindex",
@@ -800,6 +798,9 @@ def get_etrago_results_per_bus(bus_id, etrago_obj, pf_post_lopf, max_cos_phi_ren
     ]
     for result_key in result_keys:
         results[result_key] = None
+
+    timeseries_index = etrago_obj.snapshots
+    results["timeindex"] = timeseries_index
 
     # Filter dataframes by bus_id
     # Generators
