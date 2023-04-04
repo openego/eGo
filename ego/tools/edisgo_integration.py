@@ -1105,29 +1105,26 @@ class EDisGoNetworks:
         hp_dh = edisgo_grid.topology.loads_df[
             edisgo_grid.topology.loads_df.sector == "district_heating"
             ]
-        if hp_dh.empty and specs["thermal_storage_central_capacity"] > 0:
-            raise ValueError(
-                "There are thermal storage units for district heating but no "
-                "heat pumps."
-            )
-        if specs["thermal_storage_central_capacity"] > 0:
-            tes_cap = (
-                    edisgo_grid.topology.loads_df.loc[hp_dh.index, "p_set"]
-                    * specs["thermal_storage_central_capacity"]
-                    / edisgo_grid.topology.loads_df.loc[hp_dh.index, "p_set"].sum()
-            )
-            # ToDo get efficiency from specs
-            edisgo_grid.heat_pump.thermal_storage_units_df = pd.concat(
-                [
-                    edisgo_grid.heat_pump.thermal_storage_units_df,
-                    pd.DataFrame(
-                        data={
-                            "capacity": tes_cap,
-                            "efficiency": 0.9,
-                        }
-                    ),
-                ]
-            )
+        # ToDo check
+        if not hp_dh.empty:
+            if specs["thermal_storage_central_capacity"] > 0:
+                tes_cap = (
+                        edisgo_grid.topology.loads_df.loc[hp_dh.index, "p_set"]
+                        * specs["thermal_storage_central_capacity"]
+                        / edisgo_grid.topology.loads_df.loc[hp_dh.index, "p_set"].sum()
+                )
+                # ToDo get efficiency from specs
+                edisgo_grid.heat_pump.thermal_storage_units_df = pd.concat(
+                    [
+                        edisgo_grid.heat_pump.thermal_storage_units_df,
+                        pd.DataFrame(
+                            data={
+                                "capacity": tes_cap,
+                                "efficiency": 0.9,
+                            }
+                        ),
+                    ]
+                )
 
         logger.info("Set requirements from overlying grid.")
         edisgo_grid.overlying_grid.renewables_curtailment = specs[
