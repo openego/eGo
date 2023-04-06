@@ -10,6 +10,20 @@ logger = logging.getLogger(__name__)
 
 
 def func_within(geom_a, geom_b, srid=3035):
+    """
+    Checks if geometry a is completely within geometry b.
+
+    Parameters
+    ----------
+    geom_a : Geometry
+        Geometry within `geom_b`.
+    geom_b : Geometry
+        Geometry containing `geom_a`.
+    srid : int
+        SRID geometries are transformed to in order to use the same SRID for both
+        geometries.
+
+    """
     return func.ST_Within(
         func.ST_Transform(
             geom_a,
@@ -24,163 +38,325 @@ def func_within(geom_a, geom_b, srid=3035):
 
 @session_decorator
 def get_grid_ids(orm=None, session=None):
+    """
+    Gets all MV grid IDs and the area of each grid in m^2.
+
+    Parameters
+    -----------
+    orm : dict
+        Dictionary with tables to retrieve data from.
+
+    Returns
+    -------
+    pandas.DataFrame
+        Dataframe with grid ID in index and corresponding area in m^2 in column
+        "area_m2".
+
+    """
     query = session.query(
-        orm["egon_hvmv_substation"].bus_id.label("bus_id"),
-        orm["egon_hvmv_substation"].point.label("geom"),
+        orm["egon_mv_grid_district"].bus_id,
+        orm["egon_mv_grid_district"].area.label("area_m2"),
     )
-    mv_data = pd.read_sql_query(query.statement, session.bind, index_col="bus_id")
-    return mv_data
+    return pd.read_sql_query(query.statement, session.bind, index_col="bus_id")
 
 
 @session_decorator
-def get_solar_capacity(orm=None, session=None):
-    # Get PV open space join weather cell id
-    query = (
-        session.query(
-            orm["generators_pv"].bus_id,
-            func.sum(orm["generators_pv"].capacity).label("p_openspace"),
-        )
-        .filter(
-            orm["generators_pv"].bus_id > 0,
-            orm["generators_pv"].site_type == "Freifläche",
-            orm["generators_pv"].status == "InBetrieb",
-            orm["generators_pv"].voltage_level.in_([4, 5, 6, 7]),
-        )
-        .group_by(
-            orm["generators_pv"].bus_id,
-        )
-    )
-    generators_pv_open_space_df = pd.read_sql(
-        sql=query.statement, con=session.bind, index_col=None
-    )
+def get_solar_capacity(scenario, grid_ids, orm=None, session=None):
+    """
+    Gets PV capacity (rooftop and ground mounted) in MW per grid in specified scenario.
 
+    Parameters
+    -----------
+    scenario : str
+        Scenario to obtain data for. Possible options are "status_quo", "eGon2035",
+        and "eGon100RE".
+    grid_ids : list(int)
+        List of grid IDs to obtain data for.
+    orm : dict
+        Dictionary with tables to retrieve data from.
+
+    Returns
+    -------
+    pandas.DataFrame
+        DataFrame with grid ID in index and corresponding PV capacity in MW in column
+        "pv_capacity_mw".
+
+    """
+    # get PV ground mounted capacity per grid
+    if scenario == "status_quo":
+        query = (
+            session.query(
+                orm["generators_pv_status_quo"].bus_id,
+                func.sum(orm["generators_pv_status_quo"].capacity).label("p_openspace"),
+            )
+            .filter(
+                orm["generators_pv_status_quo"].bus_id.in_(grid_ids),
+                orm["generators_pv_status_quo"].site_type == "Freifläche",
+                orm["generators_pv_status_quo"].status == "InBetrieb",
+                orm["generators_pv_status_quo"].capacity <= 20,
+                orm["generators_pv_status_quo"].voltage_level.in_([4, 5, 6, 7]),
+            )
+            .group_by(
+                orm["generators_pv_status_quo"].bus_id,
+            )
+        )
+        cap_open_space_df = pd.read_sql(
+            sql=query.statement, con=session.bind, index_col="bus_id"
+        )
+    else:
+        query = (
+            session.query(
+                orm["generators"].bus_id,
+                func.sum(orm["generators"].el_capacity).label("p_openspace"),
+            )
+            .filter(
+                orm["generators"].scenario == scenario,
+                orm["generators"].bus_id.in_(grid_ids),
+                orm["generators"].voltage_level >= 4,
+                orm["generators"].el_capacity <= 20,
+                orm["generators"].carrier == "solar",
+            )
+            .group_by(
+                orm["generators"].bus_id,
+            )
+        )
+        cap_open_space_df = pd.read_sql(
+            sql=query.statement, con=session.bind, index_col="bus_id"
+        )
+    # get PV rooftop capacity per grid
     query = (
         session.query(
             orm["generators_pv_rooftop"].bus_id,
             func.sum(orm["generators_pv_rooftop"].capacity).label("p_rooftop"),
         )
         .filter(
-            orm["generators_pv_rooftop"].bus_id > 0,
-            orm["generators_pv_rooftop"].scenario == "status_quo",
+            orm["generators_pv_rooftop"].bus_id.in_(grid_ids),
+            orm["generators_pv_rooftop"].scenario == scenario,
+            orm["generators_pv_rooftop"].capacity <= 20,
             orm["generators_pv_rooftop"].voltage_level.in_([4, 5, 6, 7]),
         )
         .group_by(
             orm["generators_pv_rooftop"].bus_id,
         )
     )
-    generators_pv_rooftop_df = pd.read_sql(
-        sql=query.statement, con=session.bind, index_col=None
+    cap_rooftop_df = pd.read_sql(
+        sql=query.statement, con=session.bind, index_col="bus_id"
     )
 
-    renewable_generators_df = generators_pv_open_space_df.set_index("bus_id").join(
-        generators_pv_rooftop_df.set_index("bus_id"), how="outer"
+    return (
+        cap_open_space_df.join(cap_rooftop_df, how="outer")
+        .fillna(value=0)
+        .sum(axis="columns")
+        .to_frame("pv_capacity_mw")
     )
-    renewable_generators_df.fillna(value=0, inplace=True)
-    renewable_generators_df["solar_cap"] = renewable_generators_df.sum(axis="columns")
-    return renewable_generators_df[["solar_cap"]]
 
 
 @session_decorator
-def get_wind_capacity(orm=None, session=None):
-    # Get generators wind join weather cells
-    query = (
-        session.query(
-            orm["generators_wind"].bus_id,
-            func.sum(orm["generators_wind"].capacity).label("wind_capacity"),
-        )
-        .filter(
-            orm["generators_wind"].bus_id > 0,
-            orm["generators_wind"].site_type == "Windkraft an Land",
-            orm["generators_wind"].status == "InBetrieb",
-            orm["generators_wind"].voltage_level.in_([4, 5, 6, 7]),
-        )
-        .group_by(
-            orm["generators_wind"].bus_id,
-        )
-    )
-    generators_wind_df = pd.read_sql(
-        sql=query.statement, con=session.bind, index_col=None
-    )
+def get_wind_capacity(scenario, grid_ids, orm=None, session=None):
+    """
+    Gets wind onshore capacity in MW per grid in specified scenario.
 
-    renewable_generators_df = generators_wind_df.set_index("bus_id")
-    renewable_generators_df["wind_cap"] = renewable_generators_df.sum(axis="columns")
-    return renewable_generators_df[["wind_cap"]]
+    Parameters
+    -----------
+    scenario : str
+        Scenario to obtain data for. Possible options are "status_quo", "eGon2035",
+        and "eGon100RE".
+    grid_ids : list(int)
+        List of grid IDs to obtain data for.
+    orm : dict
+        Dictionary with tables to retrieve data from.
 
+    Returns
+    -------
+    pandas.DataFrame
+        DataFrame with grid ID in index and corresponding Wind capacity in MW in
+        column "wind_capacity_mw".
 
-@session_decorator
-def get_emob_capacity(orm=None, session=None):
-    load_timeseries_nested = (
-        session.query(
-            orm["etrago_load_timeseries"].scn_name,
-            orm["etrago_load_timeseries"].load_id,
-            orm["etrago_load_timeseries"].temp_id,
-            orm["etrago_load_timeseries"].p_set,
-            orm["etrago_load"].bus.label("bus_id"),
+    """
+    if scenario == "status_quo":
+        query = (
+            session.query(
+                orm["generators_wind_status_quo"].bus_id,
+                func.sum(orm["generators_wind_status_quo"].capacity).label(
+                    "wind_capacity_mw"
+                ),
+            )
+            .filter(
+                orm["generators_wind_status_quo"].bus_id.in_(grid_ids),
+                orm["generators_wind_status_quo"].site_type == "Windkraft an Land",
+                orm["generators_wind_status_quo"].status == "InBetrieb",
+                orm["generators_wind_status_quo"].capacity <= 20,
+                orm["generators_wind_status_quo"].voltage_level.in_([4, 5, 6, 7]),
+            )
+            .group_by(
+                orm["generators_wind_status_quo"].bus_id,
+            )
         )
-        .join(
-            orm["etrago_load_timeseries"],
-            orm["etrago_load_timeseries"].load_id == orm["etrago_load"].load_id,
+        cap_wind_df = pd.read_sql(
+            sql=query.statement, con=session.bind, index_col="bus_id"
         )
-        .filter(
-            orm["etrago_load"].scn_name == "eGon2035_lowflex",
-            orm["etrago_load"].carrier == "land transport EV",
+    else:
+        query = (
+            session.query(
+                orm["generators"].bus_id,
+                func.sum(orm["generators"].el_capacity).label("wind_capacity_mw"),
+            )
+            .filter(
+                orm["generators"].scenario == scenario,
+                orm["generators"].bus_id.in_(grid_ids),
+                orm["generators"].voltage_level >= 4,
+                orm["generators"].el_capacity <= 20,
+                orm["generators"].carrier == "wind_onshore",
+            )
+            .group_by(
+                orm["generators"].bus_id,
+            )
         )
-    ).subquery(name="load_timeseries_nested")
-    load_timeseries_unnested = (
-        session.query(
-            load_timeseries_nested.c.bus_id,
-            load_timeseries_nested.c.scn_name,
-            load_timeseries_nested.c.load_id,
-            load_timeseries_nested.c.temp_id,
-            func.unnest(load_timeseries_nested.c.p_set).label("p_set"),
+        cap_wind_df = pd.read_sql(
+            sql=query.statement, con=session.bind, index_col="bus_id"
         )
-    ).subquery(name="load_timeseries_unnested")
-    load_timeseries_maximal = (
-        session.query(
-            load_timeseries_unnested.c.bus_id,
-            load_timeseries_unnested.c.scn_name,
-            load_timeseries_unnested.c.load_id,
-            load_timeseries_unnested.c.temp_id,
-            func.max(load_timeseries_unnested.c.p_set).label("p_set_max"),
-        ).group_by(
-            load_timeseries_unnested.c.bus_id,
-            load_timeseries_unnested.c.scn_name,
-            load_timeseries_unnested.c.load_id,
-            load_timeseries_unnested.c.temp_id,
-        )
-    ).subquery(name="load_timeseries_maximal")
-    load_p_nom = session.query(
-        load_timeseries_maximal.c.bus_id,
-        func.sum(load_timeseries_maximal.c.p_set_max).label("emob_cap"),
-    ).group_by(
-        load_timeseries_maximal.c.bus_id,
-    )
-    emob_capacity_df = pd.read_sql(
-        sql=load_p_nom.statement, con=session.bind, index_col=None
-    )
-    emob_capacity_df.set_index("bus_id", inplace=True)
-    return emob_capacity_df
+    return cap_wind_df
 
 
 @session_decorator
-def get_cummulative_storage_capacity(bus_id_list, orm=None, session=None):
-    return
+def get_electromobility_maximum_load(scenario, grid_ids, orm=None, session=None):
+    """
+    Parameters
+    -----------
+    scenario : str
+        Scenario to obtain data for. Possible options are "status_quo", "eGon2035",
+        and "eGon100RE".
+    grid_ids : list(int)
+        List of grid IDs to obtain data for.
+    orm : dict
+        Dictionary with tables to retrieve data from.
+
+    Returns
+    -------
+    pandas.DataFrame
+        DataFrame with grid ID in index and corresponding maximum electromobility load
+        in MW in column "electromobility_max_load_mw".
+
+    """
+    if scenario == "status_quo":
+        return pd.DataFrame(columns=["electromobility_max_load_mw"])
+    else:
+        load_timeseries_nested = (
+            session.query(
+                orm["etrago_load"].bus.label("bus_id"),
+                orm["etrago_load_timeseries"].p_set,
+            )
+            .join(
+                orm["etrago_load_timeseries"],
+                orm["etrago_load_timeseries"].load_id == orm["etrago_load"].load_id,
+            )
+            .filter(
+                orm["etrago_load"].scn_name == f"{scenario}_lowflex",
+                orm["etrago_load"].carrier == "land_transport_EV",
+                orm["etrago_load"].bus.in_(grid_ids),
+            )
+        ).subquery(name="load_timeseries_nested")
+        load_timeseries_unnested = (
+            session.query(
+                load_timeseries_nested.c.bus_id,
+                func.unnest(load_timeseries_nested.c.p_set).label("p_set"),
+            )
+        ).subquery(name="load_timeseries_unnested")
+        load_timeseries_maximal = (
+            session.query(
+                load_timeseries_unnested.c.bus_id,
+                func.max(load_timeseries_unnested.c.p_set).label("p_set_max"),
+            ).group_by(
+                load_timeseries_unnested.c.bus_id,
+            )
+        ).subquery(name="load_timeseries_maximal")
+        load_p_nom = session.query(
+            load_timeseries_maximal.c.bus_id,
+            load_timeseries_maximal.c.p_set_max.label("electromobility_max_load_mw"),
+        )
+        return pd.read_sql(
+            sql=load_p_nom.statement, con=session.bind, index_col="bus_id"
+        )
 
 
 @session_decorator
-def get_weather_id_for_generator(bus_id, orm=None, session=None):
-    query = (
-        session.query(
-            orm["egon_hvmv_substation"].bus_id,
-            orm["weather_cells"].w_id,
+def get_heat_pump_capacity(scenario, grid_ids, orm=None, session=None):
+    """
+    Gets heat pump capacity (individual heating and district heating) in MW per grid
+    in specified scenario.
+
+    Parameters
+    -----------
+    scenario : str
+        Scenario to obtain data for. Possible options are "status_quo", "eGon2035",
+        and "eGon100RE".
+    grid_ids : list(int)
+        List of grid IDs to obtain data for.
+    orm : dict
+        Dictionary with tables to retrieve data from.
+
+    Returns
+    -------
+    pandas.DataFrame
+        DataFrame with grid ID in index and corresponding heat pump capacity in MW in
+        column "heat_pump_capacity_mw".
+
+    """
+    if scenario == "status_quo":
+        return pd.DataFrame(columns=["heat_pump_capacity_mw"])
+    else:
+        # get individual heat pump capacity
+        query = (
+            session.query(
+                orm["heat_pump_capacity_individual"].mv_grid_id.label("bus_id"),
+                func.sum(orm["heat_pump_capacity_individual"].capacity).label(
+                    "cap_individual"
+                ),
+            )
+            .filter(
+                orm["heat_pump_capacity_individual"].mv_grid_id.in_(grid_ids),
+                orm["heat_pump_capacity_individual"].carrier == "heat_pump",
+                orm["heat_pump_capacity_individual"].scenario == scenario,
+                orm["heat_pump_capacity_individual"].capacity <= 17.5,
+            )
+            .group_by(
+                orm["heat_pump_capacity_individual"].mv_grid_id,
+            )
         )
-        .join(
-            orm["egon_hvmv_substation"],
-            func_within(orm["egon_hvmv_substation"].point, orm["weather_cells"].geom),
+        cap_individual_df = pd.read_sql(
+            sql=query.statement, con=session.bind, index_col="bus_id"
         )
-        .filter(
-            orm["egon_hvmv_substation"].bus_id == bus_id,
+        # get central heat pump capacity
+        query = (
+            session.query(
+                orm["egon_mv_grid_district"].bus_id,
+                func.sum(orm["heat_pump_capacity_district_heating"].capacity).label(
+                    "p_set"
+                ),
+            )
+            .filter(
+                orm["egon_mv_grid_district"].bus_id.in_(grid_ids),
+                orm["heat_pump_capacity_district_heating"].scenario == scenario,
+                orm["heat_pump_capacity_district_heating"].carrier == "heat_pump",
+                orm["heat_pump_capacity_district_heating"].capacity <= 17.5,
+            )
+            .outerjoin(
+                orm["egon_mv_grid_district"],
+                func_within(
+                    orm["heat_pump_capacity_district_heating"].geometry,
+                    orm["egon_mv_grid_district"].geom,
+                ),
+            )
+            .group_by(
+                orm["egon_mv_grid_district"].bus_id,
+            )
         )
+        cap_dh_df = pd.read_sql(
+            sql=query.statement, con=session.bind, index_col="bus_id"
+        )
+    return (
+        cap_individual_df.join(cap_dh_df, how="outer")
+        .fillna(value=0)
+        .sum(axis="columns")
+        .to_frame("heat_pump_capacity_mw")
     )
-    weather_id = query.all()[0][1]
-    return weather_id
