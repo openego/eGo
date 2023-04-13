@@ -280,9 +280,9 @@ def get_electromobility_maximum_load(scenario, grid_ids, orm=None, session=None)
 
 
 @session_decorator
-def get_heat_pump_capacity(scenario, grid_ids, orm=None, session=None):
+def get_pth_capacity(scenario, grid_ids, orm=None, session=None):
     """
-    Gets heat pump capacity (individual heating and district heating) in MW per grid
+    Gets PtH capacity (individual heating and district heating) in MW per grid
     in specified scenario.
 
     Parameters
@@ -298,12 +298,12 @@ def get_heat_pump_capacity(scenario, grid_ids, orm=None, session=None):
     Returns
     -------
     pandas.DataFrame
-        DataFrame with grid ID in index and corresponding heat pump capacity in MW in
-        column "heat_pump_capacity_mw".
+        DataFrame with grid ID in index and corresponding PtH capacity in MW in
+        column "pth_capacity_mw".
 
     """
     if scenario == "status_quo":
-        return pd.DataFrame(columns=["heat_pump_capacity_mw"])
+        return pd.DataFrame(columns=["pth_capacity_mw"])
     else:
         # get individual heat pump capacity
         query = (
@@ -326,37 +326,28 @@ def get_heat_pump_capacity(scenario, grid_ids, orm=None, session=None):
         cap_individual_df = pd.read_sql(
             sql=query.statement, con=session.bind, index_col="bus_id"
         )
-        # get central heat pump capacity
+        # get central heat pump and resistive heater capacity
         query = (
             session.query(
-                orm["egon_mv_grid_district"].bus_id,
-                func.sum(orm["heat_pump_capacity_district_heating"].capacity).label(
-                    "p_set"
-                ),
+                orm["pth_capacity_district_heating"].bus0,
+                func.sum(orm["pth_capacity_district_heating"].p_nom).label("p_set"),
             )
             .filter(
-                orm["egon_mv_grid_district"].bus_id.in_(grid_ids),
-                orm["heat_pump_capacity_district_heating"].scenario == scenario,
-                orm["heat_pump_capacity_district_heating"].carrier == "heat_pump",
-                orm["heat_pump_capacity_district_heating"].capacity <= 17.5,
-            )
-            .outerjoin(
-                orm["egon_mv_grid_district"],
-                func_within(
-                    orm["heat_pump_capacity_district_heating"].geometry,
-                    orm["egon_mv_grid_district"].geom,
+                orm["pth_capacity_district_heating"].bus0.in_(grid_ids),
+                orm["pth_capacity_district_heating"].scn_name == scenario,
+                orm["pth_capacity_district_heating"].carrier.in_(
+                    ["central_heat_pump", "central_resistive_heater"]
                 ),
+                orm["pth_capacity_district_heating"].p_nom <= 17.5,
             )
             .group_by(
-                orm["egon_mv_grid_district"].bus_id,
+                orm["pth_capacity_district_heating"].bus0,
             )
         )
-        cap_dh_df = pd.read_sql(
-            sql=query.statement, con=session.bind, index_col="bus_id"
-        )
+        cap_dh_df = pd.read_sql(sql=query.statement, con=session.bind, index_col="bus0")
     return (
         cap_individual_df.join(cap_dh_df, how="outer")
         .fillna(value=0)
         .sum(axis="columns")
-        .to_frame("heat_pump_capacity_mw")
+        .to_frame("pth_capacity_mw")
     )
