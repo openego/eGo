@@ -57,7 +57,7 @@
     "results": "results_edisgo",
     "solver": "glpk",
     "timesteps_pfa": "snapshot_analysis",
-    "tasks": ["2_specs_overlying_grid"]
+    "tasks": ["1_setup_grid"]
   },
   "database": {
     "tables": {
