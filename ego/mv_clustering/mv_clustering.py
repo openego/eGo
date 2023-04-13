@@ -48,51 +48,101 @@ if "READTHEDOCS" not in os.environ:
 logger = logging.getLogger(__name__)
 
 
-def cluster_attributes_to_csv(attributes_path, config=None):
+def get_cluster_attributes(attributes_path, scenario, config=None):
     """
-    Calculates the attributes to cluster
+    Determines attributes to cluster MV grids by.
+
+    Considered attributes are PV, wind onshore and PtH capacity, as well as
+    maximum load of EVs (in case of uncoordinated charging). All attributes are given
+    in MW as well as in MW per km^2.
+
+    Data is written to csv file and returned.
 
     Parameters
     ----------
-    attributes_path : :obj:`str`
-        Path to attributes csv
-
-    config : :obj:`dict`
+    attributes_path : str
+        Path to save attributes csv to, including the file name.
+    scenario : str
+        Scenario to determine attributes for. Possible options are "status_quo",
+        "eGon2035", and "eGon100RE".
+    config : dict
         Config dict.
 
-    """
+    Returns
+    -------
+    pandas.DataFrame
+        DataFrame with grid ID in index and corresponding attributes in columns:
+        * "area" : area of MV grid in m^2
+        * "pv_capacity_mw" : PV capacity in MW
+        * "pv_capacity_mw_per_km2" : PV capacity in MW per km^2
+        * "wind_capacity_mw" : wind onshore capacity in MW
+        * "wind_capacity_mw_per_km2" : wind onshore capacity in MW per km^2
+        * "electromobility_max_load_mw" : maximum load of EVs (in case of
+           uncoordinated charging) in MW
+        * "electromobility_max_load_mw_per_km2" : maximum load of EVs (in case of
+           uncoordinated charging) in MW per km^2
+        * "pth_capacity_mw" : PtH capacity (for individual and district
+          heating) in MW
+        * "pth_capacity_mw_per_km2" : PtH capacity (for individual and
+          district heating) in MW per km^2
 
+    """
+    # get attributes from database
     with sshtunnel(config=config):
         engine = get_engine(config=config)
         orm = register_tables_in_saio(engine, config=config)
 
         grid_ids_df = db_io.get_grid_ids(engine=engine, orm=orm)
-        solar_capacity_df = db_io.get_solar_capacity(engine=engine, orm=orm)
-        wind_capacity_df = db_io.get_wind_capacity(engine=engine, orm=orm)
-        emob_capacity_df = db_io.get_emob_capacity(engine=engine, orm=orm)
-
+        solar_capacity_df = db_io.get_solar_capacity(
+            scenario, grid_ids_df.index, orm, engine=engine
+        )
+        wind_capacity_df = db_io.get_wind_capacity(
+            scenario, grid_ids_df.index, orm, engine=engine
+        )
+        emob_capacity_df = db_io.get_electromobility_maximum_load(
+            scenario, grid_ids_df.index, orm, engine=engine
+        )
+        pth_capacity_df = db_io.get_pth_capacity(
+            scenario, grid_ids_df.index, orm, engine=engine
+        )
     df = pd.concat(
-        [grid_ids_df, solar_capacity_df, wind_capacity_df, emob_capacity_df],
+        [
+            grid_ids_df,
+            solar_capacity_df,
+            wind_capacity_df,
+            emob_capacity_df,
+            pth_capacity_df,
+        ],
         axis="columns",
+    ).fillna(0)
+    # calculate relative values
+    df["pv_capacity_mw_per_km2"] = df["pv_capacity_mw"] / (df["area_m2"] / 1e6)
+    df["wind_capacity_mw_per_km2"] = df["wind_capacity_mw"] / (df["area_m2"] / 1e6)
+    df["electromobility_max_load_mw_per_km2"] = df["electromobility_max_load_mw"] / (
+        df["area_m2"] / 1e6
     )
-    df.fillna(0, inplace=True)
-
+    df["pth_capacity_mw_per_km2"] = df["pth_capacity_mw"] / (df["area_m2"] / 1e6)
+    # write to csv
     df.to_csv(attributes_path)
+    return df
 
 
-def mv_grid_clustering(data_df, working_grids=None, config=None):
+def mv_grid_clustering(cluster_attributes_df, working_grids=None, config=None):
     """
-    Clusters the MV grids based on the attributes, for a given number
-    of MV grids
+    Clusters the MV grids based on the attributes, for a given number of MV grids.
 
     Parameters
     ----------
+    cluster_attributes_df : pandas.DataFrame
+        Dataframe with data to cluster grids by. Columns contain the attributes to
+        cluster and index contains the MV grid IDs.
+    working_grids : pandas.DataFrame
+        DataFrame with information on whether MV grid can be used for calculations.
+        Index of the dataframe contains the MV grid ID and boolean value in column
+        "working" specifies whether respective grid can be used.
     config : dict
         Config dict.
-    working_grids : pandas.DataFrame
-        DataFrame of working grids, only working grids are used as cluster centers.
-    data_df : pandas.DataFrame
-        Attributes to cluster.
+
     Returns
     -------
     pandas.DataFrame
@@ -103,18 +153,22 @@ def mv_grid_clustering(data_df, working_grids=None, config=None):
     n_clusters = config["eDisGo"]["n_clusters"]
 
     # Norm attributes
-    for attribute in data_df:
-        attribute_max = data_df[attribute].max()
-        data_df[attribute] = data_df[attribute] / attribute_max
+    for attribute in cluster_attributes_df:
+        attribute_max = cluster_attributes_df[attribute].max()
+        cluster_attributes_df[attribute] = (
+            cluster_attributes_df[attribute] / attribute_max
+        )
 
     # Starting KMeans clustering
-    logger.info(f"Used Clustering Attributes: {data_df.columns.to_list()}")
+    logger.info(
+        f"Used clustering attributes: {cluster_attributes_df.columns.to_list()}"
+    )
     kmeans = KMeans(n_clusters=n_clusters, random_state=random_seed)
-    data_array = data_df.to_numpy()
+    data_array = cluster_attributes_df.to_numpy()
     labels = kmeans.fit_predict(data_array)
     centroids = kmeans.cluster_centers_
 
-    result_df = pd.DataFrame(index=data_df.index)
+    result_df = pd.DataFrame(index=cluster_attributes_df.index)
     result_df["label"] = labels
     # For each sample, calculate the distance to its assigned centroid.
     result_df["centroid_distance"] = np.linalg.norm(
@@ -134,9 +188,19 @@ def mv_grid_clustering(data_df, working_grids=None, config=None):
                 result_df["working"] & (result_df["label"] == label),
                 "centroid_distance",
             ].idxmin()
+            rep_orig = result_df.loc[
+                result_df["label"] == label, "centroid_distance"
+            ].idxmin()
             result_df.loc[rep, "representative"] = True
+            result_df.loc[rep, "representative_orig"] = rep_orig
         except ValueError:
             failing_labels.append(label)
+
+    if len(failing_labels) > 0:
+        logger.warning(
+            f"There are {len(failing_labels)} clusters for which no representative "
+            f"could be determined."
+        )
 
     n_grids = result_df.shape[0]
     df_data = []
@@ -145,6 +209,7 @@ def mv_grid_clustering(data_df, working_grids=None, config=None):
         "n_grids_per_cluster",
         "relative_representation",
         "represented_grids",
+        "representative_orig",
     ]
     for label in np.unique(labels):
         represented_grids = result_df[result_df["label"] == label].index.to_list()
@@ -156,41 +221,85 @@ def mv_grid_clustering(data_df, working_grids=None, config=None):
             ].index.values[0]
         except IndexError:
             representative = False
+        try:
+            representative_orig = result_df[
+                result_df["representative"] & (result_df["label"] == label)
+            ].representative_orig.values[0]
+            representative_orig = (
+                True if representative == representative_orig else False
+            )
+        except IndexError:
+            representative_orig = False
 
         row = [
             representative,
             n_grids_per_cluster,
             relative_representation,
             represented_grids,
+            representative_orig,
         ]
         df_data.append(row)
 
     cluster_df = pd.DataFrame(df_data, index=np.unique(labels), columns=columns)
     cluster_df.index.name = "cluster_id"
 
-    return cluster_df
+    return cluster_df.sort_values("n_grids_per_cluster", ascending=False)
 
 
 def cluster_workflow(config=None):
-    attributes_path = os.path.join(config["eGo"]["results_dir"], "attributes.csv")
+    """
+    Get cluster attributes per grid if needed and conduct MV grid clustering.
+
+    Parameters
+    ----------
+    config : dict
+        Config dict from config json. Can be obtained by calling
+        ego.tools.utilities.get_scenario_setting(jsonpath=config_path).
+
+    Returns
+    --------
+    pandas.DataFrame
+        DataFrame with clustering results. Columns are "representative" containing
+        the grid ID of the representative grid, "n_grids_per_cluster" containing the
+        number of grids that are represented, "relative_representation" containing the
+        percentage of grids represented, "represented_grids" containing a list of
+        grid IDs of all represented grids and "representative_orig" containing
+        information on whether the representative is the actual cluster center (in which
+        case this value is True) or chosen because the grid in the cluster center is
+        not a working grid.
+
+    """
+    # determine cluster attributes
+    logger.info("Determine cluster attributes.")
+    attributes_path = os.path.join(
+        config["eGo"]["results_dir"], "mv_grid_cluster_attributes.csv"
+    )
+    if not os.path.exists(config["eGo"]["results_dir"]):
+        os.makedirs(config["eGo"]["results_dir"])
+    scenario = config["eTraGo"]["scn_name"]
+    cluster_attributes_df = get_cluster_attributes(
+        attributes_path=attributes_path, scenario=scenario, config=config
+    )
+
+    # select attributes to cluster by
+    cluster_attributes_df = cluster_attributes_df[
+        config["eDisGo"]["cluster_attributes"]
+    ]
     working_grids_path = os.path.join(
         config["eGo"]["data_dir"], config["eDisGo"]["grid_path"], "working_grids.csv"
     )
-
-    if not os.path.isfile(attributes_path):
-        logger.info("Attributes file is missing, get attributes from egon-data.")
-        cluster_attributes_to_csv(attributes_path=attributes_path, config=config)
-
-    data_to_cluster = pd.read_csv(attributes_path, index_col=0)[
-        config["eDisGo"]["cluster_attributes"]
-    ]
     if os.path.isfile(working_grids_path):
         working_grids = pd.read_csv(working_grids_path, index_col=0)
     else:
-        raise FileNotFoundError("Working_grids aure missing.")
-        # logger.info("'working_grids.csv' is missing, select representative grids.")
-        # working_grids = None
-
-    return mv_grid_clustering(
-        data_to_cluster, working_grids=working_grids, config=config
+        raise FileNotFoundError(
+            "working_grids.csv is missing. Cannot conduct MV grid clustering."
+        )
+    # conduct MV grid clustering
+    cluster_df = mv_grid_clustering(
+        cluster_attributes_df, working_grids=working_grids, config=config
     )
+    cluster_results_path = os.path.join(
+        config["eGo"]["results_dir"], "mv_grid_cluster_results.csv"
+    )
+    cluster_df.to_csv(cluster_results_path)
+    return cluster_df
