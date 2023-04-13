@@ -86,7 +86,7 @@ def define_logging(name):
     return logger
 
 
-def get_scenario_setting(jsonpath="scenario_setting.json"):
+def get_scenario_setting(jsonpath=None):
     """Get and open json file with scenaio settings of eGo.
     The settings incluede eGo, eTraGo and eDisGo specific
     settings of arguments and parameters for a reproducible
@@ -103,11 +103,13 @@ def get_scenario_setting(jsonpath="scenario_setting.json"):
     json_file : dict
         Dictionary of json file
     """
-    path = os.getcwd()
-    # add try ego/
-    logger.info("Your path is: {}".format(path))
+    if jsonpath is None:
+        path = os.getcwd()
+        # add try ego/
+        logger.info("Your path is: {}".format(path))
+        jsonpath = os.path.join(path, "scenario_setting.json")
 
-    with open(path + "/" + jsonpath) as f:
+    with open(jsonpath) as f:
         json_file = json.load(f)
 
     # fix remove result_id
