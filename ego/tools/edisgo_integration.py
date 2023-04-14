@@ -970,7 +970,11 @@ class EDisGoNetworks:
         )
 
         logger.info("Run integrity check.")
-        edisgo_grid.check_integrity()
+        logger.info("Run integrity checks.")
+        edisgo_grid.topology.check_integrity()
+        edisgo_grid.electromobility.check_integrity()
+        edisgo_grid.heat_pump.check_integrity()
+        edisgo_grid.dsm.check_integrity()
 
         return edisgo_grid
 
