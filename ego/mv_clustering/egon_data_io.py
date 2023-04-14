@@ -317,7 +317,7 @@ def get_pth_capacity(scenario, grid_ids, orm=None, session=None):
                 orm["heat_pump_capacity_individual"].mv_grid_id.in_(grid_ids),
                 orm["heat_pump_capacity_individual"].carrier == "heat_pump",
                 orm["heat_pump_capacity_individual"].scenario == scenario,
-                orm["heat_pump_capacity_individual"].capacity <= 17.5,
+                orm["heat_pump_capacity_individual"].capacity <= 20.0,
             )
             .group_by(
                 orm["heat_pump_capacity_individual"].mv_grid_id,
@@ -338,7 +338,7 @@ def get_pth_capacity(scenario, grid_ids, orm=None, session=None):
                 orm["pth_capacity_district_heating"].carrier.in_(
                     ["central_heat_pump", "central_resistive_heater"]
                 ),
-                orm["pth_capacity_district_heating"].p_nom <= 17.5,
+                orm["pth_capacity_district_heating"].p_nom <= 20.0,
             )
             .group_by(
                 orm["pth_capacity_district_heating"].bus0,
