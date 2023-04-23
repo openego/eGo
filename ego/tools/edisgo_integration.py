@@ -769,7 +769,6 @@ class EDisGoNetworks:
 
         # ##################### general settings ####################
         config = self._json_file
-        engine = get_engine(config=config)
         scenario = config["eTraGo"]["scn_name"]
 
         # results directory
@@ -802,7 +801,7 @@ class EDisGoNetworks:
         # ################### task: setup grid ##################
         if "1_setup_grid" in config["eDisGo"]["tasks"]:
             edisgo_grid = self._run_edisgo_task_setup_grid(
-                mv_grid_id, scenario, engine, logger, config
+                mv_grid_id, scenario, logger, config
             )
             if "2_specs_overlying_grid" not in config["eDisGo"]["tasks"]:
                 edisgo_grid.save(
@@ -884,7 +883,7 @@ class EDisGoNetworks:
 
         return {edisgo_grid.topology.id: results_dir}
 
-    def _run_edisgo_task_setup_grid(self, mv_grid_id, scenario, engine, logger, config):
+    def _run_edisgo_task_setup_grid(self, mv_grid_id, scenario, logger, config):
         """
         Sets up EDisGo object for future scenario (without specifications from overlying
         grid).
@@ -914,6 +913,8 @@ class EDisGoNetworks:
 
         """
         logger.info(f"MV grid {mv_grid_id}: Start task 'setup_grid'.")
+
+        engine = get_engine(config=config)
 
         logger.info(f"MV grid {mv_grid_id}: Initialize MV grid.")
         grid_path = os.path.join(
