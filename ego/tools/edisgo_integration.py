@@ -931,7 +931,7 @@ class EDisGoNetworks:
         edisgo_grid = import_edisgo_from_files(edisgo_path=grid_path)
         edisgo_grid.legacy_grids = False
         # overwrite configs
-        edisgo_grid.config = Config()
+        edisgo_grid._config = Config()
         edisgo_grid.set_timeindex(pd.date_range("1/1/2011", periods=8760, freq="H"))
 
         logger.info("Set up load time series of conventional loads.")
