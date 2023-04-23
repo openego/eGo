@@ -50,6 +50,7 @@ from sqlalchemy.orm import scoped_session, sessionmaker
 if "READTHEDOCS" not in os.environ:
 
     from edisgo.edisgo import import_edisgo_from_files
+    from edisgo.tools.config import Config
     from edisgo.tools.logger import setup_logger
     from edisgo.tools.plots import mv_grid_topology
     from egoio.db_tables import grid, model_draft
@@ -929,6 +930,8 @@ class EDisGoNetworks:
 
         edisgo_grid = import_edisgo_from_files(edisgo_path=grid_path)
         edisgo_grid.legacy_grids = False
+        # overwrite configs
+        edisgo_grid.config = Config()
         edisgo_grid.set_timeindex(pd.date_range("1/1/2011", periods=8760, freq="H"))
 
         logger.info("Set up load time series of conventional loads.")
