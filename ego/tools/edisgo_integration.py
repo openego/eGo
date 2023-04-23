@@ -973,7 +973,6 @@ class EDisGoNetworks:
             edisgo_obj=edisgo_grid, use_case=["home", "work"]
         )
 
-        logger.info("Run integrity check.")
         logger.info("Run integrity checks.")
         edisgo_grid.topology.check_integrity()
         edisgo_grid.electromobility.check_integrity()
