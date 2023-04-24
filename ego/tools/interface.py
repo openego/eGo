@@ -205,15 +205,40 @@ def get_etrago_results_per_bus(bus_id, etrago_obj, pf_post_lopf, max_cos_phi_ren
             Type: pd.Series
             Unit: MW
 
-        * 'heat_pump_active_power'
+        * 'heat_pump_rural_active_power'
             Active power time series of PtH units at the given bus.
             Type: pd.Series
             Unit: MW
 
-        * 'heat_pump_reactive_power'
+        * 'heat_pump_rural_reactive_power'
             Reactive power time series of PtH units at the given bus.
             Type: pd.Series
             Unit: MVar
+
+        * 'heat_pump_rural_p_nom'
+            Nominal power of all rural PtH units at the given bus.
+            Type: float
+            Unit: MWh
+
+        * 'thermal_storage_rural_capacity'
+            Capacity of the storage at the bus where the rural heat units feed in.
+            Type: float
+            Unit: MWh
+
+        * 'heat_pump_central_active_power'
+            Active power time series of PtH units at the given bus.
+            Type: pd.Series
+            Unit: MW
+
+        * 'heat_pump_central_reactive_power'
+            Reactive power time series of PtH units at the given bus.
+            Type: pd.Series
+            Unit: MVar
+
+        * 'heat_pump_central_p_nom'
+            Nominal power of all rural PtH units at the given bus.
+            Type: float
+            Unit: MWh
 
         * 'thermal_storage_central_capacity'
             Capacity of the storage at the bus where the central heat units feed in.
@@ -226,11 +251,6 @@ def get_etrago_results_per_bus(bus_id, etrago_obj, pf_post_lopf, max_cos_phi_ren
             Type: pd.DataFrame
             Columns: Area ID
             Unit: MW
-
-        * 'thermal_storage_rural_capacity'
-            Capacity of the storage at the bus where the rural heat units feed in.
-            Type: float
-            Unit: MWh
 
         * 'electromobility_active_power'
             Active power charging time series at the given bus.
@@ -563,8 +583,8 @@ def get_etrago_results_per_bus(bus_id, etrago_obj, pf_post_lopf, max_cos_phi_ren
         ] = solarthermal_feedin_df_p
 
     def rural_heat():
-        # Rural heat
-        # Power2Heat
+
+        # ToDo (low priority) add resistive heaters (they only exist in eGon100RE)
         rural_heat_carriers = ["rural_heat_pump"]
         rural_heat_df = links_df.loc[
             links_df["carrier"].isin(rural_heat_carriers)
@@ -572,12 +592,10 @@ def get_etrago_results_per_bus(bus_id, etrago_obj, pf_post_lopf, max_cos_phi_ren
         ]
         if not rural_heat_df.empty:
             # Timeseries
-            rural_heat_df_p = etrago_obj.links_t["p0"][rural_heat_df.index]
-            rural_heat_df_p.columns = rural_heat_df["carrier"]
-            rural_heat_df_q = pd.DataFrame(
-                0.0, index=timeseries_index, columns=[rural_heat_df["carrier"]]
-            )
-
+            rural_heat_df_p = etrago_obj.links_t["p0"][rural_heat_df.index].sum(axis=1)
+            rural_heat_df_q = pd.Series(0.0, index=timeseries_index)
+            # p_nom
+            rural_heat_p_nom = rural_heat_df.p_nom.sum()
             # Stores
             rural_heat_bus = rural_heat_df["bus1"].values[0]
             rural_heat_store_bus = etrago_obj.links.loc[
@@ -589,17 +607,14 @@ def get_etrago_results_per_bus(bus_id, etrago_obj, pf_post_lopf, max_cos_phi_ren
                 "e_nom_opt",
             ].values[0]
         else:
-            column_names = rural_heat_df["carrier"].to_list()
-            rural_heat_df_p = pd.DataFrame(
-                0.0, index=timeseries_index, columns=column_names
-            )
-            rural_heat_df_q = pd.DataFrame(
-                0.0, index=timeseries_index, columns=column_names
-            )
+            rural_heat_df_p = pd.Series(0.0, index=timeseries_index)
+            rural_heat_df_q = pd.Series(0.0, index=timeseries_index)
             rural_heat_store_capacity = 0
+            rural_heat_p_nom = 0
 
         results["heat_pump_rural_active_power"] = rural_heat_df_p
         results["heat_pump_rural_reactive_power"] = rural_heat_df_q
+        results["heat_pump_rural_p_nom"] = rural_heat_p_nom
         results["thermal_storage_rural_capacity"] = rural_heat_store_capacity
 
     def bev_charger():
@@ -648,7 +663,7 @@ def get_etrago_results_per_bus(bus_id, etrago_obj, pf_post_lopf, max_cos_phi_ren
     storages()
     dsm()
     # central_heat()
-    # rural_heat()
+    rural_heat()
     bev_charger()
     logger.info(f"Overall time: {time.perf_counter() - t_start}")
 
