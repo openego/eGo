@@ -111,10 +111,6 @@ def get_etrago_results_per_bus(bus_id, etrago_obj, pf_post_lopf, max_cos_phi_ren
 
     Parameters
     ----------
-    engine:
-        Engine of the database.
-    orm:
-        Object relational model dict.
     bus_id : int
         ID of the corresponding HV bus
     etrago_obj: :class:`etrago.tools.io.NetworkScenario`
@@ -127,7 +123,7 @@ def get_etrago_results_per_bus(bus_id, etrago_obj, pf_post_lopf, max_cos_phi_ren
 
     Returns
     -------
-    :obj:`dict` of :pandas:`pandas.DataFrame<dataframe>`
+    dict(str: :pandas:`pandas.DataFrame<dataframe>`)
         Dataframes used as eDisGo inputs.
 
         * 'timeindex'
@@ -135,14 +131,14 @@ def get_etrago_results_per_bus(bus_id, etrago_obj, pf_post_lopf, max_cos_phi_ren
             Type: pd.Datetimeindex
 
         * 'dispatchable_generators_active_power'
-            Normalised dispatch of active power of dispatchable generators per
+            Normalised active power dispatch of dispatchable generators per
             technology in p.u. at the given bus.
             Type: pd.DataFrame
             Columns: Carrier
             Unit: pu
 
         * 'dispatchable_generators_reactive_power'
-            Normalised dispatch of reactive power of dispatchable generators per
+            Normalised reactive power dispatch of dispatchable generators per
             technology in p.u. at the given bus.
             Type: pd.DataFrame
             Columns: Carrier
@@ -150,17 +146,20 @@ def get_etrago_results_per_bus(bus_id, etrago_obj, pf_post_lopf, max_cos_phi_ren
 
         * 'renewables_potential'
             Normalised weather dependent feed-in potential of fluctuating generators
-            per technology in p.u. at the given bus.
+            per technology (solar / wind) in p.u. at the given bus.
             Type: pd.DataFrame
             Columns: Carrier
             Unit: pu
 
         * 'renewables_curtailment'
-            Normalised curtailment of fluctuating generators per
-            technology in p.u. at the given bus.
+            Curtailment of fluctuating generators per
+            technology (solar / wind) in MW at the given bus. This curtailment can also
+            include curtailment of plants at the HV side of the HV/MV station and
+            therefore needs to be scaled using the quotient of installed power at the
+            MV side and installed power at the HV side.
             Type: pd.DataFrame
             Columns: Carrier
-            Unit: pu
+            Unit: MW
 
         * 'renewables_dispatch_reactive_power'
             Normalised reactive power time series of fluctuating generators per
@@ -169,86 +168,64 @@ def get_etrago_results_per_bus(bus_id, etrago_obj, pf_post_lopf, max_cos_phi_ren
             Columns: Carrier
             Unit: pu
 
+        * 'renewables_p_nom'
+            Installed capacity of fluctuating generators per
+            technology (solar / wind) at the given bus.
+            Type: pd.Series
+            Unit: MW
+
         * 'storage_units_p_nom'
             Storage unit nominal power.
             Type: float
             Unit: MW
 
         * 'storage_units_max_hours'
-            Storage units maximal discharge with p_nom starting by a soc of 1.
+            Storage units maximal discharge hours when discharged with p_nom starting
+            at a SoC of 1.
             Type: float
             Unit: h
 
         * 'storage_units_active_power'
             Active power time series of battery storage units at the given bus.
-            Type: pd.DataFrame
-            Columns: Carrier
+            Type: pd.Series
             Unit: MW
 
         * 'storage_units_reactive_power'
             Reactive power time series of battery storage units at the given bus.
-            Type: pd.DataFrame
-            Columns: Carrier
+            Type: pd.Series
             Unit: MVar
 
         * 'storage_units_soc'
-            Reactive power time series of battery storage units at the given bus.
-            Type: pd.DataFrame
-            Columns: Carrier
+            State of charge in p.u. of battery storage units at the given bus.
+            Type: pd.Series
             Unit: pu
 
         * 'dsm_active_power'
             Active power time series of DSM units at the given bus.
-            Type: pd.DataFrame
-            Columns: Carrier
+            Type: pd.Series
             Unit: MW
 
-        * 'dsm_reactive_power'
-            Reactive power time series of DSM units at the given bus.
-            Type: pd.DataFrame
-            Columns: Carrier
-            Unit: MVar
-
-        * 'heat_pump_central_active_power'
-            Active power time series of central heat units at the given bus.
-            Type: pd.DataFrame
-            Columns: Carrier
+        * 'heat_pump_active_power'
+            Active power time series of PtH units at the given bus.
+            Type: pd.Series
             Unit: MW
 
-        * 'heat_pump_central_reactive_power'
-            Reactive power time series of central heat units at the given bus.
-            Type: pd.DataFrame
-            Columns: Carrier
+        * 'heat_pump_reactive_power'
+            Reactive power time series of PtH units at the given bus.
+            Type: pd.Series
             Unit: MVar
 
         * 'thermal_storage_central_capacity'
             Capacity of the storage at the bus where the central heat units feed in.
-            Type: float
+            Type: pd.DataFrame
+            Columns: Area ID
             Unit: MWh
 
-        * 'geothermal_energy_feedin_district_heating'
+        * 'feedin_district_heating'
             Geothermal feedin time series at the heat bus.
             Type: pd.DataFrame
-            Columns: Carrier
+            Columns: Area ID
             Unit: MW
-
-        * 'solarthermal_energy_feedin_district_heating'
-            Solarthermal feedin time series at the heat bus.
-            Type: pd.DataFrame
-            Columns: Carrier
-            Unit: MW
-
-        * 'heat_pump_rural_active_power'
-            Active power time series of rural heat pump units at the given bus.
-            Type: pd.DataFrame
-            Columns: Carrier
-            Unit: MW
-
-        * 'heat_pump_rural_reactive_power'
-            Reactive power time series of rural heat pump units at the given bus.
-            Type: pd.DataFrame
-            Columns: Carrier
-            Unit: MVar
 
         * 'thermal_storage_rural_capacity'
             Capacity of the storage at the bus where the rural heat units feed in.
@@ -256,15 +233,13 @@ def get_etrago_results_per_bus(bus_id, etrago_obj, pf_post_lopf, max_cos_phi_ren
             Unit: MWh
 
         * 'electromobility_active_power'
-            Active power time series of electromobility units at the given bus.
-            Type: pd.DataFrame
-            Columns: Carrier
+            Active power charging time series at the given bus.
+            Type: pd.Series
             Unit: MW
 
         * 'electromobility_reactive_power'
-            Reactive power time series of electromobility units at the given bus.
-            Type: pd.DataFrame
-            Columns: Carrier
+            Reactive power charging time series at the given bus.
+            Type: pd.Series
             Unit: MVar
 
     """
