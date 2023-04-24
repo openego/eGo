@@ -841,7 +841,7 @@ class EDisGoNetworks:
             )
             if "3_optimisation" not in config["eDisGo"]["tasks"]:
                 edisgo_grid.save(
-                    directory=os.path.join(results_dir, "grid_data"),
+                    directory=os.path.join(results_dir, "grid_data_overlying_grid"),
                     save_topology=True,
                     save_timeseries=True,
                     save_results=False,
