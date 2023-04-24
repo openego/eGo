@@ -1071,7 +1071,8 @@ class EDisGoNetworks:
         )
         # reactive power
         if self._pf_post_lopf:
-            # ToDo Use eTraGo time series to set reactive power (scale by nominal power)
+            # ToDo (low priority) Use eTraGo time series to set reactive power
+            #  (scale by nominal power)
             edisgo_grid.set_time_series_manual(
                 generators_q=specs["generators_reactive_power"].loc[:, []],
             )
@@ -1084,8 +1085,9 @@ class EDisGoNetworks:
                 storage_units_parametrisation=None,
             )
 
-        # ToDo for now additional optimised storage capacity is ignored as capacities
-        #  are very small and optimisation does not offer storage positioning
+        # ToDo (medium priority) for now additional optimised storage capacity is
+        #  ignored as capacities are very small and optimisation does not offer storage
+        #  positioning
         # if specs["storage_units_p_nom"] > 0.3:
         #     logger.info("Set up large battery storage units.")
         #     edisgo_grid.add_component(
@@ -1102,11 +1104,11 @@ class EDisGoNetworks:
             edisgo_grid.topology.loads_df.sector == "individual_heating"
         ]
         if hp_decentral.empty and specs["thermal_storage_rural_capacity"] > 0:
-            raise ValueError(
+            logger.warning(
                 "There are thermal storage units for individual heating but no "
                 "heat pumps."
             )
-        if specs["thermal_storage_rural_capacity"] > 0:
+        if not hp_decentral.empty and specs["thermal_storage_rural_capacity"] > 0:
             tes_cap = (
                 edisgo_grid.topology.loads_df.loc[hp_decentral.index, "p_set"]
                 * specs["thermal_storage_rural_capacity"]
@@ -1119,52 +1121,33 @@ class EDisGoNetworks:
                     "efficiency": 0.9,
                 }
             )
-        # district heating
-        hp_dh = edisgo_grid.topology.loads_df[
-            edisgo_grid.topology.loads_df.sector == "district_heating"
-        ]
-        # ToDo check
-        if not hp_dh.empty:
-            if specs["thermal_storage_central_capacity"] > 0:
-                tes_cap = (
-                    edisgo_grid.topology.loads_df.loc[hp_dh.index, "p_set"]
-                    * specs["thermal_storage_central_capacity"]
-                    / edisgo_grid.topology.loads_df.loc[hp_dh.index, "p_set"].sum()
-                )
-                # ToDo get efficiency from specs
-                edisgo_grid.heat_pump.thermal_storage_units_df = pd.concat(
-                    [
-                        edisgo_grid.heat_pump.thermal_storage_units_df,
-                        pd.DataFrame(
-                            data={
-                                "capacity": tes_cap,
-                                "efficiency": 0.9,
-                            }
-                        ),
-                    ]
-                )
+        # # district heating
+        # hp_dh = edisgo_grid.topology.loads_df[
+        #     edisgo_grid.topology.loads_df.sector == "district_heating"
+        # ]
+        # # ToDo check
+        # if not hp_dh.empty:
+        #     # ToDo map area ID
+        #     if specs["thermal_storage_central_capacity"] > 0:
+        #         tes_cap = (
+        #             edisgo_grid.topology.loads_df.loc[hp_dh.index, "p_set"]
+        #             * specs["thermal_storage_central_capacity"]
+        #             / edisgo_grid.topology.loads_df.loc[hp_dh.index, "p_set"].sum()
+        #         )
+        #         # ToDo get efficiency from specs
+        #         edisgo_grid.heat_pump.thermal_storage_units_df = pd.concat(
+        #             [
+        #                 edisgo_grid.heat_pump.thermal_storage_units_df,
+        #                 pd.DataFrame(
+        #                     data={
+        #                         "capacity": tes_cap,
+        #                         "efficiency": 0.9,
+        #                     }
+        #                 ),
+        #             ]
+        #         )
 
         logger.info("Set requirements from overlying grid.")
-        # ToDo requirements need to be scaled to capacity of home storage units
-        edisgo_grid.overlying_grid.storage_units_active_power = specs[
-            "storage_units_active_power"
-        ]
-        edisgo_grid.overlying_grid.dsm_active_power = specs["dsm_active_power"]
-        edisgo_grid.overlying_grid.electromobility_active_power = specs[
-            "electromobility_active_power"
-        ]
-        edisgo_grid.overlying_grid.heat_pump_decentral_active_power = specs[
-            "heat_pump_rural_active_power"
-        ]
-        edisgo_grid.overlying_grid.heat_pump_central_active_power = specs[
-            "heat_pump_central_active_power"
-        ]
-        edisgo_grid.overlying_grid.geothermal_energy_feedin_district_heating = specs[
-            "geothermal_energy_feedin_district_heating"
-        ]
-        edisgo_grid.overlying_grid.solarthermal_energy_feedin_district_heating = specs[
-            "solarthermal_energy_feedin_district_heating"
-        ]
 
         # curtailment
         # scale curtailment by ratio of nominal power in eDisGo and eTraGo
@@ -1188,7 +1171,41 @@ class EDisGoNetworks:
             logger.warning("Curtailment exceeds feed-in!")
         edisgo_grid.overlying_grid.renewables_curtailment = total_curtailment
 
-        # ToDo CHP + resistive heaters
+        # battery storage
+        # scale storage time series by ratio of nominal power in eDisGo and eTraGo
+        p_nom_total = specs["storage_units_p_nom"]
+        p_nom_mv_lv = edisgo_grid.topology.storage_units_df.p_nom.sum()
+        edisgo_grid.overlying_grid.storage_units_active_power = (
+            specs["storage_units_active_power"] * p_nom_mv_lv / p_nom_total
+        )
+        edisgo_grid.overlying_grid.storage_units_soc = specs["storage_units_soc"]
+
+        # DSM
+        edisgo_grid.overlying_grid.dsm_active_power = specs["dsm_active_power"]
+
+        # BEV
+        edisgo_grid.overlying_grid.electromobility_active_power = specs[
+            "electromobility_active_power"
+        ]
+
+        # PtH
+        # scale heat pump time series by ratio of nominal power in eDisGo and eTraGo
+        p_nom_total = specs["heat_pump_rural_p_nom"]
+        p_nom_mv_lv = edisgo_grid.topology.loads_df[
+            edisgo_grid.topology.loads_df.sector.isin(
+                ["individual_heating", "individual_heating_resistive_heater"]
+            )
+        ].p_set.sum()
+        edisgo_grid.overlying_grid.heat_pump_decentral_active_power = (
+            specs["heat_pump_rural_active_power"] * p_nom_mv_lv / p_nom_total
+        )
+        # # ToDo scale by p_nom
+        # edisgo_grid.overlying_grid.heat_pump_central_active_power = specs[
+        #     "heat_pump_central_active_power"
+        # ]
+        # edisgo_grid.overlying_grid.feedin_district_heating = specs[
+        #     "feedin_district_heating"
+        # ]
 
         logger.info("Run integrity check.")
         edisgo_grid.check_integrity()
