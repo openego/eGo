@@ -1145,9 +1145,6 @@ class EDisGoNetworks:
                 )
 
         logger.info("Set requirements from overlying grid.")
-        edisgo_grid.overlying_grid.renewables_curtailment = specs[
-            "renewables_curtailment"
-        ]
         # ToDo requirements need to be scaled to capacity of home storage units
         edisgo_grid.overlying_grid.storage_units_active_power = specs[
             "storage_units_active_power"
@@ -1168,6 +1165,29 @@ class EDisGoNetworks:
         edisgo_grid.overlying_grid.solarthermal_energy_feedin_district_heating = specs[
             "solarthermal_energy_feedin_district_heating"
         ]
+
+        # curtailment
+        # scale curtailment by ratio of nominal power in eDisGo and eTraGo
+        for carrier in specs["renewables_curtailment"].columns:
+            p_nom_total = specs["renewables_p_nom"][carrier]
+            p_nom_mv_lv = edisgo_grid.topology.generators_df[
+                edisgo_grid.topology.generators_df["type"] == carrier
+            ].p_nom.sum()
+            specs["renewables_curtailment"][carrier] *= p_nom_mv_lv / p_nom_total
+        # check that curtailment does not exceed feed-in
+        vres_gens = edisgo_grid.topology.generators_df[
+            edisgo_grid.topology.generators_df["type"].isin(
+                specs["renewables_curtailment"].columns
+            )
+        ].index
+        pot_vres_gens = edisgo_grid.timeseries.generators_active_power.loc[
+            :, vres_gens
+        ].sum(axis=1)
+        total_curtailment = specs["renewables_curtailment"].sum(axis=1)
+        if (total_curtailment > pot_vres_gens).any():
+            logger.warning("Curtailment exceeds feed-in!")
+        edisgo_grid.overlying_grid.renewables_curtailment = total_curtailment
+
         # ToDo CHP + resistive heaters
 
         logger.info("Run integrity check.")
