@@ -277,17 +277,17 @@ def get_etrago_results_per_bus(bus_id, etrago_obj, pf_post_lopf, max_cos_phi_ren
         dispatchable_gens_df = generators_df[
             generators_df["carrier"].isin(dispatchable_gens_carriers)
         ]
-        # Rename CHP carrier to match with carrier names in eDisGo
-        gens_gas_chp = dispatchable_gens_df[
+        # Rename carriers to match with carrier names in eDisGo
+        gens = dispatchable_gens_df[
             dispatchable_gens_df.carrier.isin(["central_gas_CHP", "industrial_gas_CHP"])
         ]
-        dispatchable_gens_df.loc[gens_gas_chp.index, "carrier"] = "gas_CHP"
-        gens_biomass_chp = dispatchable_gens_df[
+        dispatchable_gens_df.loc[gens.index, "carrier"] = "gas_CHP"
+        gens = dispatchable_gens_df[
             dispatchable_gens_df.carrier.isin(
                 ["central_biomass_CHP", "industrial_biomass_CHP"]
             )
         ]
-        dispatchable_gens_df.loc[gens_biomass_chp.index, "carrier"] = "biomass_CHP"
+        dispatchable_gens_df.loc[gens.index, "carrier"] = "biomass_CHP"
         for carrier in dispatchable_gens_df.carrier.unique():
             p_nom = dispatchable_gens_df.loc[
                 dispatchable_gens_df["carrier"] == carrier, "p_nom"
