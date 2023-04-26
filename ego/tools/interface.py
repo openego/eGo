@@ -51,7 +51,14 @@ class ETraGoMinimalData:
 
             # filter components
             columns_to_save = {
-                "links": ["bus0", "bus1", "carrier", "p_nom", "p_nom_opt"],
+                "links": [
+                    "bus0",
+                    "bus1",
+                    "carrier",
+                    "p_nom",
+                    "p_nom_opt",
+                    "efficiency",
+                ],
                 "generators": ["bus", "carrier", "p_nom", "p_nom_opt"],
                 "stores": ["bus", "carrier", "e_nom", "e_nom_opt"],
                 "storage_units": [
@@ -78,7 +85,7 @@ class ETraGoMinimalData:
             attribute_to_save = {
                 "links": ["p0", "p1"],
                 "generators": ["p", "p_max_pu", "q"],
-                "stores": ["p"],
+                "stores": ["p", "e"],
                 "storage_units": ["p", "q", "state_of_charge"],
                 "loads": ["p"],
             }
@@ -171,7 +178,7 @@ def get_etrago_results_per_bus(bus_id, etrago_obj, pf_post_lopf, max_cos_phi_ren
         * 'renewables_p_nom'
             Installed capacity of fluctuating generators per
             technology (solar / wind) at the given bus.
-            Type: pd.Series
+            Type: pd.Series with carrier in index
             Unit: MW
 
         * 'storage_units_p_nom'
@@ -206,50 +213,74 @@ def get_etrago_results_per_bus(bus_id, etrago_obj, pf_post_lopf, max_cos_phi_ren
             Unit: MW
 
         * 'heat_pump_rural_active_power'
-            Active power time series of PtH units at the given bus.
+            Active power time series of PtH units for individual heating at the given
+            bus.
             Type: pd.Series
             Unit: MW
 
         * 'heat_pump_rural_reactive_power'
-            Reactive power time series of PtH units at the given bus.
+            Reactive power time series of PtH units for individual heating at the given
+            bus.
             Type: pd.Series
             Unit: MVar
 
         * 'heat_pump_rural_p_nom'
-            Nominal power of all rural PtH units at the given bus.
+            Nominal power of all PtH units for individual heating at the given bus.
             Type: float
-            Unit: MWh
+            Unit: MW
 
         * 'thermal_storage_rural_capacity'
-            Capacity of the storage at the bus where the rural heat units feed in.
+            Capacity of thermal storage units in individual heating.
             Type: float
             Unit: MWh
 
+        * 'thermal_storage_rural_efficiency'
+            Charging and discharging efficiency of thermal storage units in individual
+            heating.
+            Type: float
+            Unit: p.u.
+
+        * 'thermal_storage_rural_soc'
+            SoC of central thermal storage units.
+            Type: pd.Series
+            Unit: p.u.
+
         * 'heat_pump_central_active_power'
-            Active power time series of PtH units at the given bus.
+            Active power time series of central PtH units at the given bus.
             Type: pd.Series
             Unit: MW
 
         * 'heat_pump_central_reactive_power'
-            Reactive power time series of PtH units at the given bus.
+            Reactive power time series of central PtH units at the given bus.
             Type: pd.Series
             Unit: MVar
 
         * 'heat_pump_central_p_nom'
-            Nominal power of all rural PtH units at the given bus.
+            Nominal power of all central PtH units at the given bus.
             Type: float
-            Unit: MWh
+            Unit: MW
 
         * 'thermal_storage_central_capacity'
-            Capacity of the storage at the bus where the central heat units feed in.
-            Type: pd.DataFrame
-            Columns: Area ID
+            Capacity of central thermal storage units.
+            Type: pd.Series with eTraGo heat bus ID in index
             Unit: MWh
 
-        * 'feedin_district_heating'
-            Geothermal feedin time series at the heat bus.
+        * 'thermal_storage_central_efficiency'
+            Charging and discharging efficiency of central thermal storage units.
+            Type: float
+            Unit: p.u.
+
+        * 'thermal_storage_central_soc'
+            SoC of central thermal storage units.
             Type: pd.DataFrame
-            Columns: Area ID
+            Columns: eTraGo heat bus ID
+            Unit: p.u.
+
+        * 'feedin_district_heating'
+            Time series of other thermal feed-in from e.g. gas boilers or geothermal
+            units at the heat bus.
+            Type: pd.DataFrame
+            Columns: eTraGo heat bus ID
             Unit: MW
 
         * 'electromobility_active_power'
@@ -288,6 +319,8 @@ def get_etrago_results_per_bus(bus_id, etrago_obj, pf_post_lopf, max_cos_phi_ren
             )
         ]
         dispatchable_gens_df.loc[gens.index, "carrier"] = "biomass_CHP"
+        gens = dispatchable_gens_df[dispatchable_gens_df.carrier.isin(["reservoir"])]
+        dispatchable_gens_df.loc[gens.index, "carrier"] = "run_of_river"
         for carrier in dispatchable_gens_df.carrier.unique():
             p_nom = dispatchable_gens_df.loc[
                 dispatchable_gens_df["carrier"] == carrier, "p_nom"
@@ -440,21 +473,17 @@ def get_etrago_results_per_bus(bus_id, etrago_obj, pf_post_lopf, max_cos_phi_ren
 
         if (weather_dep_gens_df_curt_p.min() < -1e-3).any():
             logger.warning("Curtailment values smaller -1 kW.")
-        # ToDo remove once fixed
-        weather_dep_gens_df_curt_p[weather_dep_gens_df_curt_p < 0] = 0
+
         results["renewables_potential"] = weather_dep_gens_df_pot_p
         results["renewables_curtailment"] = weather_dep_gens_df_curt_p
         results["renewables_dispatch_reactive_power"] = weather_dep_gens_df_dis_q
         results["renewables_p_nom"] = agg_weather_dep_gens_df.set_index("carrier").p_nom
 
     def storages():
-        # Storage
         # Filter batteries
         storages_df = etrago_obj.storage_units.loc[
             (etrago_obj.storage_units["carrier"] == "battery")
             & (etrago_obj.storage_units["bus"] == str(bus_id))
-            # & (etrago_obj.storage_units["p_nom_extendable"])
-            # & (etrago_obj.storage_units["p_nom_opt"] > 0)
         ]
         if not storages_df.empty:
             # p_nom - p_nom_opt can always be used, if extendable is True or False
@@ -503,84 +532,116 @@ def get_etrago_results_per_bus(bus_id, etrago_obj, pf_post_lopf, max_cos_phi_ren
         results["dsm_active_power"] = dsm_df_p
 
     def central_heat():
-        # Heat
-        # Central heat
-        # Power2Heat
+
         central_heat_carriers = ["central_heat_pump", "central_resistive_heater"]
         central_heat_df = links_df.loc[
-            links_df["carrier"].isin(central_heat_carriers)
+            (links_df["carrier"].isin(central_heat_carriers))
             & (links_df["bus0"] == str(bus_id))
+            & (links_df["p_nom"] <= 20)
         ]
         if not central_heat_df.empty:
             # Timeseries
-            central_heat_df_p = etrago_obj.links_t["p0"][central_heat_df.index]
-            central_heat_df_p.columns = central_heat_df["carrier"]
-            central_heat_df_q = pd.DataFrame(
-                0.0, index=timeseries_index, columns=[central_heat_df["carrier"]]
+            central_heat_df_p = etrago_obj.links_t["p0"][central_heat_df.index].sum(
+                axis=1
             )
+            central_heat_df_q = pd.Series(0.0, index=timeseries_index)
+
+            # Nominal power of PtH units
+            p_nom = central_heat_df.p_nom.sum()
 
             # Stores
-            central_heat_bus = central_heat_df["bus1"].values[0]
-            central_heat_store_bus = etrago_obj.links.loc[
-                etrago_obj.links["bus0"] == central_heat_bus, "bus1"
-            ].values[0]
-            central_heat_store_capacity = etrago_obj.stores.loc[
+            central_heat_buses = central_heat_df["bus1"].unique()
+            # find all heat stores connected to heat buses
+            central_heat_store_links_df = etrago_obj.links.loc[
+                etrago_obj.links["bus0"].isin(central_heat_buses)
+            ]
+            central_heat_store_df = etrago_obj.stores.loc[
                 (etrago_obj.stores["carrier"] == "central_heat_store")
-                & (etrago_obj.stores["bus"] == central_heat_store_bus),
-                "e_nom_opt",
-            ].values[0]
-
-            # Feedin
-            geothermal_feedin_df = etrago_obj.generators[
-                (etrago_obj.generators["carrier"] == "geo_thermal")
-                & (etrago_obj.generators["bus"] == central_heat_bus)
-            ]
-            if not geothermal_feedin_df.empty:
-                geothermal_feedin_df_p = etrago_obj.generators_t["p"][
-                    geothermal_feedin_df.index
-                ]
-                geothermal_feedin_df_p.columns = geothermal_feedin_df["carrier"]
-            else:
-                geothermal_feedin_df_p = pd.DataFrame(
-                    0.0, index=timeseries_index, columns=["geo_thermal"]
+                & (
+                    etrago_obj.stores["bus"].isin(
+                        central_heat_store_links_df.bus1.values
+                    )
                 )
+            ].reset_index(names="store_name")
+            central_heat_store_merge_links_df = pd.merge(
+                central_heat_store_links_df,
+                central_heat_store_df,
+                left_on="bus1",
+                right_on="bus",
+            )
+            # capacity
+            central_heat_store_capacity = central_heat_store_merge_links_df.set_index(
+                "bus0"
+            ).e_nom_opt
+            # efficiency
+            central_heat_store_efficiency = (
+                central_heat_store_links_df.efficiency.values[0]
+            )
+            # SoC
+            soc_ts = etrago_obj.stores_t["e"][
+                central_heat_store_df.store_name.values
+            ].rename(
+                columns=central_heat_store_merge_links_df.set_index("store_name").bus0
+            )
+            soc_ts = soc_ts / central_heat_store_capacity
 
-            solarthermal_feedin_df = etrago_obj.generators[
-                (etrago_obj.generators["carrier"] == "solar_thermal_collector")
-                & (etrago_obj.generators["bus"] == central_heat_bus)
-            ]
-            if not solarthermal_feedin_df.empty:
-                solarthermal_feedin_df_p = etrago_obj.generators_t["p"][
-                    solarthermal_feedin_df.index
+            # Other feed-in
+            dh_feedin_df = pd.DataFrame()
+            for heat_bus in central_heat_buses:
+                # get feed-in from generators
+                heat_gens = etrago_obj.generators[
+                    (etrago_obj.generators["bus"] == heat_bus)
+                    & (etrago_obj.generators["carrier"] != "load shedding")
                 ]
-                solarthermal_feedin_df_p.columns = solarthermal_feedin_df["carrier"]
-            else:
-                solarthermal_feedin_df_p = pd.DataFrame(
-                    0.0, index=timeseries_index, columns=["solar_thermal_collector"]
+                if not heat_gens.empty:
+                    feedin_df_gens = etrago_obj.generators_t["p"][heat_gens.index].sum(
+                        axis=1
+                    )
+                else:
+                    feedin_df_gens = pd.Series(0.0, index=timeseries_index)
+                # get feed-in from links
+                # get all links feeding into heat bus (except heat store)
+                heat_links_all = etrago_obj.links[
+                    (etrago_obj.links["bus1"] == heat_bus)
+                    & (
+                        etrago_obj.links["carrier"].isin(
+                            [
+                                "central_gas_boiler",
+                                "central_gas_CHP_heat",
+                                "central_heat_pump",
+                                "central_resistive_heater",
+                            ]
+                        )
+                    )
+                ]
+                # filter out PtH units that are already considered in PtH dispatch
+                # above
+                heat_links = heat_links_all.drop(
+                    index=central_heat_df.index, errors="ignore"
                 )
+                if not heat_links.empty:
+                    feedin_df_links = etrago_obj.links_t["p1"][heat_links.index].sum(
+                        axis=1
+                    )
+                else:
+                    feedin_df_links = pd.Series(0.0, index=timeseries_index)
+                dh_feedin_df[heat_bus] = feedin_df_gens + feedin_df_links
         else:
-            column_names = central_heat_df["carrier"].to_list()
-            central_heat_df_p = pd.DataFrame(
-                0.0, index=timeseries_index, columns=column_names
-            )
-            central_heat_df_q = pd.DataFrame(
-                0.0, index=timeseries_index, columns=column_names
-            )
-            central_heat_store_capacity = 0
-            geothermal_feedin_df_p = pd.DataFrame(
-                0.0, index=timeseries_index, columns=["geo_thermal"]
-            )
-            solarthermal_feedin_df_p = pd.DataFrame(
-                0.0, index=timeseries_index, columns=["solar_thermal_collector"]
-            )
-        # ToDo: Overlying grid no resistive heater
+            central_heat_df_p = pd.Series(0.0, index=timeseries_index)
+            central_heat_df_q = pd.Series(0.0, index=timeseries_index)
+            p_nom = 0
+            central_heat_store_capacity = pd.Series()
+            central_heat_store_efficiency = 0
+            soc_ts = pd.DataFrame()
+            dh_feedin_df = pd.DataFrame()
+
         results["heat_pump_central_active_power"] = central_heat_df_p
         results["heat_pump_central_reactive_power"] = central_heat_df_q
+        results["heat_pump_central_p_nom"] = p_nom
         results["thermal_storage_central_capacity"] = central_heat_store_capacity
-        results["geothermal_energy_feedin_district_heating"] = geothermal_feedin_df_p
-        results[
-            "solarthermal_energy_feedin_district_heating"
-        ] = solarthermal_feedin_df_p
+        results["thermal_storage_central_efficiency"] = central_heat_store_efficiency
+        results["thermal_storage_central_soc"] = soc_ts
+        results["feedin_district_heating"] = dh_feedin_df
 
     def rural_heat():
 
@@ -596,26 +657,39 @@ def get_etrago_results_per_bus(bus_id, etrago_obj, pf_post_lopf, max_cos_phi_ren
             rural_heat_df_q = pd.Series(0.0, index=timeseries_index)
             # p_nom
             rural_heat_p_nom = rural_heat_df.p_nom.sum()
-            # Stores
+            # Store
+            # capacity
             rural_heat_bus = rural_heat_df["bus1"].values[0]
-            rural_heat_store_bus = etrago_obj.links.loc[
-                etrago_obj.links["bus0"] == rural_heat_bus, "bus1"
-            ].values[0]
-            rural_heat_store_capacity = etrago_obj.stores.loc[
+            rural_heat_store_link_df = etrago_obj.links.loc[
+                etrago_obj.links["bus0"] == rural_heat_bus
+            ]
+            rural_heat_store_df = etrago_obj.stores.loc[
                 (etrago_obj.stores["carrier"] == "rural_heat_store")
-                & (etrago_obj.stores["bus"] == rural_heat_store_bus),
-                "e_nom_opt",
-            ].values[0]
+                & (etrago_obj.stores["bus"] == rural_heat_store_link_df.bus1.values[0])
+            ]
+            rural_heat_store_capacity = rural_heat_store_df.e_nom_opt.values[0]
+            # efficiency
+            heat_store_efficiency = rural_heat_store_link_df.efficiency.values[0]
+            # SoC
+            if rural_heat_store_capacity > 0:
+                soc_ts = etrago_obj.stores_t["e"][rural_heat_store_df.index[0]]
+                soc_ts = soc_ts / rural_heat_store_capacity
+            else:
+                soc_ts = pd.Series(0.0, index=timeseries_index)
         else:
             rural_heat_df_p = pd.Series(0.0, index=timeseries_index)
             rural_heat_df_q = pd.Series(0.0, index=timeseries_index)
-            rural_heat_store_capacity = 0
             rural_heat_p_nom = 0
+            rural_heat_store_capacity = 0
+            heat_store_efficiency = 0
+            soc_ts = pd.Series(0.0, index=timeseries_index)
 
         results["heat_pump_rural_active_power"] = rural_heat_df_p
         results["heat_pump_rural_reactive_power"] = rural_heat_df_q
         results["heat_pump_rural_p_nom"] = rural_heat_p_nom
         results["thermal_storage_rural_capacity"] = rural_heat_store_capacity
+        results["thermal_storage_rural_efficiency"] = heat_store_efficiency
+        results["thermal_storage_rural_soc"] = soc_ts
 
     def bev_charger():
         # BEV charger
@@ -662,7 +736,7 @@ def get_etrago_results_per_bus(bus_id, etrago_obj, pf_post_lopf, max_cos_phi_ren
     renewable_generators()
     storages()
     dsm()
-    # central_heat()
+    central_heat()
     rural_heat()
     bev_charger()
     logger.info(f"Overall time: {time.perf_counter() - t_start}")

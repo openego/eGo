@@ -48,16 +48,15 @@ import pandas as pd
 from sqlalchemy.orm import scoped_session, sessionmaker
 
 if "READTHEDOCS" not in os.environ:
-
     from edisgo.edisgo import import_edisgo_from_files
     from edisgo.tools.config import Config
     from edisgo.tools.logger import setup_logger
     from edisgo.tools.plots import mv_grid_topology
     from egoio.db_tables import grid, model_draft
     from egoio.tools import db
+    from sqlalchemy import func
 
-    from ego.mv_clustering import cluster_workflow
-    from ego.mv_clustering.database import get_engine
+    from ego.mv_clustering import cluster_workflow, database
     from ego.tools.economics import edisgo_grid_investment
     from ego.tools.interface import ETraGoMinimalData, get_etrago_results_per_bus
 
@@ -771,6 +770,7 @@ class EDisGoNetworks:
         # ##################### general settings ####################
         config = self._json_file
         scenario = config["eTraGo"]["scn_name"]
+        engine = database.get_engine(config=config)
 
         # results directory
         results_dir = os.path.join(
@@ -802,7 +802,7 @@ class EDisGoNetworks:
         # ################### task: setup grid ##################
         if "1_setup_grid" in config["eDisGo"]["tasks"]:
             edisgo_grid = self._run_edisgo_task_setup_grid(
-                mv_grid_id, scenario, logger, config
+                mv_grid_id, scenario, logger, config, engine
             )
             if "2_specs_overlying_grid" not in config["eDisGo"]["tasks"]:
                 edisgo_grid.save(
@@ -837,7 +837,7 @@ class EDisGoNetworks:
                 )
                 edisgo_grid.legacy_grids = False
             edisgo_grid = self._run_edisgo_task_specs_overlying_grid(
-                edisgo_grid, logger
+                edisgo_grid, scenario, logger, config, engine
             )
             if "3_optimisation" not in config["eDisGo"]["tasks"]:
                 edisgo_grid.save(
@@ -884,7 +884,7 @@ class EDisGoNetworks:
 
         return {edisgo_grid.topology.id: results_dir}
 
-    def _run_edisgo_task_setup_grid(self, mv_grid_id, scenario, logger, config):
+    def _run_edisgo_task_setup_grid(self, mv_grid_id, scenario, logger, config, engine):
         """
         Sets up EDisGo object for future scenario (without specifications from overlying
         grid).
@@ -914,8 +914,6 @@ class EDisGoNetworks:
 
         """
         logger.info(f"MV grid {mv_grid_id}: Start task 'setup_grid'.")
-
-        engine = get_engine(config=config)
 
         logger.info(f"MV grid {mv_grid_id}: Initialize MV grid.")
         grid_path = os.path.join(
@@ -981,7 +979,9 @@ class EDisGoNetworks:
 
         return edisgo_grid
 
-    def _run_edisgo_task_specs_overlying_grid(self, edisgo_grid, logger):
+    def _run_edisgo_task_specs_overlying_grid(
+        self, edisgo_grid, scenario, logger, config, engine
+    ):
         """
         Gets specifications from overlying grid and integrates them into the EDisGo
         object.
@@ -1111,43 +1111,114 @@ class EDisGoNetworks:
                 "heat pumps."
             )
         if not hp_decentral.empty and specs["thermal_storage_rural_capacity"] > 0:
+            # distribute thermal storage capacity to all heat pump depending on
+            # heat pump size
             tes_cap = (
                 edisgo_grid.topology.loads_df.loc[hp_decentral.index, "p_set"]
                 * specs["thermal_storage_rural_capacity"]
                 / edisgo_grid.topology.loads_df.loc[hp_decentral.index, "p_set"].sum()
             )
-            # ToDo get efficiency from specs
             edisgo_grid.heat_pump.thermal_storage_units_df = pd.DataFrame(
                 data={
                     "capacity": tes_cap,
-                    "efficiency": 0.9,
+                    "efficiency": specs["thermal_storage_rural_efficiency"],
                 }
             )
-        # # district heating
-        # hp_dh = edisgo_grid.topology.loads_df[
-        #     edisgo_grid.topology.loads_df.sector == "district_heating"
-        # ]
-        # # ToDo check
-        # if not hp_dh.empty:
-        #     # ToDo map area ID
-        #     if specs["thermal_storage_central_capacity"] > 0:
-        #         tes_cap = (
-        #             edisgo_grid.topology.loads_df.loc[hp_dh.index, "p_set"]
-        #             * specs["thermal_storage_central_capacity"]
-        #             / edisgo_grid.topology.loads_df.loc[hp_dh.index, "p_set"].sum()
-        #         )
-        #         # ToDo get efficiency from specs
-        #         edisgo_grid.heat_pump.thermal_storage_units_df = pd.concat(
-        #             [
-        #                 edisgo_grid.heat_pump.thermal_storage_units_df,
-        #                 pd.DataFrame(
-        #                     data={
-        #                         "capacity": tes_cap,
-        #                         "efficiency": 0.9,
-        #                     }
-        #                 ),
-        #             ]
-        #         )
+        # district heating
+        hp_dh = edisgo_grid.topology.loads_df[
+            edisgo_grid.topology.loads_df.sector.isin(
+                ["district_heating", "district_heating_resistive_heater"]
+            )
+        ]
+        # check if there are as many district heating systems in eTraGo as in eDisGo
+        if len(hp_dh.area_id.unique()) != len(specs["feedin_district_heating"].columns):
+            logger.warning(
+                f"There are {len(hp_dh.area_id.unique())} district heating "
+                f"systems in eDisGo and "
+                f"{len(specs['feedin_district_heating'].columns)} in eTraGo."
+            )
+        # check that installed PtH capacity is equal in eTraGo as in eDisGo
+        if abs(hp_dh.p_set.sum() - specs["heat_pump_central_p_nom"]) > 1e-3:
+            logger.warning(
+                f"Installed capacity of PtH units in district heating differs between "
+                f"eTraGo ({specs['heat_pump_central_p_nom']} MW) and eDisGo "
+                f"({hp_dh.p_set.sum()} MW)."
+            )
+
+        if not specs["feedin_district_heating"].empty:
+
+            # map district heating ID to heat bus ID from eTraGo
+            orm = database.register_tables_in_saio(engine, config=config)
+            heat_buses = [int(_) for _ in specs["feedin_district_heating"].columns]
+            with database.session_scope(engine) as session:
+                # get srid of etrago_bus table
+                query = session.query(func.ST_SRID(orm["etrago_bus"].geom)).limit(1)
+                srid_etrago_bus = query.all()[0]
+                # get district heating ID corresponding to heat bus ID by geo join
+                query = (
+                    session.query(
+                        orm["etrago_bus"].bus_id.label("heat_bus_id"),
+                        orm["district_heating_areas"].id.label("district_heating_id"),
+                    )
+                    .filter(
+                        orm["etrago_bus"].scn_name == scenario,
+                        orm["district_heating_areas"].scenario == scenario,
+                        orm["etrago_bus"].bus_id.in_(heat_buses),
+                    )
+                    .outerjoin(  # join to obtain district heating ID
+                        orm["district_heating_areas"],
+                        func.ST_Transform(
+                            func.ST_Centroid(
+                                orm["district_heating_areas"].geom_polygon
+                            ),
+                            srid_etrago_bus,
+                        )
+                        == orm["etrago_bus"].geom,
+                    )
+                )
+                mapping_heat_bus_dh_id = pd.read_sql(
+                    query.statement,
+                    engine,
+                    index_col="district_heating_id",
+                )
+            hp_dh = pd.merge(
+                hp_dh,
+                mapping_heat_bus_dh_id,
+                left_on="district_heating_id",
+                right_index=True,
+            )
+
+            for heat_bus in heat_buses:
+                if str(heat_bus) in specs["thermal_storage_central_capacity"].index:
+                    if specs["thermal_storage_central_capacity"].at[str(heat_bus)] > 0:
+                        # get PtH unit name to allocate thermal storage unit to
+                        comp_name = hp_dh[hp_dh.heat_bus_id == heat_bus].index[0]
+                        edisgo_grid.heat_pump.thermal_storage_units_df = pd.concat(
+                            [
+                                edisgo_grid.heat_pump.thermal_storage_units_df,
+                                pd.DataFrame(
+                                    data={
+                                        "capacity": specs[
+                                            "thermal_storage_central_capacity"
+                                        ].at[str(heat_bus)],
+                                        "efficiency": specs[
+                                            "thermal_storage_central_efficiency"
+                                        ],
+                                    },
+                                    index=[comp_name],
+                                ),
+                            ]
+                        )
+                        # overwrite column name of SoC dataframe to be district heating
+                        # ID
+                        specs["thermal_storage_central_soc"].rename(
+                            columns={
+                                str(heat_bus): hp_dh.at[
+                                    comp_name, "district_heating_id"
+                                ]
+                            },
+                            inplace=True,
+                        )
 
         logger.info("Set requirements from overlying grid.")
 
@@ -1201,13 +1272,28 @@ class EDisGoNetworks:
         edisgo_grid.overlying_grid.heat_pump_decentral_active_power = (
             specs["heat_pump_rural_active_power"] * p_nom_mv_lv / p_nom_total
         )
-        # # ToDo scale by p_nom
-        # edisgo_grid.overlying_grid.heat_pump_central_active_power = specs[
-        #     "heat_pump_central_active_power"
-        # ]
-        # edisgo_grid.overlying_grid.feedin_district_heating = specs[
-        #     "feedin_district_heating"
-        # ]
+        p_nom_total = specs["heat_pump_central_p_nom"]
+        p_nom_mv_lv = edisgo_grid.topology.loads_df[
+            edisgo_grid.topology.loads_df.sector.isin(
+                ["district_heating", "district_heating_resistive_heater"]
+            )
+        ].p_set.sum()
+        edisgo_grid.overlying_grid.heat_pump_central_active_power = (
+            specs["heat_pump_central_active_power"] * p_nom_mv_lv / p_nom_total
+        )
+
+        # Other feed-in into district heating
+        edisgo_grid.overlying_grid.feedin_district_heating = specs[
+            "feedin_district_heating"
+        ]
+
+        # Thermal storage units SoC
+        edisgo_grid.overlying_grid.thermal_storage_units_central_soc = specs[
+            "thermal_storage_rural_soc"
+        ]
+        edisgo_grid.overlying_grid.thermal_storage_units_central_soc = specs[
+            "thermal_storage_central_soc"
+        ]
 
         logger.info("Run integrity check.")
         edisgo_grid.check_integrity()
