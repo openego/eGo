@@ -1074,12 +1074,12 @@ class EDisGoNetworks:
         if "p_nom_th" in generators_df.columns:
             gens_rename = generators_df[
                 (generators_df["type"].isin(["gas", "gas extended", "oil", "others"]))
-                & (generators_df["p_nom_th"] > 0)
+                & (~generators_df["p_nom_th"].isna())
             ]
             generators_df.loc[gens_rename.index, "type"] = "gas_CHP"
             gens_rename = generators_df[
                 (generators_df["type"].isin(["biomass"]))
-                & (generators_df["p_nom_th"] > 0)
+                & (generators_df["p_nom_th"].isna())
             ]
             generators_df.loc[gens_rename.index, "type"] = "biomass_CHP"
         gens_rename = generators_df[generators_df["type"].isin(["water"])]
