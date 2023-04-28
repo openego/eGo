@@ -1017,10 +1017,28 @@ class EDisGoNetworks:
             self._max_cos_phi_renewable,
         )
 
+        # exclude non-converging time steps
+        try:
+            convergence = pd.read_csv(
+                os.path.join(config["eGo"]["csv_import_eTraGo"], "pf_solution.csv"),
+                index_col=0,
+                parse_dates=True,
+            )
+            ts_not_converged = convergence[~convergence.converged].index
+            snapshots = specs["timeindex"].drop(ts_not_converged)
+        except FileNotFoundError:
+            logger.info(
+                "No info on converged time steps, wherefore it is assumed that all "
+                "converged."
+            )
+            snapshots = specs["timeindex"]
+        except Exception:
+            raise
+
         # overwrite previously set dummy time index if year that was used differs from
         # year used in etrago
         edisgo_year = edisgo_grid.timeseries.timeindex[0].year
-        etrago_year = specs["timeindex"][0].year
+        etrago_year = snapshots[0].year
         if edisgo_year != etrago_year:
             timeindex_new_full = pd.date_range(
                 f"1/1/{etrago_year}", periods=8760, freq="H"
@@ -1047,7 +1065,7 @@ class EDisGoNetworks:
                 "lower_energy"
             ].index = timeindex_new_full
         # TimeSeries.timeindex
-        edisgo_grid.timeseries.timeindex = specs["timeindex"]
+        edisgo_grid.timeseries.timeindex = snapshots
 
         logger.info("Set generator time series.")
         # active power
