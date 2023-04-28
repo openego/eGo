@@ -1261,6 +1261,14 @@ class EDisGoNetworks:
                                 },
                                 inplace=True,
                             )
+                            specs["feedin_district_heating"].rename(
+                                columns={
+                                    str(heat_bus): hp_dh.at[
+                                        comp_name, "district_heating_id"
+                                    ]
+                                },
+                                inplace=True,
+                            )
 
         logger.info("Set requirements from overlying grid.")
 
