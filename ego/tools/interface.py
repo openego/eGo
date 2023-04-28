@@ -373,7 +373,7 @@ def get_etrago_results_per_bus(bus_id, etrago_obj, pf_post_lopf, max_cos_phi_ren
                 for carrier in chp_df.carrier.unique():
                     p_nom = chp_df.loc[chp_df["carrier"] == carrier, "p_nom"].sum()
                     columns_to_aggregate = chp_df[chp_df["carrier"] == carrier].index
-                    dispatchable_gens_df_p[carrier] = (
+                    dispatchable_gens_df_p[carrier] = abs(
                         etrago_obj.links_t["p1"][columns_to_aggregate].sum(
                             axis="columns"
                         )
@@ -620,8 +620,8 @@ def get_etrago_results_per_bus(bus_id, etrago_obj, pf_post_lopf, max_cos_phi_ren
                     index=central_heat_df.index, errors="ignore"
                 )
                 if not heat_links.empty:
-                    feedin_df_links = etrago_obj.links_t["p1"][heat_links.index].sum(
-                        axis=1
+                    feedin_df_links = abs(
+                        etrago_obj.links_t["p1"][heat_links.index].sum(axis=1)
                     )
                 else:
                     feedin_df_links = pd.Series(0.0, index=timeseries_index)
