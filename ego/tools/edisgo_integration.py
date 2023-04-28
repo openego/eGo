@@ -1290,8 +1290,18 @@ class EDisGoNetworks:
             :, vres_gens
         ].sum(axis=1)
         total_curtailment = specs["renewables_curtailment"].sum(axis=1)
-        if (total_curtailment > pot_vres_gens).any():
-            logger.warning("Curtailment exceeds feed-in!")
+        diff = pot_vres_gens - total_curtailment
+        if (diff < 0).any():
+            # if curtailment is much larger than feed-in, throw an error
+            if (diff < -1e-3).any():
+                raise ValueError("Curtailment exceeds feed-in!")
+            # if curtailment is only slightly larger than feed-in, this is due to
+            # numerical errors and therefore corrected
+            else:
+                ts_neg_curtailment = diff[(diff < 0)].index
+                total_curtailment.loc[ts_neg_curtailment] += diff.loc[
+                    ts_neg_curtailment
+                ]
         edisgo_grid.overlying_grid.renewables_curtailment = total_curtailment
 
         # battery storage
