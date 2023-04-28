@@ -1069,7 +1069,7 @@ class EDisGoNetworks:
 
         logger.info("Set generator time series.")
         # active power
-        # rename CHP carrier to match with carrier names in overlying grid
+        # rename carrier to match with carrier names in overlying grid
         generators_df = edisgo_grid.topology.generators_df
         if "p_nom_th" in generators_df.columns:
             gens_rename = generators_df[
@@ -1084,6 +1084,8 @@ class EDisGoNetworks:
             generators_df.loc[gens_rename.index, "type"] = "biomass_CHP"
         gens_rename = generators_df[generators_df["type"].isin(["water"])]
         generators_df.loc[gens_rename.index, "type"] = "run_of_river"
+        gens_rename = generators_df[generators_df["type"].isin(["conventional"])]
+        generators_df.loc[gens_rename.index, "type"] = "others"
 
         edisgo_grid.set_time_series_active_power_predefined(
             dispatchable_generators_ts=specs["dispatchable_generators_active_power"],
