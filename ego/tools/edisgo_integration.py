@@ -1291,7 +1291,7 @@ class EDisGoNetworks:
         pot_vres_gens = edisgo_grid.timeseries.generators_active_power.loc[
             :, vres_gens
         ].sum(axis=1)
-        total_curtailment = specs["renewables_curtailment"].sum(axis=1)
+        total_curtailment = specs["renewables_curtailment"].loc[snapshots].sum(axis=1)
         diff = pot_vres_gens - total_curtailment
         if (diff < 0).any():
             # if curtailment is much larger than feed-in, throw an error
