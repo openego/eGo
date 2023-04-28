@@ -1129,12 +1129,21 @@ class EDisGoNetworks:
                 "heat pumps."
             )
         if not hp_decentral.empty and specs["thermal_storage_rural_capacity"] > 0:
-            # distribute thermal storage capacity to all heat pump depending on
-            # heat pump size
-            tes_cap = (
+            tes_cap_min_cumsum = (
                 edisgo_grid.topology.loads_df.loc[hp_decentral.index, "p_set"]
+                .sort_index()
+                .cumsum()
+            )
+            hps_selected = tes_cap_min_cumsum[
+                tes_cap_min_cumsum <= specs["thermal_storage_rural_capacity"]
+            ].index
+
+            # distribute thermal storage capacity to all selected heat pumps depending
+            # on heat pump size
+            tes_cap = (
+                edisgo_grid.topology.loads_df.loc[hps_selected, "p_set"]
                 * specs["thermal_storage_rural_capacity"]
-                / edisgo_grid.topology.loads_df.loc[hp_decentral.index, "p_set"].sum()
+                / edisgo_grid.topology.loads_df.loc[hps_selected, "p_set"].sum()
             )
             edisgo_grid.heat_pump.thermal_storage_units_df = pd.DataFrame(
                 data={
