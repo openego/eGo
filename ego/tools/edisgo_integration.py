@@ -49,9 +49,13 @@ from sqlalchemy.orm import scoped_session, sessionmaker
 
 if "READTHEDOCS" not in os.environ:
     from edisgo.edisgo import import_edisgo_from_files
+    from edisgo.network.overlying_grid import distribute_overlying_grid_requirements
     from edisgo.tools.config import Config
     from edisgo.tools.logger import setup_logger
     from edisgo.tools.plots import mv_grid_topology
+    from edisgo.tools.temporal_complexity_reduction import (
+        get_most_critical_time_intervals,
+    )
     from egoio.db_tables import grid, model_draft
     from egoio.tools import db
     from sqlalchemy import func
@@ -839,7 +843,7 @@ class EDisGoNetworks:
             edisgo_grid = self._run_edisgo_task_specs_overlying_grid(
                 edisgo_grid, scenario, logger, config, engine
             )
-            if "3_optimisation" not in config["eDisGo"]["tasks"]:
+            if "3_temporal_complexity_reduction" not in config["eDisGo"]["tasks"]:
                 edisgo_grid.save(
                     directory=os.path.join(results_dir, "grid_data_overlying_grid"),
                     save_topology=True,
@@ -853,6 +857,28 @@ class EDisGoNetworks:
                     archive=True,
                     archive_type="zip",
                 )
+                return {edisgo_grid.topology.id: results_dir}
+
+        # ################### task: temporal complexity reduction ##################
+        if "3_temporal_complexity_reduction" in config["eDisGo"]["tasks"]:
+            if edisgo_grid is None:
+                grid_path = os.path.join(results_dir, "grid_data_overlying_grid.zip")
+                edisgo_grid = import_edisgo_from_files(
+                    edisgo_path=grid_path,
+                    import_topology=True,
+                    import_timeseries=True,
+                    import_results=False,
+                    import_electromobility=True,
+                    import_heat_pump=True,
+                    import_dsm=True,
+                    import_overlying_grid=True,
+                    from_zip_archive=True,
+                )
+                edisgo_grid.legacy_grids = False
+            time_intervals = self._run_edisgo_task_temporal_complexity_reduction(
+                edisgo_grid, logger, config
+            )
+            if "4_optimisation" not in config["eDisGo"]["tasks"]:
                 return {edisgo_grid.topology.id: results_dir}
 
         # ########################## task: optimisation ##########################
@@ -1361,6 +1387,206 @@ class EDisGoNetworks:
         edisgo_grid.check_integrity()
 
         return edisgo_grid
+
+    def _run_edisgo_task_temporal_complexity_reduction(
+        self, edisgo_grid, logger, config
+    ):
+        """
+        Runs the temporal complexity reduction.
+
+        Parameters
+        ----------
+        mv_grid_id : int
+            MV grid ID of the ding0 grid
+
+        Returns
+        -------
+        :class:`edisgo.EDisGo`
+            Returns the complete eDisGo container, also including results
+
+        """
+        logger.info("Start task 'temporal complexity reduction'.")
+
+        # get non-converging time steps
+        try:
+            convergence = pd.read_csv(
+                os.path.join(config["eGo"]["csv_import_eTraGo"], "pf_solution.csv"),
+                index_col=0,
+                parse_dates=True,
+            )
+            ts_not_converged = convergence[~convergence.converged].index
+        except FileNotFoundError:
+            logger.info(
+                "No info on converged time steps, wherefore it is assumed that all "
+                "converged."
+            )
+            ts_not_converged = []
+        except Exception:
+            raise
+
+        # set time series data at time steps with non-convergence issues to zero
+        if len(ts_not_converged) > 0:
+            logger.info(
+                f"{len(ts_not_converged)} time steps did not converge in overlying "
+                f"grid. Time series data at time steps with non-convergence issues is "
+                f"set to zero."
+            )
+            # set data in TimeSeries object to zero
+            attributes = edisgo_grid.timeseries._attributes
+            for attr in attributes:
+                ts = getattr(edisgo_grid.timeseries, attr)
+                if not ts.empty:
+                    ts.loc[ts_not_converged, :] = 0
+                    setattr(edisgo_grid.timeseries, attr, ts)
+            # set data in OverlyingGrid object to zero
+            attributes = edisgo_grid.overlying_grid._attributes
+            for attr in attributes:
+                ts = getattr(edisgo_grid.overlying_grid, attr)
+                if not ts.empty and "soc" not in attr:
+                    if isinstance(ts, pd.Series):
+                        ts.loc[ts_not_converged] = 0
+                    else:
+                        ts.loc[ts_not_converged, :] = 0
+                    setattr(edisgo_grid.overlying_grid, attr, ts)
+
+        # distribute overlying grid data
+        logger.info("Distribute overlying grid data.")
+        edisgo_grid = distribute_overlying_grid_requirements(edisgo_grid)
+
+        # get critical time intervals
+        results_dir = os.path.join(
+            config["eGo"]["results_dir"], self._results, str(edisgo_grid.topology.id)
+        )
+        # # ToDo temporary!
+        # edisgo_grid.timeseries.timeindex = edisgo_grid.timeseries.timeindex[
+        # 168:168+200]
+        time_intervals = get_most_critical_time_intervals(
+            edisgo_grid,
+            percentage=1.0,
+            time_steps_per_time_interval=168,
+            time_step_day_start=4,
+            save_steps=True,
+            path=results_dir,
+            use_troubleshooting_mode=True,
+            overloading_factor=0.95,
+            voltage_deviation_factor=0.95,
+        )
+
+        # drop time intervals with non-converging time steps
+        if len(ts_not_converged) > 0:
+
+            # check overloading time intervals
+            for ti in time_intervals.index:
+                # check if there is one time step in time interval that did not converge
+                non_converged_ts_in_ti = [
+                    _
+                    for _ in ts_not_converged
+                    if _ in time_intervals.at[ti, "time_steps_overloading"]
+                ]
+                if len(non_converged_ts_in_ti) > 0:
+                    # if any time step did not converge, set time steps to None
+                    time_intervals.at[ti, "time_steps_overloading"] = None
+
+            # check voltage issues time intervals
+            for ti in time_intervals.index:
+                # check if there is one time step in time interval that did not converge
+                non_converged_ts_in_ti = [
+                    _
+                    for _ in ts_not_converged
+                    if _ in time_intervals.at[ti, "time_steps_voltage_issues"]
+                ]
+                if len(non_converged_ts_in_ti) > 0:
+                    # if any time step did not converge, set time steps to None
+                    time_intervals.at[ti, "time_steps_voltage_issues"] = None
+
+        # select time intervals
+        if not time_intervals.loc[:, "time_steps_overloading"].dropna().empty:
+            tmp = time_intervals.loc[:, "time_steps_overloading"].dropna()
+            time_interval_1 = tmp.iloc[0]
+            time_interval_1_ind = tmp.index[0]
+        else:
+            time_interval_1 = pd.Index([])
+            time_interval_1_ind = None
+        if not time_intervals.loc[:, "time_steps_voltage_issues"].dropna().empty:
+            tmp = time_intervals.loc[:, "time_steps_voltage_issues"].dropna()
+            time_interval_2 = tmp.iloc[0]
+            time_interval_2_ind = tmp.index[0]
+        else:
+            time_interval_2 = pd.Index([])
+            time_interval_2_ind = None
+
+        # check if time intervals overlap
+        overlap = [_ for _ in time_interval_1 if _ in time_interval_2]
+        if len(overlap) > 0:
+            logger.info(
+                "Selected time intervals overlap. Trying to find another "
+                "time interval in voltage_issues intervals."
+            )
+            # check if time interval without overlap can be found
+            for ti in time_intervals.loc[:, "time_steps_voltage_issues"].dropna().index:
+                overlap = [
+                    _
+                    for _ in time_interval_1
+                    if _ in time_intervals.at[ti, "time_steps_voltage_issues"]
+                ]
+                if len(overlap) == 0:
+                    time_interval_2 = time_intervals.at[ti, "time_steps_voltage_issues"]
+                    time_interval_2_ind = ti
+                    break
+        overlap = [_ for _ in time_interval_1 if _ in time_interval_2]
+        if len(overlap) > 0:
+            logger.info(
+                "Selected time intervals overlap. Trying to find another "
+                "time interval in overloading intervals."
+            )
+            # check if time interval without overlap can be found
+            for ti in time_intervals.loc[:, "time_steps_overloading"].dropna().index:
+                overlap = [
+                    _
+                    for _ in time_interval_2
+                    if _ in time_intervals.at[ti, "time_steps_overloading"]
+                ]
+                if len(overlap) == 0:
+                    time_interval_1 = time_intervals.at[ti, "time_steps_overloading"]
+                    time_interval_1_ind = ti
+                    break
+
+        overlap = [_ for _ in time_interval_1 if _ in time_interval_2]
+        if len(overlap) > 0:
+            logger.info(
+                "Overlap of selected time intervals cannot be avoided. "
+                "Time intervals are therefore concatenated."
+            )
+            time_interval_1 = (
+                time_interval_1.append(time_interval_2).unique().sort_values()
+            )
+            time_interval_2 = None
+
+        # save to csv
+        percentage = pd.Series()
+        percentage["time_interval_1"] = (
+            None
+            if time_interval_1_ind is None
+            else time_intervals.at[
+                time_interval_1_ind, "percentage_max_overloaded_components"
+            ]
+        )
+        percentage["time_interval_2"] = (
+            None
+            if time_interval_2_ind is None
+            else time_intervals.at[
+                time_interval_2_ind, "percentage_buses_max_voltage_deviation"
+            ]
+        )
+        pd.DataFrame(
+            {
+                "time_steps": [time_interval_1, time_interval_2],
+                "percentage": percentage,
+            },
+            index=["time_interval_1", "time_interval_2"],
+        ).to_csv(os.path.join(results_dir, "selected_time_intervals.csv"))
+
+        return time_interval_1, time_interval_2
 
     def _run_edisgo_task_optimisation(self, edisgo_grid, logger):
         """
