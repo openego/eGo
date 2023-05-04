@@ -34,6 +34,7 @@ import logging
 import os
 import pickle
 
+from copy import deepcopy
 from datetime import datetime
 from datetime import timedelta as td
 from time import localtime, sleep, strftime
@@ -56,6 +57,10 @@ if "READTHEDOCS" not in os.environ:
     from edisgo.tools.temporal_complexity_reduction import (
         get_most_critical_time_intervals,
     )
+    from edisgo.tools.tools import (
+        aggregate_district_heating_components,
+        get_sample_using_time,
+    )
     from egoio.db_tables import grid, model_draft
     from egoio.tools import db
     from sqlalchemy import func
@@ -63,6 +68,7 @@ if "READTHEDOCS" not in os.environ:
     from ego.mv_clustering import cluster_workflow, database
     from ego.tools.economics import edisgo_grid_investment
     from ego.tools.interface import ETraGoMinimalData, get_etrago_results_per_bus
+
 
 # Logging
 logger = logging.getLogger(__name__)
@@ -802,6 +808,7 @@ class EDisGoNetworks:
         logger = logging.getLogger("edisgo.external.ego._run_edisgo")
 
         edisgo_grid = None
+        time_intervals = None
 
         # ################### task: setup grid ##################
         if "1_setup_grid" in config["eDisGo"]["tasks"]:
@@ -882,7 +889,52 @@ class EDisGoNetworks:
                 return {edisgo_grid.topology.id: results_dir}
 
         # ########################## task: optimisation ##########################
-        # ToDo Maike Call optimisation
+        if "4_optimisation" in config["eDisGo"]["tasks"]:
+            if edisgo_grid is None:
+                grid_path = os.path.join(results_dir, "grid_data_overlying_grid.zip")
+                edisgo_grid = import_edisgo_from_files(
+                    edisgo_path=grid_path,
+                    import_topology=True,
+                    import_timeseries=True,
+                    import_results=False,
+                    import_electromobility=True,
+                    import_heat_pump=True,
+                    import_dsm=True,
+                    import_overlying_grid=True,
+                    from_zip_archive=True,
+                )
+                edisgo_grid.legacy_grids = False
+            if time_intervals is None:
+                time_intervals = pd.read_csv(
+                    os.path.join(results_dir, "selected_time_intervals.csv"),
+                    index_col=0,
+                )
+                for ti in time_intervals.index:
+                    time_steps = time_intervals.at[ti, "time_steps"]
+                    if time_steps is not None:
+                        time_intervals.at[ti, "time_steps"] = pd.date_range(
+                            start=time_steps.split("'")[1],
+                            periods=int(time_steps.split("=")[-2].split(",")[0]),
+                            freq="H",
+                        )
+            edisgo_grid = self._run_edisgo_task_optimisation(
+                edisgo_grid, logger, time_intervals, results_dir
+            )
+            if "5_grid_reinforcement" not in config["eDisGo"]["tasks"]:
+                edisgo_grid.save(
+                    directory=os.path.join(results_dir, "grid_data_optimisation"),
+                    save_topology=True,
+                    save_timeseries=True,
+                    save_results=False,
+                    save_electromobility=False,
+                    save_dsm=False,
+                    save_heatpump=False,
+                    save_overlying_grid=False,
+                    reduce_memory=True,
+                    archive=True,
+                    archive_type="zip",
+                )
+                return {edisgo_grid.topology.id: results_dir}
 
         # ########################## reinforcement ##########################
         # edisgo_grid.reinforce()
@@ -1457,9 +1509,6 @@ class EDisGoNetworks:
         results_dir = os.path.join(
             config["eGo"]["results_dir"], self._results, str(edisgo_grid.topology.id)
         )
-        # # ToDo temporary!
-        # edisgo_grid.timeseries.timeindex = edisgo_grid.timeseries.timeindex[
-        # 168:168+200]
         time_intervals = get_most_critical_time_intervals(
             edisgo_grid,
             percentage=1.0,
@@ -1588,7 +1637,9 @@ class EDisGoNetworks:
 
         return time_interval_1, time_interval_2
 
-    def _run_edisgo_task_optimisation(self, edisgo_grid, logger):
+    def _run_edisgo_task_optimisation(
+        self, edisgo_grid, logger, time_intervals, results_dir, reduction_factor=0.3
+    ):
         """
         Runs the dispatch optimisation.
 
@@ -1604,6 +1655,89 @@ class EDisGoNetworks:
 
         """
         logger.info("Start task 'optimisation'.")
+
+        edisgo_grid._config = Config()  # ToDo needed?
+        aggregate_district_heating_components(edisgo_grid)
+
+        timeindex = pd.Index([])
+        for ti in time_intervals.index:
+            time_steps = time_intervals.at[ti, "time_steps"]
+            if time_steps is None:
+                continue
+            else:
+                timeindex = timeindex.append(pd.Index(time_steps))
+                # copy edisgo object
+                edisgo_copy = deepcopy(edisgo_grid)
+                # temporal complexity reduction
+                get_sample_using_time(
+                    edisgo_copy, start_date=time_steps[0], periods=len(time_steps)
+                )
+
+                # spatial complexity reduction
+                edisgo_copy.spatial_complexity_reduction(
+                    mode="kmeansdijkstra",
+                    cluster_area="feeder",
+                    reduction_factor=reduction_factor,
+                    reduction_factor_not_focused=False,
+                )
+
+                # OPF
+                psa_net = edisgo_copy.to_pypsa()
+                flexible_cps = psa_net.loads.loc[
+                    psa_net.loads.index.str.contains("home")
+                    | (psa_net.loads.index.str.contains("work"))
+                ].index.values
+                flexible_hps = edisgo_copy.heat_pump.heat_demand_df.columns.values
+                flexible_loads = edisgo_copy.dsm.p_max.columns
+                flexible_storage_units = (
+                    edisgo_copy.topology.storage_units_df.index.values
+                )
+
+                edisgo_copy.pm_optimize(
+                    flexible_cps=flexible_cps,
+                    flexible_hps=flexible_hps,
+                    flexible_loads=flexible_loads,
+                    flexible_storage_units=flexible_storage_units,
+                    s_base=1,
+                    opf_version=4,
+                    silence_moi=False,
+                    method="soc",
+                )
+
+                # save OPF results
+                edisgo_copy.save(
+                    directory=os.path.join(results_dir, f"opf_results_{ti}"),
+                    save_topology=True,
+                    save_timeseries=False,
+                    save_results=False,
+                    save_opf_results=True,
+                    reduce_memory=True,
+                    archive=True,
+                    archive_type="zip",
+                )
+
+                # write flexibility dispatch results to spatially unreduced edisgo
+                # object
+                edisgo_grid.timeseries._loads_active_power.loc[
+                    time_steps, :
+                ] = edisgo_copy.timeseries.loads_active_power
+                edisgo_grid.timeseries._loads_reactive_power.loc[
+                    time_steps, :
+                ] = edisgo_copy.timeseries.loads_reactive_power
+                edisgo_grid.timeseries._generators_active_power.loc[
+                    time_steps, :
+                ] = edisgo_copy.timeseries.generators_active_power
+                edisgo_grid.timeseries._generators_reactive_power.loc[
+                    time_steps, :
+                ] = edisgo_copy.timeseries.generators_reactive_power
+                edisgo_grid.timeseries._storage_units_active_power.loc[
+                    time_steps, :
+                ] = edisgo_copy.timeseries.storage_units_active_power
+                edisgo_grid.timeseries._storage_units_reactive_power.loc[
+                    time_steps, :
+                ] = edisgo_copy.timeseries.storage_units_reactive_power
+
+        edisgo_grid.timeseries.timeindex = timeindex
         return edisgo_grid
 
     def _run_edisgo_task_grid_reinforcement(self, edisgo_grid, logger):
