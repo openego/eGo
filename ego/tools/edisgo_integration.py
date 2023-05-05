@@ -815,20 +815,20 @@ class EDisGoNetworks:
             edisgo_grid = self._run_edisgo_task_setup_grid(
                 mv_grid_id, scenario, logger, config, engine
             )
+            edisgo_grid.save(
+                directory=os.path.join(results_dir, "grid_data"),
+                save_topology=True,
+                save_timeseries=True,
+                save_results=False,
+                save_electromobility=True,
+                save_dsm=True,
+                save_heatpump=True,
+                save_overlying_grid=False,
+                reduce_memory=True,
+                archive=True,
+                archive_type="zip",
+            )
             if "2_specs_overlying_grid" not in config["eDisGo"]["tasks"]:
-                edisgo_grid.save(
-                    directory=os.path.join(results_dir, "grid_data"),
-                    save_topology=True,
-                    save_timeseries=True,
-                    save_results=False,
-                    save_electromobility=True,
-                    save_dsm=True,
-                    save_heatpump=True,
-                    save_overlying_grid=False,
-                    reduce_memory=True,
-                    archive=True,
-                    archive_type="zip",
-                )
                 return {edisgo_grid.topology.id: results_dir}
 
         # ################### task: specs overlying grid ##################
@@ -850,20 +850,20 @@ class EDisGoNetworks:
             edisgo_grid = self._run_edisgo_task_specs_overlying_grid(
                 edisgo_grid, scenario, logger, config, engine
             )
+            edisgo_grid.save(
+                directory=os.path.join(results_dir, "grid_data_overlying_grid"),
+                save_topology=True,
+                save_timeseries=True,
+                save_results=False,
+                save_electromobility=True,
+                save_dsm=True,
+                save_heatpump=True,
+                save_overlying_grid=True,
+                reduce_memory=True,
+                archive=True,
+                archive_type="zip",
+            )
             if "3_temporal_complexity_reduction" not in config["eDisGo"]["tasks"]:
-                edisgo_grid.save(
-                    directory=os.path.join(results_dir, "grid_data_overlying_grid"),
-                    save_topology=True,
-                    save_timeseries=True,
-                    save_results=False,
-                    save_electromobility=True,
-                    save_dsm=True,
-                    save_heatpump=True,
-                    save_overlying_grid=True,
-                    reduce_memory=True,
-                    archive=True,
-                    archive_type="zip",
-                )
                 return {edisgo_grid.topology.id: results_dir}
 
         # ################### task: temporal complexity reduction ##################
@@ -920,20 +920,20 @@ class EDisGoNetworks:
             edisgo_grid = self._run_edisgo_task_optimisation(
                 edisgo_grid, logger, time_intervals, results_dir
             )
+            edisgo_grid.save(
+                directory=os.path.join(results_dir, "grid_data_optimisation"),
+                save_topology=True,
+                save_timeseries=True,
+                save_results=False,
+                save_electromobility=False,
+                save_dsm=False,
+                save_heatpump=False,
+                save_overlying_grid=False,
+                reduce_memory=True,
+                archive=True,
+                archive_type="zip",
+            )
             if "5_grid_reinforcement" not in config["eDisGo"]["tasks"]:
-                edisgo_grid.save(
-                    directory=os.path.join(results_dir, "grid_data_optimisation"),
-                    save_topology=True,
-                    save_timeseries=True,
-                    save_results=False,
-                    save_electromobility=False,
-                    save_dsm=False,
-                    save_heatpump=False,
-                    save_overlying_grid=False,
-                    reduce_memory=True,
-                    archive=True,
-                    archive_type="zip",
-                )
                 return {edisgo_grid.topology.id: results_dir}
 
         # ########################## reinforcement ##########################
