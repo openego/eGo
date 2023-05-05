@@ -1656,7 +1656,20 @@ class EDisGoNetworks:
         """
         logger.info("Start task 'optimisation'.")
 
-        edisgo_grid._config = Config()  # ToDo needed?
+        # initialise storage time series in case they don't yet exist
+        try:
+            edisgo_grid.timeseries._storage_units_active_power
+        except AttributeError:
+            edisgo_grid.timeseries.storage_units_active_power = pd.DataFrame(
+                index=edisgo_grid.timeseries.timeindex
+            )
+        try:
+            edisgo_grid.timeseries._storage_units_reactive_power
+        except AttributeError:
+            edisgo_grid.timeseries.storage_units_active_power = pd.DataFrame(
+                index=edisgo_grid.timeseries.timeindex
+            )
+
         aggregate_district_heating_components(edisgo_grid)
 
         timeindex = pd.Index([])
