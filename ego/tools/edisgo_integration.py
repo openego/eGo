@@ -1094,8 +1094,9 @@ class EDisGoNetworks:
             self._pf_post_lopf,
             self._max_cos_phi_renewable,
         )
+        snapshots = specs["timeindex"]
 
-        # exclude non-converging time steps
+        # get time steps that don't converge in overlying grid
         try:
             convergence = pd.read_csv(
                 os.path.join(config["eGo"]["csv_import_eTraGo"], "pf_solution.csv"),
@@ -1103,13 +1104,12 @@ class EDisGoNetworks:
                 parse_dates=True,
             )
             ts_not_converged = convergence[~convergence.converged].index
-            snapshots = specs["timeindex"].drop(ts_not_converged)
         except FileNotFoundError:
             logger.info(
                 "No info on converged time steps, wherefore it is assumed that all "
                 "converged."
             )
-            snapshots = specs["timeindex"]
+            ts_not_converged = pd.Index([])
         except Exception:
             raise
 
@@ -1360,16 +1360,19 @@ class EDisGoNetworks:
                 edisgo_grid.topology.generators_df["type"] == carrier
             ].p_nom.sum()
             specs["renewables_curtailment"][carrier] *= p_nom_mv_lv / p_nom_total
-        # check that curtailment does not exceed feed-in
+        # check that curtailment does not exceed feed-in (for all converged time steps)
         vres_gens = edisgo_grid.topology.generators_df[
             edisgo_grid.topology.generators_df["type"].isin(
                 specs["renewables_curtailment"].columns
             )
         ].index
+        ts_converged = snapshots.drop(ts_not_converged)
         pot_vres_gens = edisgo_grid.timeseries.generators_active_power.loc[
-            :, vres_gens
+            ts_converged, vres_gens
         ].sum(axis=1)
-        total_curtailment = specs["renewables_curtailment"].loc[snapshots].sum(axis=1)
+        total_curtailment = (
+            specs["renewables_curtailment"].loc[ts_converged].sum(axis=1)
+        )
         diff = pot_vres_gens - total_curtailment
         if (diff < 0).any():
             # if curtailment is much larger than feed-in, throw an error
