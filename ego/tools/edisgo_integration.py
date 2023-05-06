@@ -1658,20 +1658,6 @@ class EDisGoNetworks:
         """
         logger.info("Start task 'optimisation'.")
 
-        # initialise storage time series in case they don't yet exist
-        try:
-            edisgo_grid.timeseries._storage_units_active_power
-        except AttributeError:
-            edisgo_grid.timeseries.storage_units_active_power = pd.DataFrame(
-                index=edisgo_grid.timeseries.timeindex
-            )
-        try:
-            edisgo_grid.timeseries._storage_units_reactive_power
-        except AttributeError:
-            edisgo_grid.timeseries.storage_units_active_power = pd.DataFrame(
-                index=edisgo_grid.timeseries.timeindex
-            )
-
         aggregate_district_heating_components(edisgo_grid)
 
         timeindex = pd.Index([])
@@ -1745,11 +1731,26 @@ class EDisGoNetworks:
                 edisgo_grid.timeseries._generators_reactive_power.loc[
                     time_steps, :
                 ] = edisgo_copy.timeseries.generators_reactive_power
+
+                try:
+                    edisgo_grid.timeseries._storage_units_active_power
+                except AttributeError:
+                    edisgo_grid.timeseries.storage_units_active_power = pd.DataFrame(
+                        index=edisgo_grid.timeseries.timeindex
+                    )
                 edisgo_grid.timeseries._storage_units_active_power.loc[
-                    time_steps, :
+                    time_steps,
+                    edisgo_copy.timeseries.storage_units_active_power.columns,
                 ] = edisgo_copy.timeseries.storage_units_active_power
+                try:
+                    edisgo_grid.timeseries._storage_units_reactive_power
+                except AttributeError:
+                    edisgo_grid.timeseries.storage_units_reactive_power = pd.DataFrame(
+                        index=edisgo_grid.timeseries.timeindex
+                    )
                 edisgo_grid.timeseries._storage_units_reactive_power.loc[
-                    time_steps, :
+                    time_steps,
+                    edisgo_copy.timeseries.storage_units_reactive_power.columns,
                 ] = edisgo_copy.timeseries.storage_units_reactive_power
 
         edisgo_grid.timeseries.timeindex = timeindex
