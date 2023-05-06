@@ -1366,13 +1366,12 @@ class EDisGoNetworks:
                 specs["renewables_curtailment"].columns
             )
         ].index
-        ts_converged = snapshots.drop(ts_not_converged)
         pot_vres_gens = edisgo_grid.timeseries.generators_active_power.loc[
-            ts_converged, vres_gens
+            :, vres_gens
         ].sum(axis=1)
-        total_curtailment = (
-            specs["renewables_curtailment"].loc[ts_converged].sum(axis=1)
-        )
+        pot_vres_gens.loc[ts_not_converged] = 0.0
+        total_curtailment = specs["renewables_curtailment"].loc[:].sum(axis=1)
+        total_curtailment.loc[ts_not_converged] = 0.0
         diff = pot_vres_gens - total_curtailment
         if (diff < 0).any():
             # if curtailment is much larger than feed-in, throw an error
