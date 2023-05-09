@@ -1658,7 +1658,15 @@ class EDisGoNetworks:
         """
         logger.info("Start task 'optimisation'.")
 
-        aggregate_district_heating_components(edisgo_grid)
+        # aggregate PtH units in same district heating network and subtract feed-in
+        # from other heat sources from heat demand in district heating network
+        aggregate_district_heating_components(
+            edisgo_grid,
+            feedin_district_heating=edisgo_grid.overlying_grid.feedin_district_heating,
+        )
+        # apply operating strategy so that inflexible heat pumps (without heat
+        # storage units) have a time series
+        edisgo_grid.apply_heat_pump_operating_strategy()
 
         timeindex = pd.Index([])
         for ti in time_intervals.index:
