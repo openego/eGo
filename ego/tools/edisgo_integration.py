@@ -67,7 +67,11 @@ if "READTHEDOCS" not in os.environ:
 
     from ego.mv_clustering import cluster_workflow, database
     from ego.tools.economics import edisgo_grid_investment
-    from ego.tools.interface import ETraGoMinimalData, get_etrago_results_per_bus
+    from ego.tools.interface import (
+        ETraGoMinimalData,
+        get_etrago_results_per_bus,
+        rename_generator_carriers_edisgo,
+    )
 
 
 # Logging
@@ -1146,25 +1150,9 @@ class EDisGoNetworks:
         edisgo_grid.timeseries.timeindex = snapshots
 
         logger.info("Set generator time series.")
-        # active power
         # rename carrier to match with carrier names in overlying grid
-        generators_df = edisgo_grid.topology.generators_df
-        if "p_nom_th" in generators_df.columns:
-            gens_rename = generators_df[
-                (generators_df["type"].isin(["gas", "gas extended", "oil", "others"]))
-                & (~generators_df["p_nom_th"].isna())
-            ]
-            generators_df.loc[gens_rename.index, "type"] = "gas_CHP"
-            gens_rename = generators_df[
-                (generators_df["type"].isin(["biomass"]))
-                & (~generators_df["p_nom_th"].isna())
-            ]
-            generators_df.loc[gens_rename.index, "type"] = "biomass_CHP"
-        gens_rename = generators_df[generators_df["type"].isin(["water"])]
-        generators_df.loc[gens_rename.index, "type"] = "run_of_river"
-        gens_rename = generators_df[generators_df["type"].isin(["conventional"])]
-        generators_df.loc[gens_rename.index, "type"] = "others"
-
+        rename_generator_carriers_edisgo(edisgo_grid)
+        # active power
         edisgo_grid.set_time_series_active_power_predefined(
             dispatchable_generators_ts=specs["dispatchable_generators_active_power"],
             fluctuating_generators_ts=specs["renewables_potential"],
