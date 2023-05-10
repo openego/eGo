@@ -27,9 +27,15 @@ __author__ = "wolf_bunke,maltesc,mltja"
 
 import logging
 import math
+import os
 import time
 
 import pandas as pd
+
+if "READTHEDOCS" not in os.environ:
+    from sqlalchemy import func
+
+    from ego.mv_clustering import database
 
 logger = logging.getLogger(__name__)
 
@@ -783,3 +789,59 @@ def rename_generator_carriers_edisgo(edisgo_grid):
     generators_df.loc[gens_rename.index, "type"] = "run_of_river"
     gens_rename = generators_df[generators_df["type"].isin(["conventional"])]
     generators_df.loc[gens_rename.index, "type"] = "others"
+
+
+def map_etrago_heat_bus_to_district_heating_id(specs, scenario, config, engine):
+    """
+    Helper function to rename heat bus ID from eTraGo to district heating ID used
+    in eDisGo for specifications from overlying grid on district heating feed-in,
+    as well as district heating storage SoC and capacity.
+
+    """
+    # map district heating ID to heat bus ID from eTraGo
+    orm = database.register_tables_in_saio(engine, config=config)
+    heat_buses = [int(_) for _ in specs["feedin_district_heating"].columns]
+    with database.session_scope(engine) as session:
+        # get srid of etrago_bus table
+        query = session.query(func.ST_SRID(orm["etrago_bus"].geom)).limit(1)
+        srid_etrago_bus = query.all()[0]
+        # get district heating ID corresponding to heat bus ID by geo join
+        query = (
+            session.query(
+                orm["etrago_bus"].bus_id.label("heat_bus_id"),
+                orm["district_heating_areas"].id.label("district_heating_id"),
+            )
+            .filter(
+                orm["etrago_bus"].scn_name == scenario,
+                orm["district_heating_areas"].scenario == scenario,
+                orm["etrago_bus"].bus_id.in_(heat_buses),
+            )
+            .outerjoin(  # join to obtain district heating ID
+                orm["district_heating_areas"],
+                func.ST_Transform(
+                    func.ST_Centroid(orm["district_heating_areas"].geom_polygon),
+                    srid_etrago_bus,
+                )
+                == orm["etrago_bus"].geom,
+            )
+        )
+        mapping_heat_bus_dh_id = pd.read_sql(
+            query.statement,
+            engine,
+            index_col="heat_bus_id",
+        )
+    # convert heat bus ID to string
+    mapping_heat_bus_dh_id.index = mapping_heat_bus_dh_id.index.map(str)
+    # rename heat bus to district heating ID
+    specs["feedin_district_heating"].rename(
+        columns=mapping_heat_bus_dh_id.district_heating_id,
+        inplace=True,
+    )
+    specs["thermal_storage_central_soc"].rename(
+        columns=mapping_heat_bus_dh_id.district_heating_id,
+        inplace=True,
+    )
+    specs["thermal_storage_central_capacity"].rename(
+        index=mapping_heat_bus_dh_id.district_heating_id,
+        inplace=True,
+    )
