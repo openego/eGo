@@ -44,12 +44,14 @@ from traceback import TracebackException
 
 import dill
 import multiprocess as mp2
+import numpy as np
 import pandas as pd
 
 from sqlalchemy.orm import scoped_session, sessionmaker
 
 if "READTHEDOCS" not in os.environ:
     from edisgo.edisgo import import_edisgo_from_files
+    from edisgo.flex_opt.reinforce_grid import enhanced_reinforce_grid
     from edisgo.network.overlying_grid import distribute_overlying_grid_requirements
     from edisgo.tools.config import Config
     from edisgo.tools.logger import setup_logger
@@ -941,7 +943,52 @@ class EDisGoNetworks:
                 return {edisgo_grid.topology.id: results_dir}
 
         # ########################## reinforcement ##########################
-        # edisgo_grid.reinforce()
+        if "5_grid_reinforcement" in config["eDisGo"]["tasks"]:
+            if edisgo_grid is None:
+                grid_path = os.path.join(results_dir, "grid_data_optimisation.zip")
+                edisgo_grid = import_edisgo_from_files(
+                    edisgo_path=grid_path,
+                    import_topology=True,
+                    import_timeseries=True,
+                    import_results=False,
+                    import_electromobility=False,
+                    import_heat_pump=False,
+                    import_dsm=False,
+                    import_overlying_grid=False,
+                    from_zip_archive=True,
+                )
+                edisgo_grid.legacy_grids = False
+            if time_intervals is None:
+                time_intervals = pd.read_csv(
+                    os.path.join(results_dir, "selected_time_intervals.csv"),
+                    index_col=0,
+                )
+                for ti in time_intervals.index:
+                    time_steps = time_intervals.at[ti, "time_steps"]
+                    if time_steps is not None:
+                        time_intervals.at[ti, "time_steps"] = pd.date_range(
+                            start=time_steps.split("'")[1],
+                            periods=int(time_steps.split("=")[-2].split(",")[0]),
+                            freq="H",
+                        )
+            edisgo_grid = self._run_edisgo_task_grid_reinforcement(
+                edisgo_grid, logger, time_intervals
+            )
+            edisgo_grid.save(
+                directory=os.path.join(
+                    results_dir, f"grid_data_reinforcement_{scenario}"
+                ),
+                save_topology=True,
+                save_timeseries=True,
+                save_results=True,
+                save_electromobility=False,
+                save_dsm=False,
+                save_heatpump=False,
+                save_overlying_grid=False,
+                reduce_memory=True,
+                archive=True,
+                archive_type="zip",
+            )
 
         # ########################## save results ##########################
         self._status_update(mv_grid_id, "end")
@@ -1752,9 +1799,189 @@ class EDisGoNetworks:
         edisgo_grid.timeseries.timeindex = timeindex
         return edisgo_grid
 
-    def _run_edisgo_task_grid_reinforcement(self, edisgo_grid, logger):
+    def _run_edisgo_task_specs_overlying_grid_low_flex(
+        self, edisgo_grid, scenario, logger, config, engine
+    ):
         """
-        Runs the dispatch optimisation.
+        Sets up grid for low-flex scenario variation.
+
+        Parameters
+        ----------
+        mv_grid_id : int
+            MV grid ID of the ding0 grid
+
+        Returns
+        -------
+        :class:`edisgo.EDisGo`
+            Returns the complete eDisGo container, also including results
+
+        """
+        logger.info("Start task 'specs_overlying_grid_low_flex'.")
+
+        logger.info("Get specifications from eTraGo.")
+        specs = get_etrago_results_per_bus(
+            edisgo_grid.topology.id,
+            self._etrago_network,
+            self._pf_post_lopf,
+            self._max_cos_phi_renewable,
+        )
+        snapshots = specs["timeindex"]
+
+        # overwrite previously set dummy time index if year that was used differs from
+        # year used in etrago
+        edisgo_year = edisgo_grid.timeseries.timeindex[0].year
+        etrago_year = snapshots[0].year
+        if edisgo_year != etrago_year:
+            timeindex_new_full = pd.date_range(
+                f"1/1/{etrago_year}", periods=8760, freq="H"
+            )
+            # conventional loads
+            edisgo_grid.timeseries.loads_active_power.index = timeindex_new_full
+            edisgo_grid.timeseries.loads_reactive_power.index = timeindex_new_full
+            # COP and heat demand
+            edisgo_grid.heat_pump.cop_df.index = timeindex_new_full
+            edisgo_grid.heat_pump.heat_demand_df.index = timeindex_new_full
+        # TimeSeries.timeindex
+        edisgo_grid.timeseries.timeindex = snapshots
+
+        # set generator time series
+        # rename carrier to match with carrier names in overlying grid
+        rename_generator_carriers_edisgo(edisgo_grid)
+        # active power
+        # ToDo Abregelung?
+        edisgo_grid.set_time_series_active_power_predefined(
+            dispatchable_generators_ts=specs["dispatchable_generators_active_power"],
+            fluctuating_generators_ts=specs["renewables_potential"],
+        )
+        # reactive power
+        edisgo_grid.set_time_series_reactive_power_control(
+            control="fixed_cosphi",
+            generators_parametrisation="default",
+            loads_parametrisation=None,
+            storage_units_parametrisation=None,
+        )
+
+        # set heat pump time series
+        logger.info("Set heat pump time series.")
+
+        # individual heat pumps - uncontrolled operation
+        hp_decentral = edisgo_grid.topology.loads_df[
+            edisgo_grid.topology.loads_df.sector == "individual_heating"
+        ]
+        if not hp_decentral.empty:
+            edisgo_grid.apply_heat_pump_operating_strategy(
+                heat_pump_names=hp_decentral.index
+            )
+        # district heating heat pumps from overlying grid
+        hp_dh = edisgo_grid.topology.loads_df[
+            edisgo_grid.topology.loads_df.sector.isin(
+                ["district_heating", "district_heating_resistive_heater"]
+            )
+        ]
+        if len(hp_dh) > 0:
+            if specs["feedin_district_heating"].empty:
+                raise ValueError(
+                    "There are PtH units in district heating but no time series "
+                    "from overlying grid."
+                )
+
+            # map district heating ID to heat bus ID from eTraGo
+            orm = database.register_tables_in_saio(engine, config=config)
+            heat_buses = [int(_) for _ in specs["feedin_district_heating"].columns]
+            with database.session_scope(engine) as session:
+                # get srid of etrago_bus table
+                query = session.query(func.ST_SRID(orm["etrago_bus"].geom)).limit(1)
+                srid_etrago_bus = query.all()[0]
+                # get district heating ID corresponding to heat bus ID by geo join
+                query = (
+                    session.query(
+                        orm["etrago_bus"].bus_id.label("heat_bus_id"),
+                        orm["district_heating_areas"].id.label("district_heating_id"),
+                    )
+                    .filter(
+                        orm["etrago_bus"].scn_name == scenario,
+                        orm["district_heating_areas"].scenario == scenario,
+                        orm["etrago_bus"].bus_id.in_(heat_buses),
+                    )
+                    .outerjoin(  # join to obtain district heating ID
+                        orm["district_heating_areas"],
+                        func.ST_Transform(
+                            func.ST_Centroid(
+                                orm["district_heating_areas"].geom_polygon
+                            ),
+                            srid_etrago_bus,
+                        )
+                        == orm["etrago_bus"].geom,
+                    )
+                )
+                mapping_heat_bus_dh_id = pd.read_sql(
+                    query.statement,
+                    engine,
+                    index_col="district_heating_id",
+                )
+            hp_dh = pd.merge(
+                hp_dh,
+                mapping_heat_bus_dh_id,
+                left_on="district_heating_id",
+                right_index=True,
+            )
+
+            for heat_bus in heat_buses:
+                if str(heat_bus) in specs["thermal_storage_central_capacity"].index:
+                    if specs["thermal_storage_central_capacity"].at[str(heat_bus)] > 0:
+                        # get PtH unit name to allocate thermal storage unit to
+                        comp_name = hp_dh[hp_dh.heat_bus_id == heat_bus].index[0]
+                        edisgo_grid.heat_pump.thermal_storage_units_df = pd.concat(
+                            [
+                                edisgo_grid.heat_pump.thermal_storage_units_df,
+                                pd.DataFrame(
+                                    data={
+                                        "capacity": specs[
+                                            "thermal_storage_central_capacity"
+                                        ].at[str(heat_bus)],
+                                        "efficiency": specs[
+                                            "thermal_storage_central_efficiency"
+                                        ],
+                                    },
+                                    index=[comp_name],
+                                ),
+                            ]
+                        )
+                        specs["feedin_district_heating"].rename(
+                            columns={
+                                str(heat_bus): hp_dh.at[
+                                    comp_name, "district_heating_id"
+                                ]
+                            },
+                            inplace=True,
+                        )
+        # reactive power
+        edisgo_grid.set_time_series_reactive_power_control(
+            control="fixed_cosphi",
+            generators_parametrisation=None,
+            loads_parametrisation="default",
+            storage_units_parametrisation=None,
+        )
+
+        # delete storage units
+        logger.info("Delete battery storage units.")
+        for stor in edisgo_grid.topology.storage_units_df.index:
+            edisgo_grid.remove_component(
+                comp_type="storage_unit", comp_name=stor, drop_ts=False
+            )
+        # delete DSM and flexibility bands
+        edisgo_grid.dsm = edisgo_grid.dsm.__class__()
+        edisgo_grid.electromobility.flexibility_bands = {
+            "upper_power": pd.DataFrame(),
+            "lower_energy": pd.DataFrame(),
+            "upper_energy": pd.DataFrame(),
+        }
+
+        return edisgo_grid
+
+    def _run_edisgo_task_grid_reinforcement(self, edisgo_grid, logger, time_intervals):
+        """
+        Runs the grid reinforcement.
 
         Parameters
         ----------
@@ -1768,6 +1995,22 @@ class EDisGoNetworks:
 
         """
         logger.info("Start task 'grid_reinforcement'.")
+
+        # overwrite configs with new configs
+        edisgo_grid._config = Config()
+
+        # set timeindex to given time_intervals
+        timesteps = np.concatenate(
+            [cols.time_steps for _, cols in time_intervals.iterrows()]
+        )
+        edisgo_grid.timeseries.timeindex = pd.Index(timesteps)
+
+        enhanced_reinforce_grid(
+            edisgo_grid,
+            activate_cost_results_disturbing_mode=True,
+            separate_lv_grids=True,
+            separation_threshold=2,
+        )
         return edisgo_grid
 
     def _save_edisgo_results(self):
