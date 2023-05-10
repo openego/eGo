@@ -907,43 +907,17 @@ class EDisGoNetworks:
 
         # determine whether work flow ends here or continues, and if it continues
         # whether time intervals need to be loaded
-        # for full flex scenarios the optimisation would be the next step
-        if scenario in ["eGon2035", "eGon100RE"]:
-            if "4_optimisation" in config["eDisGo"]["tasks"]:
-                if time_intervals is None:
-                    load_time_intervals = True
-                else:
-                    load_time_intervals = False
-            else:
-                return {edisgo_grid.topology.id: results_dir}
-        # for low flex scenarios the grid reinforcement would be the next step
-        else:
-            if "5_grid_reinforcement" in config["eDisGo"]["tasks"]:
-                if time_intervals is None:
-                    load_time_intervals = True
-                else:
-                    load_time_intervals = False
-            else:
-                return {edisgo_grid.topology.id: results_dir}
-        if load_time_intervals is True:
-            # load time intervals
-            time_intervals = pd.read_csv(
-                os.path.join(results_dir, "selected_time_intervals.csv"),
-                index_col=0,
-            )
-            for ti in time_intervals.index:
-                time_steps = time_intervals.at[ti, "time_steps"]
-                if time_steps is not None:
-                    time_intervals.at[ti, "time_steps"] = pd.date_range(
-                        start=time_steps.split("'")[1],
-                        periods=int(time_steps.split("=")[-2].split(",")[0]),
-                        freq="H",
-                    )
+        if "4_optimisation" not in config["eDisGo"]["tasks"]:
+            return {edisgo_grid.topology.id: results_dir}
 
         # ########################## task: optimisation ##########################
         if "4_optimisation" in config["eDisGo"]["tasks"]:
             if edisgo_grid is None:
-                grid_path = os.path.join(results_dir, "grid_data_overlying_grid.zip")
+                if scenario in ["eGon2035", "eGon100RE"]:
+                    zip_name = "grid_data_overlying_grid.zip"
+                else:
+                    zip_name = "grid_data_overlying_grid_lowflex.zip"
+                grid_path = os.path.join(results_dir, zip_name)
                 edisgo_grid = import_edisgo_from_files(
                     edisgo_path=grid_path,
                     import_topology=True,
@@ -956,11 +930,28 @@ class EDisGoNetworks:
                     from_zip_archive=True,
                 )
                 edisgo_grid.legacy_grids = False
+            if time_intervals is None:
+                # load time intervals
+                time_intervals = pd.read_csv(
+                    os.path.join(results_dir, "selected_time_intervals.csv"),
+                    index_col=0,
+                )
+                for ti in time_intervals.index:
+                    time_steps = time_intervals.at[ti, "time_steps"]
+                    if time_steps is not None:
+                        time_intervals.at[ti, "time_steps"] = pd.date_range(
+                            start=time_steps.split("'")[1],
+                            periods=int(time_steps.split("=")[-2].split(",")[0]),
+                            freq="H",
+                        )
             edisgo_grid = self._run_edisgo_task_optimisation(
-                edisgo_grid, logger, time_intervals, results_dir
+                edisgo_grid, scenario, logger, time_intervals, results_dir
             )
+            zip_name = "grid_data_optimisation"
+            if scenario in ["eGon2035_lowflex", "eGon100RE_lowflex"]:
+                zip_name += "_lowflex"
             edisgo_grid.save(
-                directory=os.path.join(results_dir, "grid_data_optimisation"),
+                directory=os.path.join(results_dir, zip_name),
                 save_topology=True,
                 save_timeseries=True,
                 save_results=False,
@@ -981,7 +972,7 @@ class EDisGoNetworks:
                 if scenario in ["eGon2035", "eGon100RE"]:
                     zip_name = "grid_data_optimisation.zip"
                 else:
-                    zip_name = "grid_data_overlying_grid_lowflex.zip"
+                    zip_name = "grid_data_optimisation_lowflex.zip"
                 grid_path = os.path.join(results_dir, zip_name)
                 edisgo_grid = import_edisgo_from_files(
                     edisgo_path=grid_path,
@@ -1014,26 +1005,7 @@ class EDisGoNetworks:
                 archive_type="zip",
             )
 
-        # ########################## save results ##########################
         self._status_update(mv_grid_id, "end")
-        # edisgo_grid.save(
-        #     directory=os.path.join(results_dir, "reinforce_data"),
-        #     save_topology=True,
-        #     save_timeseries=True,
-        #     save_results=True,
-        #     save_electromobility=False,
-        #     # save_dsm=True,
-        #     save_heatpump=False,
-        #     save_overlying_grid=False,
-        #     reduce_memory=True,
-        #     archive=True,
-        #     archive_type="zip",
-        #     parameters={
-        #         "powerflow_results": ["pfa_p", "pfa_q", "v_res"],
-        #         "grid_expansion_results": ["grid_expansion_costs", "equipment
-        #         _changes"],
-        #     },
-        # )
 
         return {edisgo_grid.topology.id: results_dir}
 
@@ -1656,7 +1628,13 @@ class EDisGoNetworks:
         return time_interval_1, time_interval_2
 
     def _run_edisgo_task_optimisation(
-        self, edisgo_grid, logger, time_intervals, results_dir, reduction_factor=0.3
+        self,
+        edisgo_grid,
+        scenario,
+        logger,
+        time_intervals,
+        results_dir,
+        reduction_factor=0.3,
     ):
         """
         Runs the dispatch optimisation.
@@ -1707,15 +1685,23 @@ class EDisGoNetworks:
                 )
 
                 # OPF
+                # flexibilities in full flex: DSM, decentral and central PtH units,
+                # curtailment, EVs, storage units
+                # flexibilities in low flex: curtailment, storage units
                 psa_net = edisgo_copy.to_pypsa()
-                flexible_cps = psa_net.loads.loc[
-                    psa_net.loads.index.str.contains("home")
-                    | (psa_net.loads.index.str.contains("work"))
-                ].index.values
-                # ToDo nur die mit Wärmespeicher und für anderen operating
-                # strategy
-                flexible_hps = edisgo_copy.heat_pump.heat_demand_df.columns.values
-                flexible_loads = edisgo_copy.dsm.p_max.columns
+                if scenario in ["eGon2035", "eGon100RE"]:
+                    flexible_loads = edisgo_copy.dsm.p_max.columns
+                    flexible_hps = (
+                        edisgo_copy.heat_pump.thermal_storage_units_df.index.values
+                    )
+                    flexible_cps = psa_net.loads.loc[
+                        psa_net.loads.index.str.contains("home")
+                        | (psa_net.loads.index.str.contains("work"))
+                    ].index.values
+                else:
+                    flexible_loads = []
+                    flexible_hps = []
+                    flexible_cps = []
                 flexible_storage_units = (
                     edisgo_copy.topology.storage_units_df.index.values
                 )
@@ -1778,6 +1764,26 @@ class EDisGoNetworks:
                     time_steps,
                     edisgo_copy.timeseries.storage_units_reactive_power.columns,
                 ] = edisgo_copy.timeseries.storage_units_reactive_power
+
+                # write OPF results back
+                edisgo_grid.opf_results.overlying_grid = pd.concat(
+                    [
+                        edisgo_grid.opf_results.overlying_grid,
+                        edisgo_copy.opf_results.overlying_grid,
+                    ]
+                )
+                edisgo_grid.opf_results.battery_storage_t.p = pd.concat(
+                    [
+                        edisgo_grid.opf_results.battery_storage_t.p,
+                        edisgo_copy.opf_results.battery_storage_t.p,
+                    ]
+                )
+                edisgo_grid.opf_results.battery_storage_t.e = pd.concat(
+                    [
+                        edisgo_grid.opf_results.battery_storage_t.e,
+                        edisgo_copy.opf_results.battery_storage_t.e,
+                    ]
+                )
 
         edisgo_grid.timeseries.timeindex = timeindex
         return edisgo_grid
