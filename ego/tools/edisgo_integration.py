@@ -860,11 +860,19 @@ class EDisGoNetworks:
                     from_zip_archive=True,
                 )
                 edisgo_grid.legacy_grids = False
-            edisgo_grid = self._run_edisgo_task_specs_overlying_grid(
-                edisgo_grid, scenario, logger, config, engine
-            )
+            # function that is called depends on scenario
+            zip_name = "grid_data_overlying_grid"
+            if scenario in ["eGon2035", "eGon100RE"]:
+                edisgo_grid = self._run_edisgo_task_specs_overlying_grid(
+                    edisgo_grid, scenario, logger, config, engine
+                )
+            else:
+                edisgo_grid = self._run_edisgo_task_specs_overlying_grid_low_flex(
+                    edisgo_grid, scenario, logger, config, engine
+                )
+                zip_name += "_lowflex"
             edisgo_grid.save(
-                directory=os.path.join(results_dir, "grid_data_overlying_grid"),
+                directory=os.path.join(results_dir, zip_name),
                 save_topology=True,
                 save_timeseries=True,
                 save_results=False,
@@ -876,13 +884,16 @@ class EDisGoNetworks:
                 archive=True,
                 archive_type="zip",
             )
-            if "3_temporal_complexity_reduction" not in config["eDisGo"]["tasks"]:
-                return {edisgo_grid.topology.id: results_dir}
 
         # ################### task: temporal complexity reduction ##################
+        # task temporal complexity reduction is optional
         if "3_temporal_complexity_reduction" in config["eDisGo"]["tasks"]:
             if edisgo_grid is None:
-                grid_path = os.path.join(results_dir, "grid_data_overlying_grid.zip")
+                if scenario in ["eGon2035", "eGon100RE"]:
+                    zip_name = "grid_data_overlying_grid.zip"
+                else:
+                    zip_name = "grid_data_overlying_grid_lowflex.zip"
+                grid_path = os.path.join(results_dir, zip_name)
                 edisgo_grid = import_edisgo_from_files(
                     edisgo_path=grid_path,
                     import_topology=True,
@@ -898,8 +909,41 @@ class EDisGoNetworks:
             time_intervals = self._run_edisgo_task_temporal_complexity_reduction(
                 edisgo_grid, logger, config
             )
-            if "4_optimisation" not in config["eDisGo"]["tasks"]:
+
+        # determine whether work flow ends here or continues, and if it continues
+        # whether time intervals need to be loaded
+        # for full flex scenarios the optimisation would be the next step
+        if scenario in ["eGon2035", "eGon100RE"]:
+            if "4_optimisation" in config["eDisGo"]["tasks"]:
+                if time_intervals is None:
+                    load_time_intervals = True
+                else:
+                    load_time_intervals = False
+            else:
                 return {edisgo_grid.topology.id: results_dir}
+        # for low flex scenarios the grid reinforcement would be the next step
+        else:
+            if "5_grid_reinforcement" in config["eDisGo"]["tasks"]:
+                if time_intervals is None:
+                    load_time_intervals = True
+                else:
+                    load_time_intervals = False
+            else:
+                return {edisgo_grid.topology.id: results_dir}
+        if load_time_intervals is True:
+            # load time intervals
+            time_intervals = pd.read_csv(
+                os.path.join(results_dir, "selected_time_intervals.csv"),
+                index_col=0,
+            )
+            for ti in time_intervals.index:
+                time_steps = time_intervals.at[ti, "time_steps"]
+                if time_steps is not None:
+                    time_intervals.at[ti, "time_steps"] = pd.date_range(
+                        start=time_steps.split("'")[1],
+                        periods=int(time_steps.split("=")[-2].split(",")[0]),
+                        freq="H",
+                    )
 
         # ########################## task: optimisation ##########################
         if "4_optimisation" in config["eDisGo"]["tasks"]:
@@ -917,19 +961,6 @@ class EDisGoNetworks:
                     from_zip_archive=True,
                 )
                 edisgo_grid.legacy_grids = False
-            if time_intervals is None:
-                time_intervals = pd.read_csv(
-                    os.path.join(results_dir, "selected_time_intervals.csv"),
-                    index_col=0,
-                )
-                for ti in time_intervals.index:
-                    time_steps = time_intervals.at[ti, "time_steps"]
-                    if time_steps is not None:
-                        time_intervals.at[ti, "time_steps"] = pd.date_range(
-                            start=time_steps.split("'")[1],
-                            periods=int(time_steps.split("=")[-2].split(",")[0]),
-                            freq="H",
-                        )
             edisgo_grid = self._run_edisgo_task_optimisation(
                 edisgo_grid, logger, time_intervals, results_dir
             )
@@ -952,7 +983,11 @@ class EDisGoNetworks:
         # ########################## reinforcement ##########################
         if "5_grid_reinforcement" in config["eDisGo"]["tasks"]:
             if edisgo_grid is None:
-                grid_path = os.path.join(results_dir, "grid_data_optimisation.zip")
+                if scenario in ["eGon2035", "eGon100RE"]:
+                    zip_name = "grid_data_optimisation.zip"
+                else:
+                    zip_name = "grid_data_overlying_grid_lowflex.zip"
+                grid_path = os.path.join(results_dir, zip_name)
                 edisgo_grid = import_edisgo_from_files(
                     edisgo_path=grid_path,
                     import_topology=True,
@@ -965,19 +1000,6 @@ class EDisGoNetworks:
                     from_zip_archive=True,
                 )
                 edisgo_grid.legacy_grids = False
-            if time_intervals is None:
-                time_intervals = pd.read_csv(
-                    os.path.join(results_dir, "selected_time_intervals.csv"),
-                    index_col=0,
-                )
-                for ti in time_intervals.index:
-                    time_steps = time_intervals.at[ti, "time_steps"]
-                    if time_steps is not None:
-                        time_intervals.at[ti, "time_steps"] = pd.date_range(
-                            start=time_steps.split("'")[1],
-                            periods=int(time_steps.split("=")[-2].split(",")[0]),
-                            freq="H",
-                        )
             edisgo_grid = self._run_edisgo_task_grid_reinforcement(
                 edisgo_grid, logger, time_intervals
             )
