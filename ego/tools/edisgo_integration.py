@@ -954,6 +954,7 @@ class EDisGoNetworks:
                 save_topology=True,
                 save_timeseries=True,
                 save_results=False,
+                save_opf_results=True,
                 save_electromobility=False,
                 save_dsm=False,
                 save_heatpump=False,
