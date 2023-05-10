@@ -818,8 +818,15 @@ class EDisGoNetworks:
 
         # ################### task: setup grid ##################
         if "1_setup_grid" in config["eDisGo"]["tasks"]:
+            # data is always imported for the full flex scenario, wherefore in case
+            # a low-flex scenario is given, the lowflex-extension is dropped for the
+            # data import
+            if scenario.split("_")[-1] == "lowflex":
+                scn = scenario.split("_")[0]
+            else:
+                scn = scenario
             edisgo_grid = self._run_edisgo_task_setup_grid(
-                mv_grid_id, scenario, logger, config, engine
+                mv_grid_id, scn, logger, config, engine
             )
             edisgo_grid.save(
                 directory=os.path.join(results_dir, "grid_data"),
