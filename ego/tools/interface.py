@@ -556,35 +556,42 @@ def get_etrago_results_per_bus(bus_id, etrago_obj, pf_post_lopf, max_cos_phi_ren
             central_heat_store_links_df = etrago_obj.links.loc[
                 etrago_obj.links["bus0"].isin(central_heat_buses)
             ]
-            central_heat_store_df = etrago_obj.stores.loc[
-                (etrago_obj.stores["carrier"] == "central_heat_store")
-                & (
-                    etrago_obj.stores["bus"].isin(
-                        central_heat_store_links_df.bus1.values
+            if central_heat_store_links_df.empty:
+                central_heat_store_capacity = pd.Series()
+                central_heat_store_efficiency = 0
+                soc_ts = pd.DataFrame()
+            else:
+                central_heat_store_df = etrago_obj.stores.loc[
+                    (etrago_obj.stores["carrier"] == "central_heat_store")
+                    & (
+                        etrago_obj.stores["bus"].isin(
+                            central_heat_store_links_df.bus1.values
+                        )
                     )
+                ].reset_index(names="store_name")
+                central_heat_store_merge_links_df = pd.merge(
+                    central_heat_store_links_df,
+                    central_heat_store_df,
+                    left_on="bus1",
+                    right_on="bus",
                 )
-            ].reset_index(names="store_name")
-            central_heat_store_merge_links_df = pd.merge(
-                central_heat_store_links_df,
-                central_heat_store_df,
-                left_on="bus1",
-                right_on="bus",
-            )
-            # capacity
-            central_heat_store_capacity = central_heat_store_merge_links_df.set_index(
-                "bus0"
-            ).e_nom_opt
-            # efficiency
-            central_heat_store_efficiency = (
-                central_heat_store_links_df.efficiency.values[0]
-            )
-            # SoC
-            soc_ts = etrago_obj.stores_t["e"][
-                central_heat_store_df.store_name.values
-            ].rename(
-                columns=central_heat_store_merge_links_df.set_index("store_name").bus0
-            )
-            soc_ts = soc_ts / central_heat_store_capacity
+                # capacity
+                central_heat_store_capacity = (
+                    central_heat_store_merge_links_df.set_index("bus0").e_nom_opt
+                )
+                # efficiency
+                central_heat_store_efficiency = (
+                    central_heat_store_links_df.efficiency.values[0]
+                )
+                # SoC
+                soc_ts = etrago_obj.stores_t["e"][
+                    central_heat_store_df.store_name.values
+                ].rename(
+                    columns=central_heat_store_merge_links_df.set_index(
+                        "store_name"
+                    ).bus0
+                )
+                soc_ts = soc_ts / central_heat_store_capacity
 
             # Other feed-in
             dh_feedin_df = pd.DataFrame()
