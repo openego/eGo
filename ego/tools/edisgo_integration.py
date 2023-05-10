@@ -44,7 +44,6 @@ from traceback import TracebackException
 
 import dill
 import multiprocess as mp2
-import numpy as np
 import pandas as pd
 
 from sqlalchemy.orm import scoped_session, sessionmaker
@@ -986,9 +985,7 @@ class EDisGoNetworks:
                     from_zip_archive=True,
                 )
                 edisgo_grid.legacy_grids = False
-            edisgo_grid = self._run_edisgo_task_grid_reinforcement(
-                edisgo_grid, logger, time_intervals
-            )
+            edisgo_grid = self._run_edisgo_task_grid_reinforcement(edisgo_grid, logger)
             edisgo_grid.save(
                 directory=os.path.join(
                     results_dir, f"grid_data_reinforcement_{scenario}"
@@ -1788,7 +1785,7 @@ class EDisGoNetworks:
         edisgo_grid.timeseries.timeindex = timeindex
         return edisgo_grid
 
-    def _run_edisgo_task_grid_reinforcement(self, edisgo_grid, logger, time_intervals):
+    def _run_edisgo_task_grid_reinforcement(self, edisgo_grid, logger):
         """
         Runs the grid reinforcement.
 
@@ -1807,12 +1804,6 @@ class EDisGoNetworks:
 
         # overwrite configs with new configs
         edisgo_grid._config = Config()
-
-        # set timeindex to given time_intervals
-        timesteps = np.concatenate(
-            [cols.time_steps for _, cols in time_intervals.iterrows()]
-        )
-        edisgo_grid.timeseries.timeindex = pd.Index(timesteps)
 
         enhanced_reinforce_grid(
             edisgo_grid,
