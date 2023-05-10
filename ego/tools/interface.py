@@ -521,6 +521,7 @@ def get_etrago_results_per_bus(bus_id, etrago_obj, pf_post_lopf, max_cos_phi_ren
         results["storage_units_soc"] = storages_df_soc
 
     def dsm():
+        # not needed in eDisGo in low flex scenario (dsm_df will be empty in that case)
         # DSM
         dsm_df = links_df.loc[
             (links_df["carrier"] == "dsm") & (links_df["bus0"] == str(bus_id))
@@ -644,7 +645,7 @@ def get_etrago_results_per_bus(bus_id, etrago_obj, pf_post_lopf, max_cos_phi_ren
         results["feedin_district_heating"] = dh_feedin_df
 
     def rural_heat():
-
+        # not needed in eDisGo in low flex scenario, but obtained anyway
         # ToDo (low priority) add resistive heaters (they only exist in eGon100RE)
         rural_heat_carriers = ["rural_heat_pump"]
         rural_heat_df = links_df.loc[
@@ -663,19 +664,27 @@ def get_etrago_results_per_bus(bus_id, etrago_obj, pf_post_lopf, max_cos_phi_ren
             rural_heat_store_link_df = etrago_obj.links.loc[
                 etrago_obj.links["bus0"] == rural_heat_bus
             ]
-            rural_heat_store_df = etrago_obj.stores.loc[
-                (etrago_obj.stores["carrier"] == "rural_heat_store")
-                & (etrago_obj.stores["bus"] == rural_heat_store_link_df.bus1.values[0])
-            ]
-            rural_heat_store_capacity = rural_heat_store_df.e_nom_opt.values[0]
-            # efficiency
-            heat_store_efficiency = rural_heat_store_link_df.efficiency.values[0]
-            # SoC
-            if rural_heat_store_capacity > 0:
-                soc_ts = etrago_obj.stores_t["e"][rural_heat_store_df.index[0]]
-                soc_ts = soc_ts / rural_heat_store_capacity
-            else:
+            if rural_heat_store_link_df.empty:
+                rural_heat_store_capacity = 0
+                heat_store_efficiency = 0
                 soc_ts = pd.Series(0.0, index=timeseries_index)
+            else:
+                rural_heat_store_df = etrago_obj.stores.loc[
+                    (etrago_obj.stores["carrier"] == "rural_heat_store")
+                    & (
+                        etrago_obj.stores["bus"]
+                        == rural_heat_store_link_df.bus1.values[0]
+                    )
+                ]
+                rural_heat_store_capacity = rural_heat_store_df.e_nom_opt.values[0]
+                # efficiency
+                heat_store_efficiency = rural_heat_store_link_df.efficiency.values[0]
+                # SoC
+                if rural_heat_store_capacity > 0:
+                    soc_ts = etrago_obj.stores_t["e"][rural_heat_store_df.index[0]]
+                    soc_ts = soc_ts / rural_heat_store_capacity
+                else:
+                    soc_ts = pd.Series(0.0, index=timeseries_index)
         else:
             rural_heat_df_p = pd.Series(0.0, index=timeseries_index)
             rural_heat_df_q = pd.Series(0.0, index=timeseries_index)
@@ -692,6 +701,8 @@ def get_etrago_results_per_bus(bus_id, etrago_obj, pf_post_lopf, max_cos_phi_ren
         results["thermal_storage_rural_soc"] = soc_ts
 
     def bev_charger():
+        # not needed in eDisGo in low flex scenario (bev_charger_df will be empty in
+        # that case)
         # BEV charger
         bev_charger_df = links_df.loc[
             (links_df["carrier"] == "BEV_charger") & (links_df["bus0"] == str(bus_id))
