@@ -1688,17 +1688,18 @@ class EDisGoNetworks:
                 psa_net = edisgo_copy.to_pypsa()
                 if scenario in ["eGon2035", "eGon100RE"]:
                     flexible_loads = edisgo_copy.dsm.p_max.columns
-                    flexible_hps = (
-                        edisgo_copy.heat_pump.thermal_storage_units_df.index.values
-                    )
+                    # flexible_hps = (
+                    #     edisgo_copy.heat_pump.thermal_storage_units_df.index.values
+                    # )
                     flexible_cps = psa_net.loads.loc[
                         psa_net.loads.index.str.contains("home")
                         | (psa_net.loads.index.str.contains("work"))
                     ].index.values
                 else:
                     flexible_loads = []
-                    flexible_hps = []
+                    # flexible_hps = []
                     flexible_cps = []
+                flexible_hps = edisgo_copy.heat_pump.heat_demand_df.columns.values
                 flexible_storage_units = (
                     edisgo_copy.topology.storage_units_df.index.values
                 )
@@ -1715,8 +1716,11 @@ class EDisGoNetworks:
                 )
 
                 # save OPF results
+                zip_name = f"opf_results_{ti}"
+                if scenario in ["eGon2035_lowflex", "eGon100RE_lowflex"]:
+                    zip_name += "_lowflex"
                 edisgo_copy.save(
-                    directory=os.path.join(results_dir, f"opf_results_{ti}"),
+                    directory=os.path.join(results_dir, zip_name),
                     save_topology=True,
                     save_timeseries=False,
                     save_results=False,
