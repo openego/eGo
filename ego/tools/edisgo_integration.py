@@ -65,13 +65,13 @@ if "READTHEDOCS" not in os.environ:
     )
     from egoio.db_tables import grid, model_draft
     from egoio.tools import db
-    from sqlalchemy import func
 
     from ego.mv_clustering import cluster_workflow, database
     from ego.tools.economics import edisgo_grid_investment
     from ego.tools.interface import (
         ETraGoMinimalData,
         get_etrago_results_per_bus,
+        map_etrago_heat_bus_to_district_heating_id,
         rename_generator_carriers_edisgo,
     )
 
@@ -860,16 +860,11 @@ class EDisGoNetworks:
                     from_zip_archive=True,
                 )
                 edisgo_grid.legacy_grids = False
-            # function that is called depends on scenario
+            edisgo_grid = self._run_edisgo_task_specs_overlying_grid(
+                edisgo_grid, scenario, logger, config, engine
+            )
             zip_name = "grid_data_overlying_grid"
-            if scenario in ["eGon2035", "eGon100RE"]:
-                edisgo_grid = self._run_edisgo_task_specs_overlying_grid(
-                    edisgo_grid, scenario, logger, config, engine
-                )
-            else:
-                edisgo_grid = self._run_edisgo_task_specs_overlying_grid_low_flex(
-                    edisgo_grid, scenario, logger, config, engine
-                )
+            if scenario in ["eGon2035_lowflex", "eGon100RE_lowflex"]:
                 zip_name += "_lowflex"
             edisgo_grid.save(
                 directory=os.path.join(results_dir, zip_name),
@@ -1329,56 +1324,19 @@ class EDisGoNetworks:
             if not specs["feedin_district_heating"].empty:
 
                 # map district heating ID to heat bus ID from eTraGo
-                orm = database.register_tables_in_saio(engine, config=config)
-                heat_buses = [int(_) for _ in specs["feedin_district_heating"].columns]
-                with database.session_scope(engine) as session:
-                    # get srid of etrago_bus table
-                    query = session.query(func.ST_SRID(orm["etrago_bus"].geom)).limit(1)
-                    srid_etrago_bus = query.all()[0]
-                    # get district heating ID corresponding to heat bus ID by geo join
-                    query = (
-                        session.query(
-                            orm["etrago_bus"].bus_id.label("heat_bus_id"),
-                            orm["district_heating_areas"].id.label(
-                                "district_heating_id"
-                            ),
-                        )
-                        .filter(
-                            orm["etrago_bus"].scn_name == scenario,
-                            orm["district_heating_areas"].scenario == scenario,
-                            orm["etrago_bus"].bus_id.in_(heat_buses),
-                        )
-                        .outerjoin(  # join to obtain district heating ID
-                            orm["district_heating_areas"],
-                            func.ST_Transform(
-                                func.ST_Centroid(
-                                    orm["district_heating_areas"].geom_polygon
-                                ),
-                                srid_etrago_bus,
-                            )
-                            == orm["etrago_bus"].geom,
-                        )
-                    )
-                    mapping_heat_bus_dh_id = pd.read_sql(
-                        query.statement,
-                        engine,
-                        index_col="district_heating_id",
-                    )
-                hp_dh = pd.merge(
-                    hp_dh,
-                    mapping_heat_bus_dh_id,
-                    left_on="district_heating_id",
-                    right_index=True,
-                )
+                if scenario.split("_")[-1] == "lowflex":
+                    scn = scenario.split("_")[0]
+                else:
+                    scn = scenario
+                map_etrago_heat_bus_to_district_heating_id(specs, scn, config, engine)
 
-                for heat_bus in heat_buses:
-                    if str(heat_bus) in specs["thermal_storage_central_capacity"].index:
-                        if (
-                            specs["thermal_storage_central_capacity"].at[str(heat_bus)]
-                            > 0
-                        ):
+                for dh_id in hp_dh.district_heating_id.unique():
+                    if dh_id in specs["thermal_storage_central_capacity"].index:
+                        if specs["thermal_storage_central_capacity"].at[dh_id] > 0:
                             # get PtH unit name to allocate thermal storage unit to
-                            comp_name = hp_dh[hp_dh.heat_bus_id == heat_bus].index[0]
+                            comp_name = hp_dh[hp_dh.district_heating_id == dh_id].index[
+                                0
+                            ]
                             edisgo_grid.heat_pump.thermal_storage_units_df = pd.concat(
                                 [
                                     edisgo_grid.heat_pump.thermal_storage_units_df,
@@ -1386,7 +1344,7 @@ class EDisGoNetworks:
                                         data={
                                             "capacity": specs[
                                                 "thermal_storage_central_capacity"
-                                            ].at[str(heat_bus)],
+                                            ].at[dh_id],
                                             "efficiency": specs[
                                                 "thermal_storage_central_efficiency"
                                             ],
@@ -1395,26 +1353,10 @@ class EDisGoNetworks:
                                     ),
                                 ]
                             )
-                            # overwrite column name of SoC dataframe to be district
-                            # heating ID
-                            specs["thermal_storage_central_soc"].rename(
-                                columns={
-                                    str(heat_bus): hp_dh.at[
-                                        comp_name, "district_heating_id"
-                                    ]
-                                },
-                                inplace=True,
-                            )
-                            specs["feedin_district_heating"].rename(
-                                columns={
-                                    str(heat_bus): hp_dh.at[
-                                        comp_name, "district_heating_id"
-                                    ]
-                                },
-                                inplace=True,
-                            )
 
         logger.info("Set requirements from overlying grid.")
+        # all time series from overlying grid are also kept for low flex scenarios
+        # in order to afterwards check difference in dispatch between eTraGo and eDisGo
 
         # curtailment
         # scale curtailment by ratio of nominal power in eDisGo and eTraGo
@@ -1494,12 +1436,22 @@ class EDisGoNetworks:
         ]
 
         # Thermal storage units SoC
-        edisgo_grid.overlying_grid.thermal_storage_units_central_soc = specs[
+        edisgo_grid.overlying_grid.thermal_storage_units_decentral_soc = specs[
             "thermal_storage_rural_soc"
         ]
         edisgo_grid.overlying_grid.thermal_storage_units_central_soc = specs[
             "thermal_storage_central_soc"
         ]
+
+        # Delete some flex data in case of low flex scenario
+        if scenario in ["eGon2035_lowflex", "eGon100RE_flex"]:
+            # delete DSM and flexibility bands to save disk space
+            edisgo_grid.dsm = edisgo_grid.dsm.__class__()
+            edisgo_grid.electromobility.flexibility_bands = {
+                "upper_power": pd.DataFrame(),
+                "lower_energy": pd.DataFrame(),
+                "upper_energy": pd.DataFrame(),
+            }
 
         logger.info("Run integrity check.")
         edisgo_grid.check_integrity()
@@ -1760,6 +1712,8 @@ class EDisGoNetworks:
                     psa_net.loads.index.str.contains("home")
                     | (psa_net.loads.index.str.contains("work"))
                 ].index.values
+                # ToDo nur die mit Wärmespeicher und für anderen operating
+                # strategy
                 flexible_hps = edisgo_copy.heat_pump.heat_demand_df.columns.values
                 flexible_loads = edisgo_copy.dsm.p_max.columns
                 flexible_storage_units = (
@@ -1826,186 +1780,6 @@ class EDisGoNetworks:
                 ] = edisgo_copy.timeseries.storage_units_reactive_power
 
         edisgo_grid.timeseries.timeindex = timeindex
-        return edisgo_grid
-
-    def _run_edisgo_task_specs_overlying_grid_low_flex(
-        self, edisgo_grid, scenario, logger, config, engine
-    ):
-        """
-        Sets up grid for low-flex scenario variation.
-
-        Parameters
-        ----------
-        mv_grid_id : int
-            MV grid ID of the ding0 grid
-
-        Returns
-        -------
-        :class:`edisgo.EDisGo`
-            Returns the complete eDisGo container, also including results
-
-        """
-        logger.info("Start task 'specs_overlying_grid_low_flex'.")
-
-        logger.info("Get specifications from eTraGo.")
-        specs = get_etrago_results_per_bus(
-            edisgo_grid.topology.id,
-            self._etrago_network,
-            self._pf_post_lopf,
-            self._max_cos_phi_renewable,
-        )
-        snapshots = specs["timeindex"]
-
-        # overwrite previously set dummy time index if year that was used differs from
-        # year used in etrago
-        edisgo_year = edisgo_grid.timeseries.timeindex[0].year
-        etrago_year = snapshots[0].year
-        if edisgo_year != etrago_year:
-            timeindex_new_full = pd.date_range(
-                f"1/1/{etrago_year}", periods=8760, freq="H"
-            )
-            # conventional loads
-            edisgo_grid.timeseries.loads_active_power.index = timeindex_new_full
-            edisgo_grid.timeseries.loads_reactive_power.index = timeindex_new_full
-            # COP and heat demand
-            edisgo_grid.heat_pump.cop_df.index = timeindex_new_full
-            edisgo_grid.heat_pump.heat_demand_df.index = timeindex_new_full
-        # TimeSeries.timeindex
-        edisgo_grid.timeseries.timeindex = snapshots
-
-        # set generator time series
-        # rename carrier to match with carrier names in overlying grid
-        rename_generator_carriers_edisgo(edisgo_grid)
-        # active power
-        # ToDo Abregelung?
-        edisgo_grid.set_time_series_active_power_predefined(
-            dispatchable_generators_ts=specs["dispatchable_generators_active_power"],
-            fluctuating_generators_ts=specs["renewables_potential"],
-        )
-        # reactive power
-        edisgo_grid.set_time_series_reactive_power_control(
-            control="fixed_cosphi",
-            generators_parametrisation="default",
-            loads_parametrisation=None,
-            storage_units_parametrisation=None,
-        )
-
-        # set heat pump time series
-        logger.info("Set heat pump time series.")
-
-        # individual heat pumps - uncontrolled operation
-        hp_decentral = edisgo_grid.topology.loads_df[
-            edisgo_grid.topology.loads_df.sector == "individual_heating"
-        ]
-        if not hp_decentral.empty:
-            edisgo_grid.apply_heat_pump_operating_strategy(
-                heat_pump_names=hp_decentral.index
-            )
-        # district heating heat pumps from overlying grid
-        hp_dh = edisgo_grid.topology.loads_df[
-            edisgo_grid.topology.loads_df.sector.isin(
-                ["district_heating", "district_heating_resistive_heater"]
-            )
-        ]
-        if len(hp_dh) > 0:
-            if specs["feedin_district_heating"].empty:
-                raise ValueError(
-                    "There are PtH units in district heating but no time series "
-                    "from overlying grid."
-                )
-
-            # map district heating ID to heat bus ID from eTraGo
-            orm = database.register_tables_in_saio(engine, config=config)
-            heat_buses = [int(_) for _ in specs["feedin_district_heating"].columns]
-            with database.session_scope(engine) as session:
-                # get srid of etrago_bus table
-                query = session.query(func.ST_SRID(orm["etrago_bus"].geom)).limit(1)
-                srid_etrago_bus = query.all()[0]
-                # get district heating ID corresponding to heat bus ID by geo join
-                query = (
-                    session.query(
-                        orm["etrago_bus"].bus_id.label("heat_bus_id"),
-                        orm["district_heating_areas"].id.label("district_heating_id"),
-                    )
-                    .filter(
-                        orm["etrago_bus"].scn_name == scenario,
-                        orm["district_heating_areas"].scenario == scenario,
-                        orm["etrago_bus"].bus_id.in_(heat_buses),
-                    )
-                    .outerjoin(  # join to obtain district heating ID
-                        orm["district_heating_areas"],
-                        func.ST_Transform(
-                            func.ST_Centroid(
-                                orm["district_heating_areas"].geom_polygon
-                            ),
-                            srid_etrago_bus,
-                        )
-                        == orm["etrago_bus"].geom,
-                    )
-                )
-                mapping_heat_bus_dh_id = pd.read_sql(
-                    query.statement,
-                    engine,
-                    index_col="district_heating_id",
-                )
-            hp_dh = pd.merge(
-                hp_dh,
-                mapping_heat_bus_dh_id,
-                left_on="district_heating_id",
-                right_index=True,
-            )
-
-            for heat_bus in heat_buses:
-                if str(heat_bus) in specs["thermal_storage_central_capacity"].index:
-                    if specs["thermal_storage_central_capacity"].at[str(heat_bus)] > 0:
-                        # get PtH unit name to allocate thermal storage unit to
-                        comp_name = hp_dh[hp_dh.heat_bus_id == heat_bus].index[0]
-                        edisgo_grid.heat_pump.thermal_storage_units_df = pd.concat(
-                            [
-                                edisgo_grid.heat_pump.thermal_storage_units_df,
-                                pd.DataFrame(
-                                    data={
-                                        "capacity": specs[
-                                            "thermal_storage_central_capacity"
-                                        ].at[str(heat_bus)],
-                                        "efficiency": specs[
-                                            "thermal_storage_central_efficiency"
-                                        ],
-                                    },
-                                    index=[comp_name],
-                                ),
-                            ]
-                        )
-                        specs["feedin_district_heating"].rename(
-                            columns={
-                                str(heat_bus): hp_dh.at[
-                                    comp_name, "district_heating_id"
-                                ]
-                            },
-                            inplace=True,
-                        )
-        # reactive power
-        edisgo_grid.set_time_series_reactive_power_control(
-            control="fixed_cosphi",
-            generators_parametrisation=None,
-            loads_parametrisation="default",
-            storage_units_parametrisation=None,
-        )
-
-        # delete storage units
-        logger.info("Delete battery storage units.")
-        for stor in edisgo_grid.topology.storage_units_df.index:
-            edisgo_grid.remove_component(
-                comp_type="storage_unit", comp_name=stor, drop_ts=False
-            )
-        # delete DSM and flexibility bands
-        edisgo_grid.dsm = edisgo_grid.dsm.__class__()
-        edisgo_grid.electromobility.flexibility_bands = {
-            "upper_power": pd.DataFrame(),
-            "lower_energy": pd.DataFrame(),
-            "upper_energy": pd.DataFrame(),
-        }
-
         return edisgo_grid
 
     def _run_edisgo_task_grid_reinforcement(self, edisgo_grid, logger, time_intervals):
