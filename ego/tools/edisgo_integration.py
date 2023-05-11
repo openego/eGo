@@ -1810,11 +1810,12 @@ class EDisGoNetworks:
         # overwrite configs with new configs
         edisgo_grid._config = Config()
 
-        enhanced_reinforce_grid(
+        edisgo_grid = enhanced_reinforce_grid(
             edisgo_grid,
             activate_cost_results_disturbing_mode=True,
             separate_lv_grids=True,
             separation_threshold=2,
+            copy_grid=False,
         )
         return edisgo_grid
 
