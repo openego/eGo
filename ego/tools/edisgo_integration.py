@@ -1650,6 +1650,20 @@ class EDisGoNetworks:
         """
         logger.info("Start task 'optimisation'.")
 
+        # prepare district heating data
+        # make sure district heating ID is string of integer not float
+        columns_rename = [
+            str(int(float(_)))
+            for _ in edisgo_grid.overlying_grid.feedin_district_heating.columns
+        ]
+        if len(columns_rename) > 0:
+            edisgo_grid.overlying_grid.feedin_district_heating.columns = columns_rename
+        cols = edisgo_grid.overlying_grid.thermal_storage_units_central_soc.columns
+        columns_rename = [str(int(float(_))) for _ in cols]
+        if len(columns_rename) > 0:
+            edisgo_grid.overlying_grid.thermal_storage_units_central_soc.columns = (
+                columns_rename
+            )
         # aggregate PtH units in same district heating network and subtract feed-in
         # from other heat sources from heat demand in district heating network
         aggregate_district_heating_components(
