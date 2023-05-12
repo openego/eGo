@@ -1829,6 +1829,7 @@ class EDisGoNetworks:
             activate_cost_results_disturbing_mode=True,
             separate_lv_grids=True,
             separation_threshold=2,
+            reinforce_lv_feeders_large_voltage_issues=True,
             copy_grid=False,
         )
         return edisgo_grid
