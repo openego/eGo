@@ -45,25 +45,9 @@ if not "READTHEDOCS" in os.environ:
     from egoio.db_tables.model_draft import EgoGridPfHvTempResolution as TempResolution
     from egoio.db_tables.model_draft import RenpassGisParameterRegion
     from egoio.tools import db
-    from etrago.appl import etrago
-    from etrago.tools.io import load_config_file
-    from etrago.tools.plot import (
-        curtailment,
-        full_load_hours,
-        gen_dist,
-        gen_dist_diff,
-        max_load,
-        nodal_gen_dispatch,
-        nodal_production_balance,
-        plot_line_loading,
-        plot_line_loading_diff,
-        plot_q_flows,
-        plot_residual_load,
-        plot_stacked_gen,
-        plot_voltage,
-        storage_distribution,
-        storage_expansion,
-    )
+    from etrago import Etrago
+    from etrago.appl import run_etrago
+
     from geoalchemy2 import *
     from shapely.geometry import MultiPolygon, Point, Polygon
     from sqlalchemy import MetaData, and_, create_engine, func
@@ -158,8 +142,6 @@ class eTraGoResults(egoBasic):
         """ """
         super(eTraGoResults, self).__init__(self, *args, **kwargs)
         self.etrago = None
-        self._etrago_network = None
-        self._etrago_disaggregated_network = None
 
         logger.info("eTraGo section started")
 
@@ -217,237 +199,16 @@ class eTraGoResults(egoBasic):
 
             if self.json_file["eGo"].get("csv_import_eTraGo") != False:
 
-                logger.info("Caution, import disaggregation " "data of former Cluster")
+                logger.info("Import eTraGo network from csv files")
 
-                # get pathway
-                pathway = self.json_file["eGo"].get("csv_import_eTraGo")
-
-                try:
-                    # create Network from csv
-                    self._etrago_network = pypsa.Network()
-                    self._etrago_network.import_from_csv_folder(pathway)
-                    logger.info("Create eTraGo network from CSV result")
-
-                    # get disaggregation
-                    self._etrago_disaggregated_network = pypsa.Network()
-                    self._etrago_disaggregated_network.import_from_csv_folder(
-                        pathway + "/disaggregated"
-                    )
-                    logger.info(
-                        "Create eTraGo disaggregated network " "from CSV result"
-                    )
-
-                except TypeError:
-                    file_path = "disaggregated/network.csv"
-                    fix_leading_separator(pathway + "/" + file_path)
-
-                    file_path = "network.csv"
-                    fix_leading_separator(pathway + "/" + file_path)
-
-                    self._etrago_network = pypsa.Network()
-                    self._etrago_network.import_from_csv_folder(pathway)
-                    logger.info("Create eTraGo network from CSV result")
-
-                    # get disaggregation
-                    self._etrago_disaggregated_network = pypsa.Network()
-                    self._etrago_disaggregated_network.import_from_csv_folder(
-                        pathway + "/disaggregated"
-                    )
-                    logger.info("Create eTraGo disaggregated network" "from CSV result")
-
-                args_name = "args.json"
-                with open(pathway + "/" + args_name) as f:
-                    etrago_args = json.load(f)
-                    logger.info("Using argument file")
-
-                    if etrago_args.get("extendable") == ["network", "storages"]:
-                        etrago_args.update({"extendable": ["network", "storage"]})
-                        logger.info("Changed naming of storages to storage of args")
-
-                    if etrago_args.get("extendable") == ["storages"]:
-                        etrago_args.update({"extendable": ["storage"]})
-                        logger.info("Changed naming of storages to storage of args")
-
-                    for key in self.json_file["eTraGo"].keys():
-                        try:
-                            self.json_file["eTraGo"][key] = etrago_args[key]
-                        except KeyError:
-                            pass
+                self.etrago = Etrago(
+                    csv_folder_name = self.json_file['eGo'].get('csv_import_eTraGo'))
 
             else:
                 logger.info("Create eTraGo network calcualted by eGo")
 
-                if self.json_file["eTraGo"]["disaggregation"] != False:
-
-                    etrago_network, etrago_disaggregated_network = etrago(
-                        self.json_file["eTraGo"]
-                    )
-
-                    self._etrago_network = etrago_network
-                    self._etrago_disaggregated_network = etrago_disaggregated_network
-                else:
-                    logger.warning("Only one network is used.")
-
-                    etrago_network, etrago_disaggregated_network = etrago(
-                        self.json_file["eTraGo"]
-                    )
-
-                    self._etrago_network = etrago_network
-                    self._etrago_disaggregated_network = etrago_disaggregated_network
-
-        # Add selected results to results container
-        # -----------------------------------------
-
-        self.etrago = pd.DataFrame()
-        self.etrago.network = self._etrago_network
-        self.etrago.disaggregated_network = self._etrago_disaggregated_network
-
-        # Add function
-        self.etrago.storage_investment_costs = etrago_storages_investment(
-            self.etrago.network, self.json_file, self.session
-        )
-        self.etrago.storage_charges = etrago_storages(self.etrago.network)
-
-        self.etrago.operating_costs = etrago_operating_costs(self.etrago.network)
-        self.etrago.generator = create_etrago_results(
-            self.etrago.network, self.scn_name
-        )
-        self.etrago.grid_investment_costs = etrago_grid_investment(
-            self.etrago.network, self.json_file, self.session
-        )
-
-        # add functions direct
-        # self._etrago_network.etrago_line_loading = etrago_line_loading
-        self.etrago.plot_line_loading = self._line_loading
-        self.etrago.plot_stacked_gen = self._stacked_gen
-        self.etrago.plot_curtailment = self._curtailment
-        self.etrago.plot_gen_dist = self._gen_dist
-        self.etrago.plot_storage_distribution = self._storage_distribution
-        self.etrago.plot_line_loading_diff = self._line_loading_diff
-        self.etrago.plot_residual_load = self._residual_load
-        self.etrago.plot_voltage = self._voltage
-        self.etrago.plot_nodal_gen_dispatch = self._nodal_gen_dispatch
-        self.etrago.plot_full_load_hours = self._full_load_hours
-        self.etrago.plot_q_flows = self._plot_q_flows
-        self.etrago.plot_max_load = self._max_load
-        self.etrago.plot_storage_expansion = self._storage_expansion
-        self.etrago.plot_nodal_production_balance = self._nodal_production_balance
-        self.etrago.plot_gen_dist_diff = self._gen_dist_diff
-
-    if not "READTHEDOCS" in os.environ:
-        # include eTraGo functions and methods
-        def _gen_dist_diff(self, **kwargs):
-            """
-            Integrate and use function from eTraGo.
-            For more information see:
-            """
-
-            return gen_dist_diff(networkA=self.etrago.network, **kwargs)
-
-        def _nodal_production_balance(self, **kwargs):
-            """
-            Integrate and use function from eTraGo.
-            For more information see:
-            """
-
-            return nodal_production_balance(network=self.etrago.network, **kwargs)
-
-        def _storage_expansion(self, **kwargs):
-            """
-            Integrate and use function from eTraGo.
-            For more information see:
-            """
-
-            return storage_expansion(network=self.etrago.network, **kwargs)
-
-        def _max_load(self, **kwargs):
-            """
-            Integrate and use function from eTraGo.
-            For more information see:
-            """
-
-            return max_load(network=self.etrago.network, **kwargs)
-
-        def _plot_q_flows(self):
-            """
-            Integrate and use function from eTraGo.
-            For more information see:
-            """
-
-            return plot_q_flows(network=self.etrago.network)
-
-        def _line_loading(self, **kwargs):
-            """
-            Integrate and use function from eTraGo.
-            For more information see:
-            """
-            # add if time_step <1  -> plot
-            return plot_line_loading(network=self.etrago.network, **kwargs)
-
-        def _stacked_gen(self, **kwargs):
-            """
-            Integrate function from eTraGo.
-            For more information see:
-            """
-            return plot_stacked_gen(network=self.etrago.network, **kwargs)
-
-        def _curtailment(self, **kwargs):
-            """
-            Integrate function from eTraGo.
-            For more information see:
-            """
-            return curtailment(network=self.etrago.network, **kwargs)
-
-        def _gen_dist(self, **kwargs):
-            """
-            Integrate function from eTraGo.
-            For more information see:
-            """
-            return gen_dist(network=self.etrago.network, **kwargs)
-
-        def _storage_distribution(self, scaling=1, **kwargs):
-            """
-            Integrate function from eTraGo.
-            For more information see:
-            """
-            return storage_distribution(
-                network=self.etrago.network, scaling=1, **kwargs
-            )
-
-        def _voltage(self, **kwargs):
-            """
-            Integrate function from eTraGo.
-            For more information see:
-            """
-            return plot_voltage(network=self.etrago.network, **kwargs)
-
-        def _residual_load(self, **kwargs):
-            """
-            Integrate function from eTraGo.
-            For more information see:
-            """
-            return plot_residual_load(network=self.etrago.network, **kwargs)
-
-        def _line_loading_diff(self, **kwargs):
-            """
-            Integrate function from eTraGo.
-            For more information see:
-            """
-            return plot_line_loading_diff(networkA=self.etrago.network, **kwargs)
-
-        def _nodal_gen_dispatch(self, **kwargs):
-            """
-            Integrate function from eTraGo.
-            For more information see:
-            """
-            return nodal_gen_dispatch(network=self.etrago.network, **kwargs)
-
-        def _full_load_hours(self, **kwargs):
-            """
-            Integrate function from eTraGo.
-            For more information see:
-            """
-            return full_load_hours(network=self.etrago.network, **kwargs)
+                run_etrago(args= self.json_file['eTraGo'],
+                           json_path=None)
 
 
 class eDisGoResults(eTraGoResults):

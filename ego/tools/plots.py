@@ -33,17 +33,6 @@ if not "READTHEDOCS" in os.environ:
 
     import pyproj as proj
 
-    from etrago.tools.plot import (
-        add_coordinates,
-        coloring,
-        curtailment,
-        gen_dist,
-        plot_line_loading,
-        plot_residual_load,
-        plot_stacked_gen,
-        plot_voltage,
-        storage_distribution,
-    )
     from geoalchemy2 import *
     from pypsa import Network as PyPSANetwork
     from shapely.geometry import MultiPolygon, Point, Polygon
