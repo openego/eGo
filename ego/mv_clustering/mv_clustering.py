@@ -75,16 +75,33 @@ def get_cluster_attributes(attributes_path, scenario, config=None):
         * "area" : area of MV grid in m^2
         * "pv_capacity_mw" : PV capacity in MW
         * "pv_capacity_mw_per_km2" : PV capacity in MW per km^2
+        * "pv_capacity_expansion_mw" : PV expansion from status quo to given
+            scenario in MW
+        * "pv_capacity_expansion_mw_per_km2" : PV expansion from status quo to given
+            scenario in MW per km^2
         * "wind_capacity_mw" : wind onshore capacity in MW
         * "wind_capacity_mw_per_km2" : wind onshore capacity in MW per km^2
+        * "wind_capacity_expansion_mw" : wind onshore expansion from status quo to given
+            scenario in MW
+        * "wind_capacity_expansion_mw_per_km2" : wind onshore expansion from status quo
+            to given scenario in MW per km^2
         * "electromobility_max_load_mw" : maximum load of EVs (in case of
-           uncoordinated charging) in MW
+            uncoordinated charging) in MW
         * "electromobility_max_load_mw_per_km2" : maximum load of EVs (in case of
-           uncoordinated charging) in MW per km^2
+            uncoordinated charging) in MW per km^2
+        * "electromobility_max_load_expansion_mw" : increase in maximum load of EVs
+            from status quo to given scenario (in case of uncoordinated charging) in MW
+        * "electromobility_max_load_expansion_mw_per_km2" : increase in maximum load of
+            EVs from status quo to given scenario (in case of uncoordinated charging)
+            in MW per km^2
         * "pth_capacity_mw" : PtH capacity (for individual and district
-          heating) in MW
+            heating) in MW
         * "pth_capacity_mw_per_km2" : PtH capacity (for individual and
-          district heating) in MW per km^2
+            district heating) in MW per km^2
+        * "pth_capacity_expansion_mw" : increase in PtH capacity (for individual and
+            district heating) from status quo to given scenario in MW
+        * "pth_capacity_expansion_mw_per_km2" : increase in PtH capacity (for individual
+            and district heating) from status quo to given scenario in MW per km^2
 
     """
     # get attributes from database
@@ -96,15 +113,40 @@ def get_cluster_attributes(attributes_path, scenario, config=None):
         solar_capacity_df = db_io.get_solar_capacity(
             scenario, grid_ids_df.index, orm, engine=engine
         )
+        if scenario == "status_quo":
+            solar_capacity_sq_df = solar_capacity_df
+        else:
+            solar_capacity_sq_df = db_io.get_solar_capacity(
+                "status_quo", grid_ids_df.index, orm, engine=engine
+            )
         wind_capacity_df = db_io.get_wind_capacity(
             scenario, grid_ids_df.index, orm, engine=engine
         )
+        if scenario == "status_quo":
+            wind_capacity_sq_df = wind_capacity_df
+        else:
+            wind_capacity_sq_df = db_io.get_wind_capacity(
+                "status_quo", grid_ids_df.index, orm, engine=engine
+            )
         emob_capacity_df = db_io.get_electromobility_maximum_load(
             scenario, grid_ids_df.index, orm, engine=engine
         )
+        if scenario == "status_quo":
+            emob_capacity_sq_df = emob_capacity_df
+        else:
+            emob_capacity_sq_df = db_io.get_electromobility_maximum_load(
+                "status_quo", grid_ids_df.index, orm, engine=engine
+            )
         pth_capacity_df = db_io.get_pth_capacity(
             scenario, grid_ids_df.index, orm, engine=engine
         )
+        if scenario == "status_quo":
+            pth_capacity_sq_df = pth_capacity_df
+        else:
+            pth_capacity_sq_df = db_io.get_pth_capacity(
+                "status_quo", grid_ids_df.index, orm, engine=engine
+            )
+    emob_rename_col = "electromobility_max_load_expansion_mw"
     df = pd.concat(
         [
             grid_ids_df,
@@ -112,9 +154,36 @@ def get_cluster_attributes(attributes_path, scenario, config=None):
             wind_capacity_df,
             emob_capacity_df,
             pth_capacity_df,
+            solar_capacity_sq_df.rename(
+                columns={"pv_capacity_mw": "pv_capacity_expansion_mw"}
+            ),
+            wind_capacity_sq_df.rename(
+                columns={"wind_capacity_mw": "wind_capacity_expansion_mw"}
+            ),
+            emob_capacity_sq_df.rename(
+                columns={"electromobility_max_load_mw": emob_rename_col}
+            ),
+            pth_capacity_sq_df.rename(
+                columns={"pth_capacity_mw": "pth_capacity_expansion_mw"}
+            ),
         ],
         axis="columns",
     ).fillna(0)
+
+    # calculate expansion values
+    df["pv_capacity_expansion_mw"] = (
+        df["pv_capacity_mw"] - df["pv_capacity_expansion_mw"]
+    )
+    df["wind_capacity_expansion_mw"] = (
+        df["wind_capacity_mw"] - df["wind_capacity_expansion_mw"]
+    )
+    df["electromobility_max_load_expansion_mw"] = (
+        df["electromobility_max_load_mw"] - df["electromobility_max_load_expansion_mw"]
+    )
+    df["pth_capacity_expansion_mw"] = (
+        df["pth_capacity_mw"] - df["pth_capacity_expansion_mw"]
+    )
+
     # calculate relative values
     df["pv_capacity_mw_per_km2"] = df["pv_capacity_mw"] / (df["area_m2"] / 1e6)
     df["wind_capacity_mw_per_km2"] = df["wind_capacity_mw"] / (df["area_m2"] / 1e6)
@@ -122,6 +191,19 @@ def get_cluster_attributes(attributes_path, scenario, config=None):
         df["area_m2"] / 1e6
     )
     df["pth_capacity_mw_per_km2"] = df["pth_capacity_mw"] / (df["area_m2"] / 1e6)
+    df["pv_capacity_expansion_mw_per_km2"] = df["pv_capacity_expansion_mw"] / (
+        df["area_m2"] / 1e6
+    )
+    df["wind_capacity_expansion_mw_per_km2"] = df["wind_capacity_expansion_mw"] / (
+        df["area_m2"] / 1e6
+    )
+    df["electromobility_max_load_expansion_mw_per_km2"] = df[
+        "electromobility_max_load_expansion_mw"
+    ] / (df["area_m2"] / 1e6)
+    df["pth_capacity_expansion_mw_per_km2"] = df["pth_capacity_expansion_mw"] / (
+        df["area_m2"] / 1e6
+    )
+
     # write to csv
     df.to_csv(attributes_path)
     return df
