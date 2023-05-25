@@ -62,7 +62,6 @@ if "READTHEDOCS" not in os.environ:
         aggregate_district_heating_components,
         get_sample_using_time,
     )
-    from egoio.db_tables import grid, model_draft
     from egoio.tools import db
 
     from ego.mv_clustering import cluster_workflow, database
@@ -191,60 +190,6 @@ class EDisGoNetworks:
 
         """
         return self._grid_investment_costs
-
-    def get_mv_grid_from_bus_id(self, bus_id):
-        """
-        Queries the MV grid ID for a given eTraGo bus
-
-        Parameters
-        ----------
-        bus_id : int
-            eTraGo bus ID
-
-        Returns
-        -------
-        int
-            MV grid (ding0) ID
-
-        """
-
-        conn = db.connection(section=self._db_section)
-        session_factory = sessionmaker(bind=conn)
-        Session = scoped_session(session_factory)
-        session = Session()
-
-        mv_grid_id = self._get_mv_grid_from_bus_id(session, bus_id)
-
-        Session.remove()
-
-        return mv_grid_id
-
-    def get_bus_id_from_mv_grid(self, subst_id):
-        """
-        Queries the eTraGo bus ID for given MV grid (ding0) ID
-
-        Parameters
-        ----------
-        subst_id : int
-            MV grid (ding0) ID
-
-        Returns
-        -------
-        int
-            eTraGo bus ID
-
-        """
-
-        conn = db.connection(section=self._db_section)
-        session_factory = sessionmaker(bind=conn)
-        Session = scoped_session(session_factory)
-        session = Session()
-
-        bus_id = self._get_bus_id_from_mv_grid(session, subst_id)
-
-        Session.remove()
-
-        return bus_id
 
     def plot_storage_integration(self, mv_grid_id, **kwargs):
         """
@@ -605,11 +550,10 @@ class EDisGoNetworks:
 
         logger.info("Identifying extended storage")
         for mv_grid in all_mv_grids:
-            bus_id = self._get_bus_id_from_mv_grid(session, mv_grid)
 
             min_extended = 0.3
             stor_p_nom = self._etrago_network.storage_units.loc[
-                (self._etrago_network.storage_units["bus"] == str(bus_id))
+                (self._etrago_network.storage_units["bus"] == str(mv_grid))
                 & (
                     self._etrago_network.storage_units["p_nom_extendable"]
                     == True  # noqa: E712
@@ -643,11 +587,8 @@ class EDisGoNetworks:
         """
         mv_grids = []
         for file in os.listdir(self._grid_path):
-            if file.endswith(".pkl"):
-                mv_grids.append(
-                    int(file.replace("ding0_grids__", "").replace(".pkl", ""))
-                )
-
+            if os.path.isdir(os.path.join(self._grid_path, file)):
+                mv_grids.append(int(file))
         return mv_grids
 
     def _set_grid_choice(self):
@@ -1033,6 +974,14 @@ class EDisGoNetworks:
         ----------
         mv_grid_id : int
             MV grid ID of the ding0 grid.
+        scenario : str
+            Name of scenario to import data for. Possible options are "eGon2035"
+            and "eGon100RE".
+        logger : logger handler
+        config : dict
+            Dictionary with configuration data.
+        engine : :sqlalchemy:`sqlalchemy.Engine<sqlalchemy.engine.Engine>`
+            Database engine.
 
         Returns
         -------
@@ -1124,8 +1073,16 @@ class EDisGoNetworks:
 
         Parameters
         ----------
-        mv_grid_id : int
-            MV grid ID of the ding0 grid
+        edisgo_grid : :class:`edisgo.EDisGo`
+            EDisGo object.
+        scenario : str
+            Name of scenario to import data for. Possible options are "eGon2035"
+            and "eGon100RE".
+        logger : logger handler
+        config : dict
+            Dictionary with configuration data.
+        engine : :sqlalchemy:`sqlalchemy.Engine<sqlalchemy.engine.Engine>`
+            Database engine.
 
         Returns
         -------
@@ -1435,17 +1392,21 @@ class EDisGoNetworks:
         self, edisgo_grid, logger, config
     ):
         """
-        Runs the temporal complexity reduction.
+        Runs the temporal complexity reduction to select most critical time periods.
 
         Parameters
         ----------
-        mv_grid_id : int
-            MV grid ID of the ding0 grid
+        edisgo_grid : :class:`edisgo.EDisGo`
+            EDisGo object.
+        logger : logger handler
+        config : dict
+            Dictionary with configuration data.
+        engine : :sqlalchemy:`sqlalchemy.Engine<sqlalchemy.engine.Engine>`
+            Database engine.
 
         Returns
         -------
         :class:`edisgo.EDisGo`
-            Returns the complete eDisGo container, also including results
 
         """
         logger.info("Start task 'temporal complexity reduction'.")
@@ -1642,13 +1603,24 @@ class EDisGoNetworks:
 
         Parameters
         ----------
-        mv_grid_id : int
-            MV grid ID of the ding0 grid
+        edisgo_grid : :class:`edisgo.EDisGo`
+            EDisGo object.
+        scenario : str
+            Name of scenario to define flexible components. Possible options are
+            "eGon2035", "eGon2035_lowflex", "eGon100RE", and "eGon100RE_lowflex".
+        logger : logger handler
+        time_intervals : pd.DataFrame
+            Dataframe with information on time intervals to consider in the optimisation
+            in column "time_steps".
+        results_dir : str
+            Directory where to store OPF results.
+        reduction_factor : float
+            Reduction factor to use in spatial complexity reduction. Per default this
+            is set to 0.3.
 
         Returns
         -------
         :class:`edisgo.EDisGo`
-            Returns the complete eDisGo container, also including results
 
         """
         logger.info("Start task 'optimisation'.")
@@ -1813,13 +1785,13 @@ class EDisGoNetworks:
 
         Parameters
         ----------
-        mv_grid_id : int
-            MV grid ID of the ding0 grid
+        edisgo_grid : :class:`edisgo.EDisGo`
+            EDisGo object.
+        logger : logger handler
 
         Returns
         -------
         :class:`edisgo.EDisGo`
-            Returns the complete eDisGo container, also including results
 
         """
         logger.info("Start task 'grid_reinforcement'.")
@@ -1890,43 +1862,6 @@ class EDisGoNetworks:
                 self._edisgo_grids[mv_grid_id] = "This grid failed to reimport"
 
                 logger.warning("MV grid {} could not be loaded".format(mv_grid_id))
-
-    def _get_mv_grid_from_bus_id(self, session, bus_id):
-        """
-        Queries the MV grid ID for a given eTraGo bus
-
-        Parameters
-        ----------
-        bus_id : int
-            eTraGo bus ID
-
-        Returns
-        -------
-        int
-            MV grid (ding0) ID
-
-        """
-
-        if self._versioned is True:
-            ormclass_hvmv_subst = grid.__getattribute__("EgoDpHvmvSubstation")
-            subst_id = (
-                session.query(ormclass_hvmv_subst.subst_id)
-                .filter(
-                    ormclass_hvmv_subst.otg_id == bus_id,
-                    ormclass_hvmv_subst.version == self._grid_version,
-                )
-                .scalar()
-            )
-
-        if self._versioned is False:
-            ormclass_hvmv_subst = model_draft.__getattribute__("EgoGridHvmvSubstation")
-            subst_id = (
-                session.query(ormclass_hvmv_subst.subst_id)
-                .filter(ormclass_hvmv_subst.otg_id == bus_id)
-                .scalar()
-            )
-
-        return subst_id
 
 
 class _ETraGoData:
