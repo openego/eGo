@@ -317,7 +317,6 @@ def get_pth_capacity(scenario, grid_ids, orm=None, session=None):
                 orm["heat_pump_capacity_individual"].mv_grid_id.in_(grid_ids),
                 orm["heat_pump_capacity_individual"].carrier == "heat_pump",
                 orm["heat_pump_capacity_individual"].scenario == scenario,
-                orm["heat_pump_capacity_individual"].capacity <= 20.0,
             )
             .group_by(
                 orm["heat_pump_capacity_individual"].mv_grid_id,
