@@ -831,7 +831,7 @@ class EDisGoNetworks:
                 directory=os.path.join(results_dir, "grid_data"),
                 save_topology=True,
                 save_timeseries=True,
-                save_results=False,
+                save_results=True,
                 save_electromobility=True,
                 save_dsm=True,
                 save_heatpump=True,
@@ -839,6 +839,7 @@ class EDisGoNetworks:
                 reduce_memory=True,
                 archive=True,
                 archive_type="zip",
+                parameters={"grid_expansion_results": ["equipment_changes"]},
             )
             if "2_specs_overlying_grid" not in config["eDisGo"]["tasks"]:
                 return {edisgo_grid.topology.id: results_dir}
@@ -851,7 +852,7 @@ class EDisGoNetworks:
                     edisgo_path=grid_path,
                     import_topology=True,
                     import_timeseries=True,
-                    import_results=False,
+                    import_results=True,
                     import_electromobility=True,
                     import_heat_pump=True,
                     import_dsm=True,
@@ -869,7 +870,7 @@ class EDisGoNetworks:
                 directory=os.path.join(results_dir, zip_name),
                 save_topology=True,
                 save_timeseries=True,
-                save_results=False,
+                save_results=True,
                 save_electromobility=True,
                 save_dsm=True,
                 save_heatpump=True,
@@ -877,6 +878,7 @@ class EDisGoNetworks:
                 reduce_memory=True,
                 archive=True,
                 archive_type="zip",
+                parameters={"grid_expansion_results": ["equipment_changes"]},
             )
 
         # ################### task: temporal complexity reduction ##################
@@ -892,7 +894,7 @@ class EDisGoNetworks:
                     edisgo_path=grid_path,
                     import_topology=True,
                     import_timeseries=True,
-                    import_results=False,
+                    import_results=True,
                     import_electromobility=True,
                     import_heat_pump=True,
                     import_dsm=True,
@@ -921,7 +923,7 @@ class EDisGoNetworks:
                     edisgo_path=grid_path,
                     import_topology=True,
                     import_timeseries=True,
-                    import_results=False,
+                    import_results=True,
                     import_electromobility=True,
                     import_heat_pump=True,
                     import_dsm=True,
@@ -953,7 +955,7 @@ class EDisGoNetworks:
                 directory=os.path.join(results_dir, zip_name),
                 save_topology=True,
                 save_timeseries=True,
-                save_results=False,
+                save_results=True,
                 save_opf_results=True,
                 save_electromobility=False,
                 save_dsm=False,
@@ -962,6 +964,7 @@ class EDisGoNetworks:
                 reduce_memory=True,
                 archive=True,
                 archive_type="zip",
+                parameters={"grid_expansion_results": ["equipment_changes"]},
             )
             if "5_grid_reinforcement" not in config["eDisGo"]["tasks"]:
                 return {edisgo_grid.topology.id: results_dir}
@@ -978,7 +981,7 @@ class EDisGoNetworks:
                     edisgo_path=grid_path,
                     import_topology=True,
                     import_timeseries=True,
-                    import_results=False,
+                    import_results=True,
                     import_electromobility=False,
                     import_heat_pump=False,
                     import_dsm=False,
@@ -1829,7 +1832,6 @@ class EDisGoNetworks:
             activate_cost_results_disturbing_mode=True,
             separate_lv_grids=True,
             separation_threshold=2,
-            reinforce_lv_feeders_large_voltage_issues=True,
             copy_grid=False,
         )
         return edisgo_grid
