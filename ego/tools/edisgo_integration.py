@@ -60,7 +60,7 @@ if "READTHEDOCS" not in os.environ:
     )
     from edisgo.tools.tools import (
         aggregate_district_heating_components,
-        get_sample_using_time,
+        reduce_timeseries_data_to_given_timeindex,
     )
     from egoio.tools import db
 
@@ -1653,9 +1653,7 @@ class EDisGoNetworks:
                 # copy edisgo object
                 edisgo_copy = deepcopy(edisgo_grid)
                 # temporal complexity reduction
-                get_sample_using_time(
-                    edisgo_copy, start_date=time_steps[0], periods=len(time_steps)
-                )
+                reduce_timeseries_data_to_given_timeindex(edisgo_copy, time_steps)
 
                 # spatial complexity reduction
                 edisgo_copy.spatial_complexity_reduction(
