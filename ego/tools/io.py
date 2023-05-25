@@ -20,45 +20,28 @@
 """This file contains the eGo main class as well as input & output functions
 of eGo in order to build the eGo application container.
 """
-import json
 import logging
 import os
-import sys
 
-logger = logging.getLogger("ego")
-import json
-
-import numpy as np
 import pandas as pd
 
-if not "READTHEDOCS" in os.environ:
+if "READTHEDOCS" not in os.environ:
     import re
 
     from importlib import import_module
 
-    import oedialect
-    import pyproj as proj
     import pypsa
 
-    from egoio.db_tables import grid, model_draft
     from egoio.db_tables.model_draft import EgoGridPfHvSource as Source
     from egoio.db_tables.model_draft import EgoGridPfHvTempResolution as TempResolution
-    from egoio.db_tables.model_draft import RenpassGisParameterRegion
     from egoio.tools import db
     from etrago import Etrago
     from etrago.appl import run_etrago
-
-    from geoalchemy2 import *
-    from shapely.geometry import MultiPolygon, Point, Polygon
-    from sqlalchemy import MetaData, and_, create_engine, func
+    from etrago.tools.io import load_config_file
+    from sqlalchemy import and_
     from sqlalchemy.orm import sessionmaker
 
-    from ego.tools.economics import (
-        etrago_convert_overnight_cost,
-        etrago_grid_investment,
-        etrago_operating_costs,
-        get_generator_investment,
-    )
+    from ego.tools.economics import etrago_convert_overnight_cost
     from ego.tools.edisgo_integration import EDisGoNetworks
     from ego.tools.plots import (
         igeoplot,
@@ -69,13 +52,9 @@ if not "READTHEDOCS" in os.environ:
         plot_storage_use,
         power_price_plot,
     )
-    from ego.tools.results import create_etrago_results
-    from ego.tools.storages import etrago_storages, etrago_storages_investment
-    from ego.tools.utilities import (
-        fix_leading_separator,
-        get_scenario_setting,
-        get_time_steps,
-    )
+    from ego.tools.utilities import get_scenario_setting
+
+logger = logging.getLogger("ego")
 
 __copyright__ = "Europa-Universität Flensburg, " "Centre for Sustainable Energy Systems"
 __license__ = "GNU Affero General Public License Version 3 (AGPL-3.0)"
@@ -119,7 +98,7 @@ class egoBasic(object):
             Session = sessionmaker(bind=conn)
             self.session = Session()
             logger.info("Connected to Database")
-        except:
+        except:  # noqa: E722
             logger.error("Failed connection to Database", exc_info=True)
 
         # get scn_name
@@ -145,7 +124,7 @@ class eTraGoResults(egoBasic):
 
         logger.info("eTraGo section started")
 
-        if self.json_file["eGo"]["result_id"] != None:
+        if self.json_file["eGo"]["result_id"] is not None:
 
             # Delete arguments from scenario_setting
             logger.info("Remove given eTraGo settings from scenario_setting")
@@ -188,7 +167,7 @@ class eTraGoResults(egoBasic):
             logger.info("Create eTraGo network from oedb result")
             self._etrago_network = etrago_from_oedb(self.session, self.json_file)
 
-            if self.json_file["eTraGo"]["disaggregation"] != False:
+            if self.json_file["eTraGo"]["disaggregation"] is not False:
                 self._etrago_disaggregated_network = self._etrago_network
             else:
                 logger.warning("No disaggregated network found in DB")
@@ -197,18 +176,18 @@ class eTraGoResults(egoBasic):
         # create eTraGo NetworkScenario
         if self.json_file["eGo"]["eTraGo"] is True:
 
-            if self.json_file["eGo"].get("csv_import_eTraGo") != False:
+            if self.json_file["eGo"].get("csv_import_eTraGo") is not False:
 
                 logger.info("Import eTraGo network from csv files")
 
                 self.etrago = Etrago(
-                    csv_folder_name = self.json_file['eGo'].get('csv_import_eTraGo'))
+                    csv_folder_name=self.json_file["eGo"].get("csv_import_eTraGo")
+                )
 
             else:
                 logger.info("Create eTraGo network calcualted by eGo")
 
-                run_etrago(args= self.json_file['eTraGo'],
-                           json_path=None)
+                run_etrago(args=self.json_file["eTraGo"], json_path=None)
 
 
 class eDisGoResults(eTraGoResults):
@@ -385,7 +364,7 @@ class eGo(eDisGoResults):
                 costs_df = costs_df.append(new_storage_row)
 
                 self._total_investment_costs = costs_df
-        except:
+        except:  # noqa: E722
             logger.info("Something went wrong with the MV storage distribution.")
 
     def _calculate_all_extended_storages(self):
@@ -395,7 +374,7 @@ class eGo(eDisGoResults):
         etrago_network = self._etrago_disaggregated_network
 
         stor_df = etrago_network.storage_units.loc[
-            (etrago_network.storage_units["p_nom_extendable"] == True)
+            (etrago_network.storage_units["p_nom_extendable"] is True)
         ]
 
         stor_df = stor_df[["bus", "p_nom_opt"]]
@@ -412,7 +391,7 @@ class eGo(eDisGoResults):
 
         min_extended = 0.3
         stor_df = etrago_network.storage_units.loc[
-            (etrago_network.storage_units["p_nom_extendable"] == True)
+            (etrago_network.storage_units["p_nom_extendable"] is True)
             & (etrago_network.storage_units["p_nom_opt"] > min_extended)
             & (etrago_network.storage_units["max_hours"] <= 20.0)
         ]
@@ -422,10 +401,8 @@ class eGo(eDisGoResults):
         integrated_storage = 0.0  # Storage integrated in MV grids
 
         for idx, row in stor_df.iterrows():
-            bus_id = row["bus"]
+            mv_grid_id = row["bus"]
             p_nom_opt = row["p_nom_opt"]
-
-            mv_grid_id = self.edisgo.get_mv_grid_from_bus_id(bus_id)
 
             if not mv_grid_id:
                 continue
@@ -647,7 +624,7 @@ def etrago_from_oedb(session, json_file):
 
         Parameters
         ----------
-        session: : sqlalchemy: `sqlalchemy.orm.session.Session < orm/session_basics.html >`
+        session: : sqlalchemy: `sqlalchemy.orm.session.Session<orm/session_basics.html>`
             SQLAlchemy session to the OEDB
         """
 
