@@ -4,8 +4,6 @@
     "eDisGo": true,
     "csv_import_eTraGo": false,
     "csv_import_eDisGo": false,
-    "data_dir": ".../data_in",
-    "results_dir": ".../data_out",
     "random_seed": 42
   },
   "eTraGo": {
@@ -56,7 +54,6 @@
     "max_cos_phi_renewable": 0.9,
     "results": "results_edisgo",
     "solver": "glpk",
-    "timesteps_pfa": "snapshot_analysis",
     "tasks": ["1_setup_grid"]
   },
   "database": {

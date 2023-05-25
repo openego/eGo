@@ -354,10 +354,10 @@ def cluster_workflow(config=None):
     # determine cluster attributes
     logger.info("Determine cluster attributes.")
     attributes_path = os.path.join(
-        config["eGo"]["results_dir"], "mv_grid_cluster_attributes.csv"
+        config["eDisGo"]["results"], "mv_grid_cluster_attributes.csv"
     )
-    if not os.path.exists(config["eGo"]["results_dir"]):
-        os.makedirs(config["eGo"]["results_dir"])
+    if not os.path.exists(config["eDisGo"]["results"]):
+        os.makedirs(config["eDisGo"]["results"])
     scenario = config["eTraGo"]["scn_name"]
     cluster_attributes_df = get_cluster_attributes(
         attributes_path=attributes_path, scenario=scenario, config=config
@@ -368,7 +368,7 @@ def cluster_workflow(config=None):
         config["eDisGo"]["cluster_attributes"]
     ]
     working_grids_path = os.path.join(
-        config["eGo"]["data_dir"], config["eDisGo"]["grid_path"], "working_grids.csv"
+        config["eDisGo"]["grid_path"], "working_grids.csv"
     )
     if os.path.isfile(working_grids_path):
         working_grids = pd.read_csv(working_grids_path, index_col=0)
@@ -381,7 +381,7 @@ def cluster_workflow(config=None):
         cluster_attributes_df, working_grids=working_grids, config=config
     )
     cluster_results_path = os.path.join(
-        config["eGo"]["results_dir"], "mv_grid_cluster_results.csv"
+        config["eDisGo"]["results"], "mv_grid_cluster_results_new.csv"
     )
     cluster_df.to_csv(cluster_results_path)
     return cluster_df

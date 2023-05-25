@@ -294,7 +294,7 @@ class EDisGoNetworks:
         * 'end_time' - end time of calculation
 
         """
-        self._status_dir = os.path.join(self._json_file["eGo"]["results_dir"], "status")
+        self._status_dir = os.path.join(self._json_file["eDisGo"]["results"], "status")
         if not os.path.exists(self._status_dir):
             os.makedirs(self._status_dir)
 
@@ -479,7 +479,6 @@ class EDisGoNetworks:
         # TODO: Integrate into a for-loop
         self._db_section = self._edisgo_args["db"]
         self._grid_version = self._edisgo_args["gridversion"]
-        self._timesteps_pfa = self._edisgo_args["timesteps_pfa"]
         self._solver = self._edisgo_args["solver"]
         self._grid_path = self._edisgo_args["grid_path"]
         self._choice_mode = self._edisgo_args["choice_mode"]
@@ -656,7 +655,7 @@ class EDisGoNetworks:
         """
         parallelization = self._parallelization
 
-        results_dir = os.path.join(self._json_file["eGo"]["results_dir"], self._results)
+        results_dir = self._results
         if not os.path.exists(results_dir):
             os.makedirs(results_dir)
 
@@ -729,9 +728,7 @@ class EDisGoNetworks:
         engine = database.get_engine(config=config)
 
         # results directory
-        results_dir = os.path.join(
-            config["eGo"]["results_dir"], self._results, str(mv_grid_id)
-        )
+        results_dir = os.path.join(self._results, str(mv_grid_id))
         if not os.path.exists(results_dir):
             os.makedirs(results_dir)
 
@@ -992,7 +989,6 @@ class EDisGoNetworks:
 
         logger.info(f"MV grid {mv_grid_id}: Initialize MV grid.")
         grid_path = os.path.join(
-            config["eGo"]["data_dir"],
             config["eDisGo"]["grid_path"],
             str(mv_grid_id),
         )
@@ -1458,9 +1454,7 @@ class EDisGoNetworks:
         edisgo_grid = distribute_overlying_grid_requirements(edisgo_grid)
 
         # get critical time intervals
-        results_dir = os.path.join(
-            config["eGo"]["results_dir"], self._results, str(edisgo_grid.topology.id)
-        )
+        results_dir = os.path.join(self._results, str(edisgo_grid.topology.id))
         time_intervals = get_most_critical_time_intervals(
             edisgo_grid,
             percentage=1.0,
@@ -1809,7 +1803,7 @@ class EDisGoNetworks:
         return edisgo_grid
 
     def _save_edisgo_results(self):
-        results_dir = os.path.join(self._json_file["eGo"]["results_dir"], self._results)
+        results_dir = self._results
         if not os.path.exists(results_dir):
             os.makedirs(results_dir)
 
@@ -1829,7 +1823,7 @@ class EDisGoNetworks:
         """
 
         # Load the grid choice from CSV
-        results_dir = os.path.join(self._json_file["eGo"]["results_dir"], self._results)
+        results_dir = self._results
         self._grid_choice = pd.read_csv(
             os.path.join(results_dir, "grid_choice.csv"), index_col=0
         )
