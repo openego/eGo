@@ -11,10 +11,6 @@ def pytest_configure(config):
         os.path.realpath(os.path.dirname(__file__)),
         "data/interface_results_reference_data",
     )
-    pytest.interface_results_reference_data_set_max_cos_phi_path = os.path.join(
-        os.path.realpath(os.path.dirname(__file__)),
-        "data/interface_results_reference_data_set_max_cos_phi",
-    )
 
     config.addinivalue_line("markers", "slow: mark test as slow to run")
 

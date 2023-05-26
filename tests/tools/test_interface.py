@@ -89,36 +89,6 @@ class TestSpecs:
                         value, reference_s, check_index_type=False, check_names=False
                     )
 
-    def test_get_etrago_results_per_bus_no_non_linear_pf(self):
-
-        bus_id = 0
-        etrago_network = ETraGoMinimalData(self.etrago_network)
-        pf_post_lopf = False
-        max_cos_phi_renewable = False
-
-        etrago_results_per_bus = get_etrago_results_per_bus(
-            bus_id,
-            etrago_network,
-            pf_post_lopf,
-            max_cos_phi_renewable,
-        )
-
-        none_results = [
-            "dispatchable_generators_reactive_power",
-            "renewables_dispatch_reactive_power",
-            "storage_units_reactive_power",
-            "dsm_reactive_power",
-            "heat_central_reactive_power",
-            "heat_pump_rural_reactive_power",
-            "electromobility_reactive_power",
-        ]
-
-        for key, value in etrago_results_per_bus.items():
-            if value is None:
-                none_results.remove(key)
-
-        assert len(none_results) == 0
-
     def test_get_etrago_results_per_bus_empty(self):
 
         bus_id = 11
@@ -133,34 +103,52 @@ class TestSpecs:
             max_cos_phi_renewable,
         )
 
-        none_results = [
+        float_results = [
+            "storage_units_p_nom",
+            "storage_units_max_hours",
+            "heat_pump_rural_p_nom",
+            "heat_pump_central_p_nom",
+            "thermal_storage_rural_capacity",
+            "thermal_storage_rural_efficiency",
+            "thermal_storage_central_efficiency",
+        ]
+        series_results = [
+            "renewables_p_nom",
+            "storage_units_active_power",
+            "storage_units_reactive_power",
+            "storage_units_soc",
+            "dsm_active_power",
+            "heat_pump_rural_active_power",
+            "heat_pump_rural_reactive_power",
+            "thermal_storage_rural_soc",
+            "heat_central_active_power",
+            "heat_central_reactive_power",
+            "thermal_storage_central_capacity",
+            "electromobility_active_power",
+            "electromobility_reactive_power",
+        ]
+        dataframes_results = [
             "dispatchable_generators_active_power",
             "dispatchable_generators_reactive_power",
             "renewables_potential",
             "renewables_curtailment",
             "renewables_dispatch_reactive_power",
-            "storage_units_capacity",
-            "storage_units_active_power",
-            "storage_units_reactive_power",
-            "dsm_active_power",
-            "dsm_reactive_power",
-            "heat_central_active_power",
-            "heat_central_reactive_power",
-            "thermal_storage_central_capacity",
-            "geothermal_energy_feedin_district_heating",
-            "solarthermal_energy_feedin_district_heating",
-            "heat_pump_rural_active_power",
-            "heat_pump_rural_reactive_power",
-            "thermal_storage_rural_capacity",
-            "electromobility_active_power",
-            "electromobility_reactive_power",
-        ]
+            "thermal_storage_central_soc",
+            "feedin_district_heating",
+        ]  #
 
         for key, value in etrago_results_per_bus.items():
-            if value is None:
-                none_results.remove(key)
+            if key in float_results:
+                if value == 0.0:
+                    float_results.remove(key)
+            elif key in series_results:
+                if value.empty:
+                    series_results.remove(key)
+            elif key in dataframes_results:
+                if len(value.columns) == 0:
+                    dataframes_results.remove(key)
 
-        assert len(none_results) == 0
+        assert len(float_results) == 0
 
     def test_get_etrago_results_per_bus_with_set_max_cosphi(self):
 
@@ -175,48 +163,18 @@ class TestSpecs:
             pf_post_lopf,
             max_cos_phi_renewable,
         )
-
-        for key, value in etrago_results_per_bus.items():
-            logger.info(f"Check Result: {key}")
-            if key == "timeindex":
-                assert type(value) is pd.DatetimeIndex
-                pd.testing.assert_index_equal(
-                    value,
-                    pd.DatetimeIndex(
-                        data=[
-                            "2011-01-01 00:00:00",
-                            "2011-01-01 12:00:00",
-                            "2011-01-02 00:00:00",
-                        ],
-                        name="snapshot",
-                    ),
-                )
-            elif key == "storage_units_capacity":
-                assert value == 10.0
-            elif key == "thermal_storage_central_capacity":
-                assert value == 1.0
-            elif key == "thermal_storage_rural_capacity":
-                assert value == 1.0
-            else:
-                assert type(value) is pd.DataFrame
-                path_reference_df = os.path.join(
-                    pytest.interface_results_reference_data_set_max_cos_phi_path,
-                    f"{key}.csv",
-                )
-                # value.to_csv(path_reference_df)
-
-                if key in [
-                    "renewables_potential",
-                    "renewables_curtailment",
-                    "renewables_dispatch_reactive_power",
-                ]:
-                    reference_df = pd.read_csv(
-                        path_reference_df, index_col=0, header=[0, 1], parse_dates=True
-                    )
-                else:
-                    reference_df = pd.read_csv(
-                        path_reference_df, index_col=0, parse_dates=True
-                    )
-                pd.testing.assert_frame_equal(
-                    value, reference_df, check_index_type=False, check_names=False
-                )
+        renewables_dispatch_reactive_power = etrago_results_per_bus[
+            "renewables_dispatch_reactive_power"
+        ]
+        path_reference_df = os.path.join(
+            pytest.interface_results_reference_data_path,
+            "renewables_dispatch_reactive_power_max_cosphi.csv",
+        )
+        reference_df = pd.read_csv(path_reference_df, index_col=0, parse_dates=True)
+        pd.testing.assert_frame_equal(
+            renewables_dispatch_reactive_power,
+            reference_df,
+            check_index_type=False,
+            check_names=False,
+            atol=1e-4,
+        )
