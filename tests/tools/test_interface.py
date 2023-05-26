@@ -14,17 +14,6 @@ logger = logging.getLogger(__name__)
 random.seed(42)
 
 
-def mock_get_weather_id_for_generator(grid_version, session, generator_index, scn_name):
-    generator_number = int(generator_index.split("_")[-1])
-
-    if generator_number in [0]:
-        weather_id = 0
-    elif generator_number in [1]:
-        weather_id = 1
-
-    return weather_id
-
-
 class TestSpecs:
     @classmethod
     def setup_class(cls):
@@ -34,27 +23,18 @@ class TestSpecs:
         etrago_network = ETraGoMinimalData(self.etrago_network)
         assert "p_min_pu" not in etrago_network.generators_t
 
-    def test_get_etrago_results_per_bus(self, monkeypatch):
-        monkeypatch.setattr(
-            "ego.tools.interface.get_weather_id_for_generator",
-            mock_get_weather_id_for_generator,
-        )
+    def test_get_etrago_results_per_bus(self):
 
-        session = None
         bus_id = 0
         etrago_network = ETraGoMinimalData(self.etrago_network)
-        grid_version = None
-        scn_name = "ego 100"
         pf_post_lopf = True
         max_cos_phi_renewable = False
 
         etrago_results_per_bus = get_etrago_results_per_bus(
             bus_id,
             etrago_network,
-            grid_version,
-            scn_name,
             pf_post_lopf,
-            session=session,
+            max_cos_phi_renewable,
         )
 
         for key, value in etrago_results_per_bus.items():
@@ -72,56 +52,55 @@ class TestSpecs:
                         name="snapshot",
                     ),
                 )
-            elif key == "storage_units_capacity":
+            elif key == "storage_units_p_nom":
+                assert value == 1.0
+            elif key == "storage_units_max_hours":
                 assert value == 10.0
             elif key == "thermal_storage_central_capacity":
-                assert value == 1.0
+                pd.testing.assert_series_equal(
+                    value, pd.Series(index=["4"], data=[1.0]), check_names=False
+                )
             elif key == "thermal_storage_rural_capacity":
                 assert value == 1.0
+            elif key == "heat_pump_rural_p_nom":
+                assert value == 1.0
+            elif key == "heat_pump_central_p_nom":
+                assert value == 2.0
+            elif key == "thermal_storage_rural_efficiency":
+                assert value == 0.8
+            elif key == "thermal_storage_central_efficiency":
+                assert value == 0.84
             else:
-                assert type(value) is pd.DataFrame
                 path_reference_df = os.path.join(
                     pytest.interface_results_reference_data_path, f"{key}.csv"
                 )
-                # value.to_csv(path_reference_df)
-
-                if key in [
-                    "renewables_potential",
-                    "renewables_curtailment",
-                    "renewables_dispatch_reactive_power",
-                ]:
-                    reference_df = pd.read_csv(
-                        path_reference_df, index_col=0, header=[0, 1], parse_dates=True
-                    )
-                else:
+                if isinstance(value, pd.DataFrame):
                     reference_df = pd.read_csv(
                         path_reference_df, index_col=0, parse_dates=True
                     )
-                pd.testing.assert_frame_equal(
-                    value, reference_df, check_index_type=False, check_names=False
-                )
+                    pd.testing.assert_frame_equal(
+                        value, reference_df, check_index_type=False, check_names=False
+                    )
+                else:
+                    reference_s = pd.read_csv(
+                        path_reference_df, index_col=0, parse_dates=True
+                    ).iloc[:, 0]
+                    pd.testing.assert_series_equal(
+                        value, reference_s, check_index_type=False, check_names=False
+                    )
 
-    def test_get_etrago_results_per_bus_no_non_linear_pf(self, monkeypatch):
-        monkeypatch.setattr(
-            "ego.tools.interface.get_weather_id_for_generator",
-            mock_get_weather_id_for_generator,
-        )
+    def test_get_etrago_results_per_bus_no_non_linear_pf(self):
 
-        session = None
         bus_id = 0
         etrago_network = ETraGoMinimalData(self.etrago_network)
-        grid_version = None
-        scn_name = "ego 100"
         pf_post_lopf = False
         max_cos_phi_renewable = False
 
         etrago_results_per_bus = get_etrago_results_per_bus(
             bus_id,
             etrago_network,
-            grid_version,
-            scn_name,
             pf_post_lopf,
-            session=session,
+            max_cos_phi_renewable,
         )
 
         none_results = [
@@ -140,27 +119,18 @@ class TestSpecs:
 
         assert len(none_results) == 0
 
-    def test_get_etrago_results_per_bus_empty(self, monkeypatch):
-        monkeypatch.setattr(
-            "ego.tools.interface.get_weather_id_for_generator",
-            mock_get_weather_id_for_generator,
-        )
+    def test_get_etrago_results_per_bus_empty(self):
 
-        session = None
         bus_id = 11
         etrago_network = ETraGoMinimalData(self.etrago_network)
-        grid_version = None
-        scn_name = "ego 100"
         pf_post_lopf = True
         max_cos_phi_renewable = False
 
         etrago_results_per_bus = get_etrago_results_per_bus(
             bus_id,
             etrago_network,
-            grid_version,
-            scn_name,
             pf_post_lopf,
-            session=session,
+            max_cos_phi_renewable,
         )
 
         none_results = [
@@ -192,27 +162,18 @@ class TestSpecs:
 
         assert len(none_results) == 0
 
-    def test_get_etrago_results_per_bus_with_set_max_cosphi(self, monkeypatch):
-        monkeypatch.setattr(
-            "ego.tools.interface.get_weather_id_for_generator",
-            mock_get_weather_id_for_generator,
-        )
+    def test_get_etrago_results_per_bus_with_set_max_cosphi(self):
 
-        session = None
         bus_id = 0
         etrago_network = ETraGoMinimalData(self.etrago_network)
-        grid_version = None
-        scn_name = "ego 100"
         pf_post_lopf = True
         max_cos_phi_renewable = 0.9
 
         etrago_results_per_bus = get_etrago_results_per_bus(
             bus_id,
             etrago_network,
-            grid_version,
-            scn_name,
             pf_post_lopf,
-            session=session,
+            max_cos_phi_renewable,
         )
 
         for key, value in etrago_results_per_bus.items():
