@@ -107,7 +107,7 @@ def get_cluster_attributes(attributes_path, scenario, config=None):
     # get attributes from database
     with sshtunnel(config=config):
         engine = get_engine(config=config)
-        orm = register_tables_in_saio(engine, config=config)
+        orm = register_tables_in_saio(engine)
 
         grid_ids_df = db_io.get_grid_ids(engine=engine, orm=orm)
         solar_capacity_df = db_io.get_solar_capacity(

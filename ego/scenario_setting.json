@@ -143,17 +143,6 @@
     "tasks": ["1_setup_grid", "2_specs_overlying_grid", "3_temporal_complexity_reduction", "4_optimisation", "5_grid_reinforcement"]
   },
   "database": {
-    "tables": {
-      "egon_mv_grid_district": "grid.egon_mv_grid_district",
-      "generators_pv_status_quo": "supply.egon_power_plants_pv",
-      "generators_pv_rooftop": "supply.egon_power_plants_pv_roof_building",
-      "generators_wind_status_quo": "supply.egon_power_plants_wind",
-      "generators": "supply.egon_power_plants",
-      "etrago_load": "grid.egon_etrago_load",
-      "etrago_load_timeseries": "grid.egon_etrago_load_timeseries",
-      "heat_pump_capacity_individual": "supply.egon_individual_heating",
-      "pth_capacity_district_heating": "grid.egon_etrago_link"
-    },
     "database_name": "<database_name>",
     "host": "127.0.0.1",
     "port": "59700",

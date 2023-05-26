@@ -1254,7 +1254,7 @@ class EDisGoNetworks:
                     scn = scenario.split("_")[0]
                 else:
                     scn = scenario
-                map_etrago_heat_bus_to_district_heating_id(specs, scn, config, engine)
+                map_etrago_heat_bus_to_district_heating_id(specs, scn, engine)
 
                 for dh_id in hp_dh.district_heating_id.unique():
                     if dh_id in specs["thermal_storage_central_capacity"].index:

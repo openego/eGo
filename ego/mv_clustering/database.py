@@ -89,8 +89,18 @@ def session_decorator(f):
     return wrapper
 
 
-def register_tables_in_saio(engine, config=None):
-    db_tables = config["database"]["tables"]
+def register_tables_in_saio(engine):
+    db_tables = {
+        "egon_mv_grid_district": "grid.egon_mv_grid_district",
+        "generators_pv_status_quo": "supply.egon_power_plants_pv",
+        "generators_pv_rooftop": "supply.egon_power_plants_pv_roof_building",
+        "generators_wind_status_quo": "supply.egon_power_plants_wind",
+        "generators": "supply.egon_power_plants",
+        "etrago_load": "grid.egon_etrago_load",
+        "etrago_load_timeseries": "grid.egon_etrago_load_timeseries",
+        "heat_pump_capacity_individual": "supply.egon_individual_heating",
+        "pth_capacity_district_heating": "grid.egon_etrago_link",
+    }
     orm = {}
 
     for name, table_str in db_tables.items():

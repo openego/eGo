@@ -791,7 +791,7 @@ def rename_generator_carriers_edisgo(edisgo_grid):
     generators_df.loc[gens_rename.index, "type"] = "others"
 
 
-def map_etrago_heat_bus_to_district_heating_id(specs, scenario, config, engine):
+def map_etrago_heat_bus_to_district_heating_id(specs, scenario, engine):
     """
     Helper function to rename heat bus ID from eTraGo to district heating ID used
     in eDisGo for specifications from overlying grid on district heating feed-in,
@@ -799,7 +799,7 @@ def map_etrago_heat_bus_to_district_heating_id(specs, scenario, config, engine):
 
     """
     # map district heating ID to heat bus ID from eTraGo
-    orm = database.register_tables_in_saio(engine, config=config)
+    orm = database.register_tables_in_saio(engine)
     heat_buses = [int(_) for _ in specs["feedin_district_heating"].columns]
     with database.session_scope(engine) as session:
         # get srid of etrago_bus table
