@@ -46,8 +46,6 @@ import dill
 import multiprocess as mp2
 import pandas as pd
 
-from sqlalchemy.orm import scoped_session, sessionmaker
-
 if "READTHEDOCS" not in os.environ:
     from edisgo.edisgo import import_edisgo_from_files
     from edisgo.flex_opt.reinforce_grid import enhanced_reinforce_grid
@@ -62,7 +60,6 @@ if "READTHEDOCS" not in os.environ:
         aggregate_district_heating_components,
         reduce_timeseries_data_to_given_timeindex,
     )
-    from egoio.tools import db
 
     from ego.mv_clustering import cluster_workflow, database
     from ego.tools.economics import edisgo_grid_investment
@@ -378,21 +375,6 @@ class EDisGoNetworks:
             self._suppress_log = False  # Only in the first run warnings and
             # info get thrown
 
-        # Database section
-        ego_db = self._db_section
-        edisgo_db = edisgo_grid.network.config["db_connection"]["section"]
-
-        if not ego_db == edisgo_db:
-            if not self._suppress_log:
-                logger.warning(
-                    (
-                        "eDisGo database configuration (db: '{}') "
-                        + "will be overwritten with database configuration "
-                        + "from eGo's scenario settings (db: '{}')"
-                    ).format(edisgo_db, ego_db)
-                )
-            edisgo_grid.network.config["db_connection"]["section"] = ego_db
-
         # Versioned
         ego_gridversion = self._grid_version
         if ego_gridversion is None:
@@ -477,7 +459,6 @@ class EDisGoNetworks:
 
         # Reading all eDisGo settings
         # TODO: Integrate into a for-loop
-        self._db_section = self._edisgo_args["db"]
         self._grid_version = self._edisgo_args["gridversion"]
         self._solver = self._edisgo_args["solver"]
         self._grid_path = self._edisgo_args["grid_path"]
@@ -538,11 +519,6 @@ class EDisGoNetworks:
 
     def _identify_extended_storages(self):
 
-        conn = db.connection(section=self._db_section)
-        session_factory = sessionmaker(bind=conn)
-        Session = scoped_session(session_factory)
-        session = Session()
-
         all_mv_grids = self._check_available_mv_grids()
 
         storages = pd.DataFrame(index=all_mv_grids, columns=["storage_p_nom"])
@@ -569,8 +545,6 @@ class EDisGoNetworks:
                 raise IndexError
 
             storages.at[mv_grid, "storage_p_nom"] = stor_p_nom
-
-        Session.remove()
 
         return storages
 

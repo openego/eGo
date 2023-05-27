@@ -29,7 +29,7 @@ dev_req = [
     "flake8",
 ]
 
-doc_req = []
+doc_req = ["numpydoc", "sphinxcontrib.httpdomain", "sphinx-jsondomain"]
 
 full_req = list(set(dev_req + doc_req))
 
@@ -55,9 +55,6 @@ setup(
     install_requires=req,
     extras_require=extras,
     package_data={
-        "ego": [os.path.join("tools", "*.csv")]
-        + [os.path.join("tools", "*.json")]
-        + [os.path.join("", "*.json")],
-        "ego.data": ["*.csv"],
+        "ego": [os.path.join("tools", "*.json")] + [os.path.join("", "*.json")],
     },
 )

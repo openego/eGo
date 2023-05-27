@@ -126,8 +126,6 @@
     "comments": null
 },
   "eDisGo": {
-    "db": "oedb",
-    "gridversion": "v0.4.5",
     "grid_path": "/path/to_your/.dingo/grids",
     "choice_mode": "cluster",
     "cluster_attributes":["pv_capacity_expansion_mw_per_km2", "wind_capacity_expansion_mw_per_km2", "electromobility_max_load_expansion_mw_per_km2", "pth_capacity_expansion_mw_per_km2"],
@@ -140,7 +138,8 @@
     "max_cos_phi_renewable": 0.9,
     "results": "results/another_result",
     "solver": "gurobi",
-    "tasks": ["1_setup_grid", "2_specs_overlying_grid", "3_temporal_complexity_reduction", "4_optimisation", "5_grid_reinforcement"]
+    "tasks": ["1_setup_grid", "2_specs_overlying_grid", "3_temporal_complexity_reduction", "4_optimisation", "5_grid_reinforcement"],
+    "gridversion": "v0.4.5"
   },
   "database": {
     "database_name": "<database_name>",

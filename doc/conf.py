@@ -6,7 +6,11 @@ eGo lives at github: https://github.com/openego/eGo/
 The documentation is available on RTD: https://openego.readthedocs.io"""
 
 
-__copyright__ = "Flensburg University of Applied Sciences, Europa-Universität Flensburg, Centre for Sustainable Energy Systems, DLR-Institute for Networked Energy Systems"
+__copyright__ = (
+    "Flensburg University of Applied Sciences, Europa-Universität "
+    "Flensburg, Centre for Sustainable Energy Systems, DLR-Institute "
+    "for Networked Energy Systems"
+)
 __license__ = "GNU Affero General Public License Version 3 (AGPL-3.0)"
 __author__ = "wolf_bunke"
 
@@ -26,10 +30,11 @@ __author__ = "wolf_bunke"
 # serve to show the default.
 
 import os
-import shlex
 import sys
 
 from unittest.mock import MagicMock
+
+import sphinx_rtd_theme
 
 # from mock import Mock as MagicMock
 
@@ -56,9 +61,7 @@ extensions = [
     "sphinx.ext.imgmath",
     "sphinx.ext.viewcode",
     "sphinx.ext.autosummary",
-    #    'sphinxcontrib.napoleon',#enable Napoleon interpreter of docstrings Sphinx v<=1.2
     "sphinx.ext.napoleon",  # enable Napoleon Sphinx v>1.3
-    #    'sphinx_paramlinks',#to have links to the types of the parameters of the functions
     "numpydoc",
     "sphinxcontrib.httpdomain",  # for restfull API
     "sphinxcontrib.autohttp.flask",
@@ -95,6 +98,7 @@ extlinks = {
     "shapely": ("http://toblerity.org/shapely/manual.html#%s", "Shapely object"),
 }
 
+
 # test oedb implementation
 def rstjinja(app, docname, source):
     """
@@ -117,7 +121,6 @@ def setup(app):
 # oep_url= 'http://oep.iks.cs.ovgu.de/'
 
 # get data from oedb test
-# power_class = requests.get(oep_url+'/api/v0/schema/model_draft/tables/ego_power_class/rows/', ).json()
 
 # import json
 # path = os.getcwd()
@@ -173,7 +176,7 @@ release = "0.3.4"
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+language = "en"
 
 # There are two options for replacing |today|: either, you set today to some
 # non-false value, then it is used:
@@ -213,8 +216,10 @@ pygments_style = "sphinx"
 todo_include_todos = True
 
 
-# Fix import error of modules which depend on C modules (mock out the imports for these modules)
-# see http://read-the-docs.readthedocs.io/en/latest/faq.html#i-get-import-errors-on-libraries-that-depend-on-c-modules
+# Fix import error of modules which depend on C modules (mock out the imports for
+# these modules)
+# see http://read-the-docs.readthedocs.io/en/latest/faq.html#i-get-import-
+# errors-on-libraries-that-depend-on-c-modules
 
 
 if "READTHEDOCS" in os.environ:
@@ -245,8 +250,6 @@ if "READTHEDOCS" in os.environ:
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 # html_theme = 'alabaster'
-
-import sphinx_rtd_theme
 
 html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 html_theme = "sphinx_rtd_theme"
@@ -347,13 +350,13 @@ htmlhelp_basename = "eGodoc"
 
 latex_elements = {
     # The paper size ('letterpaper' or 'a4paper').
-    #'papersize': 'letterpaper',
+    # 'papersize': 'letterpaper',
     # The font size ('10pt', '11pt' or '12pt').
-    #'pointsize': '10pt',
+    # 'pointsize': '10pt',
     # Additional stuff for the LaTeX preamble.
-    #'preamble': '',
+    # 'preamble': '',
     # Latex figure (float) alignment
-    #'figure_align': 'htbp',
+    # 'figure_align': 'htbp',
 }
 
 # Grouping the document tree into LaTeX files. List of tuples
