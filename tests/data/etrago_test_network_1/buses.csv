@@ -1,0 +1,10 @@
+name,carrier
+0,AC
+1,CH4
+2,dsm
+3,Li ion
+4,central_heat
+5,central_heat_store
+6,rural_heat
+7,rural_heat_store
+10,junk

@@ -1,7 +1,7 @@
 Release v0.3.1 (October 27, 2018)
 +++++++++++++++++++++++++++++++++
 
-This release contains documentation and bug fixes for the new features 
+This release contains documentation and bug fixes for the new features
 introduced in 0.3.0.
 
 Added features
@@ -14,10 +14,10 @@ Added features
 * Change and update of API file scenario_setting.json
 * Improved cluster plot of ``ego.plot_edisgo_cluster()``
 * Improved cost differentiation
-* Add jupyter notebook eGo tutorials 
+* Add jupyter notebook eGo tutorials
 
 
 Fixes
 -----
 * Fix installation problems of the pypsa 0.11.0 fork (use pip 18.1)
-* Fix parallel calculation of mv results 
+* Fix parallel calculation of mv results

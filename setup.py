@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
+
+# flake8: noqa: F401, F601
 import os
 
+from pip._internal.req import parse_requirements
 from setuptools import find_packages, setup
 
 __copyright__ = (
@@ -26,7 +29,7 @@ dev_req = [
     "flake8",
 ]
 
-doc_req = []
+doc_req = ["numpydoc", "sphinxcontrib.httpdomain", "sphinx-jsondomain"]
 
 full_req = list(set(dev_req + doc_req))
 
@@ -50,14 +53,8 @@ setup(
     package_dir={"ego": "ego"},
     include_package_data=True,
     install_requires=req,
-    dependency_links=[
-        ("git+https://git@github.com/openego/PyPSA.git" "@master#egg=pypsa-0.11.0fork")
-    ],
     extras_require=extras,
     package_data={
-        "ego": [os.path.join("tools", "*.csv")]
-        + [os.path.join("tools", "*.json")]
-        + [os.path.join("", "*.json")],
-        "ego.data": ["*.csv"],
+        "ego": [os.path.join("tools", "*.json")] + [os.path.join("", "*.json")],
     },
 )

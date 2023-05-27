@@ -7,4 +7,3 @@ Added features
 --------------
 
 * Registration at zenodo.org
-

@@ -3,7 +3,8 @@
     "eTraGo": true,
     "eDisGo": true,
     "csv_import_eTraGo": false,
-    "csv_import_eDisGo": false
+    "csv_import_eDisGo": false,
+    "random_seed": 42
   },
   "eTraGo": {
     "db": "egon-data",
@@ -125,22 +126,35 @@
     "comments": null
 },
   "eDisGo": {
-    "db": "oedb",
-    "gridversion": "v0.4.5",
-    "ding0_path": "/path/to_your/.dingo/grids",
+    "grid_path": "/path/to_your/.dingo/grids",
     "choice_mode": "cluster",
-    "cluster_attributes":["farthest_node", "wind_cap", "solar_cap", "extended_storage"],
+    "cluster_attributes":["pv_capacity_expansion_mw_per_km2", "wind_capacity_expansion_mw_per_km2", "electromobility_max_load_expansion_mw_per_km2", "pth_capacity_expansion_mw_per_km2"],
     "only_cluster": false,
     "manual_grids": [],
-    "no_grids": 2,
+    "n_clusters": 2,
     "parallelization":true,
     "max_calc_time": 0.5,
     "max_workers":2,
-    "initial_reinforcement":true,
     "max_cos_phi_renewable": 0.9,
     "results": "results/another_result",
     "solver": "gurobi",
-    "timesteps_pfa": "snapshot_analysis"
-  }
-
+    "tasks": ["1_setup_grid", "2_specs_overlying_grid", "3_temporal_complexity_reduction", "4_optimisation", "5_grid_reinforcement"],
+    "gridversion": "v0.4.5"
+  },
+  "database": {
+    "database_name": "<database_name>",
+    "host": "127.0.0.1",
+    "port": "59700",
+    "user": "<database_user>",
+    "password": "<database_password>"
+  },
+  "ssh": {
+    "enabled": true,
+    "user": "<server_user>",
+    "ip": "<server_ip>",
+    "port": "<server_port>",
+    "local_address": "127.0.0.1",
+    "local_port": "59700"
+  },
+  "external_config": "~/.ego/secondary_ego_config.json"
 }
