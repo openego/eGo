@@ -1,0 +1,5 @@
+name,bus,carrier,e_nom_opt
+5 central_heat_store,5,central_heat_store,1
+10 central_heat_store,10,central_heat_store,10
+7 rural_heat_store,7,rural_heat_store,1
+10 rural_heat_store,10,rural_heat_store,10

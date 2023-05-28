@@ -1,0 +1,4 @@
+name,bus,carrier,p_nom_opt,p_nom_extendable,max_hours
+0 battery,0,battery,1.0,True,10.0
+10 battery,10,battery,10.0,True,10.0
+10 junk,10,junk,10.0,True,10.0

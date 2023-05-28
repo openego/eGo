@@ -12,13 +12,13 @@ command in order to install eGo:
   $ pip3 install eGo --process-dependency-links
 
 Please ensure, that you are using the pip version 18.1.
-Use ``pip install --upgrade pip==18.1`` to get the right pip version. 
+Use ``pip install --upgrade pip==18.1`` to get the right pip version.
 In Case of problems with the Installation and the ``dependency_links`` of
 the PyPSA fork, please istall PyPSA from the github.com/openego Repository.
 
 .. code-block:: bash
 
-  $ pip3 install -e git+https://github.com/openego/PyPSA@master#egg=0.11.0fork 
+  $ pip3 install -e git+https://github.com/openego/PyPSA@master#egg=0.11.0fork
 
 
 Using virtual environment
@@ -117,7 +117,7 @@ Old developer connection
   host = oe2.iws.cs.ovgu.de
   port = 5432
   pw = YourOEDBPassword
-  
-  
-  
+
+
+
 Please find more information on *Developer notes*.

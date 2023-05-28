@@ -13,6 +13,5 @@ Fixes
 -----
 
 * Fix bug of period calculation
-* removed duplicate matplotlib from setup.py 
+* removed duplicate matplotlib from setup.py
 * fixed csv import
-

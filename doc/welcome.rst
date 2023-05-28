@@ -28,7 +28,7 @@ in order to use eGo a registration on the OpenEnergy Platform is required. For m
 information see
 `openenergy-platform <https://openenergy-platform.org/>`_ and login.
 
-The OpenEnergy platform mainly addresses students, researchers and scientists in 
+The OpenEnergy platform mainly addresses students, researchers and scientists in
 the field of energy modelling and analytics, but also welcomes all other interested parties.
 The platform provides great tools to make your energy system
 modelling process transparent. Data of the open_eGo project are stored on
@@ -73,7 +73,7 @@ grid data for whole Germany. `Learn more here <http://edisgo.readthedocs.io>`_.
 Dataprocessing
 --------------
 
-For the open_eGo project several python packages are developed which are feeded 
+For the open_eGo project several python packages are developed which are feeded
 by the input data of the data processing. The dataprocessing is written in
 SQL and Python. `Learn more here <https://data-processing.readthedocs.io/>`_.
 
@@ -115,7 +115,7 @@ License
 .. image:: images/open_ego_icon_web.png
    :scale: 100%
    :align: right
-   
+
 © Copyright 2015-2018
 
 Flensburg University of Applied Sciences,
@@ -150,7 +150,7 @@ Partner
    :alt: ZNES Flensburg
    :target: http://www.znes-flensburg.de/project/150?language=en
    :align: right
-   
+
 .. image:: https://i0.wp.com/reiner-lemoine-institut.de/wp-content/uploads/2015/08/RLI_Logo.png
    :scale: 90%
    :width: 180px
@@ -176,4 +176,3 @@ Partner
    :alt: Uni Magdeburg
    :target: http://iks.cs.ovgu.de/IKS.html
    :align: left
-
