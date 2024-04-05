@@ -478,7 +478,11 @@ def get_etrago_results_per_bus(bus_id, etrago_obj, pf_post_lopf, max_cos_phi_ren
             weather_dep_gens_df_curt_p[carrier] += p_max_pu_series * p_nom - p_series
 
         if (weather_dep_gens_df_curt_p.min() < -1e-3).any():
-            logger.warning("Curtailment values smaller -1 kW.")
+            ts = weather_dep_gens_df_curt_p[
+                (weather_dep_gens_df_curt_p.min(axis=1) < -1e-3)].index
+            logger.warning(
+                f"Curtailment values smaller -1 kW for time steps {ts}."
+            )
 
         results["renewables_potential"] = weather_dep_gens_df_pot_p
         results["renewables_curtailment"] = weather_dep_gens_df_curt_p
