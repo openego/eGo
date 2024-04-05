@@ -1765,13 +1765,47 @@ class EDisGoNetworks:
         # overwrite configs with new configs
         edisgo_grid._config = Config()
 
+        logger.info("Run grid reinforcement (without n-1).")
+
+        # change configs
+        edisgo_grid.config["grid_expansion_load_factors"][
+            "mv_load_case_transformer"] = 1.0
+        edisgo_grid.config["grid_expansion_load_factors"][
+            "mv_load_case_line"] = 1.0
+
         edisgo_grid = enhanced_reinforce_grid(
             edisgo_grid,
             activate_cost_results_disturbing_mode=True,
             separate_lv_grids=True,
             separation_threshold=2,
-            copy_grid=False,
         )
+
+        logger.info("Run n-1 grid reinforcement.")
+
+        # set feed-in to zero
+        gens_active_power = edisgo_grid.timeseries.generators_active_power.copy()
+        gens_reactive_power = edisgo_grid.timeseries.generators_reactive_power.copy()
+        gens_ts_new = pd.DataFrame(
+            columns=gens_active_power.columns,
+            index=gens_active_power.index,
+            data=0.0
+        )
+        edisgo_grid.timeseries.generators_active_power = gens_ts_new
+        edisgo_grid.timeseries.generators_reactive_power = gens_ts_new
+
+        # change configs
+        edisgo_grid.config["grid_expansion_load_factors"][
+            "mv_load_case_transformer"] = 0.5
+        edisgo_grid.config["grid_expansion_load_factors"][
+            "mv_load_case_line"] = 0.5
+
+        # run MV grid reinforcement (only needed for n-1, as it does not apply in LV)
+        catch_convergence_reinforce_grid(edisgo=edisgo_grid, mode="mv")
+
+        # reset feed-in timeseries
+        edisgo_grid.timeseries.generators_active_power = gens_active_power
+        edisgo_grid.timeseries.generators_reactive_power = gens_reactive_power
+
         return edisgo_grid
 
     def _save_edisgo_results(self):
