@@ -90,7 +90,7 @@ class ETraGoMinimalData:
             # filter components timeseries
             attribute_to_save = {
                 "links": ["p0", "p1"],
-                "generators": ["p", "p_max_pu", "q"],
+                "generators": ["p", "p_max_pu", "q", "p_set"],
                 "stores": ["p", "e"],
                 "storage_units": ["p", "q", "state_of_charge"],
                 "loads": ["p"],
@@ -447,7 +447,7 @@ def get_etrago_results_per_bus(bus_id, etrago_obj, pf_post_lopf, max_cos_phi_ren
             ].index.values[0]
             p_nom_agg = agg_weather_dep_gens_df.loc[agg_idx, "p_nom"]
 
-            p_series = etrago_obj.generators_t["p"][index]
+            p_series = etrago_obj.generators_t["p_set"][index]
             p_max_pu_series = etrago_obj.generators_t["p_max_pu"][index]
             p_max_pu_normed_series = p_max_pu_series * p_nom / p_nom_agg
 
