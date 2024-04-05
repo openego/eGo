@@ -747,7 +747,7 @@ def get_etrago_results_per_bus(bus_id, etrago_obj, pf_post_lopf, max_cos_phi_ren
 
     results = {}
 
-    timeseries_index = etrago_obj.snapshots
+    timeseries_index = pd.DatetimeIndex(etrago_obj.snapshots)
     results["timeindex"] = timeseries_index
 
     # Filter dataframes by bus_id
