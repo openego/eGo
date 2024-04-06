@@ -980,5 +980,5 @@ if __name__ == "__main__":
     for mv_grid in grids:
         #run_edisgo_task_specs_overlying_grid(mv_grid, config, scenario)
         #run_temporal_complexity_reduction(mv_grid, config)
-        run_edisgo_task_optimisation(mv_grid, config, scenario)
+        #run_edisgo_task_optimisation(mv_grid, config, scenario)
         run_edisgo_task_grid_reinforcement(mv_grid, config, scenario)
