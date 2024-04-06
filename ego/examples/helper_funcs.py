@@ -627,7 +627,7 @@ def run_edisgo_task_optimisation(mv_grid_id, config, scenario):
 
     """
     results_dir = os.path.join(
-        config["eGo"]["results_dir"], config["eDisGo"]["results"], str(mv_grid_id)
+        config["eDisGo"]["results"], str(mv_grid_id)
     )
 
     setup_logger(
@@ -854,7 +854,7 @@ def run_edisgo_task_grid_reinforcement(mv_grid_id, config, scenario):
 
     """
     results_dir = os.path.join(
-        config["eGo"]["results_dir"], config["eDisGo"]["results"], str(mv_grid_id)
+        config["eDisGo"]["results"], str(mv_grid_id)
     )
 
     setup_logger(
@@ -895,7 +895,6 @@ def run_edisgo_task_grid_reinforcement(mv_grid_id, config, scenario):
 
         # Add new lines to equipment changes
         grid_path = os.path.join(
-            config["eGo"]["data_dir"],
             config["eDisGo"]["grid_path"],
             str(mv_grid_id),
         )
@@ -979,7 +978,7 @@ if __name__ == "__main__":
         #31972, 31180, 32971, 33128, 34325, 32831, 31133, 33111
     ]
     for mv_grid in grids:
-        run_edisgo_task_specs_overlying_grid(mv_grid, config, scenario)
-        run_temporal_complexity_reduction(mv_grid, config)
+        #run_edisgo_task_specs_overlying_grid(mv_grid, config, scenario)
+        #run_temporal_complexity_reduction(mv_grid, config)
         run_edisgo_task_optimisation(mv_grid, config, scenario)
         run_edisgo_task_grid_reinforcement(mv_grid, config, scenario)
