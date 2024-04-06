@@ -127,7 +127,7 @@
     "comments": null
 },
   "eDisGo": {
-    "grid_path": "/home/gurobi/eGo_workflow/.dingo/grids",
+    "grid_path": "/home/gurobi/eGo_workflow/data_in/grids/working_grids",
     "choice_mode": "manual",
     "cluster_attributes":["pv_capacity_expansion_mw_per_km2", "wind_capacity_expansion_mw_per_km2", "electromobility_max_load_expansion_mw_per_km2", "pth_capacity_expansion_mw_per_km2"],
     "only_cluster": false,
