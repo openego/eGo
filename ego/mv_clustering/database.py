@@ -97,9 +97,11 @@ def register_tables_in_saio(engine):
         "generators_wind_status_quo": "supply.egon_power_plants_wind",
         "generators": "supply.egon_power_plants",
         "etrago_load": "grid.egon_etrago_load",
+        "etrago_bus": "grid.egon_etrago_bus",
         "etrago_load_timeseries": "grid.egon_etrago_load_timeseries",
         "heat_pump_capacity_individual": "supply.egon_individual_heating",
         "pth_capacity_district_heating": "grid.egon_etrago_link",
+        "district_heating_areas": "demand.egon_district_heating_areas",
     }
     orm = {}
 
