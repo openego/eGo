@@ -972,13 +972,13 @@ if __name__ == "__main__":
     scenario = "eGon2035"
     grids = [
         33128,
-        #31105, 31636, 32572, 31140, 35920, 32393, 32829, 32101, 32349, 35810, 31114,
-        #33577, 32418, 33105, 32346, 31498, 36023, 31994, 32567, 36007, 33832, 35958,
-        #35848, 36008, 32415, 30977, 32022, 32639, 36091, 36029, 33680, 31358, 31760,
-        #31972, 31180, 32971, 33128, 34325, 32831, 31133, 33111
+        31105, 31636, 32572, 31140, 35920, 32393, 32829, 32101, 32349, 35810, 31114,
+        33577, 32418, 33105, 32346, 31498, 36023, 31994, 32567, 36007, 33832, 35958,
+        35848, 36008, 32415, 30977, 32022, 32639, 36091, 36029, 33680, 31358, 31760,
+        31972, 31180, 32971, 33128, 34325, 32831, 31133, 33111
     ]
     for mv_grid in grids:
-        #run_edisgo_task_specs_overlying_grid(mv_grid, config, scenario)
-        #run_temporal_complexity_reduction(mv_grid, config)
+        run_edisgo_task_specs_overlying_grid(mv_grid, config, scenario)
+        run_temporal_complexity_reduction(mv_grid, config)
         #run_edisgo_task_optimisation(mv_grid, config, scenario)
-        run_edisgo_task_grid_reinforcement(mv_grid, config, scenario)
+        #run_edisgo_task_grid_reinforcement(mv_grid, config, scenario)
