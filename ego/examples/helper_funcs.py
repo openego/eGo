@@ -100,9 +100,6 @@ def run_edisgo_task_specs_overlying_grid(
         )
         etrago_network = Etrago(csv_folder_name=etrago_path)
 
-        print("etrago snapshots")
-        print(etrago_network.network.snapshots)
-
         specs = get_etrago_results_per_bus(
             edisgo_grid.topology.id,
             etrago_network.network,
