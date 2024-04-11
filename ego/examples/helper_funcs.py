@@ -28,6 +28,143 @@ from ego.tools.interface import (
 from etrago import Etrago
 
 
+def run_edisgo_task_setup_grid(mv_grid_id, config, scenario):
+    """
+    Sets up EDisGo object for future scenario (without specifications from overlying
+    grid).
+
+    The following data is set up:
+
+    * load time series of conventional loads
+    * generator park
+    * home storage units
+    * DSM data
+    * heat pumps including heat demand and COP time series per heat pump
+    * charging points with standing times, etc. as well as charging time series for
+      uncontrolled charging (done so that public charging points have a charging
+      time series) and flexibility bands for home and work charging points
+
+    A dummy time index is set that is later on overwritten by the time index used
+    in eTraGo.
+
+    Parameters
+    ----------
+    mv_grid_id : int
+        MV grid ID of the ding0 grid.
+    scenario : str
+        Name of scenario to import data for. Possible options are "eGon2035"
+        and "eGon100RE".
+    config : dict
+        Dictionary with configuration data.
+
+    Returns
+    -------
+    :class:`edisgo.EDisGo`
+
+    """
+    results_dir = os.path.join(
+        config["eDisGo"]["results"], str(mv_grid_id)
+    )
+
+    setup_logger(
+        loggers=[
+            {"name": "edisgo", "file_level": "debug", "stream_level": "debug"},
+        ],
+        file_name=f"run_edisgo_{mv_grid_id}.log",
+        log_dir=results_dir,
+    )
+    # use edisgo logger in order to have all logging information for one grid go
+    # to the same file
+    logger = logging.getLogger("edisgo.external.ego._run_edisgo")
+    logging.getLogger('pypsa').setLevel(logging.WARNING)
+
+    egon_data_config_yml = os.path.join(
+        os.getcwd(), "egon-data.configuration.yaml"
+    )
+    eng = engine(path=egon_data_config_yml, ssh=True)
+
+    logger.info(f"MV grid {mv_grid_id}: Start task 'setup_grid'.")
+
+    logger.info(f"MV grid {mv_grid_id}: Initialize MV grid.")
+
+    try:
+        grid_path = os.path.join(
+            config["eDisGo"]["grid_path"],
+            str(mv_grid_id),
+        )
+        if not os.path.isdir(grid_path):
+            msg = f"MV grid {mv_grid_id}: No grid data found."
+            logger.error(msg)
+            raise Exception(msg)
+
+        edisgo_grid = import_edisgo_from_files(edisgo_path=grid_path)
+        edisgo_grid.legacy_grids = False
+        # overwrite configs
+        edisgo_grid._config = Config()
+        edisgo_grid.set_timeindex(pd.date_range("1/1/2011", periods=8760, freq="H"))
+
+        logger.info("Set up load time series of conventional loads.")
+        edisgo_grid.set_time_series_active_power_predefined(
+            conventional_loads_ts="oedb", engine=eng, scenario=scenario
+        )
+        edisgo_grid.set_time_series_reactive_power_control(
+            control="fixed_cosphi",
+            generators_parametrisation=None,
+            loads_parametrisation="default",
+            storage_units_parametrisation=None,
+        )
+        # overwrite p_set of conventional loads as it changes from scenario to scenario
+        edisgo_grid.topology.loads_df[
+            "p_set"
+        ] = edisgo_grid.timeseries.loads_active_power.max()
+
+        logger.info("Set up generator park.")
+        edisgo_grid.import_generators(generator_scenario=scenario, engine=eng)
+
+        logger.info("Set up home storage units.")
+        edisgo_grid.import_home_batteries(scenario=scenario, engine=eng)
+
+        logger.info("Set up DSM data.")
+        edisgo_grid.import_dsm(scenario=scenario, engine=eng)
+
+        logger.info("Set up heat supply and demand data.")
+        edisgo_grid.import_heat_pumps(scenario=scenario, engine=eng)
+
+        logger.info("Set up electromobility data.")
+        edisgo_grid.import_electromobility(
+            data_source="oedb", scenario=scenario, engine=eng
+        )
+        # apply charging strategy so that public charging points have a charging
+        # time series
+        edisgo_grid.apply_charging_strategy(strategy="dumb")
+        # get flexibility bands for home and work charging points
+        edisgo_grid.electromobility.get_flexibility_bands(
+            edisgo_obj=edisgo_grid, use_case=["home", "work"]
+        )
+
+        logger.info("Run integrity checks.")
+        edisgo_grid.topology.check_integrity()
+        edisgo_grid.electromobility.check_integrity()
+        edisgo_grid.heat_pump.check_integrity()
+        edisgo_grid.dsm.check_integrity()
+
+        edisgo_grid.save(
+            directory=os.path.join(results_dir, "grid_data"),
+            save_topology=True,
+            save_timeseries=True,
+            save_results=False,
+            save_electromobility=True,
+            save_dsm=True,
+            save_heatpump=True,
+            save_overlying_grid=False,
+            reduce_memory=True,
+            archive=True,
+            archive_type="zip",
+        )
+    except:
+        logger.exception('')
+
+
 def run_edisgo_task_specs_overlying_grid(
         mv_grid_id, config, scenario,
 ):
