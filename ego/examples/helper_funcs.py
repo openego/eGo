@@ -514,7 +514,7 @@ def run_edisgo_task_specs_overlying_grid(
         ]
 
         # Delete some flex data in case of low flex scenario
-        if scenario in ["eGon2035_lowflex", "eGon100RE_flex"]:
+        if scenario in ["eGon2035_lowflex", "eGon100RE_lowflex"]:
             # delete DSM and flexibility bands to save disk space
             edisgo_grid.dsm = edisgo_grid.dsm.__class__()
             edisgo_grid.electromobility.flexibility_bands = {
