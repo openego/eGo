@@ -2,6 +2,7 @@ from copy import deepcopy
 import logging
 import os
 import pandas as pd
+import matplotlib.pyplot as plt
 
 from edisgo.edisgo import import_edisgo_from_files
 from edisgo.flex_opt.reinforce_grid import (
@@ -755,6 +756,271 @@ def run_temporal_complexity_reduction(mv_grid_id, config):
     ).to_csv(os.path.join(results_dir, "selected_time_intervals.csv"))
 
 
+def run_temporal_complexity_reduction_new(mv_grid_id, config):
+
+    def get_min_max_intervals(grid_obj, what):
+        comps_ts = grid_obj.timeseries.residual_load
+        if what == "max":
+            timesteps = comps_ts.rolling(
+                window=int(time_steps_per_time_interval), closed="right"
+            ).max()
+        else:
+            timesteps = comps_ts.rolling(
+                window=int(time_steps_per_time_interval), closed="right"
+            ).min()
+        # drop each time interval that doesn't start at specified hour of the day
+        timesteps = timesteps.iloc[
+                    time_step_day_start:: time_steps_per_day].dropna()
+        # move time index back, as rolling window gives end point of time interval, but
+        # we want start point
+        timesteps.index = timesteps.index - pd.DateOffset(
+            hours=int(time_steps_per_time_interval)
+        )
+        return timesteps
+
+    def plotting():
+        fig, ax = plt.subplots(figsize=(15, 5))
+        time_intervals_values_df.plot(ax=ax)
+        figpath = os.path.join(results_dir, f"time_intervals_residual_load.png")
+        plt.savefig(figpath, dpi=150, bbox_inches='tight', pad_inches=0.1)
+        plt.close()
+
+    time_steps_per_time_interval = 168
+    time_step_day_start = 4
+    time_steps_per_day = 24
+
+    results_dir = os.path.join(
+        config["eDisGo"]["results"], str(mv_grid_id)
+    )
+
+    setup_logger(
+        loggers=[
+            {"name": "edisgo", "file_level": "debug", "stream_level": "debug"},
+        ],
+        file_name=f"run_edisgo_{mv_grid_id}.log",
+        log_dir=results_dir,
+    )
+    # use edisgo logger in order to have all logging information for one grid go
+    # to the same file
+    logger = logging.getLogger("edisgo.external.ego._run_edisgo")
+    logging.getLogger('pypsa').setLevel(logging.WARNING)
+
+    try:
+        grid_path = os.path.join(results_dir, "grid_data_overlying_grid.zip")
+        edisgo_grid = import_edisgo_from_files(
+            edisgo_path=grid_path,
+            import_topology=True,
+            import_timeseries=True,
+            import_results=False,
+            import_electromobility=True,
+            import_heat_pump=True,
+            import_dsm=True,
+            import_overlying_grid=True,
+            from_zip_archive=True,
+        )
+        edisgo_grid.legacy_grids = False
+
+        grid_path = os.path.join(results_dir, "grid_data_overlying_grid_lowflex.zip")
+        edisgo_grid_lowflex = import_edisgo_from_files(
+            edisgo_path=grid_path,
+            import_topology=True,
+            import_timeseries=True,
+            import_results=False,
+            import_electromobility=True,
+            import_heat_pump=True,
+            import_dsm=True,
+            import_overlying_grid=True,
+            from_zip_archive=True,
+        )
+        edisgo_grid_lowflex.legacy_grids = False
+
+        logger.info("Start task 'temporal complexity reduction'.")
+
+        # get non-converging time steps
+        try:
+            convergence = pd.read_csv(
+                os.path.join(config["eGo"]["csv_import_eTraGo"], "pf_solution.csv"),
+                index_col=0,
+                parse_dates=True,
+            )
+            ts_not_converged = convergence[~convergence.converged].index
+        except FileNotFoundError:
+            logger.info(
+                "No info on converged time steps, wherefore it is assumed that all "
+                "converged."
+            )
+            ts_not_converged = []
+        except Exception:
+            raise
+
+        # set time series data at time steps with non-convergence issues to zero
+        if len(ts_not_converged) > 0:
+            logger.info(
+                f"{len(ts_not_converged)} time steps did not converge in overlying "
+                f"grid. Time series data at time steps with non-convergence issues is "
+                f"set to zero."
+            )
+            # set data in TimeSeries object to zero
+            attributes = edisgo_grid.timeseries._attributes
+            for attr in attributes:
+                ts = getattr(edisgo_grid.timeseries, attr)
+                if not ts.empty:
+                    ts.loc[ts_not_converged, :] = 0
+                    setattr(edisgo_grid.timeseries, attr, ts)
+            # set data in OverlyingGrid object to zero
+            attributes = edisgo_grid.overlying_grid._attributes
+            for attr in attributes:
+                ts = getattr(edisgo_grid.overlying_grid, attr)
+                if not ts.empty and "soc" not in attr:
+                    if isinstance(ts, pd.Series):
+                        ts.loc[ts_not_converged] = 0
+                    else:
+                        ts.loc[ts_not_converged, :] = 0
+                    setattr(edisgo_grid.overlying_grid, attr, ts)
+
+        # distribute overlying grid data
+        logger.info("Distribute overlying grid data.")
+        edisgo_grid = distribute_overlying_grid_requirements(edisgo_grid)
+        edisgo_grid_lowflex = distribute_overlying_grid_requirements(edisgo_grid_lowflex)
+
+        # get critical time intervals
+        time_intervals_values_df = pd.DataFrame()
+        time_intervals_values_df["full_flex_max"] = get_min_max_intervals(
+            edisgo_grid,"max"
+        )
+        time_intervals_values_df["full_flex_min"] = get_min_max_intervals(
+            edisgo_grid, "min"
+        )
+        time_intervals_values_df["low_flex_max"] = get_min_max_intervals(
+            edisgo_grid_lowflex,"max"
+        )
+        time_intervals_values_df["low_flex_min"] = get_min_max_intervals(
+            edisgo_grid_lowflex, "min"
+        )
+
+        # save plot
+        plotting()
+
+        # set to zero if minimal residual load is positive or if it's absolute value is
+        # much smaller than maximum residual load
+        for col in ["full_flex_min", "low_flex_min"]:
+            min_res_load = time_intervals_values_df[col].min()
+            max_res_load = time_intervals_values_df[
+                "full_flex_max"].max() if col == "full_flex_min" else \
+            time_intervals_values_df["low_flex_max"].max()
+            if min_res_load > 0:
+                time_intervals_values_df[col] = 0.0
+            elif abs(min_res_load) / abs(max_res_load) < 0.2:
+                time_intervals_values_df[col] = 0.0
+        # set to zero if maximum residual load is negative or if it's absolute value is
+        # much smaller than inimum residual load
+        for col in ["full_flex_max", "low_flex_max"]:
+            max_res_load = time_intervals_values_df[col].max()
+            min_res_load = time_intervals_values_df[
+                "full_flex_min"].min() if col == "full_flex_max" else \
+            time_intervals_values_df["low_flex_min"].min()
+            if max_res_load < 0:
+                time_intervals_values_df[col] = 0.0
+            elif abs(max_res_load) / abs(min_res_load) < 0.2:
+                time_intervals_values_df[col] = 0.0
+
+        # get time intervals with highest values
+        final_time_intervals = pd.DataFrame(columns=["time_steps", "value"])
+        for col in time_intervals_values_df.columns:
+            if not (time_intervals_values_df[col] == 0.0).all():
+                if col in ["full_flex_min", "low_flex_min"]:
+                    ti_start = time_intervals_values_df[col].idxmin()
+                    value = time_intervals_values_df[col].min()
+                else:
+                    ti_start = time_intervals_values_df[col].idxmax()
+                    value = time_intervals_values_df[col].max()
+                final_time_intervals.at[col, "time_steps"] = pd.date_range(
+                    start=ti_start,
+                    periods=time_steps_per_time_interval,
+                    freq="H"
+                )
+                final_time_intervals.at[col, "value"] = value
+
+        def check_overlap(base, col):
+            if col in final_time_intervals.index:
+                overlap = [_ for _ in final_time_intervals.at[base, "time_steps"]
+                           if _ in final_time_intervals.at[col, "time_steps"]]
+                if len(overlap) > 0:
+                    if len(overlap) < time_steps_per_time_interval:
+                        # if time intervals partly overlap, combine them
+                        final_time_intervals.at[base, "time_steps"] = (
+                            (pd.Index(final_time_intervals.at[base, "time_steps"]).append(
+                                pd.Index(final_time_intervals.at[
+                                             col, "time_steps"]))).unique().sort_values()
+                        )
+                        final_time_intervals.at[col, "time_steps"] = None
+                    else:
+                        # if time intervals fully overlap, delete one
+                        final_time_intervals.at[col, "time_steps"] = None
+
+        # check overlap for full_flex_max
+        base = "full_flex_max"
+        # make sure time interval exists
+        if base in final_time_intervals.index:
+            # make sure time intervals are not None
+            if final_time_intervals.at[base, "time_steps"] is not None:
+                for col in ["full_flex_min", "low_flex_max", "low_flex_min"]:
+                    if final_time_intervals.at[col, "time_steps"] is not None:
+                        check_overlap(base, col)
+        # check overlap for full_flex_min
+        base = "full_flex_min"
+        # make sure time interval exists
+        if base in final_time_intervals.index:
+            # make sure time intervals are not None
+            if final_time_intervals.at[base, "time_steps"] is not None:
+                for col in ["low_flex_max", "low_flex_min"]:
+                    if final_time_intervals.at[col, "time_steps"] is not None:
+                        check_overlap(base, col)
+        # check overlap for low_flex_max
+        base = "low_flex_max"
+        # make sure time interval exists
+        if base in final_time_intervals.index:
+            # make sure time intervals are not None
+            if final_time_intervals.at[base, "time_steps"] is not None:
+                for col in ["low_flex_min"]:
+                    if final_time_intervals.at[col, "time_steps"] is not None:
+                        check_overlap(base, col)
+
+        # # drop time intervals with non-converging time steps
+        # if len(ts_not_converged) > 0:
+        #
+        #     # check overloading time intervals
+        #     for ti in time_intervals.index:
+        #         # check if there is one time step in time interval that did not converge
+        #         non_converged_ts_in_ti = [
+        #             _
+        #             for _ in ts_not_converged
+        #             if _ in time_intervals.at[ti, "time_steps_overloading"]
+        #         ]
+        #         if len(non_converged_ts_in_ti) > 0:
+        #             # if any time step did not converge, set time steps to None
+        #             time_intervals.at[ti, "time_steps_overloading"] = None
+        #
+        #     # check voltage issues time intervals
+        #     for ti in time_intervals.index:
+        #         # check if there is one time step in time interval that did not converge
+        #         non_converged_ts_in_ti = [
+        #             _
+        #             for _ in ts_not_converged
+        #             if _ in time_intervals.at[ti, "time_steps_voltage_issues"]
+        #         ]
+        #         if len(non_converged_ts_in_ti) > 0:
+        #             # if any time step did not converge, set time steps to None
+        #             time_intervals.at[ti, "time_steps_voltage_issues"] = None
+
+        # save to csv
+        final_time_intervals.to_csv(
+            os.path.join(results_dir, "selected_time_intervals_new.csv")
+        )
+    except:
+        logger.exception('')
+
+
 def run_edisgo_task_optimisation(mv_grid_id, config, scenario):
     """
     Runs the dispatch optimisation.
@@ -1117,6 +1383,6 @@ if __name__ == "__main__":
     for mv_grid in grids:
         #run_edisgo_task_setup_grid(mv_grid, config, scenario)
         #run_edisgo_task_specs_overlying_grid(mv_grid, config, scenario)
-        run_temporal_complexity_reduction(mv_grid, config)
+        run_temporal_complexity_reduction_new(mv_grid, config)
         #run_edisgo_task_optimisation(mv_grid, config, scenario)
         #run_edisgo_task_grid_reinforcement(mv_grid, config, scenario)
