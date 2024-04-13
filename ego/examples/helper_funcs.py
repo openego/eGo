@@ -1065,7 +1065,7 @@ def run_edisgo_task_optimisation(mv_grid_id, config, scenario):
         edisgo_grid.legacy_grids = False
 
         time_intervals = pd.read_csv(
-            os.path.join(results_dir, "selected_time_intervals.csv"),
+            os.path.join(results_dir, "selected_time_intervals_new.csv"),
             index_col=0,
         )
         for ti in time_intervals.index:
@@ -1073,8 +1073,8 @@ def run_edisgo_task_optimisation(mv_grid_id, config, scenario):
             if time_steps is not None:
                 time_intervals.at[ti, "time_steps"] = pd.date_range(
                     start=time_steps.split("'")[1],
-                    periods=int(time_steps.split("=")[-2].split(",")[0]),
-                    freq="H",
+                    end=time_steps.split("'")[-2],
+                    freq="h",
                 )
 
         logger.info("Start task 'optimisation'.")
