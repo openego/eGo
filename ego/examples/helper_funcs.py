@@ -965,8 +965,9 @@ def run_temporal_complexity_reduction_new(mv_grid_id, config):
             # make sure time intervals are not None
             if final_time_intervals.at[base, "time_steps"] is not None:
                 for col in ["full_flex_min", "low_flex_max", "low_flex_min"]:
-                    if final_time_intervals.at[col, "time_steps"] is not None:
-                        check_overlap(base, col)
+                    if col in final_time_intervals.index:
+                        if final_time_intervals.at[col, "time_steps"] is not None:
+                            check_overlap(base, col)
         # check overlap for full_flex_min
         base = "full_flex_min"
         # make sure time interval exists
@@ -974,8 +975,9 @@ def run_temporal_complexity_reduction_new(mv_grid_id, config):
             # make sure time intervals are not None
             if final_time_intervals.at[base, "time_steps"] is not None:
                 for col in ["low_flex_max", "low_flex_min"]:
-                    if final_time_intervals.at[col, "time_steps"] is not None:
-                        check_overlap(base, col)
+                    if col in final_time_intervals.index:
+                        if final_time_intervals.at[col, "time_steps"] is not None:
+                            check_overlap(base, col)
         # check overlap for low_flex_max
         base = "low_flex_max"
         # make sure time interval exists
@@ -983,8 +985,9 @@ def run_temporal_complexity_reduction_new(mv_grid_id, config):
             # make sure time intervals are not None
             if final_time_intervals.at[base, "time_steps"] is not None:
                 for col in ["low_flex_min"]:
-                    if final_time_intervals.at[col, "time_steps"] is not None:
-                        check_overlap(base, col)
+                    if col in final_time_intervals.index:
+                        if final_time_intervals.at[col, "time_steps"] is not None:
+                            check_overlap(base, col)
 
         # # drop time intervals with non-converging time steps
         # if len(ts_not_converged) > 0:
