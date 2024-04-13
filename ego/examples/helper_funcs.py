@@ -1,5 +1,6 @@
 from copy import deepcopy
 import logging
+import numpy as np
 import os
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -1070,12 +1071,14 @@ def run_edisgo_task_optimisation(mv_grid_id, config, scenario):
         )
         for ti in time_intervals.index:
             time_steps = time_intervals.at[ti, "time_steps"]
-            if time_steps is not None:
+            if time_steps is not np.nan:
                 time_intervals.at[ti, "time_steps"] = pd.date_range(
                     start=time_steps.split("'")[1],
                     end=time_steps.split("'")[-2],
                     freq="h",
                 )
+            else:
+                time_intervals.at[ti, "time_steps"] = None
 
         logger.info("Start task 'optimisation'.")
 
