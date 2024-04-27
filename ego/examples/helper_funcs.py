@@ -1565,7 +1565,7 @@ def grid_expansion_costs_from_diff(mv_grid_id, config, scenario):
             )
 
         # determine line costs
-        lines_changed.drop_duplicates(keep="last", inplace=True)
+        lines_changed.drop_duplicates(keep="last", inplace=True, subset=["bus0", "bus1"])
         line_costs = line_expansion_costs(edisgo_obj, lines_names=lines_changed.index)
         costs_df = pd.DataFrame(
             {
