@@ -1027,7 +1027,7 @@ def run_temporal_complexity_reduction_new(mv_grid_id, config):
         logger.exception('')
 
 
-def run_edisgo_task_optimisation(mv_grid_id, config, scenario):
+def run_edisgo_task_optimisation(mv_grid_id, config, scenario, scenario_variation="og"):
     """
     Runs the dispatch optimisation.
 
@@ -1049,10 +1049,10 @@ def run_edisgo_task_optimisation(mv_grid_id, config, scenario):
     logging.getLogger('pypsa').setLevel(logging.WARNING)
 
     try:
-        if scenario in ["eGon2035", "eGon100RE"]:
-            zip_name = "grid_data_overlying_grid.zip"
-        else:
-            zip_name = "grid_data_overlying_grid_lowflex.zip"
+        zip_name = "grid_data_overlying_grid"
+        if scenario in ["eGon2035_lowflex", "eGon100RE_lowflex"]:
+            zip_name += "_lowflex"
+        zip_name += ".zip"
         grid_path = os.path.join(results_dir, zip_name)
         edisgo_grid = import_edisgo_from_files(
             edisgo_path=grid_path,
@@ -1158,13 +1158,17 @@ def run_edisgo_task_optimisation(mv_grid_id, config, scenario):
                     edisgo_copy.topology.storage_units_df.index.values
                 )
 
+                if scenario_variation == "dg":
+                    opf_version = 2
+                else:
+                    opf_version = 4
                 edisgo_copy.pm_optimize(
                     flexible_cps=flexible_cps,
                     flexible_hps=flexible_hps,
                     flexible_loads=flexible_loads,
                     flexible_storage_units=flexible_storage_units,
                     s_base=1,
-                    opf_version=4,
+                    opf_version=opf_version,
                     silence_moi=False,
                     method="soc",
                 )
@@ -1173,6 +1177,8 @@ def run_edisgo_task_optimisation(mv_grid_id, config, scenario):
                 zip_name = f"opf_results_{ti}"
                 if scenario in ["eGon2035_lowflex", "eGon100RE_lowflex"]:
                     zip_name += "_lowflex"
+                if scenario_variation == "dg":
+                    zip_name += "_dg"
                 edisgo_copy.save(
                     directory=os.path.join(results_dir, zip_name),
                     save_topology=True,
@@ -1245,6 +1251,8 @@ def run_edisgo_task_optimisation(mv_grid_id, config, scenario):
         zip_name = "grid_data_optimisation"
         if scenario in ["eGon2035_lowflex", "eGon100RE_lowflex"]:
             zip_name += "_lowflex"
+        if scenario_variation == "dg":
+            zip_name += "_dg"
         edisgo_grid.save(
             directory=os.path.join(results_dir, zip_name),
             save_topology=True,
@@ -1263,7 +1271,7 @@ def run_edisgo_task_optimisation(mv_grid_id, config, scenario):
         logger.exception('')
 
 
-def run_edisgo_task_grid_reinforcement(mv_grid_id, config, scenario):
+def run_edisgo_task_grid_reinforcement(mv_grid_id, config, scenario, scenario_variation="og"):
     """
     Runs the grid reinforcement.
 
@@ -1285,10 +1293,12 @@ def run_edisgo_task_grid_reinforcement(mv_grid_id, config, scenario):
     logging.getLogger('pypsa').setLevel(logging.WARNING)
 
     try:
-        if scenario in ["eGon2035", "eGon100RE"]:
-            zip_name = "grid_data_optimisation.zip"
-        else:
-            zip_name = "grid_data_optimisation_lowflex.zip"
+        zip_name = "grid_data_optimisation"
+        if scenario in ["eGon2035_lowflex", "eGon100RE_lowflex"]:
+            zip_name += "_lowflex"
+        if scenario_variation == "dg":
+            zip_name += "_dg"
+        zip_name += ".zip"
         grid_path = os.path.join(results_dir, zip_name)
         edisgo_grid = import_edisgo_from_files(
             edisgo_path=grid_path,
@@ -1363,9 +1373,12 @@ def run_edisgo_task_grid_reinforcement(mv_grid_id, config, scenario):
         # reset feed-in timeseries
         edisgo_grid.timeseries.generators_active_power = gens_active_power
         edisgo_grid.timeseries.generators_reactive_power = gens_reactive_power
+        zip_name = f"grid_data_reinforcement_{scenario}"
+        if scenario_variation == "dg":
+            zip_name += "_dg"
         edisgo_grid.save(
             directory=os.path.join(
-                results_dir, f"grid_data_reinforcement_{scenario}"
+                results_dir, zip_name
             ),
             save_topology=True,
             save_timeseries=True,
@@ -1382,7 +1395,7 @@ def run_edisgo_task_grid_reinforcement(mv_grid_id, config, scenario):
         logger.exception('')
 
 
-def grid_expansion_costs_from_diff(mv_grid_id, config, scenario):
+def grid_expansion_costs_from_diff(mv_grid_id, config, scenario, scenario_variation="og"):
     """
     Returns grid expansion costs based on a comparison of the original grid topology
     and the current grid topology.
@@ -1414,7 +1427,10 @@ def grid_expansion_costs_from_diff(mv_grid_id, config, scenario):
     logging.getLogger('pypsa').setLevel(logging.WARNING)
 
     try:
-        zip_name = f"grid_data_reinforcement_{scenario}.zip"
+        zip_name = f"grid_data_reinforcement_{scenario}"
+        if scenario_variation == "dg":
+            zip_name += "_dg"
+        zip_name += ".zip"
         grid_path = os.path.join(results_dir, zip_name)
         edisgo_obj = import_edisgo_from_files(
             edisgo_path=grid_path,
@@ -1619,12 +1635,15 @@ def grid_expansion_costs_from_diff(mv_grid_id, config, scenario):
         costs_df = pd.concat([costs_df, transformer_costs_df])
 
         # save to Results object
-        csv_path = os.path.join(results_dir, f"lines_changed_{scenario}.csv")
+        file_add = f"{scenario}"
+        if scenario_variation == "dg":
+            file_add += "_dg"
+        csv_path = os.path.join(results_dir, f"lines_changed_{file_add}.csv")
         lines_changed.to_csv(csv_path)
-        csv_path = os.path.join(results_dir, f"transformers_changed_{scenario}.csv")
+        csv_path = os.path.join(results_dir, f"transformers_changed_{file_add}.csv")
         transformers_changed.to_csv(csv_path)
         csv_path = os.path.join(
-            results_dir, f"grid_expansion_costs_new_approach_{scenario}.csv"
+            results_dir, f"grid_expansion_costs_new_approach_{file_add}.csv"
         )
         costs_df.to_csv(csv_path)
     except:
@@ -1635,6 +1654,7 @@ if __name__ == "__main__":
     jsonpath = os.path.join(os.getcwd(), "scenario_setting_eGon2035.json")
     config = get_scenario_setting(jsonpath=jsonpath)
     scenario = "eGon2035"
+    scenario_variation = "dg"
     grids = [
         33128, 34186, 31181, 32971, 33111, 31972,
         31133, 32831, 31105, 31180, 31358, 33680,
@@ -1649,6 +1669,6 @@ if __name__ == "__main__":
         #run_edisgo_task_setup_grid(mv_grid, config, scenario)
         #run_edisgo_task_specs_overlying_grid(mv_grid, config, scenario)
         #run_temporal_complexity_reduction_new(mv_grid, config)
-        #run_edisgo_task_optimisation(mv_grid, config, scenario)
-        #run_edisgo_task_grid_reinforcement(mv_grid, config, scenario)
-        grid_expansion_costs_from_diff(mv_grid, config, scenario)
+        run_edisgo_task_optimisation(mv_grid, config, scenario, scenario_variation)
+        run_edisgo_task_grid_reinforcement(mv_grid, config, scenario, scenario_variation)
+        grid_expansion_costs_from_diff(mv_grid, config, scenario, scenario_variation)
