@@ -90,7 +90,7 @@ class ETraGoMinimalData:
             # filter components timeseries
             attribute_to_save = {
                 "links": ["p0", "p1"],
-                "generators": ["p", "p_max_pu", "q", "p_set"],
+                "generators": ["p", "p_max_pu", "q"],
                 "stores": ["p", "e"],
                 "storage_units": ["p", "q", "state_of_charge"],
                 "loads": ["p"],
@@ -448,7 +448,7 @@ def get_etrago_results_per_bus(bus_id, etrago_obj, pf_post_lopf, max_cos_phi_ren
             p_nom_agg = agg_weather_dep_gens_df.loc[agg_idx, "p_nom"]
 
             # active power feed-in in MW
-            p_series = etrago_obj.generators_t["p_set"][index]
+            p_series = etrago_obj.generators_t["p"][index]
             # potential feed-in of single generator in MW/MW
             p_max_pu_series = etrago_obj.generators_t["p_max_pu"][index]
             # potential feed-in normed by nominal power of all generators of that type
