@@ -1,41 +1,44 @@
 {
   "eGo": {
     "eTraGo": true,
-    "eDisGo": true,
+    "eDisGo": false,
     "csv_import_eTraGo": false,
     "csv_import_eDisGo": false,
     "random_seed": 42
   },
   "eTraGo": {
-    "db": "egon-data",
+
+    "db": "oep",
     "gridversion": null,
-    "method": {
-        "type": "lopf",
+    "method": { 
+        "type": "lopf",  
         "n_iter": 4,
-        "pyomo": true
+        "formulation": "linopy",
+        "market_optimization":
+            {
+                "active": true,
+                "market_zones": "status_quo",
+                "rolling_horizon": {
+                    "planning_horizon": 168,
+                    "overlap": 120
+                 },
+                 "redispatch": true
+             }
     },
     "pf_post_lopf": {
-        "active": true,
+        "active": false,
         "add_foreign_lopf": true,
         "q_allocation": "p_nom"
     },
     "start_snapshot": 1,
     "end_snapshot": 2,
     "solver": "gurobi",
-    "solver_options": {
-        "BarConvTol": 1e-05,
-        "FeasibilityTol": 1e-05,
-        "method": 2,
-        "crossover": 0,
-        "logFile": "solver_etragos.log",
-        "threads": 4
-    },
+    "solver_options": {},
     "model_formulation": "kirchhoff",
     "scn_name": "eGon2035",
     "scn_extension": null,
-    "scn_decommissioning": null,
     "lpfile": false,
-    "csv_export": "test",
+    "csv_export": "results",
     "extendable": {
         "extendable_components": [
             "as_in_db"
@@ -66,43 +69,35 @@
     },
     "generator_noise": 789456,
     "extra_functionality": {},
+    "network_clustering_ehv": {
+        "active": false,
+        "busmap": false
+    },
     "network_clustering": {
-        "random_state": 42,
         "active": true,
         "method": "kmedoids-dijkstra",
         "n_clusters_AC": 30,
         "cluster_foreign_AC": false,
         "method_gas": "kmedoids-dijkstra",
-        "n_clusters_gas": 20,
+        "n_clusters_gas": 15,
+        "n_clusters_h2": 15,
         "cluster_foreign_gas": false,
-        "k_busmap": false,
-        "kmeans_gas_busmap": false,
-        "line_length_factor": 1,
-        "remove_stubs": false,
-        "use_reduced_coordinates": false,
+        "k_elec_busmap": false,
+        "k_gas_busmap": false,
         "bus_weight_tocsv": null,
         "bus_weight_fromcsv": null,
         "gas_weight_tocsv": null,
         "gas_weight_fromcsv": null,
+        "line_length_factor": 1,
+        "remove_stubs": false,
+        "use_reduced_coordinates": false,
+        "random_state": 42,
         "n_init": 10,
         "max_iter": 100,
-        "tol": 1e-06,
+        "tol": 1e-6,
         "CPU_cores": 4
     },
-    "sector_coupled_clustering": {
-        "active": true,
-        "carrier_data": {
-            "central_heat": {
-                "base": [
-                    "CH4",
-                    "AC"
-                ],
-                "strategy": "simultaneous"
-            }
-        }
-    },
-    "network_clustering_ehv": false,
-    "disaggregation": "uniform",
+    "spatial_disaggregation": null,
     "snapshot_clustering": {
         "active": false,
         "method": "segmentation",
@@ -112,8 +107,11 @@
         "n_clusters": 5,
         "n_segments": 5
     },
-    "skip_snapshots": false,
-    "dispatch_disaggregation": false,
+    "skip_snapshots": 5,
+    "temporal_disaggregation": {
+    	"active": false,
+    	"no_slices": 8
+    },
     "branch_capacity_factor": {
         "HV": 0.5,
         "eHV": 0.7
@@ -124,6 +122,7 @@
         "capacity": "osmTGmod"
     },
     "comments": null
+
 },
   "eDisGo": {
     "grid_path": "/path/to_your/.dingo/grids",
