@@ -156,5 +156,5 @@
     "local_address": "127.0.0.1",
     "local_port": "59700"
   },
-  "external_config": "~/.ego/secondary_ego_config.json"
+  "external_config": null
 }
