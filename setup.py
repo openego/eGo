@@ -18,7 +18,10 @@ def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 
-req = []
+req = [
+    "etrago @ git+https://github.com/openego/eTraGo.git@dev#egg=etrago",
+    "edisgo @ git+https://github.com/openego/eDisGo.git@dev#egg=edisgo",
+]
 
 dev_req = [
     "pre-commit",
