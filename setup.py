@@ -3,7 +3,6 @@
 # flake8: noqa: F401, F601
 import os
 
-from pip._internal.req import parse_requirements
 from setuptools import find_packages, setup
 
 __copyright__ = (
