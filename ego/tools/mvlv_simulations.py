@@ -275,6 +275,8 @@ def run_mvlv_simulation(mv_id, config, add_feedin_noload=False):
                 from_zip_archive=False,
             )
             edisgo.results = Results(edisgo)
+            edisgo.timeseries.reset()
+            edisgo.set_time_series_worst_case_analysis()
         except:
             print(" -----------------------------------------------------------")
             print(f"MV Grid {mv_id} not available in the path. Building grid...")
