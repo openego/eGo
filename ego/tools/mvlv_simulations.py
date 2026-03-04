@@ -596,14 +596,15 @@ def run_bottomup_analysis(config, all_results_path=None):
             "capital_cost_load",
             "capital_cost_feedin",
             "capital_cost_worst_case",
-        ]
+        ],
+        index = df.index,
     )
     df_interface.loc[:, "p_nom_load"] = df.loc[:, "slack_base_load"].abs()
     df_interface.loc[:, "p_nom_feedin"] = df.loc[:, "slack_base_feedin"].abs()
     df_interface.loc[:, "capital_cost_load"] = df.loc[:, "slope_load"].abs()
     df_interface.loc[:, "capital_cost_feedin"] = df.loc[:, "slope_feedin"].abs()
 
-    for i, row in df_interface.iterrows():
+    for i, row in df.iterrows():
         # Use the smallest p_nom
         df_interface.loc[i, "p_nom_worst_case"] = df_interface.loc[i, "p_nom_load"]
         if df_interface.loc[i, "p_nom_worst_case"] > abs(
