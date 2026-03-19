@@ -26,6 +26,9 @@ can be found on
 Installation
 ------------
 
+The last eGo release is quite old, and might not work anymore.
+Please use the developer installation, which is described below.
+
 .. code-block::
 
    $ pip3 install eGo --process-dependency-links
@@ -46,7 +49,7 @@ Create a virtualenvironment and activate it:
 
 .. code-block::
 
-   $ virtualenv venv --clear -p python3.8
+   $ virtualenv venv --clear -p python3.10
    $ source venv/bin/activate
    $ cd path/to/eGo
    $ python -m pip install -e .[full]
