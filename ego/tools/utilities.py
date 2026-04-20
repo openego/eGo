@@ -140,13 +140,6 @@ def get_scenario_setting(jsonpath=None):
         return
         # or ? json_file['eGo']['result_id'] = None
 
-    if json_file["eGo"]["eTraGo"] is None and json_file["eGo"]["eDisGo"]:
-        logger.info("eDisGo needs eTraGo results. Please change your settings!\n")
-        return
-
-    if json_file["eGo"]["eTraGo"] is False and json_file["eGo"]["eDisGo"]:
-        logger.info("eDisGo needs eTraGo results. Please change your settings!\n")
-        return
 
     if (
         json_file["eGo"]["result_id"] is None
