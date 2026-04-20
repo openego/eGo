@@ -37,7 +37,10 @@ if "READTHEDOCS" not in os.environ:
     from egoio.tools import db
     from etrago import Etrago
     from etrago.appl import run_etrago
-    from etrago.tools.io import load_config_file
+    try:
+        from etrago.tools.io import load_config_file
+    except ImportError:
+        load_config_file = None
     from sqlalchemy import and_
     from sqlalchemy.orm import sessionmaker
 
@@ -202,9 +205,14 @@ class eDisGoResults(eTraGoResults):
         if self.json_file["eGo"]["eDisGo"] is True:
             logger.info("Create eDisGo network")
 
+            etrago_network = (
+                self.etrago.disaggregated_network
+                if self.etrago is not None
+                else None
+            )
             self._edisgo = EDisGoNetworks(
                 json_file=self.json_file,
-                etrago_network=self.etrago.disaggregated_network,
+                etrago_network=etrago_network,
             )
         else:
             self._edisgo = None
@@ -262,7 +270,12 @@ class eGo(eDisGoResults):
             columns=["component", "voltage_level", "capital_cost"]
         )
         _grid_ehv = None
-        if "network" in self.json_file["eTraGo"]["extendable"]:
+        extendable = self.json_file["eTraGo"].get("extendable", {})
+        extendable_list = (
+            extendable if isinstance(extendable, list)
+            else extendable.get("extendable_components", [])
+        )
+        if self.etrago is not None and "network" in extendable_list:
             _grid_ehv = self.etrago.grid_investment_costs
             _grid_ehv["component"] = "grid"
 
@@ -271,7 +284,7 @@ class eGo(eDisGoResults):
             )
 
         _storage = None
-        if "storage" in self.json_file["eTraGo"]["extendable"]:
+        if self.etrago is not None and "storage" in extendable_list:
             _storage = self.etrago.storage_investment_costs
             _storage["component"] = "storage"
 
@@ -293,12 +306,18 @@ class eGo(eDisGoResults):
 
         # add overnight costs
         self._total_investment_costs = self._total_inv_cost
-        self._total_investment_costs["overnight_costs"] = etrago_convert_overnight_cost(
-            self._total_investment_costs["capital_cost"], self.json_file
-        )
+        if (
+            not self._total_inv_cost.empty
+            and self.json_file["eTraGo"].get("end_snapshot") is not None
+        ):
+            self._total_investment_costs["overnight_costs"] = etrago_convert_overnight_cost(
+                self._total_investment_costs["capital_cost"], self.json_file
+            )
+        else:
+            self._total_investment_costs["overnight_costs"] = None
 
         # Include MV storages into the _total_investment_costs dataframe
-        if storage_mv_integration is True:
+        if storage_mv_integration is True and self.etrago is not None:
             if _grid_mv_lv is not None:
                 self._integrate_mv_storage_investment()
 
