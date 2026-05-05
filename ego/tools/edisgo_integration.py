@@ -91,14 +91,17 @@ class EDisGoNetworks:
 
     """
 
-    def __init__(self, json_file, etrago_network):
+    def __init__(self, json_file, etrago_network=None):
 
         # Genral Json Inputs
         self._json_file = json_file
         self._set_scenario_settings()
 
-        # Create reduced eTraGo network
-        self._etrago_network = ETraGoMinimalData(etrago_network)
+        # Create reduced eTraGo network (optional in eDisGo-only mode)
+        if etrago_network is not None:
+            self._etrago_network = ETraGoMinimalData(etrago_network)
+        else:
+            self._etrago_network = None
         del etrago_network
 
         # Program information
@@ -430,14 +433,19 @@ class EDisGoNetworks:
 
         self._csv_import = self._json_file["eGo"]["csv_import_eDisGo"]
 
-        # eTraGo args
-        self._etrago_args = self._json_file["eTraGo"]
-        self._scn_name = self._etrago_args["scn_name"]
-        self._ext_storage = "storage" in self._etrago_args["extendable"]
+        # eTraGo args (may be absent/minimal in eDisGo-only mode)
+        self._etrago_args = self._json_file.get("eTraGo", {})
+        self._scn_name = self._etrago_args.get("scn_name", "eGon2035")
+        extendable = self._etrago_args.get("extendable", {})
+        extendable_list = (
+            extendable if isinstance(extendable, list)
+            else extendable.get("extendable_components", [])
+        )
+        self._ext_storage = "storage" in extendable_list
         if self._ext_storage:
             logger.info("eTraGo Dataset used extendable storage")
 
-        self._pf_post_lopf = self._etrago_args["pf_post_lopf"]
+        self._pf_post_lopf = self._etrago_args.get("pf_post_lopf", False)
 
         # eDisGo args import
         if self._csv_import:
