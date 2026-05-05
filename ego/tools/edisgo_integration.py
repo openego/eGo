@@ -478,6 +478,9 @@ class EDisGoNetworks:
         self._max_cos_phi_renewable = self._edisgo_args["max_cos_phi_renewable"]
         self._results = self._edisgo_args["results"]
         self._max_calc_time = self._edisgo_args["max_calc_time"]
+        # Optional: name of an edisgo.run preset. When set, run_edisgo()
+        # delegates the per-grid workflow to edisgo.run.run_edisgo().
+        self._preset = self._edisgo_args.get("preset")
 
         # Some basic checks
         if self._only_cluster:
@@ -687,6 +690,53 @@ class EDisGoNetworks:
         self._load_edisgo_results()
         self._run_finished = True
 
+    def _build_run_edisgo_config(self, mv_grid_id):
+        """
+        Build a config dict for ``edisgo.run.run_edisgo`` for one grid.
+
+        Returns a dict that uses ``extends: <preset>`` so the runner
+        resolves the bundled preset and merges grid-specific overrides
+        on top.
+        """
+        cfg = {
+            "extends": self._preset,
+            "scenario": self._scn_name,
+            "grid": {
+                "ding0_path": os.path.join(self._grid_path, str(mv_grid_id)),
+            },
+            "results": {
+                "directory": os.path.join(self._results, str(mv_grid_id)),
+            },
+        }
+        db_block = self._json_file.get("database")
+        ssh_block = self._json_file.get("ssh")
+        if db_block is not None or ssh_block is not None:
+            cfg["database"] = {}
+            if db_block is not None:
+                cfg["database"].update(db_block)
+            if ssh_block is not None:
+                cfg["database"]["ssh"] = ssh_block
+        return cfg
+
+    def _run_one_grid_via_runner(self, mv_grid_id):
+        """
+        Delegate the per-grid eDisGo workflow to edisgo.run.run_edisgo.
+        """
+        from edisgo.run import run_edisgo as edisgo_runner
+
+        self._status_update(mv_grid_id, "start", show=False)
+        results_dir = os.path.join(self._results, str(mv_grid_id))
+        os.makedirs(results_dir, exist_ok=True)
+
+        cfg = self._build_run_edisgo_config(mv_grid_id)
+        logger.info(
+            "MV grid %s: delegating to edisgo.run.run_edisgo (preset=%s)",
+            mv_grid_id, self._preset,
+        )
+        edisgo_grid = edisgo_runner(cfg)
+        self._status_update(mv_grid_id, "end")
+        return edisgo_grid
+
     def run_edisgo(self, mv_grid_id):
         """
         Performs a single eDisGo run
@@ -702,6 +752,8 @@ class EDisGoNetworks:
             Returns the complete eDisGo container, also including results
 
         """
+        if self._preset:
+            return self._run_one_grid_via_runner(mv_grid_id)
         self._status_update(mv_grid_id, "start", show=False)
 
         # ##################### general settings ####################
