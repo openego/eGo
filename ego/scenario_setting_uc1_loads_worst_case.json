@@ -1,0 +1,85 @@
+{
+  "_comment": "UC1: Grid laden, Basis-Reinforce, dann HP/EV/Batteries als reine Worst-Case-Lasten laden, finales Reinforce.",
+  "_workflow": [
+    "Workflow (alles in einem Aufruf):",
+    "  1. 1_setup_grid: Grid laden + Generatoren importieren (kein HP/EV/Batteries)",
+    "  2. base_reinforce: Worst-Case-TS intern + Basis-Reinforce + Reset equipment_changes",
+    "  3. import_heat_pumps_from_db: WP aus egon_data importieren",
+    "  4. import_home_batteries_from_db: Hausspeicher aus egon_data importieren",
+    "  5. import_dsm_from_db: DSM aus egon_data importieren",
+    "  6. import_electromobility_from_db: EV aus egon_data importieren (dumb charging)",
+    "  7. worst_case_ts: Worst-Case-Zeitreihen fuer alle Komponenten (inkl. neue)",
+    "  8. 5_grid_reinforcement: Szenario-Reinforce — Kosten = Mehraufwand durch neue Komponenten",
+    "",
+    "Ergebnis: equipment_changes enthaelt nur Massnahmen aus Phase 2 (nach base_reinforce)."
+  ],
+
+  "eGo": {
+    "eTraGo": false,
+    "eDisGo": true,
+    "csv_import_eTraGo": false,
+    "csv_import_eDisGo": false,
+    "random_seed": 42
+  },
+
+  "eTraGo": {
+    "scn_name": "eGon2035",
+    "db": "egon-data",
+    "extendable": []
+  },
+
+  "eDisGo": {
+    "preset": "uc1_loads_worst_case",
+    "grid_path": "/home/gurobi/.ding0/2026-02-23T18:33:20_R4MU_DE3/edisgo_grids",
+    "choice_mode": "all",
+    "cluster_attributes": [],
+    "only_cluster": false,
+    "manual_grids": [],
+    "n_clusters": 2,
+    "parallelization": true,
+    "max_calc_time": 2.0,
+    "max_workers": 4,
+    "max_cos_phi_renewable": 0.9,
+
+    "results": "/storage/JoDa/results/uc1_loads_worst_case",
+    "solver": "gurobi",
+    "gridversion": null,
+
+    "tasks": [
+      "1_setup_grid",
+      "base_reinforce",
+      "import_heat_pumps_from_db",
+      "import_home_batteries_from_db",
+      "import_dsm_from_db",
+      "import_electromobility_from_db",
+      "worst_case_ts",
+      "5_grid_reinforcement"
+    ],
+
+    "_comment_flags": "Nur Generatoren in 1_setup_grid laden. Alles andere kommt als atomare Tasks nach base_reinforce.",
+    "import_generators": true,
+    "import_heat_pumps": false,
+    "import_home_batteries": false,
+    "import_dsm": false,
+    "import_electromobility": false
+  },
+
+  "database": {
+    "database_name": "egon-data",
+    "host": "localhost",
+    "port": "59510",
+    "user": "egon",
+    "password": "data"
+  },
+
+  "ssh": {
+    "enabled": false,
+    "user": "",
+    "ip": "",
+    "port": "",
+    "local_address": "127.0.0.1",
+    "local_port": "59510"
+  },
+
+  "external_config": "~/.ego/secondary_ego_config.json"
+}

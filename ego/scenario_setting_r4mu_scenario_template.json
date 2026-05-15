@@ -1,0 +1,85 @@
+{
+  "_comment": "eGo scenario setting for ONE R4MU scenario reinforcement run (eDisGo-only, no eTraGo).",
+  "_workflow": [
+    "Run scenario_setting_r4mu_base.json FIRST to produce the base-reinforced grid.",
+    "Then run this config once per scenario, changing 'results' and 'charging_dir'.",
+    "Example scenarios:",
+    "  scenario_1_ref_2035              -> charging_dir points to 1_ref_2035 folder",
+    "  scenario_2_mehrfachnutzung_2035  -> charging_dir points to 2_mehrfachnutzung_2035 folder",
+    "  scenario_3_mehrfachnutzung_flex  -> charging_dir points to 3_mehrfachnutzung_flex_2035 folder"
+  ],
+
+  "eGo": {
+    "eTraGo": false,
+    "eDisGo": true,
+    "csv_import_eTraGo": false,
+    "csv_import_eDisGo": false,
+    "random_seed": 42
+  },
+
+  "eTraGo": {
+    "scn_name": "eGon2035",
+    "db": "egon-data",
+    "extendable": []
+  },
+
+  "eDisGo": {
+    "preset": "r4mu_base_and_scenario",
+    "grid_path": "/home/gurobi/.ding0/2026-02-23T18:33:20_R4MU_DE3/edisgo_grids",
+    "choice_mode": "all",
+    "cluster_attributes": [],
+    "only_cluster": false,
+    "manual_grids": [],
+    "n_clusters": 2,
+    "parallelization": true,
+    "max_calc_time": 2.0,
+    "max_workers": 4,
+    "max_cos_phi_renewable": 0.9,
+
+    "results": "/storage/JoDa/2026-02-24_R4MU_Ausbaukosten_Vergleich/results_ego/scenario_1_ref_2035",
+    "solver": "gurobi",
+    "gridversion": null,
+
+    "tasks": [
+      "load_from_base",
+      "load_charging_from_files",
+      "worst_case_ts",
+      "5_grid_reinforcement"
+    ],
+
+    "base_results": "/storage/JoDa/2026-02-24_R4MU_Ausbaukosten_Vergleich/results_ego/base",
+
+    "charging_dir": "/storage/JoDa/2026-01-08 R4MU_Aufnahmefähigkeit/2026_03_13_Szenarien_2035_geolis_fix_JA/1_ref_2035",
+
+    "mv_threshold_kw": 100.0,
+
+    "use_case_to_sector": {
+      "hpc": "hpc",
+      "public": "public",
+      "home_detached": "home",
+      "home_apartment": "home",
+      "work": "work",
+      "retail": "public",
+      "depot": "hpc"
+    }
+  },
+
+  "database": {
+    "database_name": "egon-data",
+    "host": "localhost",
+    "port": "59510",
+    "user": "egon",
+    "password": "data"
+  },
+
+  "ssh": {
+    "enabled": false,
+    "user": "",
+    "ip": "",
+    "port": "",
+    "local_address": "127.0.0.1",
+    "local_port": "59510"
+  },
+
+  "external_config": "~/.ego/secondary_ego_config.json"
+}
