@@ -48,7 +48,9 @@ if __name__ == "__main__":
 
     logger.info("Start calculation")
 
-    ego = eGo(jsonpath="scenario_setting.json")
+    # ego = eGo(jsonpath="scenario_setting.json")
+    ego = eGo(jsonpath="scenario_setting_uc4_example_MS.json")
+
 #    logger.info('Print results')
 #    ego.etrago_line_loading()
 #    print(ego.etrago.generator)
