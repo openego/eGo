@@ -49,7 +49,7 @@ if __name__ == "__main__":
     logger.info("Start calculation")
 
     # ego = eGo(jsonpath="scenario_setting.json")
-    ego = eGo(jsonpath="scenario_setting_uc4_example_MS.json")
+    ego = eGo(jsonpath="scenario_setting_etrago_files_and_edisgo.json")
 
 #    logger.info('Print results')
 #    ego.etrago_line_loading()
