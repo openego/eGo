@@ -770,7 +770,6 @@ class EDisGoNetworks:
             if (key != "timeindex") & (type(series)==pd.Series):
                 filepath = os.path.join(output_dir, f"{key}.csv")
                 series.to_csv(filepath, index=True, header=True)
-                print(f"Gespeichert: {filepath}")
 
 
     def run_edisgo(self, mv_grid_id):
