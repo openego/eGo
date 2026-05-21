@@ -194,7 +194,20 @@ class eTraGoResults(egoBasic):
             else:
                 logger.info("Create eTraGo network calcualted by eGo")
 
-                self.etrago = run_etrago(args=self.json_file["eTraGo"], json_path=None)
+                from etrago.appl import args as default_args
+
+                def deep_merge(base: dict, override: dict) -> dict:
+                    result = base.copy()
+                    for key, value in override.items():
+                        if key in result and isinstance(result[key], dict) and isinstance(value, dict):
+                            result[key] = deep_merge(result[key], value)
+                        else:
+                            result[key] = value
+                    return result
+
+                etrago_args = deep_merge(default_args, self.json_file["eTraGo"])
+
+                self.etrago = run_etrago(args=etrago_args, json_path=None)
 
 
 class eDisGoResults(eTraGoResults):
