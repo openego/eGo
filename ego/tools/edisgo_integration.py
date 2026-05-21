@@ -731,14 +731,14 @@ class EDisGoNetworks:
         results_dir = os.path.join(self._results, str(mv_grid_id))
         os.makedirs(results_dir, exist_ok=True)
         overlying_grid_data = None
-        if self._json_file.get("eGo", {}).get("eTraGo"):
-            if self._json_file.get("eDisGo", {}).get("overlying_grid_source") == "etrago":
-                overlying_grid_data = get_etrago_results_per_bus(
-                    str(mv_grid_id),
-                    self._etrago_network,
-                    pf_post_lopf=True,
-                    max_cos_phi_ren=None
-                )
+        source = self._json_file.get("eDisGo", {}).get("overlying_grid_source")
+        if source == "etrago":
+            overlying_grid_data = get_etrago_results_per_bus(
+                str(mv_grid_id),
+                self._etrago_network,
+                pf_post_lopf=True,
+                max_cos_phi_ren=None,
+            )
         cfg = self._build_run_edisgo_config(mv_grid_id)
         logger.info(
             "MV grid %s: delegating to edisgo.run.run_edisgo (preset=%s)",
@@ -1892,9 +1892,12 @@ class EDisGoNetworks:
         for idx, row in self._grid_choice.iterrows():
             mv_grid_id = int(row["the_selected_network_id"])
 
+            zip_path = os.path.join(
+                self._csv_import, str(mv_grid_id), "main.zip"
+            )
             try:
                 edisgo_grid = import_edisgo_from_files(
-                    edisgo_path=os.path.join(self._csv_import, str(mv_grid_id)),
+                    edisgo_path=zip_path,
                     import_topology=True,
                     import_timeseries=False,
                     import_results=True,
