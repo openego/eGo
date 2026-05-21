@@ -733,12 +733,16 @@ class EDisGoNetworks:
         overlying_grid_data = None
         if self._json_file.get("eGo", {}).get("eTraGo"):
             if self._json_file.get("eDisGo", {}).get("overlying_grid_source") == "etrago":
+
                 overlying_grid_data = get_etrago_results_per_bus(
                     str(mv_grid_id),
                     self._etrago_network,
-                    pf_post_lopf=True,
-                    max_cos_phi_ren=None
+                    self._pf_post_lopf["active"],
+                    self._max_cos_phi_renewable,
                 )
+
+                self._export_overlying_grid_data(mv_grid_id, path=results_dir)
+
         cfg = self._build_run_edisgo_config(mv_grid_id)
         logger.info(
             "MV grid %s: delegating to edisgo.run.run_edisgo (preset=%s)",
@@ -755,8 +759,8 @@ class EDisGoNetworks:
         overlying_grid_data = get_etrago_results_per_bus(
             str(mv_grid_id),
             self._etrago_network,
-            pf_post_lopf=True,
-            max_cos_phi_ren=None
+            self._pf_post_lopf["active"],
+            self._max_cos_phi_renewable,
             )
 
         output_dir = path + f"/overlying_grid_data_{str(mv_grid_id)}"
