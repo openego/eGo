@@ -34,7 +34,7 @@
 
   "eDisGo": {
     "preset": "uc4_example_MS",
-    "grid_path": "/home/gurobi/.ding0/2024-07-25T17:38:34_new_planning_new_edisgo/ding0_grids",
+    "grid_path": "/path/to/ding0_grids",
     "legacy_ding0_grids": false,
     "choice_mode": "manual",
     "cluster_attributes": [],
@@ -46,7 +46,7 @@
     "max_workers": 1,
     "max_cos_phi_renewable": 0.9,
 
-    "results": "/storage/JoDa/results/uc4_example_MS",
+    "results": "/path/to/results",
     "solver": "gurobi",
     "gridversion": null,
 

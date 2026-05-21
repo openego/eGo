@@ -716,6 +716,9 @@ class EDisGoNetworks:
                 cfg["database"].update(db_block)
             if ssh_block is not None:
                 cfg["database"]["ssh"] = ssh_block
+        source = self._json_file.get("eDisGo", {}).get("overlying_grid_source")
+        if source and source != "etrago":
+            cfg["overlying_grid"] = {"path": source}
         return cfg
 
     def _run_one_grid_via_runner(self, mv_grid_id):
@@ -727,14 +730,23 @@ class EDisGoNetworks:
         self._status_update(mv_grid_id, "start", show=False)
         results_dir = os.path.join(self._results, str(mv_grid_id))
         os.makedirs(results_dir, exist_ok=True)
-
+        overlying_grid_data = None
+        if self._json_file.get("eGo", {}).get("eTraGo"):
+            if self._json_file.get("eDisGo", {}).get("overlying_grid_source") == "etrago":
+                overlying_grid_data = get_etrago_results_per_bus(
+                    str(mv_grid_id),
+                    self._etrago_network,
+                    pf_post_lopf=True,
+                    max_cos_phi_ren=None
+                )
         cfg = self._build_run_edisgo_config(mv_grid_id)
         logger.info(
             "MV grid %s: delegating to edisgo.run.run_edisgo (preset=%s)",
             mv_grid_id, self._preset,
         )
 
-        edisgo_grid = edisgo_runner(cfg)
+
+        edisgo_grid = edisgo_runner(cfg,overlying_grid_data=overlying_grid_data)
         self._status_update(mv_grid_id, "end")
         return edisgo_grid
 
@@ -759,249 +771,261 @@ class EDisGoNetworks:
 
     def run_edisgo(self, mv_grid_id):
         """
+        Performs a single eDisGo run.
 
-        Performs a single eDisGo run
-
-        Parameters
-        ----------
-        mv_grid_id : int
-            MV grid ID of the ding0 grid
-
-        Returns
-        -------
-        :class:`edisgo.EDisGo`
-            Returns the complete eDisGo container, also including results
-
+        Delegates to :meth:`_run_one_grid_via_runner` when a preset is
+        configured; otherwise raises NotImplementedError.
         """
         if self._preset:
             return self._run_one_grid_via_runner(mv_grid_id)
-        self._status_update(mv_grid_id, "start", show=False)
-
-        # ##################### general settings ####################
-        config = self._json_file
-        scenario = config["eTraGo"]["scn_name"]
-        engine = database.get_engine(config=config)
-
-        # results directory
-        results_dir = os.path.join(self._results, str(mv_grid_id))
-        if not os.path.exists(results_dir):
-            os.makedirs(results_dir)
-
-        # logger
-        if self._parallelization:
-            stream_level = None
-        else:
-            stream_level = "debug"
-        setup_logger(
-            loggers=[
-                # {"name": "root", "file_level": None, "stream_level": None},
-                # {"name": "ego", "file_level": None, "stream_level": None},
-                {"name": "edisgo", "file_level": "debug", "stream_level": stream_level},
-            ],
-            file_name=f"run_edisgo_{mv_grid_id}.log",
-            log_dir=results_dir,
+        raise NotImplementedError(
+            "Legacy run_edisgo path removed. Set 'preset' in eDisGo config."
         )
-        # use edisgo logger in order to have all logging information for one grid go
-        # to the same file
-        logger = logging.getLogger("edisgo.external.ego._run_edisgo")
 
-        edisgo_grid = None
-        time_intervals = None
+    # def run_edisgo(self, mv_grid_id):
+    #     """
+    #     Performs a single eDisGo run
 
-        # ################### task: setup grid ##################
-        if "1_setup_grid" in config["eDisGo"]["tasks"]:
-            # data is always imported for the full flex scenario, wherefore in case
-            # a low-flex scenario is given, the lowflex-extension is dropped for the
-            # data import
-            if scenario.split("_")[-1] == "lowflex":
-                scn = scenario.split("_")[0]
-            else:
-                scn = scenario
-            edisgo_grid = self._run_edisgo_task_setup_grid(
-                mv_grid_id, scn, logger, config, engine
-            )
-            edisgo_grid.save(
-                directory=os.path.join(results_dir, "grid_data"),
-                save_topology=True,
-                save_timeseries=True,
-                save_results=True,
-                save_electromobility=True,
-                save_dsm=True,
-                save_heatpump=True,
-                save_overlying_grid=False,
-                reduce_memory=True,
-                archive=True,
-                archive_type="zip",
-                parameters={"grid_expansion_results": ["equipment_changes"]},
-            )
-            if "2_specs_overlying_grid" not in config["eDisGo"]["tasks"]:
-                return {edisgo_grid.topology.id: results_dir}
+    #     Parameters
+    #     ----------
+    #     mv_grid_id : int
+    #         MV grid ID of the ding0 grid
 
-        # ################### task: specs overlying grid ##################
-        if "2_specs_overlying_grid" in config["eDisGo"]["tasks"]:
-            if edisgo_grid is None:
-                grid_path = os.path.join(results_dir, "grid_data.zip")
-                edisgo_grid = import_edisgo_from_files(
-                    edisgo_path=grid_path,
-                    import_topology=True,
-                    import_timeseries=True,
-                    import_results=True,
-                    import_electromobility=True,
-                    import_heat_pump=True,
-                    import_dsm=True,
-                    import_overlying_grid=False,
-                    from_zip_archive=True,
-                )
-                edisgo_grid.legacy_grids = False
-            edisgo_grid = self._run_edisgo_task_specs_overlying_grid(
-                edisgo_grid, scenario, logger, config, engine
-            )
-            zip_name = "grid_data_overlying_grid"
-            if scenario in ["eGon2035_lowflex", "eGon100RE_lowflex"]:
-                zip_name += "_lowflex"
-            edisgo_grid.save(
-                directory=os.path.join(results_dir, zip_name),
-                save_topology=True,
-                save_timeseries=True,
-                save_results=True,
-                save_electromobility=True,
-                save_dsm=True,
-                save_heatpump=True,
-                save_overlying_grid=True,
-                reduce_memory=True,
-                archive=True,
-                archive_type="zip",
-                parameters={"grid_expansion_results": ["equipment_changes"]},
-            )
+    #     Returns
+    #     -------
+    #     :class:`edisgo.EDisGo`
+    #         Returns the complete eDisGo container, also including results
 
-        # ################### task: temporal complexity reduction ##################
-        # task temporal complexity reduction is optional
-        if "3_temporal_complexity_reduction" in config["eDisGo"]["tasks"]:
-            if edisgo_grid is None:
-                if scenario in ["eGon2035", "eGon100RE"]:
-                    zip_name = "grid_data_overlying_grid.zip"
-                else:
-                    zip_name = "grid_data_overlying_grid_lowflex.zip"
-                grid_path = os.path.join(results_dir, zip_name)
-                edisgo_grid = import_edisgo_from_files(
-                    edisgo_path=grid_path,
-                    import_topology=True,
-                    import_timeseries=True,
-                    import_results=True,
-                    import_electromobility=True,
-                    import_heat_pump=True,
-                    import_dsm=True,
-                    import_overlying_grid=True,
-                    from_zip_archive=True,
-                )
-                edisgo_grid.legacy_grids = False
-            time_intervals = self._run_edisgo_task_temporal_complexity_reduction(
-                edisgo_grid, logger, config
-            )
+    #     """
+    #     if self._preset:
+    #         return self._run_one_grid_via_runner(mv_grid_id)
+    #     self._status_update(mv_grid_id, "start", show=False)
 
-        # determine whether work flow ends here or continues, and if it continues
-        # whether time intervals need to be loaded
-        if "4_optimisation" not in config["eDisGo"]["tasks"]:
-            return {edisgo_grid.topology.id: results_dir}
+    #     # ##################### general settings ####################
+    #     config = self._json_file
+    #     scenario = config["eTraGo"]["scn_name"]
+    #     engine = database.get_engine(config=config)
 
-        # ########################## task: optimisation ##########################
-        if "4_optimisation" in config["eDisGo"]["tasks"]:
-            if edisgo_grid is None:
-                if scenario in ["eGon2035", "eGon100RE"]:
-                    zip_name = "grid_data_overlying_grid.zip"
-                else:
-                    zip_name = "grid_data_overlying_grid_lowflex.zip"
-                grid_path = os.path.join(results_dir, zip_name)
-                edisgo_grid = import_edisgo_from_files(
-                    edisgo_path=grid_path,
-                    import_topology=True,
-                    import_timeseries=True,
-                    import_results=True,
-                    import_electromobility=True,
-                    import_heat_pump=True,
-                    import_dsm=True,
-                    import_overlying_grid=True,
-                    from_zip_archive=True,
-                )
-                edisgo_grid.legacy_grids = False
-            if time_intervals is None:
-                # load time intervals
-                time_intervals = pd.read_csv(
-                    os.path.join(results_dir, "selected_time_intervals.csv"),
-                    index_col=0,
-                )
-                for ti in time_intervals.index:
-                    time_steps = time_intervals.at[ti, "time_steps"]
-                    if time_steps is not None:
-                        time_intervals.at[ti, "time_steps"] = pd.date_range(
-                            start=time_steps.split("'")[1],
-                            periods=int(time_steps.split("=")[-2].split(",")[0]),
-                            freq="H",
-                        )
-            edisgo_grid = self._run_edisgo_task_optimisation(
-                edisgo_grid, scenario, logger, time_intervals, results_dir
-            )
-            zip_name = "grid_data_optimisation"
-            if scenario in ["eGon2035_lowflex", "eGon100RE_lowflex"]:
-                zip_name += "_lowflex"
-            edisgo_grid.save(
-                directory=os.path.join(results_dir, zip_name),
-                save_topology=True,
-                save_timeseries=True,
-                save_results=True,
-                save_opf_results=True,
-                save_electromobility=False,
-                save_dsm=False,
-                save_heatpump=False,
-                save_overlying_grid=False,
-                reduce_memory=True,
-                archive=True,
-                archive_type="zip",
-                parameters={"grid_expansion_results": ["equipment_changes"]},
-            )
-            if "5_grid_reinforcement" not in config["eDisGo"]["tasks"]:
-                return {edisgo_grid.topology.id: results_dir}
+    #     # results directory
+    #     results_dir = os.path.join(self._results, str(mv_grid_id))
+    #     if not os.path.exists(results_dir):
+    #         os.makedirs(results_dir)
 
-        # ########################## reinforcement ##########################
-        if "5_grid_reinforcement" in config["eDisGo"]["tasks"]:
-            if edisgo_grid is None:
-                if scenario in ["eGon2035", "eGon100RE"]:
-                    zip_name = "grid_data_optimisation.zip"
-                else:
-                    zip_name = "grid_data_optimisation_lowflex.zip"
-                grid_path = os.path.join(results_dir, zip_name)
-                edisgo_grid = import_edisgo_from_files(
-                    edisgo_path=grid_path,
-                    import_topology=True,
-                    import_timeseries=True,
-                    import_results=True,
-                    import_electromobility=False,
-                    import_heat_pump=False,
-                    import_dsm=False,
-                    import_overlying_grid=False,
-                    from_zip_archive=True,
-                )
-                edisgo_grid.legacy_grids = False
-            edisgo_grid = self._run_edisgo_task_grid_reinforcement(edisgo_grid, logger)
-            edisgo_grid.save(
-                directory=os.path.join(
-                    results_dir, f"grid_data_reinforcement_{scenario}"
-                ),
-                save_topology=True,
-                save_timeseries=True,
-                save_results=True,
-                save_electromobility=False,
-                save_dsm=False,
-                save_heatpump=False,
-                save_overlying_grid=False,
-                reduce_memory=True,
-                archive=True,
-                archive_type="zip",
-            )
+    #     # logger
+    #     if self._parallelization:
+    #         stream_level = None
+    #     else:
+    #         stream_level = "debug"
+    #     setup_logger(
+    #         loggers=[
+    #             # {"name": "root", "file_level": None, "stream_level": None},
+    #             # {"name": "ego", "file_level": None, "stream_level": None},
+    #             {"name": "edisgo", "file_level": "debug", "stream_level": stream_level},
+    #         ],
+    #         file_name=f"run_edisgo_{mv_grid_id}.log",
+    #         log_dir=results_dir,
+    #     )
+    #     # use edisgo logger in order to have all logging information for one grid go
+    #     # to the same file
+    #     logger = logging.getLogger("edisgo.external.ego._run_edisgo")
 
-        self._status_update(mv_grid_id, "end")
+    #     edisgo_grid = None
+    #     time_intervals = None
 
-        return {edisgo_grid.topology.id: results_dir}
+    #     # ################### task: setup grid ##################
+    #     if "1_setup_grid" in config["eDisGo"]["tasks"]:
+    #         # data is always imported for the full flex scenario, wherefore in case
+    #         # a low-flex scenario is given, the lowflex-extension is dropped for the
+    #         # data import
+    #         if scenario.split("_")[-1] == "lowflex":
+    #             scn = scenario.split("_")[0]
+    #         else:
+    #             scn = scenario
+    #         edisgo_grid = self._run_edisgo_task_setup_grid(
+    #             mv_grid_id, scn, logger, config, engine
+    #         )
+    #         edisgo_grid.save(
+    #             directory=os.path.join(results_dir, "grid_data"),
+    #             save_topology=True,
+    #             save_timeseries=True,
+    #             save_results=True,
+    #             save_electromobility=True,
+    #             save_dsm=True,
+    #             save_heatpump=True,
+    #             save_overlying_grid=False,
+    #             reduce_memory=True,
+    #             archive=True,
+    #             archive_type="zip",
+    #             parameters={"grid_expansion_results": ["equipment_changes"]},
+    #         )
+    #         if "2_specs_overlying_grid" not in config["eDisGo"]["tasks"]:
+    #             return {edisgo_grid.topology.id: results_dir}
+
+    #     # ################### task: specs overlying grid ##################
+    #     if "2_specs_overlying_grid" in config["eDisGo"]["tasks"]:
+    #         if edisgo_grid is None:
+    #             grid_path = os.path.join(results_dir, "grid_data.zip")
+    #             edisgo_grid = import_edisgo_from_files(
+    #                 edisgo_path=grid_path,
+    #                 import_topology=True,
+    #                 import_timeseries=True,
+    #                 import_results=True,
+    #                 import_electromobility=True,
+    #                 import_heat_pump=True,
+    #                 import_dsm=True,
+    #                 import_overlying_grid=False,
+    #                 from_zip_archive=True,
+    #             )
+    #             edisgo_grid.legacy_grids = False
+    #         edisgo_grid = self._run_edisgo_task_specs_overlying_grid(
+    #             edisgo_grid, scenario, logger, config, engine
+    #         )
+    #         zip_name = "grid_data_overlying_grid"
+    #         if scenario in ["eGon2035_lowflex", "eGon100RE_lowflex"]:
+    #             zip_name += "_lowflex"
+    #         edisgo_grid.save(
+    #             directory=os.path.join(results_dir, zip_name),
+    #             save_topology=True,
+    #             save_timeseries=True,
+    #             save_results=True,
+    #             save_electromobility=True,
+    #             save_dsm=True,
+    #             save_heatpump=True,
+    #             save_overlying_grid=True,
+    #             reduce_memory=True,
+    #             archive=True,
+    #             archive_type="zip",
+    #             parameters={"grid_expansion_results": ["equipment_changes"]},
+    #         )
+
+    #     # ################### task: temporal complexity reduction ##################
+    #     # task temporal complexity reduction is optional
+    #     if "3_temporal_complexity_reduction" in config["eDisGo"]["tasks"]:
+    #         if edisgo_grid is None:
+    #             if scenario in ["eGon2035", "eGon100RE"]:
+    #                 zip_name = "grid_data_overlying_grid.zip"
+    #             else:
+    #                 zip_name = "grid_data_overlying_grid_lowflex.zip"
+    #             grid_path = os.path.join(results_dir, zip_name)
+    #             edisgo_grid = import_edisgo_from_files(
+    #                 edisgo_path=grid_path,
+    #                 import_topology=True,
+    #                 import_timeseries=True,
+    #                 import_results=True,
+    #                 import_electromobility=True,
+    #                 import_heat_pump=True,
+    #                 import_dsm=True,
+    #                 import_overlying_grid=True,
+    #                 from_zip_archive=True,
+    #             )
+    #             edisgo_grid.legacy_grids = False
+    #         time_intervals = self._run_edisgo_task_temporal_complexity_reduction(
+    #             edisgo_grid, logger, config
+    #         )
+
+    #     # determine whether work flow ends here or continues, and if it continues
+    #     # whether time intervals need to be loaded
+    #     if "4_optimisation" not in config["eDisGo"]["tasks"]:
+    #         return {edisgo_grid.topology.id: results_dir}
+
+    #     # ########################## task: optimisation ##########################
+    #     if "4_optimisation" in config["eDisGo"]["tasks"]:
+    #         if edisgo_grid is None:
+    #             if scenario in ["eGon2035", "eGon100RE"]:
+    #                 zip_name = "grid_data_overlying_grid.zip"
+    #             else:
+    #                 zip_name = "grid_data_overlying_grid_lowflex.zip"
+    #             grid_path = os.path.join(results_dir, zip_name)
+    #             edisgo_grid = import_edisgo_from_files(
+    #                 edisgo_path=grid_path,
+    #                 import_topology=True,
+    #                 import_timeseries=True,
+    #                 import_results=True,
+    #                 import_electromobility=True,
+    #                 import_heat_pump=True,
+    #                 import_dsm=True,
+    #                 import_overlying_grid=True,
+    #                 from_zip_archive=True,
+    #             )
+    #             edisgo_grid.legacy_grids = False
+    #         if time_intervals is None:
+    #             # load time intervals
+    #             time_intervals = pd.read_csv(
+    #                 os.path.join(results_dir, "selected_time_intervals.csv"),
+    #                 index_col=0,
+    #             )
+    #             for ti in time_intervals.index:
+    #                 time_steps = time_intervals.at[ti, "time_steps"]
+    #                 if time_steps is not None:
+    #                     time_intervals.at[ti, "time_steps"] = pd.date_range(
+    #                         start=time_steps.split("'")[1],
+    #                         periods=int(time_steps.split("=")[-2].split(",")[0]),
+    #                         freq="H",
+    #                     )
+    #         edisgo_grid = self._run_edisgo_task_optimisation(
+    #             edisgo_grid, scenario, logger, time_intervals, results_dir
+    #         )
+    #         zip_name = "grid_data_optimisation"
+    #         if scenario in ["eGon2035_lowflex", "eGon100RE_lowflex"]:
+    #             zip_name += "_lowflex"
+    #         edisgo_grid.save(
+    #             directory=os.path.join(results_dir, zip_name),
+    #             save_topology=True,
+    #             save_timeseries=True,
+    #             save_results=True,
+    #             save_opf_results=True,
+    #             save_electromobility=False,
+    #             save_dsm=False,
+    #             save_heatpump=False,
+    #             save_overlying_grid=False,
+    #             reduce_memory=True,
+    #             archive=True,
+    #             archive_type="zip",
+    #             parameters={"grid_expansion_results": ["equipment_changes"]},
+    #         )
+    #         if "5_grid_reinforcement" not in config["eDisGo"]["tasks"]:
+    #             return {edisgo_grid.topology.id: results_dir}
+
+    #     # ########################## reinforcement ##########################
+    #     if "5_grid_reinforcement" in config["eDisGo"]["tasks"]:
+    #         if edisgo_grid is None:
+    #             if scenario in ["eGon2035", "eGon100RE"]:
+    #                 zip_name = "grid_data_optimisation.zip"
+    #             else:
+    #                 zip_name = "grid_data_optimisation_lowflex.zip"
+    #             grid_path = os.path.join(results_dir, zip_name)
+    #             edisgo_grid = import_edisgo_from_files(
+    #                 edisgo_path=grid_path,
+    #                 import_topology=True,
+    #                 import_timeseries=True,
+    #                 import_results=True,
+    #                 import_electromobility=False,
+    #                 import_heat_pump=False,
+    #                 import_dsm=False,
+    #                 import_overlying_grid=False,
+    #                 from_zip_archive=True,
+    #             )
+    #             edisgo_grid.legacy_grids = False
+    #         edisgo_grid = self._run_edisgo_task_grid_reinforcement(edisgo_grid, logger)
+    #         edisgo_grid.save(
+    #             directory=os.path.join(
+    #                 results_dir, f"grid_data_reinforcement_{scenario}"
+    #             ),
+    #             save_topology=True,
+    #             save_timeseries=True,
+    #             save_results=True,
+    #             save_electromobility=False,
+    #             save_dsm=False,
+    #             save_heatpump=False,
+    #             save_overlying_grid=False,
+    #             reduce_memory=True,
+    #             archive=True,
+    #             archive_type="zip",
+    #         )
+
+    #     self._status_update(mv_grid_id, "end")
+
+    #     return {edisgo_grid.topology.id: results_dir}
 
     def _run_edisgo_task_setup_grid(self, mv_grid_id, scenario, logger, config, engine):
         """
