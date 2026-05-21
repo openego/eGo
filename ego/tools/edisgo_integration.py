@@ -771,7 +771,7 @@ class EDisGoNetworks:
         os.makedirs(output_dir, exist_ok=True)
 
         for key, series in overlying_grid_data.items():
-            if (key != "timeindex") & (type(series)==pd.Series):
+            if (key != "timeindex") & (type(series) in [pd.Series, pd.DataFrame]):
                 filepath = os.path.join(output_dir, f"{key}.csv")
                 series.to_csv(filepath, index=True, header=True)
 
