@@ -187,10 +187,14 @@ class eTraGoResults(egoBasic):
                     csv_folder_name=self.json_file["eGo"].get("csv_import_eTraGo")
                 )
 
+                # Temporary fix if only disaggregated network was imported
+                if not self.etrago.disaggregated_network:
+                    self.etrago.disaggregated_network = self.etrago.network
+
             else:
                 logger.info("Create eTraGo network calcualted by eGo")
 
-                run_etrago(args=self.json_file["eTraGo"], json_path=None)
+                self.etrago = run_etrago(args=self.json_file["eTraGo"], json_path=None)
 
 
 class eDisGoResults(eTraGoResults):
