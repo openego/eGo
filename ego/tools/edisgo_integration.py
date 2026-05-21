@@ -733,15 +733,26 @@ class EDisGoNetworks:
         overlying_grid_data = None
         if self._json_file.get("eGo", {}).get("eTraGo"):
             if self._json_file.get("eDisGo", {}).get("overlying_grid_source") == "etrago":
-
                 overlying_grid_data = get_etrago_results_per_bus(
                     str(mv_grid_id),
                     self._etrago_network,
                     self._pf_post_lopf["active"],
                     self._max_cos_phi_renewable,
                 )
+            else:
+                overlying_grid_data = get_etrago_results_per_bus(
+                    str(mv_grid_id),
+                    self._etrago_network,
+                    self._pf_post_lopf,
+                    self._max_cos_phi_renewable,
+                )
 
-                self._export_overlying_grid_data(mv_grid_id, path=results_dir)
+            os.makedirs(self._results+"/overlying_grid", exist_ok=True)
+            self._export_overlying_grid_data(
+                overlying_grid_data,
+                mv_grid_id,
+                path=self._results+"/overlying_grid/"
+                )
 
         cfg = self._build_run_edisgo_config(mv_grid_id)
         logger.info(
@@ -749,21 +760,14 @@ class EDisGoNetworks:
             mv_grid_id, self._preset,
         )
 
-
         edisgo_grid = edisgo_runner(cfg,overlying_grid_data=overlying_grid_data)
         self._status_update(mv_grid_id, "end")
         return edisgo_grid
 
 
-    def _export_overlying_grid_data(self, mv_grid_id, path):
-        overlying_grid_data = get_etrago_results_per_bus(
-            str(mv_grid_id),
-            self._etrago_network,
-            self._pf_post_lopf["active"],
-            self._max_cos_phi_renewable,
-            )
+    def _export_overlying_grid_data(self, overlying_grid_data, mv_grid_id, path):
 
-        output_dir = path + f"/overlying_grid_data_{str(mv_grid_id)}"
+        output_dir = path + f"{str(mv_grid_id)}/"
         os.makedirs(output_dir, exist_ok=True)
 
         for key, series in overlying_grid_data.items():
