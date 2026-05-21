@@ -188,7 +188,7 @@ class eTraGoResults(egoBasic):
                 )
 
                 # Temporary fix if only disaggregated network was imported
-                if not self.etrago.disaggregated_network:
+                if len(self.etrago.disaggregated_network.buses)==0:
                     self.etrago.disaggregated_network = self.etrago.network
 
             else:
