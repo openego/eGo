@@ -29,14 +29,16 @@
   "eTraGo": {
     "scn_name": "eGon2035",
     "db": "egon-data",
-    "extendable": []
+    "extendable": [],
+    "start_snapshot":1,
+    "end_snapshot":8760
   },
 
   "eDisGo": {
     "overlying_grid": true,
-    "overlying_grid_source": "/storage/JoDa/edisgo_playground/overlying_grid_32377",
+    "overlying_grid_source": "path/to/overlying_grid/32377",
     "preset": "uc4_example",
-    "grid_path": "/home/gurobi/.ding0/2024-07-25T17:38:34_new_planning_new_edisgo/ding0_grids",
+    "grid_path": "path/to/grids",
     "legacy_ding0_grids": false,
     "choice_mode": "manual",
     "cluster_attributes": [],
