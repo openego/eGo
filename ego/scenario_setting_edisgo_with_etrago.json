@@ -54,7 +54,7 @@
   "eDisGo": {
     "overlying_grid": true,
     "overlying_grid_source": "etrago",
-    "preset": "uc4_example_no_emob",
+    "preset": "uc4_example_overlying_grid",
     "grid_path": "/home/clara/edisgo/grids",
     "legacy_ding0_grids": false,
     "choice_mode": "manual",
