@@ -296,8 +296,8 @@ class eGo(eDisGoResults):
             _grid_ehv = self.etrago.grid_investment_costs
             _grid_ehv["component"] = "grid"
 
-            self._total_inv_cost = self._total_inv_cost.append(
-                _grid_ehv, ignore_index=True
+            self._total_inv_cost = pd.concat([self._total_inv_cost,
+                _grid_ehv], ignore_index=True
             )
 
         _storage = None
@@ -305,8 +305,8 @@ class eGo(eDisGoResults):
             _storage = self.etrago.storage_investment_costs
             _storage["component"] = "storage"
 
-            self._total_inv_cost = self._total_inv_cost.append(
-                _storage, ignore_index=True
+            self._total_inv_cost = pd.concat([self._total_inv_cost,
+                _storage], ignore_index=True
             )
 
         _grid_mv_lv = None
@@ -317,8 +317,8 @@ class eGo(eDisGoResults):
                 _grid_mv_lv["component"] = "grid"
                 _grid_mv_lv["differentiation"] = "domestic"
 
-                self._total_inv_cost = self._total_inv_cost.append(
-                    _grid_mv_lv, ignore_index=True
+                self._total_inv_cost = pd.concat([self._total_inv_cost,
+                    _grid_mv_lv], ignore_index=True
                 )
 
         # add overnight costs
@@ -397,7 +397,7 @@ class eGo(eDisGoResults):
                 }
 
                 new_storage_row = pd.DataFrame(new_storage_row)
-                costs_df = costs_df.append(new_storage_row)
+                costs_df = pd.concat([costs_df, new_storage_row], ignore_index=True)
 
                 self._total_investment_costs = costs_df
         except:  # noqa: E722

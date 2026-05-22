@@ -524,8 +524,8 @@ def edisgo_grid_investment(edisgo, json_file):
         )
 
         # Append costs of this grid
-        costs = costs.append(
-            costs_single[["voltage_level", "capital_cost", "overnight_costs"]],
+        costs = pd.concat([costs, 
+            costs_single[["voltage_level", "capital_cost", "overnight_costs"]]],
             ignore_index=True,
         )
 
