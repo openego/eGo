@@ -494,13 +494,12 @@ def edisgo_grid_investment(edisgo, json_file):
 
     # Loop through all calculated eDisGo grids
     for key, value in edisgo.network.items():
-
-        if not hasattr(value, "network"):
+        if not hasattr(value, "results"):
             logger.warning("No results available for grid {}".format(key))
             continue
 
         # eDisGo results (overnight costs) for this grid
-        costs_single = value.network.results.grid_expansion_costs
+        costs_single = value.results.grid_expansion_costs
         costs_single.rename(columns={"total_costs": "overnight_costs"}, inplace=True)
 
         # continue if this grid was not reinforced
@@ -541,17 +540,17 @@ def edisgo_grid_investment(edisgo, json_file):
             aggr_costs[["capital_cost", "overnight_costs"]] * 1000
         )
 
-        successfull_grids = edisgo.successfull_grids
-        if successfull_grids < 1:
+        successful_grids = edisgo.successful_grids
+        if successful_grids < 1:
             logger.warning(
                 "Only {} % of the grids were calculated.\n".format(
-                    "{:,.2f}".format(successfull_grids * 100)
+                    "{:,.2f}".format(successful_grids * 100)
                 )
                 + "Costs are extrapolated..."
             )
 
             aggr_costs[["capital_cost", "overnight_costs"]] = (
-                aggr_costs[["capital_cost", "overnight_costs"]] / successfull_grids
+                aggr_costs[["capital_cost", "overnight_costs"]] / successful_grids
             )
 
     return aggr_costs
