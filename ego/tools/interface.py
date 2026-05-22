@@ -218,35 +218,35 @@ def get_etrago_results_per_bus(bus_id, etrago_obj, pf_post_lopf, max_cos_phi_ren
             Type: pd.Series
             Unit: MW
 
-        * 'heat_pump_rural_active_power'
+        * 'heat_pump_decentral_active_power'
             Active power time series of PtH units for individual heating at the given
             bus.
             Type: pd.Series
             Unit: MW
 
-        * 'heat_pump_rural_reactive_power'
+        * 'heat_pump_decentral_reactive_power'
             Reactive power time series of PtH units for individual heating at the given
             bus.
             Type: pd.Series
             Unit: MVar
 
-        * 'heat_pump_rural_p_nom'
+        * 'heat_pump_decentral_p_nom'
             Nominal power of all PtH units for individual heating at the given bus.
             Type: float
             Unit: MW
 
-        * 'thermal_storage_rural_capacity'
+        * 'thermal_storage_decentral_capacity'
             Capacity of thermal storage units in individual heating.
             Type: float
             Unit: MWh
 
-        * 'thermal_storage_rural_efficiency'
+        * 'thermal_storage_decentral_efficiency'
             Charging and discharging efficiency of thermal storage units in individual
             heating.
             Type: float
             Unit: p.u.
 
-        * 'thermal_storage_rural_soc'
+        * 'thermal_storage_decentral_soc'
             SoC of central thermal storage units.
             Type: pd.Series
             Unit: p.u.
@@ -706,12 +706,12 @@ def get_etrago_results_per_bus(bus_id, etrago_obj, pf_post_lopf, max_cos_phi_ren
             heat_store_efficiency = 0
             soc_ts = pd.Series(0.0, index=timeseries_index)
 
-        results["heat_pump_rural_active_power"] = rural_heat_df_p
-        results["heat_pump_rural_reactive_power"] = rural_heat_df_q
-        results["heat_pump_rural_p_nom"] = rural_heat_p_nom
-        results["thermal_storage_rural_capacity"] = rural_heat_store_capacity
-        results["thermal_storage_rural_efficiency"] = heat_store_efficiency
-        results["thermal_storage_rural_soc"] = soc_ts
+        results["heat_pump_decentral_active_power"] = rural_heat_df_p
+        results["heat_pump_decentral_reactive_power"] = rural_heat_df_q
+        results["heat_pump_decentral_p_nom"] = rural_heat_p_nom
+        results["thermal_storage_decentral_capacity"] = rural_heat_store_capacity
+        results["thermal_storage_decentral_efficiency"] = heat_store_efficiency
+        results["thermal_storage_decentral_soc"] = soc_ts
 
     def bev_charger():
         # not needed in eDisGo in low flex scenario (bev_charger_df will be empty in
