@@ -731,22 +731,14 @@ class EDisGoNetworks:
         results_dir = os.path.join(self._results, str(mv_grid_id))
         os.makedirs(results_dir, exist_ok=True)
         overlying_grid_data = None
-        if self._json_file.get("eGo", {}).get("eTraGo"):
-            if self._json_file.get("eDisGo", {}).get("overlying_grid_source") == "etrago":
-                overlying_grid_data = get_etrago_results_per_bus(
+        source = self._json_file.get("eDisGo", {}).get("overlying_grid_source")
+        if source == "etrago":
+            overlying_grid_data = get_etrago_results_per_bus(
                     str(mv_grid_id),
                     self._etrago_network,
                     self._pf_post_lopf["active"],
                     self._max_cos_phi_renewable,
                 )
-            else:
-                overlying_grid_data = get_etrago_results_per_bus(
-                    str(mv_grid_id),
-                    self._etrago_network,
-                    self._pf_post_lopf,
-                    self._max_cos_phi_renewable,
-                )
-
             os.makedirs(self._results+"/overlying_grid", exist_ok=True)
             self._export_overlying_grid_data(
                 overlying_grid_data,
@@ -759,6 +751,7 @@ class EDisGoNetworks:
             "MV grid %s: delegating to edisgo.run.run_edisgo (preset=%s)",
             mv_grid_id, self._preset,
         )
+
 
         edisgo_grid = edisgo_runner(cfg,overlying_grid_data=overlying_grid_data)
         self._status_update(mv_grid_id, "end")
@@ -1918,9 +1911,12 @@ class EDisGoNetworks:
         for idx, row in self._grid_choice.iterrows():
             mv_grid_id = int(row["the_selected_network_id"])
 
+            zip_path = os.path.join(
+                self._csv_import, str(mv_grid_id), "main.zip"
+            )
             try:
                 edisgo_grid = import_edisgo_from_files(
-                    edisgo_path=os.path.join(self._csv_import, str(mv_grid_id)),
+                    edisgo_path=zip_path,
                     import_topology=True,
                     import_timeseries=False,
                     import_results=True,
