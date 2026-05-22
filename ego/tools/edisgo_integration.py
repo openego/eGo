@@ -113,7 +113,20 @@ class EDisGoNetworks:
         if self._csv_import:
             self._load_edisgo_results()
             self._successful_grids = self._successful_grids()
-            self._grid_investment_costs = edisgo_grid_investment(self, self._json_file)
+            etrago_cfg = self._json_file.get("eTraGo", {})
+            if (
+                self._etrago_network is not None
+                and etrago_cfg.get("end_snapshot") is not None
+                and etrago_cfg.get("start_snapshot") is not None
+            ):
+                self._grid_investment_costs = edisgo_grid_investment(
+                    self, self._json_file
+                )
+            else:
+                logger.info(
+                    "Skipping edisgo_grid_investment: no eTraGo snapshots."
+                )
+                self._grid_investment_costs = None
 
         else:
             # Only clustering results
@@ -133,9 +146,21 @@ class EDisGoNetworks:
 
                 self._successful_grids = self._successful_grids()
 
-                self._grid_investment_costs = edisgo_grid_investment(
-                    self, self._json_file
-                )
+                etrago_cfg = self._json_file.get("eTraGo", {})
+                if (
+                    self._etrago_network is not None
+                    and etrago_cfg.get("end_snapshot") is not None
+                    and etrago_cfg.get("start_snapshot") is not None
+                ):
+                    self._grid_investment_costs = edisgo_grid_investment(
+                        self, self._json_file
+                    )
+                else:
+                    logger.info(
+                        "Skipping edisgo_grid_investment: no eTraGo snapshots "
+                        "configured (annuity scaling requires eTraGo subset)."
+                    )
+                    self._grid_investment_costs = None
 
     @property
     def network(self):
@@ -717,8 +742,14 @@ class EDisGoNetworks:
             if ssh_block is not None:
                 cfg["database"]["ssh"] = ssh_block
         source = self._json_file.get("eDisGo", {}).get("overlying_grid_source")
-        if source and source != "etrago":
+        if source == "etrago":
+            pass  # overlying_grid_data passed via runner function arg
+        elif source:
             cfg["overlying_grid"] = {"path": source}
+        else:
+            # No source set → disable overlying grid entirely (overrides any
+            # path that may be baked into the preset).
+            cfg["overlying_grid"] = None
         return cfg
 
     def _run_one_grid_via_runner(self, mv_grid_id):
