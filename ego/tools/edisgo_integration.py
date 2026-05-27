@@ -717,8 +717,20 @@ class EDisGoNetworks:
             if ssh_block is not None:
                 cfg["database"]["ssh"] = ssh_block
         source = self._json_file.get("eDisGo", {}).get("overlying_grid_source")
-        if source and source != "etrago":
-            cfg["overlying_grid"] = {"path": source}
+        overlying_grid = self._json_file.get("eDisGo", {}).get("overlying_grid")
+        if overlying_grid:
+            if source == "etrago":
+                cfg["overlying_grid"] = {"enabled": True, "source": "etrago"}
+            elif source:
+                cfg["overlying_grid"] = {
+                    "enabled": True,
+                    "source": "csv",
+                    "path": os.path.join(source, str(mv_grid_id)),
+                }
+            else:
+                cfg["overlying_grid"] = {"enabled": False}
+        else:
+            cfg["overlying_grid"] = {"enabled": False}
         return cfg
 
     def _run_one_grid_via_runner(self, mv_grid_id):
@@ -732,7 +744,10 @@ class EDisGoNetworks:
         os.makedirs(results_dir, exist_ok=True)
         overlying_grid_data = None
         if self._json_file.get("eGo", {}).get("eTraGo"):
-            if self._json_file.get("eDisGo", {}).get("overlying_grid_source") == "etrago":
+            if (self._json_file.get("eDisGo", {}).get("overlying_grid_source") == "etrago"  
+            and self._json_file.get("eDisGo", {}).get("overlying_grid")):
+                # if instead of "etrago" a file path is passed as source for the overlying grid data, 
+                # tha data is loaded inside of edisgo from the provided directory
                 overlying_grid_data = get_etrago_results_per_bus(
                     str(mv_grid_id),
                     self._etrago_network,
