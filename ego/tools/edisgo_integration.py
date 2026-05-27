@@ -113,7 +113,20 @@ class EDisGoNetworks:
         if self._csv_import:
             self._load_edisgo_results()
             self._successful_grids = self._successful_grids()
-            self._grid_investment_costs = edisgo_grid_investment(self, self._json_file)
+            etrago_cfg = self._json_file.get("eTraGo", {})
+            if (
+                self._etrago_network is not None
+                and etrago_cfg.get("end_snapshot") is not None
+                and etrago_cfg.get("start_snapshot") is not None
+            ):
+                self._grid_investment_costs = edisgo_grid_investment(
+                    self, self._json_file
+                )
+            else:
+                logger.info(
+                    "Skipping edisgo_grid_investment: no eTraGo snapshots."
+                )
+                self._grid_investment_costs = None
 
         else:
             # Only clustering results
@@ -133,9 +146,21 @@ class EDisGoNetworks:
 
                 self._successful_grids = self._successful_grids()
 
-                self._grid_investment_costs = edisgo_grid_investment(
-                    self, self._json_file
-                )
+                etrago_cfg = self._json_file.get("eTraGo", {})
+                if (
+                    self._etrago_network is not None
+                    and etrago_cfg.get("end_snapshot") is not None
+                    and etrago_cfg.get("start_snapshot") is not None
+                ):
+                    self._grid_investment_costs = edisgo_grid_investment(
+                        self, self._json_file
+                    )
+                else:
+                    logger.info(
+                        "Skipping edisgo_grid_investment: no eTraGo snapshots "
+                        "configured (annuity scaling requires eTraGo subset)."
+                    )
+                    self._grid_investment_costs = None
 
     @property
     def network(self):
@@ -1907,9 +1932,12 @@ class EDisGoNetworks:
         for idx, row in self._grid_choice.iterrows():
             mv_grid_id = int(row["the_selected_network_id"])
 
+            zip_path = os.path.join(
+                self._csv_import, str(mv_grid_id), "main.zip"
+            )
             try:
                 edisgo_grid = import_edisgo_from_files(
-                    edisgo_path=os.path.join(self._csv_import, str(mv_grid_id)),
+                    edisgo_path=zip_path,
                     import_topology=True,
                     import_timeseries=False,
                     import_results=True,
