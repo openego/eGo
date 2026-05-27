@@ -742,14 +742,20 @@ class EDisGoNetworks:
             if ssh_block is not None:
                 cfg["database"]["ssh"] = ssh_block
         source = self._json_file.get("eDisGo", {}).get("overlying_grid_source")
-        if source == "etrago":
-            pass  # overlying_grid_data passed via runner function arg
-        elif source:
-            cfg["overlying_grid"] = {"path": source}
+        overlying_grid = self._json_file.get("eDisGo", {}).get("overlying_grid")
+        if overlying_grid:
+            if source == "etrago":
+                cfg["overlying_grid"] = {"enabled": True, "source": "etrago"}
+            elif source:
+                cfg["overlying_grid"] = {
+                    "enabled": True,
+                    "source": "csv",
+                    "path": os.path.join(source, str(mv_grid_id)),
+                }
+            else:
+                cfg["overlying_grid"] = {"enabled": False}
         else:
-            # No source set → disable overlying grid entirely (overrides any
-            # path that may be baked into the preset).
-            cfg["overlying_grid"] = None
+            cfg["overlying_grid"] = {"enabled": False}
         return cfg
 
     def _run_one_grid_via_runner(self, mv_grid_id):
@@ -762,14 +768,17 @@ class EDisGoNetworks:
         results_dir = os.path.join(self._results, str(mv_grid_id))
         os.makedirs(results_dir, exist_ok=True)
         overlying_grid_data = None
-        source = self._json_file.get("eDisGo", {}).get("overlying_grid_source")
-        if source == "etrago":
-            overlying_grid_data = get_etrago_results_per_bus(
-                str(mv_grid_id),
-                self._etrago_network,
-                pf_post_lopf=True,
-                max_cos_phi_ren=None,
-            )
+        if self._json_file.get("eGo", {}).get("eTraGo"):
+            if (self._json_file.get("eDisGo", {}).get("overlying_grid_source") == "etrago"  
+            and self._json_file.get("eDisGo", {}).get("overlying_grid")):
+                # if instead of "etrago" a file path is passed as source for the overlying grid data, 
+                # tha data is loaded inside of edisgo from the provided directory
+                overlying_grid_data = get_etrago_results_per_bus(
+                    str(mv_grid_id),
+                    self._etrago_network,
+                    pf_post_lopf=True,
+                    max_cos_phi_ren=None
+                )
         cfg = self._build_run_edisgo_config(mv_grid_id)
         logger.info(
             "MV grid %s: delegating to edisgo.run.run_edisgo (preset=%s)",
