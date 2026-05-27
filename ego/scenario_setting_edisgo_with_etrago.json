@@ -40,7 +40,7 @@
         "active": true
     },
     "start_snapshot": 1,
-    "end_snapshot": 24,
+    "end_snapshot": 25,
     "scn_name": "eGon2035",
     "spatial_disaggregation": "uniform",
     "skip_snapshots": false,
