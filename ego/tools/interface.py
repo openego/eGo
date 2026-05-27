@@ -95,6 +95,11 @@ class ETraGoMinimalData:
                 "storage_units": ["p", "q", "state_of_charge"],
                 "loads": ["p"],
             }
+
+            # If etrago ran a pf_post_lopf, use p_set of generators to exclude slack
+            if not etrago_network_obj.generators_t.q.empty:
+                attribute_to_save["generators"] = ["p_set", "p_max_pu", "q"]
+
             attribute_to_save = attribute_to_save[component]
 
             component_timeseries_dict = getattr(etrago_network_obj, component + "_t")
@@ -327,6 +332,7 @@ def get_etrago_results_per_bus(bus_id, etrago_obj, pf_post_lopf, max_cos_phi_ren
         dispatchable_gens_df.loc[gens.index, "carrier"] = "biomass_CHP"
         gens = dispatchable_gens_df[dispatchable_gens_df.carrier.isin(["reservoir"])]
         dispatchable_gens_df.loc[gens.index, "carrier"] = "run_of_river"
+
         for carrier in dispatchable_gens_df.carrier.unique():
             p_nom = dispatchable_gens_df.loc[
                 dispatchable_gens_df["carrier"] == carrier, "p_nom"
@@ -334,11 +340,14 @@ def get_etrago_results_per_bus(bus_id, etrago_obj, pf_post_lopf, max_cos_phi_ren
             columns_to_aggregate = dispatchable_gens_df[
                 dispatchable_gens_df["carrier"] == carrier
             ].index
-            dispatchable_gens_df_p[carrier] = (
-                etrago_obj.generators_t["p"][columns_to_aggregate].sum(axis="columns")
-                / p_nom
-            )
             if pf_post_lopf:
+                # If pf_post_lopf was executed, p includes the distributed Slack
+                # This is why p_set is used in case a pf was part of eTraGo
+                dispatchable_gens_df_p[carrier] = (
+                    etrago_obj.generators_t["p_set"][columns_to_aggregate].sum(axis="columns")
+                    / p_nom
+                )
+
                 dispatchable_gens_df_q[carrier] = (
                     etrago_obj.generators_t["q"][columns_to_aggregate].sum(
                         axis="columns"
@@ -346,6 +355,11 @@ def get_etrago_results_per_bus(bus_id, etrago_obj, pf_post_lopf, max_cos_phi_ren
                     / p_nom
                 )
             else:
+                dispatchable_gens_df_p[carrier] = (
+                    etrago_obj.generators_t["p"][columns_to_aggregate].sum(axis="columns")
+                    / p_nom
+                )
+
                 dispatchable_gens_df_q[carrier] = pd.Series(
                     data=0, index=timeseries_index, dtype=float
                 )
@@ -447,11 +461,11 @@ def get_etrago_results_per_bus(bus_id, etrago_obj, pf_post_lopf, max_cos_phi_ren
             ].index.values[0]
             p_nom_agg = agg_weather_dep_gens_df.loc[agg_idx, "p_nom"]
 
-            p_series = etrago_obj.generators_t["p"][index]
             p_max_pu_series = etrago_obj.generators_t["p_max_pu"][index]
             p_max_pu_normed_series = p_max_pu_series * p_nom / p_nom_agg
 
             if pf_post_lopf:
+                p_series = etrago_obj.generators_t["p_set"][index]
                 q_series = etrago_obj.generators_t["q"][index]
                 # If set limit maximum reactive power
                 if max_cos_phi_ren:
@@ -471,6 +485,7 @@ def get_etrago_results_per_bus(bus_id, etrago_obj, pf_post_lopf, max_cos_phi_ren
                         q_series[timestep] = q
                 q_normed_series = q_series / p_nom_agg
             else:
+                p_series = etrago_obj.generators_t["p"][index]
                 q_normed_series = pd.Series(0.0, index=timeseries_index)
 
             weather_dep_gens_df_pot_p[carrier] += p_max_pu_normed_series
