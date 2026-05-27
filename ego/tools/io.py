@@ -56,6 +56,8 @@ if "READTHEDOCS" not in os.environ:
         power_price_plot,
     )
     from ego.tools.utilities import get_scenario_setting
+    
+    from ego.mv_clustering import cluster_workflow, database
 
 logger = logging.getLogger("ego")
 
@@ -251,6 +253,14 @@ class eGo(eDisGoResults):
 
     def __init__(self, jsonpath, *args, **kwargs):
         self.jsonpath = jsonpath
+
+        self._json_file = get_scenario_setting(jsonpath=self.jsonpath)
+
+        # Perform MV grid clustering
+        # TODO: Use this clustering in eDisGoResults!
+        self._choice_mode = self._json_file["eDisGo"]["choice_mode"]
+        self.set_mvlv_grid_choice()      
+
         super(eGo, self).__init__(self, *args, **kwargs)
 
         # add total results here
@@ -539,6 +549,79 @@ class eGo(eDisGoResults):
         """Get iplot of results as html"""
         return igeoplot(self)
 
+    def _cluster_mv_grids(self):
+        """
+        Clusters the MV grids based on the attributes, for a given number
+        of MV grids
+
+        Returns
+        -------
+        :pandas:`pandas.DataFrame<dataframe>`
+            Dataframe containing the clustered MV grids and their weightings
+
+        """
+        cluster_df = cluster_workflow(config=self._json_file)
+        # Filter for clusters with representatives.
+        cluster_df = cluster_df[cluster_df["representative"].astype(bool)]
+        return cluster_df
+    
+    def set_mvlv_grid_choice(self):
+        """
+        Sets the grid choice based on the settings file
+
+        """
+
+        choice_df = pd.DataFrame(
+            columns=[
+                "no_of_points_per_cluster",
+                "the_selected_network_id",
+                "represented_grids",
+            ]
+        )
+
+        if self._choice_mode == "cluster":
+            cluster_df = self._cluster_mv_grids()
+
+            n_clusters = self._json_file["eDisGo"]["n_clusters"]
+            n_clusters_found = cluster_df.shape[0]
+            if n_clusters == n_clusters_found:
+                logger.info(f"Clustering to {n_clusters} MV grids")
+            else:
+                logger.warning(
+                    f"For {n_clusters} only for {n_clusters_found} clusters "
+                    f"found working grids."
+                )
+
+            choice_df["the_selected_network_id"] = cluster_df["representative"]
+            choice_df["no_of_points_per_cluster"] = cluster_df["n_grids_per_cluster"]
+            choice_df["represented_grids"] = cluster_df["represented_grids"]
+
+        elif self._choice_mode == "manual":
+            man_grids = self._edisgo_args["manual_grids"]
+
+            choice_df["the_selected_network_id"] = man_grids
+            choice_df["no_of_points_per_cluster"] = 1
+            choice_df["represented_grids"] = [
+                [mv_grid_id] for mv_grid_id in choice_df["the_selected_network_id"]
+            ]
+
+            logger.info("Calculating manually chosen MV grids {}".format(man_grids))
+
+        elif self._choice_mode == "all":
+            mv_grids = self._check_available_mv_grids()
+
+            choice_df["the_selected_network_id"] = mv_grids
+            choice_df["no_of_points_per_cluster"] = 1
+            choice_df["represented_grids"] = [
+                [mv_grid_id] for mv_grid_id in choice_df["the_selected_network_id"]
+            ]
+
+            no_grids = len(mv_grids)
+            logger.info("Calculating all available {} MV grids".format(no_grids))
+
+        choice_df = choice_df.sort_values("no_of_points_per_cluster", ascending=False)
+
+        self.mvlv_grid_choice = choice_df
     # write_results_to_db():
     logging.info("Initialisation of eGo Results")
 
