@@ -407,10 +407,10 @@ class eGo(eDisGoResults):
         """
         Returns the all extended storage p_nom_opt in MW.
         """
-        etrago_network = self._etrago_disaggregated_network
+        etrago_network = self.etrago.disaggregated_network
 
         stor_df = etrago_network.storage_units.loc[
-            (etrago_network.storage_units["p_nom_extendable"] is True)
+            etrago_network.storage_units["p_nom_extendable"]
         ]
 
         stor_df = stor_df[["bus", "p_nom_opt"]]
@@ -423,11 +423,11 @@ class eGo(eDisGoResults):
         """
         Returns the storage p_nom_opt in MW, integrated in MV grids
         """
-        etrago_network = self._etrago_disaggregated_network
+        etrago_network = self.etrago.disaggregated_network
 
         min_extended = 0.3
         stor_df = etrago_network.storage_units.loc[
-            (etrago_network.storage_units["p_nom_extendable"] is True)
+            (etrago_network.storage_units["p_nom_extendable"])
             & (etrago_network.storage_units["p_nom_opt"] > min_extended)
             & (etrago_network.storage_units["max_hours"] <= 20.0)
         ]
