@@ -61,7 +61,7 @@ if "READTHEDOCS" not in os.environ:
         reduce_timeseries_data_to_given_timeindex,
     )
 
-    from ego.mv_clustering import cluster_workflow, database
+    #from ego.mv_clustering import cluster_workflow, database
     from ego.tools.economics import edisgo_grid_investment
     from ego.tools.interface import (
         ETraGoMinimalData,
@@ -91,11 +91,14 @@ class EDisGoNetworks:
 
     """
 
-    def __init__(self, json_file, etrago_network):
+    def __init__(self, json_file, etrago_network, mvlv_grid_choice):
 
         # Genral Json Inputs
         self._json_file = json_file
         self._set_scenario_settings()
+
+        # Set grid choice from eGo
+        self._grid_choice = mvlv_grid_choice
 
         # Create reduced eTraGo network
         self._etrago_network = ETraGoMinimalData(etrago_network)
@@ -113,26 +116,17 @@ class EDisGoNetworks:
             self._grid_investment_costs = edisgo_grid_investment(self, self._json_file)
 
         else:
-            # Only clustering results
-            if self._only_cluster:
-                self._set_grid_choice()
-                if self._results:
-                    self._save_edisgo_results()
-                self._grid_investment_costs = None
+            # Execute Functions
+            self._init_status()
+            self._run_edisgo_pool()
+            if self._results:
+                self._save_edisgo_results()
 
-            else:
-                # Execute Functions
-                self._set_grid_choice()
-                self._init_status()
-                self._run_edisgo_pool()
-                if self._results:
-                    self._save_edisgo_results()
+            self._successful_grids = self._successful_grids()
 
-                self._successful_grids = self._successful_grids()
-
-                self._grid_investment_costs = edisgo_grid_investment(
-                    self, self._json_file
-                )
+            self._grid_investment_costs = edisgo_grid_investment(
+                self, self._json_file
+            )
 
     @property
     def network(self):
@@ -501,21 +495,21 @@ class EDisGoNetworks:
                 fail += weight
         return success / total
 
-    def _cluster_mv_grids(self):
-        """
-        Clusters the MV grids based on the attributes, for a given number
-        of MV grids
+    # def _cluster_mv_grids(self):
+    #     """
+    #     Clusters the MV grids based on the attributes, for a given number
+    #     of MV grids
 
-        Returns
-        -------
-        :pandas:`pandas.DataFrame<dataframe>`
-            Dataframe containing the clustered MV grids and their weightings
+    #     Returns
+    #     -------
+    #     :pandas:`pandas.DataFrame<dataframe>`
+    #         Dataframe containing the clustered MV grids and their weightings
 
-        """
-        cluster_df = cluster_workflow(config=self._json_file)
-        # Filter for clusters with representatives.
-        cluster_df = cluster_df[cluster_df["representative"].astype(bool)]
-        return cluster_df
+    #     """
+    #     cluster_df = cluster_workflow(config=self._json_file)
+    #     # Filter for clusters with representatives.
+    #     cluster_df = cluster_df[cluster_df["representative"].astype(bool)]
+    #     return cluster_df
 
     def _identify_extended_storages(self):
 
@@ -564,63 +558,63 @@ class EDisGoNetworks:
                 mv_grids.append(int(file))
         return mv_grids
 
-    def _set_grid_choice(self):
-        """
-        Sets the grid choice based on the settings file
+    # def _set_grid_choice(self):
+    #     """
+    #     Sets the grid choice based on the settings file
 
-        """
+    #     """
 
-        choice_df = pd.DataFrame(
-            columns=[
-                "no_of_points_per_cluster",
-                "the_selected_network_id",
-                "represented_grids",
-            ]
-        )
+    #     choice_df = pd.DataFrame(
+    #         columns=[
+    #             "no_of_points_per_cluster",
+    #             "the_selected_network_id",
+    #             "represented_grids",
+    #         ]
+    #     )
 
-        if self._choice_mode == "cluster":
-            cluster_df = self._cluster_mv_grids()
+    #     if self._choice_mode == "cluster":
+    #         cluster_df = self._cluster_mv_grids()
 
-            n_clusters = self._json_file["eDisGo"]["n_clusters"]
-            n_clusters_found = cluster_df.shape[0]
-            if n_clusters == n_clusters_found:
-                logger.info(f"Clustering to {n_clusters} MV grids")
-            else:
-                logger.warning(
-                    f"For {n_clusters} only for {n_clusters_found} clusters "
-                    f"found working grids."
-                )
+    #         n_clusters = self._json_file["eDisGo"]["n_clusters"]
+    #         n_clusters_found = cluster_df.shape[0]
+    #         if n_clusters == n_clusters_found:
+    #             logger.info(f"Clustering to {n_clusters} MV grids")
+    #         else:
+    #             logger.warning(
+    #                 f"For {n_clusters} only for {n_clusters_found} clusters "
+    #                 f"found working grids."
+    #             )
 
-            choice_df["the_selected_network_id"] = cluster_df["representative"]
-            choice_df["no_of_points_per_cluster"] = cluster_df["n_grids_per_cluster"]
-            choice_df["represented_grids"] = cluster_df["represented_grids"]
+    #         choice_df["the_selected_network_id"] = cluster_df["representative"]
+    #         choice_df["no_of_points_per_cluster"] = cluster_df["n_grids_per_cluster"]
+    #         choice_df["represented_grids"] = cluster_df["represented_grids"]
 
-        elif self._choice_mode == "manual":
-            man_grids = self._edisgo_args["manual_grids"]
+    #     elif self._choice_mode == "manual":
+    #         man_grids = self._edisgo_args["manual_grids"]
 
-            choice_df["the_selected_network_id"] = man_grids
-            choice_df["no_of_points_per_cluster"] = 1
-            choice_df["represented_grids"] = [
-                [mv_grid_id] for mv_grid_id in choice_df["the_selected_network_id"]
-            ]
+    #         choice_df["the_selected_network_id"] = man_grids
+    #         choice_df["no_of_points_per_cluster"] = 1
+    #         choice_df["represented_grids"] = [
+    #             [mv_grid_id] for mv_grid_id in choice_df["the_selected_network_id"]
+    #         ]
 
-            logger.info("Calculating manually chosen MV grids {}".format(man_grids))
+    #         logger.info("Calculating manually chosen MV grids {}".format(man_grids))
 
-        elif self._choice_mode == "all":
-            mv_grids = self._check_available_mv_grids()
+    #     elif self._choice_mode == "all":
+    #         mv_grids = self._check_available_mv_grids()
 
-            choice_df["the_selected_network_id"] = mv_grids
-            choice_df["no_of_points_per_cluster"] = 1
-            choice_df["represented_grids"] = [
-                [mv_grid_id] for mv_grid_id in choice_df["the_selected_network_id"]
-            ]
+    #         choice_df["the_selected_network_id"] = mv_grids
+    #         choice_df["no_of_points_per_cluster"] = 1
+    #         choice_df["represented_grids"] = [
+    #             [mv_grid_id] for mv_grid_id in choice_df["the_selected_network_id"]
+    #         ]
 
-            no_grids = len(mv_grids)
-            logger.info("Calculating all available {} MV grids".format(no_grids))
+    #         no_grids = len(mv_grids)
+    #         logger.info("Calculating all available {} MV grids".format(no_grids))
 
-        choice_df = choice_df.sort_values("no_of_points_per_cluster", ascending=False)
+    #     choice_df = choice_df.sort_values("no_of_points_per_cluster", ascending=False)
 
-        self._grid_choice = choice_df
+    #     self._grid_choice = choice_df
 
     def _run_edisgo_pool(self):
         """

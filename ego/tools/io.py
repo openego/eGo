@@ -207,6 +207,7 @@ class eDisGoResults(eTraGoResults):
             self._edisgo = EDisGoNetworks(
                 json_file=self.json_file,
                 etrago_network=self.etrago.disaggregated_network,
+                mvlv_grid_choice=self.mvlv_grid_choice,
             )
         else:
             self._edisgo = None
