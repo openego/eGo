@@ -250,8 +250,7 @@ class eGo(eDisGoResults):
         self._json_file = get_scenario_setting(jsonpath=self.jsonpath)
 
         # Perform MV grid clustering
-        # TODO: Use this clustering in eDisGoResults!
-        self._choice_mode = self._json_file["eDisGo"]["choice_mode"]
+        self._mvlv_grid_choice_mode = self._json_file["eDisGo"]["choice_mode"]
         self.set_mvlv_grid_choice()      
 
         super(eGo, self).__init__(self, *args, **kwargs)
@@ -561,7 +560,7 @@ class eGo(eDisGoResults):
             ]
         )
 
-        if self._choice_mode == "cluster":
+        if self._mvlv_grid_choice_mode == "cluster":
             cluster_df = self._cluster_mv_grids()
 
             n_clusters = self._json_file["eDisGo"]["n_clusters"]
@@ -578,7 +577,7 @@ class eGo(eDisGoResults):
             choice_df["no_of_points_per_cluster"] = cluster_df["n_grids_per_cluster"]
             choice_df["represented_grids"] = cluster_df["represented_grids"]
 
-        elif self._choice_mode == "manual":
+        elif self._mvlv_grid_choice_mode == "manual":
             man_grids = self._edisgo_args["manual_grids"]
 
             choice_df["the_selected_network_id"] = man_grids
@@ -589,7 +588,7 @@ class eGo(eDisGoResults):
 
             logger.info("Calculating manually chosen MV grids {}".format(man_grids))
 
-        elif self._choice_mode == "all":
+        elif self._mvlv_grid_choice_mode == "all":
             mv_grids = self._check_available_mv_grids()
 
             choice_df["the_selected_network_id"] = mv_grids
