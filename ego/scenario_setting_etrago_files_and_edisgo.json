@@ -34,9 +34,9 @@
 
   "eDisGo": {
     "overlying_grid": false,
-    "overlying_grid_source": "/storage/JoDa/edisgo_playground/overlying_grid_data",
+    "overlying_grid_source": "path/to/overlying_grid/data",
     "preset": "uc4_example",
-    "grid_path": "/home/gurobi/.ding0/2024-07-25T17:38:34_new_planning_new_edisgo/ding0_grids",
+    "grid_path": "path/to/edsigo/grids",
     "legacy_ding0_grids": false,
     "choice_mode": "manual",
     "cluster_attributes": [],
@@ -48,7 +48,7 @@
     "max_workers": 1,
     "max_cos_phi_renewable": 0.9,
 
-    "results": "/storage/JoDa/ego/results",
+    "results": "path/to/results",
     "solver": "gurobi",
     "gridversion": null, 
 
