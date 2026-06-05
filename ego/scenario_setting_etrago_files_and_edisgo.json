@@ -33,7 +33,7 @@
   },
 
   "eDisGo": {
-    "overlying_grid": false,
+    "overlying_grid": true,
     "overlying_grid_source": "path/to/overlying_grid/data",
     "preset": "uc4_example",
     "grid_path": "path/to/edsigo/grids",
