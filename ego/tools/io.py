@@ -37,10 +37,6 @@ if "READTHEDOCS" not in os.environ:
     from egoio.tools import db
     from etrago import Etrago
     from etrago.appl import run_etrago
-    try:
-        from etrago.tools.io import load_config_file
-    except ImportError:
-        load_config_file = None
     from sqlalchemy import and_
     from sqlalchemy.orm import sessionmaker
 

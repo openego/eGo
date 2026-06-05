@@ -494,12 +494,16 @@ def edisgo_grid_investment(edisgo, json_file):
 
     # Loop through all calculated eDisGo grids
     for key, value in edisgo.network.items():
+
         if not hasattr(value, "results"):
             logger.warning("No results available for grid {}".format(key))
             continue
 
         # eDisGo results (overnight costs) for this grid
         costs_single = value.results.grid_expansion_costs
+        if costs_single is None or costs_single.empty:
+            logger.info("No expansion costs for grid {}".format(key))
+            continue
         costs_single.rename(columns={"total_costs": "overnight_costs"}, inplace=True)
 
         # continue if this grid was not reinforced
@@ -523,8 +527,11 @@ def edisgo_grid_investment(edisgo, json_file):
         )
 
         # Append costs of this grid
-        costs = pd.concat([costs, 
-            costs_single[["voltage_level", "capital_cost", "overnight_costs"]]],
+        costs = pd.concat(
+            [
+                costs,
+                costs_single[["voltage_level", "capital_cost", "overnight_costs"]],
+            ],
             ignore_index=True,
         )
 

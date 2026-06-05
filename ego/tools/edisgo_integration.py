@@ -113,7 +113,20 @@ class EDisGoNetworks:
         if self._csv_import:
             self._load_edisgo_results()
             self._successful_grids = self._successful_grids()
-            self._grid_investment_costs = edisgo_grid_investment(self, self._json_file)
+            etrago_cfg = self._json_file.get("eTraGo", {})
+            if (
+                self._etrago_network is not None
+                and etrago_cfg.get("end_snapshot") is not None
+                and etrago_cfg.get("start_snapshot") is not None
+            ):
+                self._grid_investment_costs = edisgo_grid_investment(
+                    self, self._json_file
+                )
+            else:
+                logger.info(
+                    "Skipping edisgo_grid_investment: no eTraGo snapshots."
+                )
+                self._grid_investment_costs = None
 
         else:
             # Only clustering results
@@ -133,9 +146,21 @@ class EDisGoNetworks:
 
                 self._successful_grids = self._successful_grids()
 
-                self._grid_investment_costs = edisgo_grid_investment(
-                    self, self._json_file
-                )
+                etrago_cfg = self._json_file.get("eTraGo", {})
+                if (
+                    self._etrago_network is not None
+                    and etrago_cfg.get("end_snapshot") is not None
+                    and etrago_cfg.get("start_snapshot") is not None
+                ):
+                    self._grid_investment_costs = edisgo_grid_investment(
+                        self, self._json_file
+                    )
+                else:
+                    logger.info(
+                        "Skipping edisgo_grid_investment: no eTraGo snapshots "
+                        "configured (annuity scaling requires eTraGo subset)."
+                    )
+                    self._grid_investment_costs = None
 
     @property
     def network(self):
@@ -717,8 +742,20 @@ class EDisGoNetworks:
             if ssh_block is not None:
                 cfg["database"]["ssh"] = ssh_block
         source = self._json_file.get("eDisGo", {}).get("overlying_grid_source")
-        if source and source != "etrago":
-            cfg["overlying_grid"] = {"path": source}
+        overlying_grid = self._json_file.get("eDisGo", {}).get("overlying_grid")
+        if overlying_grid:
+            if source == "etrago":
+                cfg["overlying_grid"] = {"enabled": True, "source": "etrago"}
+            elif source:
+                cfg["overlying_grid"] = {
+                    "enabled": True,
+                    "source": "csv",
+                    "path": os.path.join(source, str(mv_grid_id)),
+                }
+            else:
+                cfg["overlying_grid"] = {"enabled": False}
+        else:
+            cfg["overlying_grid"] = {"enabled": False}
         return cfg
 
     def _run_one_grid_via_runner(self, mv_grid_id):
@@ -731,21 +768,24 @@ class EDisGoNetworks:
         results_dir = os.path.join(self._results, str(mv_grid_id))
         os.makedirs(results_dir, exist_ok=True)
         overlying_grid_data = None
-        source = self._json_file.get("eDisGo", {}).get("overlying_grid_source")
-        if source == "etrago":
-            overlying_grid_data = get_etrago_results_per_bus(
+        if self._json_file.get("eGo", {}).get("eTraGo"):
+            if (self._json_file.get("eDisGo", {}).get("overlying_grid_source") == "etrago"  
+            and self._json_file.get("eDisGo", {}).get("overlying_grid")):
+                # if instead of "etrago" a file path is passed as source for the overlying grid data, 
+                # tha data is loaded inside of edisgo from the provided directory
+                overlying_grid_data = get_etrago_results_per_bus(
                     str(mv_grid_id),
                     self._etrago_network,
                     self._pf_post_lopf["active"],
                     self._max_cos_phi_renewable,
                 )
-            os.makedirs(self._results+"/overlying_grid", exist_ok=True)
-            self._export_overlying_grid_data(
-                overlying_grid_data,
-                mv_grid_id,
-                path=self._results+"/overlying_grid/"
-                )
 
+                os.makedirs(self._results+"/overlying_grid", exist_ok=True)
+                self._export_overlying_grid_data(
+                    overlying_grid_data,
+                    mv_grid_id,
+                    path=self._results+"/overlying_grid/"
+                    )
         cfg = self._build_run_edisgo_config(mv_grid_id)
         logger.info(
             "MV grid %s: delegating to edisgo.run.run_edisgo (preset=%s)",

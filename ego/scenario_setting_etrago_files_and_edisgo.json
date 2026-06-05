@@ -29,16 +29,14 @@
   "eTraGo": {
     "scn_name": "eGon2035",
     "db": "egon-data",
-    "extendable": [],
-    "start_snapshot":1,
-    "end_snapshot":8760
+    "extendable": []
   },
 
   "eDisGo": {
     "overlying_grid": true,
-    "overlying_grid_source": "path/to/overlying_grid/32377",
+    "overlying_grid_source": "path/to/overlying_grid/data",
     "preset": "uc4_example",
-    "grid_path": "path/to/grids",
+    "grid_path": "path/to/edsigo/grids",
     "legacy_ding0_grids": false,
     "choice_mode": "manual",
     "cluster_attributes": [],
@@ -50,11 +48,9 @@
     "max_workers": 1,
     "max_cos_phi_renewable": 0.9,
 
-    "results": "/storage/JoDa/results/uc4_example_MS",
+    "results": "path/to/results",
     "solver": "gurobi",
-    "gridversion": null,
-
-   
+    "gridversion": null, 
 
     "tasks": [
       "1_setup_grid",
@@ -66,6 +62,7 @@
       "import_electromobility_from_db",
       "apply_heat_pump_strategy",
       "oedb_ts",
+      "import_overlying_grid",
       "reactive_power",
       "check_integrity",
       "optimize",
