@@ -50,7 +50,7 @@ if "READTHEDOCS" not in os.environ:
     )
     from ego.tools.utilities import get_scenario_setting
     
-    from ego.mv_clustering import cluster_workflow, database
+    from ego.mv_clustering import cluster_workflow
 
 logger = logging.getLogger("ego")
 
