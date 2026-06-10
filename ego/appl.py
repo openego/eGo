@@ -48,8 +48,11 @@ if __name__ == "__main__":
 
     logger.info("Start calculation")
 
-    # ego = eGo(jsonpath="scenario_setting.json")
-    ego = eGo(jsonpath="scenario_setting_etrago_files_and_edisgo.json")
+    # Initialize eGo object
+    ego = eGo(jsonpath="scenario_setting_mv_clustering.json")
+
+    # Run eGo
+    ego.run()
 
 #    logger.info('Print results')
 #    ego.etrago_line_loading()
