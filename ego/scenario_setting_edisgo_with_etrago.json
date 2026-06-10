@@ -54,8 +54,8 @@
   "eDisGo": {
     "overlying_grid": true,
     "overlying_grid_source": "etrago",
-    "preset": "uc4_example_overlying_grid",
-    "grid_path": "/home/clara/edisgo/grids",
+    "preset": "uc4_example",
+    "grid_path": "/home/path_to/grids",
     "legacy_ding0_grids": false,
     "choice_mode": "manual",
     "cluster_attributes": [],
@@ -67,11 +67,9 @@
     "max_workers": 1,
     "max_cos_phi_renewable": 0.9,
 
-    "results": "/home/clara/ego/results_test_etrago_edisgo",
+    "results": "/home/path_to/results",
     "solver": "gurobi",
     "gridversion": null,
-
-   
 
     "tasks": [
       "1_setup_grid",

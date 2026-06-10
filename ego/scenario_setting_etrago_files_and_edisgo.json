@@ -34,9 +34,9 @@
 
   "eDisGo": {
     "overlying_grid": true,
-    "overlying_grid_source": "path/to/overlying_grid/data",
+    "overlying_grid_source": "/home/path_to/overlying_grid",
     "preset": "uc4_example",
-    "grid_path": "path/to/edsigo/grids",
+    "grid_path": "/home/path_to/grids",
     "legacy_ding0_grids": false,
     "choice_mode": "manual",
     "cluster_attributes": [],
@@ -48,7 +48,7 @@
     "max_workers": 1,
     "max_cos_phi_renewable": 0.9,
 
-    "results": "path/to/results",
+    "results": "/home/path_to/results",
     "solver": "gurobi",
     "gridversion": null, 
 
