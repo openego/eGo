@@ -3,7 +3,6 @@
 # flake8: noqa: F401, F601
 import os
 
-from pip._internal.req import parse_requirements
 from setuptools import find_packages, setup
 
 __copyright__ = (
@@ -19,7 +18,10 @@ def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 
-req = []
+req = [
+    "etrago @ git+https://github.com/openego/eTraGo.git@dev#egg=etrago",
+    "edisgo @ git+https://github.com/openego/eDisGo.git@dev#egg=edisgo",
+]
 
 dev_req = [
     "pre-commit",

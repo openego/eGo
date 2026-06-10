@@ -37,7 +37,6 @@ if "READTHEDOCS" not in os.environ:
     from egoio.tools import db
     from etrago import Etrago
     from etrago.appl import run_etrago
-    from etrago.tools.io import load_config_file
     from sqlalchemy import and_
     from sqlalchemy.orm import sessionmaker
 
@@ -186,10 +185,27 @@ class eTraGoResults(egoBasic):
                     csv_folder_name=self.json_file["eGo"].get("csv_import_eTraGo")
                 )
 
+                # Temporary fix if only disaggregated network was imported
+                if len(self.etrago.disaggregated_network.buses)==0:
+                    self.etrago.disaggregated_network = self.etrago.network
+
             else:
                 logger.info("Create eTraGo network calcualted by eGo")
 
-                run_etrago(args=self.json_file["eTraGo"], json_path=None)
+                from etrago.appl import args as default_args
+
+                def deep_merge(base: dict, override: dict) -> dict:
+                    result = base.copy()
+                    for key, value in override.items():
+                        if key in result and isinstance(result[key], dict) and isinstance(value, dict):
+                            result[key] = deep_merge(result[key], value)
+                        else:
+                            result[key] = value
+                    return result
+
+                etrago_args = deep_merge(default_args, self.json_file["eTraGo"])
+
+                self.etrago = run_etrago(args=etrago_args, json_path=None)
 
 
 class eDisGoResults(eTraGoResults):
@@ -204,9 +220,14 @@ class eDisGoResults(eTraGoResults):
         if self.json_file["eGo"]["eDisGo"] is True:
             logger.info("Create eDisGo network")
 
+            etrago_network = (
+                self.etrago.disaggregated_network
+                if self.etrago is not None
+                else None
+            )
             self._edisgo = EDisGoNetworks(
                 json_file=self.json_file,
-                etrago_network=self.etrago.disaggregated_network,
+                etrago_network=etrago_network,
                 mvlv_grid_choice=self.mvlv_grid_choice,
             )
         else:
@@ -272,21 +293,26 @@ class eGo(eDisGoResults):
             columns=["component", "voltage_level", "capital_cost"]
         )
         _grid_ehv = None
-        if "network" in self.json_file["eTraGo"]["extendable"]:
+        extendable = self.json_file["eTraGo"].get("extendable", {})
+        extendable_list = (
+            extendable if isinstance(extendable, list)
+            else extendable.get("extendable_components", [])
+        )
+        if self.etrago is not None and "network" in extendable_list:
             _grid_ehv = self.etrago.grid_investment_costs
             _grid_ehv["component"] = "grid"
 
-            self._total_inv_cost = self._total_inv_cost.append(
-                _grid_ehv, ignore_index=True
+            self._total_inv_cost = pd.concat([self._total_inv_cost,
+                _grid_ehv], ignore_index=True
             )
 
         _storage = None
-        if "storage" in self.json_file["eTraGo"]["extendable"]:
+        if self.etrago is not None and "storage" in extendable_list:
             _storage = self.etrago.storage_investment_costs
             _storage["component"] = "storage"
 
-            self._total_inv_cost = self._total_inv_cost.append(
-                _storage, ignore_index=True
+            self._total_inv_cost = pd.concat([self._total_inv_cost,
+                _storage], ignore_index=True
             )
 
         _grid_mv_lv = None
@@ -297,18 +323,24 @@ class eGo(eDisGoResults):
                 _grid_mv_lv["component"] = "grid"
                 _grid_mv_lv["differentiation"] = "domestic"
 
-                self._total_inv_cost = self._total_inv_cost.append(
-                    _grid_mv_lv, ignore_index=True
+                self._total_inv_cost = pd.concat([self._total_inv_cost,
+                    _grid_mv_lv], ignore_index=True
                 )
 
         # add overnight costs
         self._total_investment_costs = self._total_inv_cost
-        self._total_investment_costs["overnight_costs"] = etrago_convert_overnight_cost(
-            self._total_investment_costs["capital_cost"], self.json_file
-        )
+        if (
+            not self._total_inv_cost.empty
+            and self.json_file["eTraGo"].get("end_snapshot") is not None
+        ):
+            self._total_investment_costs["overnight_costs"] = etrago_convert_overnight_cost(
+                self._total_investment_costs["capital_cost"], self.json_file
+            )
+        else:
+            self._total_investment_costs["overnight_costs"] = None
 
         # Include MV storages into the _total_investment_costs dataframe
-        if storage_mv_integration is True:
+        if storage_mv_integration is True and self.etrago is not None:
             if _grid_mv_lv is not None:
                 self._integrate_mv_storage_investment()
 
@@ -371,7 +403,7 @@ class eGo(eDisGoResults):
                 }
 
                 new_storage_row = pd.DataFrame(new_storage_row)
-                costs_df = costs_df.append(new_storage_row)
+                costs_df = pd.concat([costs_df, new_storage_row], ignore_index=True)
 
                 self._total_investment_costs = costs_df
         except:  # noqa: E722
@@ -381,10 +413,10 @@ class eGo(eDisGoResults):
         """
         Returns the all extended storage p_nom_opt in MW.
         """
-        etrago_network = self._etrago_disaggregated_network
+        etrago_network = self.etrago.disaggregated_network
 
         stor_df = etrago_network.storage_units.loc[
-            (etrago_network.storage_units["p_nom_extendable"] is True)
+            etrago_network.storage_units["p_nom_extendable"]
         ]
 
         stor_df = stor_df[["bus", "p_nom_opt"]]
@@ -397,11 +429,11 @@ class eGo(eDisGoResults):
         """
         Returns the storage p_nom_opt in MW, integrated in MV grids
         """
-        etrago_network = self._etrago_disaggregated_network
+        etrago_network = self.etrago.disaggregated_network
 
         min_extended = 0.3
         stor_df = etrago_network.storage_units.loc[
-            (etrago_network.storage_units["p_nom_extendable"] is True)
+            (etrago_network.storage_units["p_nom_extendable"])
             & (etrago_network.storage_units["p_nom_opt"] > min_extended)
             & (etrago_network.storage_units["max_hours"] <= 20.0)
         ]
