@@ -91,7 +91,7 @@ class EDisGoNetworks:
 
     """
 
-    def __init__(self, json_file, etrago_network=None, mvlv_grid_choice):
+    def __init__(self, json_file, mvlv_grid_choice, etrago_network=None):
 
         # Genral Json Inputs
         self._json_file = json_file
