@@ -776,9 +776,16 @@ class EDisGoNetworks:
                 overlying_grid_data = get_etrago_results_per_bus(
                     str(mv_grid_id),
                     self._etrago_network,
-                    pf_post_lopf=True,
-                    max_cos_phi_ren=None
+                    self._pf_post_lopf["active"],
+                    self._max_cos_phi_renewable,
                 )
+
+                os.makedirs(self._results+"/overlying_grid", exist_ok=True)
+                self._export_overlying_grid_data(
+                    overlying_grid_data,
+                    mv_grid_id,
+                    path=self._results+"/overlying_grid/"
+                    )
         cfg = self._build_run_edisgo_config(mv_grid_id)
         logger.info(
             "MV grid %s: delegating to edisgo.run.run_edisgo (preset=%s)",
@@ -789,6 +796,18 @@ class EDisGoNetworks:
         edisgo_grid = edisgo_runner(cfg,overlying_grid_data=overlying_grid_data)
         self._status_update(mv_grid_id, "end")
         return edisgo_grid
+
+
+    def _export_overlying_grid_data(self, overlying_grid_data, mv_grid_id, path):
+
+        output_dir = path + f"{str(mv_grid_id)}/"
+        os.makedirs(output_dir, exist_ok=True)
+
+        for key, series in overlying_grid_data.items():
+            if (key != "timeindex") & (type(series) in [pd.Series, pd.DataFrame]):
+                filepath = os.path.join(output_dir, f"{key}.csv")
+                series.to_csv(filepath, index=True, header=True)
+
 
     def run_edisgo(self, mv_grid_id):
         """

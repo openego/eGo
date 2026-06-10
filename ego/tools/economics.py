@@ -547,17 +547,17 @@ def edisgo_grid_investment(edisgo, json_file):
             aggr_costs[["capital_cost", "overnight_costs"]] * 1000
         )
 
-        successfull_grids = edisgo.successfull_grids
-        if successfull_grids < 1:
+        successful_grids = edisgo.successful_grids
+        if successful_grids < 1:
             logger.warning(
                 "Only {} % of the grids were calculated.\n".format(
-                    "{:,.2f}".format(successfull_grids * 100)
+                    "{:,.2f}".format(successful_grids * 100)
                 )
                 + "Costs are extrapolated..."
             )
 
             aggr_costs[["capital_cost", "overnight_costs"]] = (
-                aggr_costs[["capital_cost", "overnight_costs"]] / successfull_grids
+                aggr_costs[["capital_cost", "overnight_costs"]] / successful_grids
             )
 
     return aggr_costs

@@ -19,7 +19,7 @@
   ],
 
   "eGo": {
-    "eTraGo": false,
+    "eTraGo": true,
     "eDisGo": true,
     "csv_import_eTraGo": false,
     "csv_import_eDisGo": false,
@@ -27,14 +27,33 @@
   },
 
   "eTraGo": {
+    "method": { 
+        "n_iter": 1,
+        "formulation": "pyomo",
+        "market_optimization":
+            {
+                "active": false
+             },
+        "distribution_grids":false
+    },
+    "pf_post_lopf": {
+        "active": true
+    },
+    "start_snapshot": 1,
+    "end_snapshot": 25,
     "scn_name": "eGon2035",
-    "db": "egon-data",
-    "extendable": []
-  },
+    "spatial_disaggregation": "uniform",
+    "skip_snapshots": false,
+    "temporal_disaggregation": {
+    	"active": false,
+    	"no_slices": 8
+    },
+    "load_shedding": true
+},
 
   "eDisGo": {
     "overlying_grid": true,
-    "overlying_grid_source": "/home/path_to/overlying_grid",
+    "overlying_grid_source": "etrago",
     "preset": "uc4_example",
     "grid_path": "/home/path_to/grids",
     "legacy_ding0_grids": false,
@@ -50,7 +69,7 @@
 
     "results": "/home/path_to/results",
     "solver": "gurobi",
-    "gridversion": null, 
+    "gridversion": null,
 
     "tasks": [
       "1_setup_grid",
@@ -62,7 +81,6 @@
       "import_electromobility_from_db",
       "apply_heat_pump_strategy",
       "oedb_ts",
-      "import_overlying_grid",
       "reactive_power",
       "check_integrity",
       "optimize",
