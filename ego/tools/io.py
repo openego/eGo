@@ -58,144 +58,7 @@ __copyright__ = "Europa-Universität Flensburg, " "Centre for Sustainable Energy
 __license__ = "GNU Affero General Public License Version 3 (AGPL-3.0)"
 __author__ = "wolf_bunke,maltesc"
 
-
-class egoBasic(object):
-    """The eGo basic class select and creates based on your
-    ``scenario_setting.json`` file  your definded eTraGo and
-    eDisGo results container. And contains the session for the
-    database connection.
-
-    Parameters
-    ----------
-    jsonpath : :obj:`json`
-        Path to ``scenario_setting.json`` file.
-
-    Returns
-    -------
-    json_file : :obj:dict
-        Dictionary of the ``scenario_setting.json`` file
-    session : :sqlalchemy:`sqlalchemy.orm.session.Session<orm/session_basics.html>`
-        SQLAlchemy session to the OEDB
-
-    """
-
-    def __init__(self, *args, **kwargs):
-        """ """
-
-        logger.info("Using scenario setting: {}".format(self.jsonpath))
-
-        self.json_file = None
-        self.session = None
-        self.scn_name = None
-
-        self.json_file = get_scenario_setting(jsonpath=self.jsonpath)
-
-        # Database connection from json_file
-        try:
-            conn = db.connection(section=self.json_file["eTraGo"]["db"])
-            Session = sessionmaker(bind=conn)
-            self.session = Session()
-            logger.info("Connected to Database")
-        except:  # noqa: E722
-            logger.error("Failed connection to Database", exc_info=True)
-
-        # get scn_name
-        self.scn_name = self.json_file["eTraGo"]["scn_name"]
-
-
-class eTraGoResults(egoBasic):
-    """The ``eTraGoResults`` class creates and contains all results
-    of eTraGo  and it's network container for eGo.
-
-    Returns
-    -------
-    network_etrago: :class:`etrago.tools.io.NetworkScenario`
-        eTraGo network object compiled by :func:`etrago.appl.etrago`
-    etrago: :pandas:`pandas.Dataframe<dataframe>`
-        DataFrame which collects several eTraGo results
-    """
-
-    def __init__(self, *args, **kwargs):
-        """ """
-        super(eTraGoResults, self).__init__(self, *args, **kwargs)
-        self.etrago = None
-
-        logger.info("eTraGo section started")
-
-        # create eTraGo NetworkScenario
-        if self.json_file["eGo"]["eTraGo"] is True:
-
-            if self.json_file["eGo"].get("csv_import_eTraGo") is not False:
-
-                logger.info("Import eTraGo network from csv files")
-
-                self.etrago = Etrago(
-                    csv_folder_name=self.json_file["eGo"].get("csv_import_eTraGo")
-                )
-
-                # Temporary fix if only disaggregated network was imported
-                if len(self.etrago.disaggregated_network.buses)==0:
-                    self.etrago.disaggregated_network = self.etrago.network
-
-            else:
-                logger.info("Create eTraGo network calcualted by eGo")
-
-                from etrago.appl import args as default_args
-
-                def deep_merge(base: dict, override: dict) -> dict:
-                    result = base.copy()
-                    for key, value in override.items():
-                        if key in result and isinstance(result[key], dict) and isinstance(value, dict):
-                            result[key] = deep_merge(result[key], value)
-                        else:
-                            result[key] = value
-                    return result
-
-                etrago_args = deep_merge(default_args, self.json_file["eTraGo"])
-
-                self.etrago = run_etrago(args=etrago_args, json_path=None)
-
-
-class eDisGoResults(eTraGoResults):
-    """The ``eDisGoResults`` class create and contains all results
-    of eDisGo and its network containers.
-
-    """
-
-    def __init__(self, *args, **kwargs):
-        super(eDisGoResults, self).__init__(self, *args, **kwargs)
-
-        if self.json_file["eGo"]["eDisGo"] is True:
-            logger.info("Create eDisGo network")
-
-            etrago_network = (
-                self.etrago.disaggregated_network
-                if self.etrago is not None
-                else None
-            )
-            self._edisgo = EDisGoNetworks(
-                json_file=self.json_file,
-                mvlv_grid_choice=self.mvlv_grid_choice,
-                etrago_network=etrago_network,
-            )
-        else:
-            self._edisgo = None
-            logger.info("No eDisGo network")
-
-    @property
-    def edisgo(self):
-        """
-        Contains basic informations about eDisGo
-
-        Returns
-        -------
-        :pandas:`pandas.DataFrame<dataframe>`
-
-        """
-        return self._edisgo
-
-
-class eGo(eDisGoResults):
+class eGo:
     """Main eGo module which includs all results and main functionalities.
 
 
@@ -214,23 +77,117 @@ class eGo(eDisGoResults):
     """
 
     def __init__(self, jsonpath, *args, **kwargs):
+
+        # Extract settings
         self.jsonpath = jsonpath
+        self._json_file = get_scenario_setting(jsonpath=jsonpath)
+        self.scn_name = self._json_file["eTraGo"]["scn_name"]
+        
+        # Database connection from json_file
+        #self._connect_to_db()
 
-        self._json_file = get_scenario_setting(jsonpath=self.jsonpath)
 
+    def run(self):
+        """
+        Run all grid optimization steps in the given scenario settings
+
+        Returns
+        -------
+        None.
+
+        """
         # Perform MV grid clustering
         self._mvlv_grid_choice_mode = self._json_file["eDisGo"]["choice_mode"]
-        self.set_mvlv_grid_choice()      
+        self.set_mvlv_grid_choice()
 
-        super(eGo, self).__init__(self, *args, **kwargs)
+        # Run eTraGo for optimizing the eHV/HV grid
+        self.etrago = self._setup_etrago()
+        
+        # Run eDisGo for optimizing MV/LV grids
+        self.edisgo = self._setup_edisgo()
 
-        # add total results here
+
+    def analyze_results(self):
+        """
+        Run all functions to analyze the results of the grid optimizations
+
+        Returns
+        -------
+        None.
+
+        """
+        # Analyze results
         self._total_investment_costs = None
         self._total_operation_costs = None
         self._calculate_investment_cost()
-        self._storage_costs = None
-        self._ehv_grid_costs = None
-        self._mv_grid_costs = None
+        
+
+    def _connect_to_db(self):
+        try:
+            conn = db.connection(section=self.json_file["eTraGo"]["db"])
+            Session = sessionmaker(bind=conn)
+            self.session = Session()
+            logger.info("Connected to Database")
+        except:  # noqa: E722
+            logger.error("Failed connection to Database", exc_info=True)
+
+
+    def _setup_etrago(self):
+        """
+        Run optimization of ehv/hv grid or load results from provious run
+        """
+        logger.info("eTraGo section started")
+        cfg = self._json_file
+
+        if cfg["eGo"].get("csv_import_eTraGo"):
+            logger.info("Import eTraGo network from csv files")
+            return Etrago(csv_folder_name=cfg["eGo"]["csv_import_eTraGo"])
+
+        if cfg["eGo"]["eTraGo"] is True:
+            
+            from etrago.appl import args as default_args
+
+            def deep_merge(base: dict, override: dict) -> dict:
+                result = base.copy()
+                for key, value in override.items():
+                    if key in result and isinstance(result[key], dict) and isinstance(value, dict):
+                        result[key] = deep_merge(result[key], value)
+                    else:
+                        result[key] = value
+                return result
+
+            etrago_args = deep_merge(default_args, cfg["eTraGo"])
+            logger.info("Create eTraGo network calculated by eGo")
+            return run_etrago(args=etrago_args, json_path=None)
+
+        return None
+
+
+    def _setup_edisgo(self):
+        """
+        Run optimization of selected mvlv grids
+
+        Returns
+        -------
+        None.
+
+        """
+        if self._json_file["eGo"]["eDisGo"] is True:
+            logger.info("Create eDisGo network")
+
+            etrago_network = (
+                self.etrago.disaggregated_network
+                if self.etrago is not None
+                else None
+            )
+            self._edisgo = EDisGoNetworks(
+                json_file=self.json_file,
+                mvlv_grid_choice=self.mvlv_grid_choice,
+                etrago_network=etrago_network,
+            )
+        else:
+            self._edisgo = None
+            logger.info("No eDisGo network")
 
     def _calculate_investment_cost(self, storage_mv_integration=True):
         """Get total investment costs of all voltage level for storages
