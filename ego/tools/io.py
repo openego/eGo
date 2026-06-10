@@ -20,6 +20,7 @@
 """This file contains the eGo main class as well as input & output functions
 of eGo in order to build the eGo application container.
 """
+
 import logging
 import os
 
@@ -49,7 +50,7 @@ if "READTHEDOCS" not in os.environ:
         power_price_plot,
     )
     from ego.tools.utilities import get_scenario_setting
-    
+
     from ego.mv_clustering import cluster_workflow
 
 logger = logging.getLogger("ego")
@@ -57,6 +58,7 @@ logger = logging.getLogger("ego")
 __copyright__ = "Europa-Universität Flensburg, " "Centre for Sustainable Energy Systems"
 __license__ = "GNU Affero General Public License Version 3 (AGPL-3.0)"
 __author__ = "wolf_bunke,maltesc"
+
 
 class eGo:
     """Main eGo module which includs all results and main functionalities.
@@ -82,10 +84,9 @@ class eGo:
         self.jsonpath = jsonpath
         self._json_file = get_scenario_setting(jsonpath=jsonpath)
         self.scn_name = self._json_file["eTraGo"]["scn_name"]
-        
-        # Database connection from json_file
-        #self._connect_to_db()
 
+        # Database connection from json_file
+        # self._connect_to_db()
 
     def run(self):
         """
@@ -102,10 +103,9 @@ class eGo:
 
         # Run eTraGo for optimizing the eHV/HV grid
         self.etrago = self._setup_etrago()
-        
+
         # Run eDisGo for optimizing MV/LV grids
         self.edisgo = self._setup_edisgo()
-
 
     def analyze_results(self):
         """
@@ -120,7 +120,6 @@ class eGo:
         self._total_investment_costs = None
         self._total_operation_costs = None
         self._calculate_investment_cost()
-        
 
     def _connect_to_db(self):
         try:
@@ -130,7 +129,6 @@ class eGo:
             logger.info("Connected to Database")
         except:  # noqa: E722
             logger.error("Failed connection to Database", exc_info=True)
-
 
     def _setup_etrago(self):
         """
@@ -144,13 +142,17 @@ class eGo:
             return Etrago(csv_folder_name=cfg["eGo"]["csv_import_eTraGo"])
 
         if cfg["eGo"]["eTraGo"] is True:
-            
+
             from etrago.appl import args as default_args
 
             def deep_merge(base: dict, override: dict) -> dict:
                 result = base.copy()
                 for key, value in override.items():
-                    if key in result and isinstance(result[key], dict) and isinstance(value, dict):
+                    if (
+                        key in result
+                        and isinstance(result[key], dict)
+                        and isinstance(value, dict)
+                    ):
                         result[key] = deep_merge(result[key], value)
                     else:
                         result[key] = value
@@ -161,7 +163,6 @@ class eGo:
             return run_etrago(args=etrago_args, json_path=None)
 
         return None
-
 
     def _setup_edisgo(self):
         """
@@ -176,9 +177,7 @@ class eGo:
             logger.info("Create eDisGo network")
 
             etrago_network = (
-                self.etrago.disaggregated_network
-                if self.etrago is not None
-                else None
+                self.etrago.disaggregated_network if self.etrago is not None else None
             )
             self._edisgo = EDisGoNetworks(
                 json_file=self.json_file,
@@ -200,15 +199,16 @@ class eGo:
         _grid_ehv = None
         extendable = self.json_file["eTraGo"].get("extendable", {})
         extendable_list = (
-            extendable if isinstance(extendable, list)
+            extendable
+            if isinstance(extendable, list)
             else extendable.get("extendable_components", [])
         )
         if self.etrago is not None and "network" in extendable_list:
             _grid_ehv = self.etrago.grid_investment_costs
             _grid_ehv["component"] = "grid"
 
-            self._total_inv_cost = pd.concat([self._total_inv_cost,
-                _grid_ehv], ignore_index=True
+            self._total_inv_cost = pd.concat(
+                [self._total_inv_cost, _grid_ehv], ignore_index=True
             )
 
         _storage = None
@@ -216,8 +216,8 @@ class eGo:
             _storage = self.etrago.storage_investment_costs
             _storage["component"] = "storage"
 
-            self._total_inv_cost = pd.concat([self._total_inv_cost,
-                _storage], ignore_index=True
+            self._total_inv_cost = pd.concat(
+                [self._total_inv_cost, _storage], ignore_index=True
             )
 
         _grid_mv_lv = None
@@ -228,8 +228,8 @@ class eGo:
                 _grid_mv_lv["component"] = "grid"
                 _grid_mv_lv["differentiation"] = "domestic"
 
-                self._total_inv_cost = pd.concat([self._total_inv_cost,
-                    _grid_mv_lv], ignore_index=True
+                self._total_inv_cost = pd.concat(
+                    [self._total_inv_cost, _grid_mv_lv], ignore_index=True
                 )
 
         # add overnight costs
@@ -238,8 +238,10 @@ class eGo:
             not self._total_inv_cost.empty
             and self.json_file["eTraGo"].get("end_snapshot") is not None
         ):
-            self._total_investment_costs["overnight_costs"] = etrago_convert_overnight_cost(
-                self._total_investment_costs["capital_cost"], self.json_file
+            self._total_investment_costs["overnight_costs"] = (
+                etrago_convert_overnight_cost(
+                    self._total_investment_costs["capital_cost"], self.json_file
+                )
             )
         else:
             self._total_investment_costs["overnight_costs"] = None
@@ -482,7 +484,7 @@ class eGo:
         # Filter for clusters with representatives.
         cluster_df = cluster_df[cluster_df["representative"].astype(bool)]
         return cluster_df
-    
+
     def set_mvlv_grid_choice(self):
         """
         Sets the grid choice based on the settings file
@@ -540,6 +542,7 @@ class eGo:
         choice_df = choice_df.sort_values("no_of_points_per_cluster", ascending=False)
 
         self.mvlv_grid_choice = choice_df
+
     # write_results_to_db():
     logging.info("Initialisation of eGo Results")
 
@@ -561,6 +564,7 @@ def results_to_excel(ego):
     # Close the Pandas Excel writer and output the Excel file.
     writer.save()
     # buses
+
 
 if __name__ == "__main__":
     pass
