@@ -610,7 +610,7 @@ class eGo(eDisGoResults):
             choice_df["represented_grids"] = cluster_df["represented_grids"]
 
         elif self._mvlv_grid_choice_mode == "manual":
-            man_grids = self._edisgo_args["manual_grids"]
+            man_grids = self._json_file["eDisGo"]["manual_grids"]
 
             choice_df["the_selected_network_id"] = man_grids
             choice_df["no_of_points_per_cluster"] = 1
