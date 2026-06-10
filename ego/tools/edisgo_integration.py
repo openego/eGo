@@ -492,7 +492,6 @@ class EDisGoNetworks:
         self._choice_mode = self._edisgo_args["choice_mode"]
         self._parallelization = self._edisgo_args["parallelization"]
         self._cluster_attributes = self._edisgo_args["cluster_attributes"]
-        self._only_cluster = self._edisgo_args["only_cluster"]
         self._max_workers = self._edisgo_args["max_workers"]
         self._max_cos_phi_renewable = self._edisgo_args["max_cos_phi_renewable"]
         self._results = self._edisgo_args["results"]
@@ -500,10 +499,6 @@ class EDisGoNetworks:
         # Optional: name of an edisgo.run preset. When set, run_edisgo()
         # delegates the per-grid workflow to edisgo.run.run_edisgo().
         self._preset = self._edisgo_args.get("preset")
-
-        # Some basic checks
-        if self._only_cluster:
-            logger.warning("\n\nThis eDisGo run only returns cluster results\n\n")
 
         # Versioning
         if self._grid_version is not None:
