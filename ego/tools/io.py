@@ -180,7 +180,7 @@ class eGo:
                 self.etrago.disaggregated_network if self.etrago is not None else None
             )
             self._edisgo = EDisGoNetworks(
-                json_file=self.json_file,
+                json_file=self._json_file,
                 mvlv_grid_choice=self.mvlv_grid_choice,
                 etrago_network=etrago_network,
             )
