@@ -230,31 +230,24 @@ def get_etrago_results_per_bus(bus_id, etrago_obj, pf_post_lopf, max_cos_phi_ren
 
         * 'renewables_potential'
             Normalised weather dependent feed-in potential of fluctuating generators
-            per technology (solar / wind) in p.u. at the given bus.
-            Type: pd.DataFrame
-            Columns: Carrier
+            in p.u. at the given bus attached to MVLV.
+            Type: pd.Series
             Unit: pu
 
         * 'renewables_curtailment'
-            Curtailment of fluctuating generators per
-            technology (solar / wind) in MW at the given bus. This curtailment can also
-            include curtailment of plants at the HV side of the HV/MV station and
-            therefore needs to be scaled using the quotient of installed power at the
-            MV side and installed power at the HV side.
-            Type: pd.DataFrame
-            Columns: Carrier
+            Curtailment of fluctuating generators attached to MVLV
+            in MW at the given bus.
+            Type: pd.Series
             Unit: MW
 
         * 'renewables_dispatch_reactive_power'
-            Normalised reactive power time series of fluctuating generators per
-            technology in p.u. at the given bus.
-            Type: pd.DataFrame
-            Columns: Carrier
+            Normalised reactive power time series of fluctuating generators
+            in p.u. at the given bus.
+            Type: pd.Series
             Unit: pu
 
         * 'renewables_p_nom'
-            Installed capacity of fluctuating generators per
-            technology (solar / wind) at the given bus.
+            Installed capacity of fluctuating generators at the given bus.
             Type: pd.Series with carrier in index
             Unit: MW
 
@@ -490,34 +483,26 @@ def get_etrago_results_per_bus(bus_id, etrago_obj, pf_post_lopf, max_cos_phi_ren
 
         # Initialize dfs
         # potential
-        weather_dep_gens_df_pot_p = pd.DataFrame(
+        weather_dep_gens_df_pot_p = pd.Series(
             0.0,
             index=timeseries_index,
-            columns=agg_weather_dep_gens_df.carrier.unique(),
         )
         # reactive power
-        weather_dep_gens_df_dis_q = pd.DataFrame(
+        weather_dep_gens_df_dis_q = pd.Series(
             0.0,
             index=timeseries_index,
-            columns=agg_weather_dep_gens_df.carrier.unique(),
         )
         # curtailment
-        weather_dep_gens_df_curt_p = pd.DataFrame(
+        weather_dep_gens_df_curt_p = pd.Series(
             0.0,
             index=timeseries_index,
-            columns=agg_weather_dep_gens_df.carrier.unique(),
         )
 
+        # get total capacity of fluctuating renewables in MVLV grid
+        p_nom_agg = agg_weather_dep_gens_df.p_nom.sum()
         for index, carrier, p_nom in weather_dep_gens_df[
             ["carrier", "p_nom"]
         ].itertuples():
-            # get index in aggregated dataframe to determine total installed capacity
-            # of the respective carrier
-            agg_idx = agg_weather_dep_gens_df[
-                agg_weather_dep_gens_df["carrier"] == carrier
-            ].index.values[0]
-            p_nom_agg = agg_weather_dep_gens_df.loc[agg_idx, "p_nom"]
-
             p_series = etrago_obj.generators_t["p"][index]
             p_max_pu_series = etrago_obj.generators_t["p_max_pu"][index]
             p_max_pu_normed_series = p_max_pu_series * p_nom / p_nom_agg
@@ -527,7 +512,8 @@ def get_etrago_results_per_bus(bus_id, etrago_obj, pf_post_lopf, max_cos_phi_ren
                 # If set limit maximum reactive power
                 if max_cos_phi_ren:
                     logger.info(
-                        "Applying Q limit (max cos(phi)={})".format(max_cos_phi_ren)
+                        "Applying Q limit (max cos(phi)={})".format(
+                            max_cos_phi_ren)
                     )
                     phi = math.acos(max_cos_phi_ren)
                     for timestep in timeseries_index:
@@ -544,17 +530,17 @@ def get_etrago_results_per_bus(bus_id, etrago_obj, pf_post_lopf, max_cos_phi_ren
             else:
                 q_normed_series = pd.Series(0.0, index=timeseries_index)
 
-            weather_dep_gens_df_pot_p[carrier] += p_max_pu_normed_series
-            weather_dep_gens_df_dis_q[carrier] += q_normed_series
-            weather_dep_gens_df_curt_p[carrier] += p_max_pu_series * p_nom - p_series
+            weather_dep_gens_df_pot_p += p_max_pu_normed_series
+            weather_dep_gens_df_dis_q += q_normed_series
+            weather_dep_gens_df_curt_p += p_max_pu_series * p_nom - p_series
 
-        if (weather_dep_gens_df_curt_p.min() < -1e-3).any():
+        if weather_dep_gens_df_curt_p.min() < -1e-3:
             logger.warning("Curtailment values smaller -1 kW.")
 
         results["renewables_potential"] = weather_dep_gens_df_pot_p
         results["renewables_curtailment"] = weather_dep_gens_df_curt_p
         results["renewables_dispatch_reactive_power"] = weather_dep_gens_df_dis_q
-        results["renewables_p_nom"] = agg_weather_dep_gens_df.set_index("carrier").p_nom
+        results["renewables_p_nom"] = agg_weather_dep_gens_df.p_nom.sum()
 
     def storages():
         # Filter batteries
