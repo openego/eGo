@@ -373,9 +373,11 @@ def cluster_workflow(config=None):
     if os.path.isfile(working_grids_path):
         working_grids = pd.read_csv(working_grids_path, index_col=0)
     else:
-        raise FileNotFoundError(
-            "working_grids.csv is missing. Cannot conduct MV grid clustering."
+        logger.warning(
+            "working_grids.csv is missing. Assuming that all grids are working."
         )
+        working_grids = None
+
     # conduct MV grid clustering
     cluster_df = mv_grid_clustering(
         cluster_attributes_df, working_grids=working_grids, config=config
