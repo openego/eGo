@@ -102,7 +102,7 @@ class EDisGoNetworks:
 
         # Create reduced eTraGo network (optional in eDisGo-only mode)
         if etrago_network is not None:
-            self._etrago_network = ETraGoMinimalData(etrago_network)
+            self._etrago_network = ETraGoMinimalData(etrago_network, json_file)
         else:
             self._etrago_network = None
         del etrago_network
