@@ -36,6 +36,7 @@ if "READTHEDOCS" not in os.environ:
     from sqlalchemy import func
 
     from ego.mv_clustering import database
+    import ego.mv_clustering.egon_data_io as db_io
 
 logger = logging.getLogger(__name__)
 
@@ -52,7 +53,7 @@ class ETraGoMinimalData:
 
     """
 
-    def __init__(self, etrago_network):
+    def __init__(self, etrago_network, json_file):
         def set_filtered_attribute(etrago_network_obj, component):
 
             # filter components
@@ -106,6 +107,73 @@ class ETraGoMinimalData:
 
             setattr(self, component + "_t", new_component_timeseries_dict)
 
+
+        def exclude_wind_and_solar_hv(self, json_file):
+            engine = database.get_engine(json_file)
+            orm = database.register_tables_in_saio(engine)
+
+            grid_ids_df = db_io.get_grid_ids(engine=engine, orm=orm)
+            solar_capacity_df = db_io.get_solar_capacity(
+                json_file["eTraGo"]["scn_name"],
+                grid_ids_df.index, orm, engine=engine
+            )
+            wind_capacity_df = db_io.get_wind_capacity(
+                json_file["eTraGo"]["scn_name"],
+                grid_ids_df.index, orm, engine=engine
+            )
+            solar_capacity_df.index = solar_capacity_df.index.astype(str)
+            wind_capacity_df.index = wind_capacity_df.index.astype(str)
+
+            # Select wind generators that are at least partly attached to MVLV
+            mvlv_wind_generators = self.generators[
+                (self.generators.carrier.str.contains("wind_onshore"))
+                &(self.generators.bus.isin(wind_capacity_df.index))
+                ]
+            mvlv_share_wind = wind_capacity_df.loc[
+                mvlv_wind_generators.bus, "wind_capacity_mw"].mul(
+                    1/self.generators.loc[
+                        mvlv_wind_generators.index, "p_nom"
+                        ].values)
+
+            # Reduce p_nom to capacity in MVLV grid
+            self.generators.loc[
+                mvlv_wind_generators.index, "p_nom"
+                ] *= mvlv_share_wind.values
+
+            # Reduce timeseries
+            self.generators_t["p"].loc[
+                :, mvlv_wind_generators.index
+                ] *= mvlv_share_wind.values
+            self.generators_t["q"].loc[
+                :, mvlv_wind_generators.index
+                ] *= mvlv_share_wind.values
+
+            # Select solar generators that are at least partly attached to MVLV
+            solar_carriers = ["solar", "solar_rooftop"]
+            solar_generators = self.generators[
+                (self.generators.carrier.isin(solar_carriers))
+                ].groupby("bus").p_nom.sum()
+
+            mvlv_solar_generators = self.generators[
+                (self.generators.carrier.isin(solar_carriers))
+                &(self.generators.bus.isin(solar_capacity_df.index))
+                ]
+            mvlv_share_solar = solar_capacity_df.mul(
+                1/solar_generators, axis=0).dropna().squeeze()
+
+            # Reduce p_nom to capacity in MVLV grid
+            self.generators.loc[
+                mvlv_solar_generators.index, "p_nom"
+                ] *= mvlv_share_solar.loc[mvlv_solar_generators.bus].values
+
+            # Reduce timeseries
+            self.generators_t["p"].loc[
+                :, mvlv_solar_generators.index
+                ] *= mvlv_share_solar.loc[mvlv_solar_generators.bus].values
+            self.generators_t["q"].loc[
+                :, mvlv_solar_generators.index
+                ] *= mvlv_share_solar.loc[mvlv_solar_generators.bus].values
+
         t_start = time.perf_counter()
 
         self.snapshots = etrago_network.snapshots
@@ -115,6 +183,9 @@ class ETraGoMinimalData:
             set_filtered_attribute(etrago_network, selected_component)
 
         logger.info(f"Data selection time {time.perf_counter() - t_start}")
+
+        # Exclude wind and solar generators attached to the HV side
+        exclude_wind_and_solar_hv(self, json_file)
 
 
 def get_etrago_results_per_bus(bus_id, etrago_obj, pf_post_lopf, max_cos_phi_ren):
