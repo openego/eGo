@@ -230,8 +230,9 @@ def get_etrago_results_per_bus(bus_id, etrago_obj, pf_post_lopf, max_cos_phi_ren
 
         * 'renewables_potential'
             Normalised weather dependent feed-in potential of fluctuating generators
-            in p.u. at the given bus attached to MVLV.
-            Type: pd.Series
+            per technology (solar / wind) in p.u. at the given bus.
+            Type: pd.DataFrame
+            Columns: Carrier
             Unit: pu
 
         * 'renewables_curtailment'
@@ -241,9 +242,10 @@ def get_etrago_results_per_bus(bus_id, etrago_obj, pf_post_lopf, max_cos_phi_ren
             Unit: MW
 
         * 'renewables_dispatch_reactive_power'
-            Normalised reactive power time series of fluctuating generators
-            in p.u. at the given bus.
-            Type: pd.Series
+            Normalised reactive power time series of fluctuating generators per
+            technology in p.u. at the given bus.
+            Type: pd.DataFrame
+            Columns: Carrier
             Unit: pu
 
         * 'renewables_p_nom'
@@ -483,14 +485,16 @@ def get_etrago_results_per_bus(bus_id, etrago_obj, pf_post_lopf, max_cos_phi_ren
 
         # Initialize dfs
         # potential
-        weather_dep_gens_df_pot_p = pd.Series(
+        weather_dep_gens_df_pot_p = pd.DataFrame(
             0.0,
             index=timeseries_index,
+            columns=agg_weather_dep_gens_df.carrier.unique(),
         )
         # reactive power
-        weather_dep_gens_df_dis_q = pd.Series(
+        weather_dep_gens_df_dis_q = pd.DataFrame(
             0.0,
             index=timeseries_index,
+            columns=agg_weather_dep_gens_df.carrier.unique(),
         )
         # curtailment
         weather_dep_gens_df_curt_p = pd.Series(
@@ -530,8 +534,8 @@ def get_etrago_results_per_bus(bus_id, etrago_obj, pf_post_lopf, max_cos_phi_ren
             else:
                 q_normed_series = pd.Series(0.0, index=timeseries_index)
 
-            weather_dep_gens_df_pot_p += p_max_pu_normed_series
-            weather_dep_gens_df_dis_q += q_normed_series
+            weather_dep_gens_df_pot_p[carrier] += p_max_pu_normed_series
+            weather_dep_gens_df_dis_q[carrier] += q_normed_series
             weather_dep_gens_df_curt_p += p_max_pu_series * p_nom - p_series
 
         if weather_dep_gens_df_curt_p.min() < -1e-3:
