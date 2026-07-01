@@ -107,19 +107,16 @@ class ETraGoMinimalData:
 
             setattr(self, component + "_t", new_component_timeseries_dict)
 
-
         def exclude_wind_and_solar_hv(self, json_file):
             engine = database.get_engine(json_file)
             orm = database.register_tables_in_saio(engine)
 
             grid_ids_df = db_io.get_grid_ids(engine=engine, orm=orm)
             solar_capacity_df = db_io.get_solar_capacity(
-                json_file["eTraGo"]["scn_name"],
-                grid_ids_df.index, orm, engine=engine
+                json_file["eTraGo"]["scn_name"], grid_ids_df.index, orm, engine=engine
             )
             wind_capacity_df = db_io.get_wind_capacity(
-                json_file["eTraGo"]["scn_name"],
-                grid_ids_df.index, orm, engine=engine
+                json_file["eTraGo"]["scn_name"], grid_ids_df.index, orm, engine=engine
             )
             solar_capacity_df.index = solar_capacity_df.index.astype(str)
             wind_capacity_df.index = wind_capacity_df.index.astype(str)
@@ -127,52 +124,53 @@ class ETraGoMinimalData:
             # Select wind generators that are at least partly attached to MVLV
             mvlv_wind_generators = self.generators[
                 (self.generators.carrier.str.contains("wind_onshore"))
-                &(self.generators.bus.isin(wind_capacity_df.index))
-                ]
+                & (self.generators.bus.isin(wind_capacity_df.index))
+            ]
             mvlv_share_wind = wind_capacity_df.loc[
-                mvlv_wind_generators.bus, "wind_capacity_mw"].mul(
-                    1/self.generators.loc[
-                        mvlv_wind_generators.index, "p_nom"
-                        ].values)
+                mvlv_wind_generators.bus, "wind_capacity_mw"
+            ].mul(1 / self.generators.loc[mvlv_wind_generators.index, "p_nom"].values)
 
             # Reduce p_nom to capacity in MVLV grid
             self.generators.loc[
                 mvlv_wind_generators.index, "p_nom"
-                ] *= mvlv_share_wind.values
+            ] *= mvlv_share_wind.values
 
             # Reduce timeseries
             self.generators_t["p"].loc[
                 :, mvlv_wind_generators.index
-                ] *= mvlv_share_wind.values
+            ] *= mvlv_share_wind.values
             self.generators_t["q"].loc[
                 :, mvlv_wind_generators.index
-                ] *= mvlv_share_wind.values
+            ] *= mvlv_share_wind.values
 
             # Select solar generators that are at least partly attached to MVLV
             solar_carriers = ["solar", "solar_rooftop"]
-            solar_generators = self.generators[
-                (self.generators.carrier.isin(solar_carriers))
-                ].groupby("bus").p_nom.sum()
+            solar_generators = (
+                self.generators[(self.generators.carrier.isin(solar_carriers))]
+                .groupby("bus")
+                .p_nom.sum()
+            )
 
             mvlv_solar_generators = self.generators[
                 (self.generators.carrier.isin(solar_carriers))
-                &(self.generators.bus.isin(solar_capacity_df.index))
-                ]
-            mvlv_share_solar = solar_capacity_df.mul(
-                1/solar_generators, axis=0).dropna().squeeze()
+                & (self.generators.bus.isin(solar_capacity_df.index))
+            ]
+            mvlv_share_solar = (
+                solar_capacity_df.mul(1 / solar_generators, axis=0).dropna().squeeze()
+            )
 
             # Reduce p_nom to capacity in MVLV grid
             self.generators.loc[
                 mvlv_solar_generators.index, "p_nom"
-                ] *= mvlv_share_solar.loc[mvlv_solar_generators.bus].values
+            ] *= mvlv_share_solar.loc[mvlv_solar_generators.bus].values
 
             # Reduce timeseries
             self.generators_t["p"].loc[
                 :, mvlv_solar_generators.index
-                ] *= mvlv_share_solar.loc[mvlv_solar_generators.bus].values
+            ] *= mvlv_share_solar.loc[mvlv_solar_generators.bus].values
             self.generators_t["q"].loc[
                 :, mvlv_solar_generators.index
-                ] *= mvlv_share_solar.loc[mvlv_solar_generators.bus].values
+            ] *= mvlv_share_solar.loc[mvlv_solar_generators.bus].values
 
         t_start = time.perf_counter()
 
@@ -517,8 +515,7 @@ def get_etrago_results_per_bus(bus_id, etrago_obj, pf_post_lopf, max_cos_phi_ren
                 # If set limit maximum reactive power
                 if max_cos_phi_ren:
                     logger.info(
-                        "Applying Q limit (max cos(phi)={})".format(
-                            max_cos_phi_ren)
+                        "Applying Q limit (max cos(phi)={})".format(max_cos_phi_ren)
                     )
                     phi = math.acos(max_cos_phi_ren)
                     for timestep in timeseries_index:
@@ -609,7 +606,7 @@ def get_etrago_results_per_bus(bus_id, etrago_obj, pf_post_lopf, max_cos_phi_ren
     def central_heat():
 
         central_heat_carriers = ["central_heat_pump", "central_resistive_heater"]
-        
+
         if etrago_obj.loads.bus.str.contains("distribution_grid").any():
             central_heat_df = links_df.loc[
                 (links_df["carrier"].isin(central_heat_carriers))
