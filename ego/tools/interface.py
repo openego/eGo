@@ -184,8 +184,9 @@ class ETraGoMinimalData:
 
         logger.info(f"Data selection time {time.perf_counter() - t_start}")
 
-        # Exclude wind and solar generators attached to the HV side
-        exclude_wind_and_solar_hv(self, json_file)
+        if not "distribution_grid" in etrago_network.buses.carrier.unique():
+            # Exclude wind and solar generators attached to the HV side
+            exclude_wind_and_solar_hv(self, json_file)
 
 
 def get_etrago_results_per_bus(bus_id, etrago_obj, pf_post_lopf, max_cos_phi_ren):
@@ -548,10 +549,16 @@ def get_etrago_results_per_bus(bus_id, etrago_obj, pf_post_lopf, max_cos_phi_ren
 
     def storages():
         # Filter batteries
-        storages_df = etrago_obj.storage_units.loc[
-            (etrago_obj.storage_units["carrier"] == "battery")
-            & (etrago_obj.storage_units["bus"] == str(bus_id))
-        ]
+        if etrago_obj.loads.bus.str.contains("distribution_grid").any():
+            storages_df = etrago_obj.storage_units.loc[
+                (etrago_obj.storage_units["carrier"] == "home_battery")
+                & (etrago_obj.storage_units["bus"] == dg_bus)
+            ]
+        else:
+            storages_df = etrago_obj.storage_units.loc[
+                (etrago_obj.storage_units["carrier"] == "battery")
+                & (etrago_obj.storage_units["bus"] == str(bus_id))
+            ]
         if not storages_df.empty:
             # p_nom - p_nom_opt can always be used, if extendable is True or False
             storages_df_p_nom = storages_df["p_nom_opt"].sum()
@@ -602,11 +609,19 @@ def get_etrago_results_per_bus(bus_id, etrago_obj, pf_post_lopf, max_cos_phi_ren
     def central_heat():
 
         central_heat_carriers = ["central_heat_pump", "central_resistive_heater"]
-        central_heat_df = links_df.loc[
-            (links_df["carrier"].isin(central_heat_carriers))
-            & (links_df["bus0"] == str(bus_id))
-            & (links_df["p_nom"] <= 20)
-        ]
+        
+        if etrago_obj.loads.bus.str.contains("distribution_grid").any():
+            central_heat_df = links_df.loc[
+                (links_df["carrier"].isin(central_heat_carriers))
+                & (links_df["bus0"] == dg_bus)
+                & (links_df["p_nom"] <= 20)
+            ]
+        else:
+            central_heat_df = links_df.loc[
+                (links_df["carrier"].isin(central_heat_carriers))
+                & (links_df["bus0"] == str(bus_id))
+                & (links_df["p_nom"] <= 20)
+            ]
         if not central_heat_df.empty:
             # Timeseries
             central_heat_df_p = etrago_obj.links_t["p0"][central_heat_df.index].sum(
@@ -722,10 +737,16 @@ def get_etrago_results_per_bus(bus_id, etrago_obj, pf_post_lopf, max_cos_phi_ren
         # not needed in eDisGo in low flex scenario, but obtained anyway
         # ToDo (low priority) add resistive heaters (they only exist in eGon100RE)
         rural_heat_carriers = ["rural_heat_pump"]
-        rural_heat_df = links_df.loc[
-            links_df["carrier"].isin(rural_heat_carriers)
-            & (links_df["bus0"] == str(bus_id))
-        ]
+        if etrago_obj.loads.bus.str.contains("distribution_grid").any():
+            rural_heat_df = links_df.loc[
+                links_df["carrier"].isin(rural_heat_carriers)
+                & (links_df["bus0"] == dg_bus)
+            ]
+        else:
+            rural_heat_df = links_df.loc[
+                links_df["carrier"].isin(rural_heat_carriers)
+                & (links_df["bus0"] == str(bus_id))
+            ]
         if not rural_heat_df.empty:
             # Timeseries
             rural_heat_df_p = etrago_obj.links_t["p0"][rural_heat_df.index].sum(axis=1)
@@ -778,9 +799,15 @@ def get_etrago_results_per_bus(bus_id, etrago_obj, pf_post_lopf, max_cos_phi_ren
         # not needed in eDisGo in low flex scenario (bev_charger_df will be empty in
         # that case)
         # BEV charger
-        bev_charger_df = links_df.loc[
-            (links_df["carrier"] == "BEV_charger") & (links_df["bus0"] == str(bus_id))
-        ]
+        if etrago_obj.loads.bus.str.contains("distribution_grid").any():
+            bev_charger_df = links_df.loc[
+                (links_df["carrier"] == "BEV_charger") & (links_df["bus0"] == dg_bus)
+            ]
+        else:
+            bev_charger_df = links_df.loc[
+                (links_df["carrier"] == "BEV_charger")
+                & (links_df["bus0"] == str(bus_id))
+            ]
         if not bev_charger_df.empty:
             bev_charger_df_p = etrago_obj.links_t["p0"][bev_charger_df.index].sum(
                 axis=1
@@ -808,13 +835,52 @@ def get_etrago_results_per_bus(bus_id, etrago_obj, pf_post_lopf, max_cos_phi_ren
     results["timeindex"] = timeseries_index
 
     # Filter dataframes by bus_id
-    # Generators
-    generators_df = etrago_obj.generators[etrago_obj.generators["bus"] == str(bus_id)]
-    # Links
-    links_df = etrago_obj.links[
-        (etrago_obj.links["bus0"] == str(bus_id))
-        | (etrago_obj.links["bus1"] == str(bus_id))
-    ]
+
+    if etrago_obj.loads.bus.str.contains("distribution_grid").any():
+        logger.info("Using data of distribution grid buses within eTraGo")
+
+        dg_bus = str(bus_id) + "_distribution_grid"
+
+        # Generators
+        generators_df = etrago_obj.generators[etrago_obj.generators["bus"] == dg_bus]
+
+        # Links
+        links_df = etrago_obj.links[
+            (
+                (
+                    (etrago_obj.links["bus0"] == dg_bus)
+                    | (etrago_obj.links["bus1"] == dg_bus)
+                )
+                & (etrago_obj.links.carrier != "distribution_grid")
+            )
+        ]
+
+        # dsm still at hv bus
+        links_df = pd.concat(
+            [
+                links_df,
+                etrago_obj.links[
+                    (
+                        (
+                            (etrago_obj.links["bus0"] == str(bus_id))
+                            | (etrago_obj.links["bus1"] == str(bus_id))
+                        )
+                        & (etrago_obj.links.carrier == "dsm")
+                    )
+                ],
+            ]
+        )
+
+    else:
+        # Generators
+        generators_df = etrago_obj.generators[
+            etrago_obj.generators["bus"] == str(bus_id)
+        ]
+        # Links
+        links_df = etrago_obj.links[
+            (etrago_obj.links["bus0"] == str(bus_id))
+            | (etrago_obj.links["bus1"] == str(bus_id))
+        ]
 
     # Fill results
     dispatchable_gens()
