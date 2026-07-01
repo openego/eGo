@@ -20,6 +20,7 @@
 """This file contains the eGo main class as well as input & output functions
 of eGo in order to build the eGo application container.
 """
+
 import logging
 import os
 
@@ -32,12 +33,9 @@ if "READTHEDOCS" not in os.environ:
 
     import pypsa
 
-    from egoio.db_tables.model_draft import EgoGridPfHvSource as Source
-    from egoio.db_tables.model_draft import EgoGridPfHvTempResolution as TempResolution
     from egoio.tools import db
     from etrago import Etrago
     from etrago.appl import run_etrago
-    from sqlalchemy import and_
     from sqlalchemy.orm import sessionmaker
 
     from ego.tools.economics import etrago_convert_overnight_cost
@@ -53,6 +51,8 @@ if "READTHEDOCS" not in os.environ:
     )
     from ego.tools.utilities import get_scenario_setting
 
+    from ego.mv_clustering import cluster_workflow
+
 logger = logging.getLogger("ego")
 
 __copyright__ = "Europa-Universität Flensburg, " "Centre for Sustainable Energy Systems"
@@ -60,191 +60,7 @@ __license__ = "GNU Affero General Public License Version 3 (AGPL-3.0)"
 __author__ = "wolf_bunke,maltesc"
 
 
-class egoBasic(object):
-    """The eGo basic class select and creates based on your
-    ``scenario_setting.json`` file  your definded eTraGo and
-    eDisGo results container. And contains the session for the
-    database connection.
-
-    Parameters
-    ----------
-    jsonpath : :obj:`json`
-        Path to ``scenario_setting.json`` file.
-
-    Returns
-    -------
-    json_file : :obj:dict
-        Dictionary of the ``scenario_setting.json`` file
-    session : :sqlalchemy:`sqlalchemy.orm.session.Session<orm/session_basics.html>`
-        SQLAlchemy session to the OEDB
-
-    """
-
-    def __init__(self, *args, **kwargs):
-        """ """
-
-        logger.info("Using scenario setting: {}".format(self.jsonpath))
-
-        self.json_file = None
-        self.session = None
-        self.scn_name = None
-
-        self.json_file = get_scenario_setting(jsonpath=self.jsonpath)
-
-        # Database connection from json_file
-        try:
-            conn = db.connection(section=self.json_file["eTraGo"]["db"])
-            Session = sessionmaker(bind=conn)
-            self.session = Session()
-            logger.info("Connected to Database")
-        except:  # noqa: E722
-            logger.error("Failed connection to Database", exc_info=True)
-
-        # get scn_name
-        self.scn_name = self.json_file["eTraGo"]["scn_name"]
-
-
-class eTraGoResults(egoBasic):
-    """The ``eTraGoResults`` class creates and contains all results
-    of eTraGo  and it's network container for eGo.
-
-    Returns
-    -------
-    network_etrago: :class:`etrago.tools.io.NetworkScenario`
-        eTraGo network object compiled by :func:`etrago.appl.etrago`
-    etrago: :pandas:`pandas.Dataframe<dataframe>`
-        DataFrame which collects several eTraGo results
-    """
-
-    def __init__(self, *args, **kwargs):
-        """ """
-        super(eTraGoResults, self).__init__(self, *args, **kwargs)
-        self.etrago = None
-
-        logger.info("eTraGo section started")
-
-        if self.json_file["eGo"]["result_id"] is not None:
-
-            # Delete arguments from scenario_setting
-            logger.info("Remove given eTraGo settings from scenario_setting")
-
-            try:
-                self.json_file["eGo"]["eTraGo"] = False
-
-                for key in self.json_file["eTraGo"].keys():
-
-                    self.json_file["eTraGo"][key] = "removed by DB recover"
-
-                # ToDo add scenario_setting for results
-                self.json_file["eTraGo"]["db"] = self.json_file["eTraGo"]["db"]
-                logger.info("Add eTraGo scenario_setting from oedb result")
-                # To do ....
-                _prefix = "EgoGridPfHvResult"
-                schema = "model_draft"
-                packagename = "egoio.db_tables"
-                _pkg = import_module(packagename + "." + schema)
-
-                # get metadata
-                orm_meta = getattr(_pkg, _prefix + "Meta")
-                self.jsonpath = recover_resultsettings(
-                    self.session,
-                    self.json_file,
-                    orm_meta,
-                    self.json_file["eGo"]["result_id"],
-                )
-
-                # add etrago_disaggregated_network from DB
-                logger.info(
-                    "Recovered eTraGo network uses kmeans: {}".format(
-                        self.json_file["eTraGo"]["network_clustering_kmeans"]
-                    )
-                )
-
-            except KeyError:
-                pass
-
-            logger.info("Create eTraGo network from oedb result")
-            self._etrago_network = etrago_from_oedb(self.session, self.json_file)
-
-            if self.json_file["eTraGo"]["disaggregation"] is not False:
-                self._etrago_disaggregated_network = self._etrago_network
-            else:
-                logger.warning("No disaggregated network found in DB")
-                self._etrago_disaggregated_network = None
-
-        # create eTraGo NetworkScenario
-        if self.json_file["eGo"]["eTraGo"] is True:
-
-            if self.json_file["eGo"].get("csv_import_eTraGo") is not False:
-
-                logger.info("Import eTraGo network from csv files")
-
-                self.etrago = Etrago(
-                    csv_folder_name=self.json_file["eGo"].get("csv_import_eTraGo")
-                )
-
-                # Temporary fix if only disaggregated network was imported
-                if len(self.etrago.disaggregated_network.buses)==0:
-                    self.etrago.disaggregated_network = self.etrago.network
-
-            else:
-                logger.info("Create eTraGo network calcualted by eGo")
-
-                from etrago.appl import args as default_args
-
-                def deep_merge(base: dict, override: dict) -> dict:
-                    result = base.copy()
-                    for key, value in override.items():
-                        if key in result and isinstance(result[key], dict) and isinstance(value, dict):
-                            result[key] = deep_merge(result[key], value)
-                        else:
-                            result[key] = value
-                    return result
-
-                etrago_args = deep_merge(default_args, self.json_file["eTraGo"])
-
-                self.etrago = run_etrago(args=etrago_args, json_path=None)
-
-
-class eDisGoResults(eTraGoResults):
-    """The ``eDisGoResults`` class create and contains all results
-    of eDisGo and its network containers.
-
-    """
-
-    def __init__(self, *args, **kwargs):
-        super(eDisGoResults, self).__init__(self, *args, **kwargs)
-
-        if self.json_file["eGo"]["eDisGo"] is True:
-            logger.info("Create eDisGo network")
-
-            etrago_network = (
-                self.etrago.disaggregated_network
-                if self.etrago is not None
-                else None
-            )
-            self._edisgo = EDisGoNetworks(
-                json_file=self.json_file,
-                etrago_network=etrago_network,
-            )
-        else:
-            self._edisgo = None
-            logger.info("No eDisGo network")
-
-    @property
-    def edisgo(self):
-        """
-        Contains basic informations about eDisGo
-
-        Returns
-        -------
-        :pandas:`pandas.DataFrame<dataframe>`
-
-        """
-        return self._edisgo
-
-
-class eGo(eDisGoResults):
+class eGo:
     """Main eGo module which includs all results and main functionalities.
 
 
@@ -263,16 +79,114 @@ class eGo(eDisGoResults):
     """
 
     def __init__(self, jsonpath, *args, **kwargs):
-        self.jsonpath = jsonpath
-        super(eGo, self).__init__(self, *args, **kwargs)
 
-        # add total results here
+        # Extract settings
+        self.jsonpath = jsonpath
+        self._json_file = get_scenario_setting(jsonpath=jsonpath)
+        self.scn_name = self._json_file["eTraGo"]["scn_name"]
+
+        # Database connection from json_file
+        # self._connect_to_db()
+
+    def run(self):
+        """
+        Run all grid optimization steps in the given scenario settings
+
+        Returns
+        -------
+        None.
+
+        """
+        # Perform MV grid clustering
+        self._mvlv_grid_choice_mode = self._json_file["eDisGo"]["choice_mode"]
+        self.set_mvlv_grid_choice()
+
+        # Run eTraGo for optimizing the eHV/HV grid
+        self.etrago = self._setup_etrago()
+
+        # Run eDisGo for optimizing MV/LV grids
+        self.edisgo = self._setup_edisgo()
+
+    def analyze_results(self):
+        """
+        Run all functions to analyze the results of the grid optimizations
+
+        Returns
+        -------
+        None.
+
+        """
+        # Analyze results
         self._total_investment_costs = None
         self._total_operation_costs = None
         self._calculate_investment_cost()
-        self._storage_costs = None
-        self._ehv_grid_costs = None
-        self._mv_grid_costs = None
+
+    def _connect_to_db(self):
+        try:
+            conn = db.connection(section=self.json_file["eTraGo"]["db"])
+            Session = sessionmaker(bind=conn)
+            self.session = Session()
+            logger.info("Connected to Database")
+        except:  # noqa: E722
+            logger.error("Failed connection to Database", exc_info=True)
+
+    def _setup_etrago(self):
+        """
+        Run optimization of ehv/hv grid or load results from provious run
+        """
+        logger.info("eTraGo section started")
+        cfg = self._json_file
+
+        if cfg["eGo"].get("csv_import_eTraGo"):
+            logger.info("Import eTraGo network from csv files")
+            return Etrago(csv_folder_name=cfg["eGo"]["csv_import_eTraGo"])
+
+        if cfg["eGo"]["eTraGo"] is True:
+
+            from etrago.appl import args as default_args
+
+            def deep_merge(base: dict, override: dict) -> dict:
+                result = base.copy()
+                for key, value in override.items():
+                    if (
+                        key in result
+                        and isinstance(result[key], dict)
+                        and isinstance(value, dict)
+                    ):
+                        result[key] = deep_merge(result[key], value)
+                    else:
+                        result[key] = value
+                return result
+
+            etrago_args = deep_merge(default_args, cfg["eTraGo"])
+            logger.info("Create eTraGo network calculated by eGo")
+            return run_etrago(args=etrago_args, json_path=None)
+
+        return None
+
+    def _setup_edisgo(self):
+        """
+        Run optimization of selected mvlv grids
+
+        Returns
+        -------
+        None.
+
+        """
+        if self._json_file["eGo"]["eDisGo"] is True:
+            logger.info("Create eDisGo network")
+
+            etrago_network = (
+                self.etrago.disaggregated_network if self.etrago is not None else None
+            )
+            self._edisgo = EDisGoNetworks(
+                json_file=self._json_file,
+                mvlv_grid_choice=self.mvlv_grid_choice,
+                etrago_network=etrago_network,
+            )
+        else:
+            self._edisgo = None
+            logger.info("No eDisGo network")
 
     def _calculate_investment_cost(self, storage_mv_integration=True):
         """Get total investment costs of all voltage level for storages
@@ -285,15 +199,16 @@ class eGo(eDisGoResults):
         _grid_ehv = None
         extendable = self.json_file["eTraGo"].get("extendable", {})
         extendable_list = (
-            extendable if isinstance(extendable, list)
+            extendable
+            if isinstance(extendable, list)
             else extendable.get("extendable_components", [])
         )
         if self.etrago is not None and "network" in extendable_list:
             _grid_ehv = self.etrago.grid_investment_costs
             _grid_ehv["component"] = "grid"
 
-            self._total_inv_cost = pd.concat([self._total_inv_cost,
-                _grid_ehv], ignore_index=True
+            self._total_inv_cost = pd.concat(
+                [self._total_inv_cost, _grid_ehv], ignore_index=True
             )
 
         _storage = None
@@ -301,8 +216,8 @@ class eGo(eDisGoResults):
             _storage = self.etrago.storage_investment_costs
             _storage["component"] = "storage"
 
-            self._total_inv_cost = pd.concat([self._total_inv_cost,
-                _storage], ignore_index=True
+            self._total_inv_cost = pd.concat(
+                [self._total_inv_cost, _storage], ignore_index=True
             )
 
         _grid_mv_lv = None
@@ -313,8 +228,8 @@ class eGo(eDisGoResults):
                 _grid_mv_lv["component"] = "grid"
                 _grid_mv_lv["differentiation"] = "domestic"
 
-                self._total_inv_cost = pd.concat([self._total_inv_cost,
-                    _grid_mv_lv], ignore_index=True
+                self._total_inv_cost = pd.concat(
+                    [self._total_inv_cost, _grid_mv_lv], ignore_index=True
                 )
 
         # add overnight costs
@@ -323,8 +238,10 @@ class eGo(eDisGoResults):
             not self._total_inv_cost.empty
             and self.json_file["eTraGo"].get("end_snapshot") is not None
         ):
-            self._total_investment_costs["overnight_costs"] = etrago_convert_overnight_cost(
-                self._total_investment_costs["capital_cost"], self.json_file
+            self._total_investment_costs["overnight_costs"] = (
+                etrago_convert_overnight_cost(
+                    self._total_investment_costs["capital_cost"], self.json_file
+                )
             )
         else:
             self._total_investment_costs["overnight_costs"] = None
@@ -552,6 +469,80 @@ class eGo(eDisGoResults):
         """Get iplot of results as html"""
         return igeoplot(self)
 
+    def _cluster_mv_grids(self):
+        """
+        Clusters the MV grids based on the attributes, for a given number
+        of MV grids
+
+        Returns
+        -------
+        :pandas:`pandas.DataFrame<dataframe>`
+            Dataframe containing the clustered MV grids and their weightings
+
+        """
+        cluster_df = cluster_workflow(config=self._json_file)
+        # Filter for clusters with representatives.
+        cluster_df = cluster_df[cluster_df["representative"].astype(bool)]
+        return cluster_df
+
+    def set_mvlv_grid_choice(self):
+        """
+        Sets the grid choice based on the settings file
+
+        """
+
+        choice_df = pd.DataFrame(
+            columns=[
+                "no_of_points_per_cluster",
+                "the_selected_network_id",
+                "represented_grids",
+            ]
+        )
+
+        if self._mvlv_grid_choice_mode == "cluster":
+            cluster_df = self._cluster_mv_grids()
+
+            n_clusters = self._json_file["eDisGo"]["n_clusters"]
+            n_clusters_found = cluster_df.shape[0]
+            if n_clusters == n_clusters_found:
+                logger.info(f"Clustering to {n_clusters} MV grids")
+            else:
+                logger.warning(
+                    f"For {n_clusters} only for {n_clusters_found} clusters "
+                    f"found working grids."
+                )
+
+            choice_df["the_selected_network_id"] = cluster_df["representative"]
+            choice_df["no_of_points_per_cluster"] = cluster_df["n_grids_per_cluster"]
+            choice_df["represented_grids"] = cluster_df["represented_grids"]
+
+        elif self._mvlv_grid_choice_mode == "manual":
+            man_grids = self._json_file["eDisGo"]["manual_grids"]
+
+            choice_df["the_selected_network_id"] = man_grids
+            choice_df["no_of_points_per_cluster"] = 1
+            choice_df["represented_grids"] = [
+                [mv_grid_id] for mv_grid_id in choice_df["the_selected_network_id"]
+            ]
+
+            logger.info("Calculating manually chosen MV grids {}".format(man_grids))
+
+        elif self._mvlv_grid_choice_mode == "all":
+            mv_grids = self._check_available_mv_grids()
+
+            choice_df["the_selected_network_id"] = mv_grids
+            choice_df["no_of_points_per_cluster"] = 1
+            choice_df["represented_grids"] = [
+                [mv_grid_id] for mv_grid_id in choice_df["the_selected_network_id"]
+            ]
+
+            no_grids = len(mv_grids)
+            logger.info("Calculating all available {} MV grids".format(no_grids))
+
+        choice_df = choice_df.sort_values("no_of_points_per_cluster", ascending=False)
+
+        self.mvlv_grid_choice = choice_df
+
     # write_results_to_db():
     logging.info("Initialisation of eGo Results")
 
@@ -573,298 +564,6 @@ def results_to_excel(ego):
     # Close the Pandas Excel writer and output the Excel file.
     writer.save()
     # buses
-
-
-def etrago_from_oedb(session, json_file):
-    """Function which import eTraGo results for the Database by the
-    ``result_id`` number.
-
-    Parameters
-    ----------
-    session : :sqlalchemy:`sqlalchemy.orm.session.Session<orm/session_basics.html>`
-        SQLAlchemy session to the OEDB
-    json_file : :obj:`dict`
-        Dictionary of the ``scenario_setting.json`` file
-
-    Returns
-    -------
-    network_etrago: :class:`etrago.tools.io.NetworkScenario`
-        eTraGo network object compiled by :meth:`etrago.appl.etrago`
-
-    """
-
-    result_id = json_file["eGo"]["result_id"]
-
-    # functions
-    def map_ormclass(name):
-        """
-        Function to map sqlalchemy classes
-        """
-        try:
-            _mapped[name] = getattr(_pkg, _prefix + name)
-
-        except AttributeError:
-            logger.warning("Relation %s does not exist." % name)
-
-        return _mapped
-
-    def id_to_source(query):
-
-        # ormclass = map_ormclass(name)
-        # query = session.query(ormclass).filter(ormclass.result_id == result_id)
-
-        # TODO column naming in database
-        return {k.source_id: k.name for k in query.all()}
-
-    def dataframe_results(name, session, result_id, ormclass):
-        """
-        Function to get pandas DataFrames by the result_id
-
-        Parameters
-        ----------
-        session : :sqlalchemy:`sqlalchemy.orm.session.Session<orm/session_basics.html>`
-            SQLAlchemy session to the OEDB
-        """
-
-        query = session.query(ormclass).filter(ormclass.result_id == result_id)
-
-        if name == "Transformer":
-            name = "Trafo"
-
-        df = pd.read_sql(query.statement, session.bind, index_col=name.lower() + "_id")
-
-        if name == "Link":
-            df["bus0"] = df.bus0.astype(int)
-            df["bus1"] = df.bus1.astype(int)
-
-        if "source" in df:
-
-            source_orm = Source
-
-            source_query = session.query(source_orm)
-
-            df.source = df.source.map(id_to_source(source_query))
-
-        if str(ormclass)[:-2].endswith("T"):
-            df = pd.Dataframe()
-
-        return df
-
-    def series_results(name, column, session, result_id, ormclass):
-        """
-        Function to get Time Series as pandas DataFrames by the result_id
-
-        Parameters
-        ----------
-        session: : sqlalchemy: `sqlalchemy.orm.session.Session<orm/session_basics.html>`
-            SQLAlchemy session to the OEDB
-        """
-
-        # TODO - check index of bus_t and soon is wrong!
-        # TODO: pls make more robust
-
-        id_column = re.findall(r"[A-Z][^A-Z]*", name)[0] + "_" + "id"
-        id_column = id_column.lower()
-
-        query = session.query(
-            getattr(ormclass, id_column), getattr(ormclass, column).label(column)
-        ).filter(and_(ormclass.result_id == result_id))
-
-        df = pd.io.sql.read_sql(
-            query.statement, session.bind, columns=[column], index_col=id_column
-        )
-
-        df.index = df.index.astype(str)
-
-        # change of format to fit pypsa
-        df = df[column].apply(pd.Series).transpose()
-
-        try:
-            assert not df.empty
-            df.index = timeindex
-        except AssertionError:
-            logger.warning("No data for {} in column {}.".format(name, column))
-
-        return df
-
-    # create config for results
-    path = os.getcwd()
-    # add meta_args with args of results
-    config = load_config_file(path + "/tools/config.json")["results"]
-
-    # map and Database settings of etrago_from_oedb()
-    _prefix = "EgoGridPfHvResult"
-    schema = "model_draft"
-    packagename = "egoio.db_tables"
-    _pkg = import_module(packagename + "." + schema)
-    temp_ormclass = "TempResolution"
-    carr_ormclass = "Source"
-    _mapped = {}
-
-    # get metadata
-
-    orm_meta = getattr(_pkg, _prefix + "Meta")
-
-    # check result_id
-
-    result_id_in = (
-        session.query(orm_meta.result_id).filter(orm_meta.result_id == result_id).all()
-    )
-    if result_id_in:
-        logger.info("Choosen result_id %s found in DB", result_id)
-    else:
-        logger.info("Error: result_id not found in DB")
-
-    # get meta data as args
-    meta_args = recover_resultsettings(session, json_file, orm_meta, result_id)
-
-    # get TempResolution
-    temp = TempResolution
-
-    tr = session.query(
-        temp.temp_id, temp.timesteps, temp.resolution, temp.start_time
-    ).one()
-
-    timeindex = pd.DatetimeIndex(
-        start=tr.start_time, periods=tr.timesteps, freq=tr.resolution
-    )
-
-    timeindex = timeindex[
-        meta_args["eTraGo"]["start_snapshot"] - 1 : meta_args["eTraGo"]["end_snapshot"]
-    ]
-
-    # create df for PyPSA network
-
-    network = pypsa.Network()
-    network.set_snapshots(timeindex)
-
-    timevarying_override = False
-
-    if pypsa.__version__ == "0.11.0":
-        old_to_new_name = {
-            "Generator": {
-                "p_min_pu_fixed": "p_min_pu",
-                "p_max_pu_fixed": "p_max_pu",
-                "source": "carrier",
-                "dispatch": "former_dispatch",
-            },
-            "Bus": {"current_type": "carrier"},
-            "Transformer": {"trafo_id": "transformer_id"},
-            "Storage": {
-                "p_min_pu_fixed": "p_min_pu",
-                "p_max_pu_fixed": "p_max_pu",
-                "soc_cyclic": "cyclic_state_of_charge",
-                "soc_initial": "state_of_charge_initial",
-                "source": "carrier",
-            },
-        }
-
-        timevarying_override = True
-
-    else:
-        old_to_new_name = {
-            "Storage": {
-                "soc_cyclic": "cyclic_state_of_charge",
-                "soc_initial": "state_of_charge_initial",
-            }
-        }
-
-    # get data into dataframes
-    logger.info("Start building eTraGo results network")
-    for comp, comp_t_dict in config.items():
-
-        orm_dict = map_ormclass(comp)
-
-        pypsa_comp_name = "StorageUnit" if comp == "Storage" else comp
-        ormclass = orm_dict[comp]
-
-        if not comp_t_dict:
-            df = dataframe_results(comp, session, result_id, ormclass)
-
-            if comp in old_to_new_name:
-                tmp = old_to_new_name[comp]
-                df.rename(columns=tmp, inplace=True)
-
-            network.import_components_from_dataframe(df, pypsa_comp_name)
-
-        if comp_t_dict:
-
-            for name, columns in comp_t_dict.items():
-
-                name = name[:-1]
-                pypsa_comp_name = name
-
-                if name == "Storage":
-                    pypsa_comp_name = "StorageUnit"
-                if name == "Transformer":
-                    name = "Trafo"
-
-                for col in columns:
-
-                    df_series = series_results(name, col, session, result_id, ormclass)
-
-                    # TODO: VMagPuSet?
-                    if timevarying_override and comp == "Generator":
-                        idx = df[df.former_dispatch == "flexible"].index
-                        idx = [i for i in idx if i in df_series.columns]
-                        df_series.drop(idx, axis=1, inplace=True)
-
-                    try:
-
-                        pypsa.io.import_series_from_dataframe(
-                            network, df_series, pypsa_comp_name, col
-                        )
-
-                    except (ValueError, AttributeError):
-                        logger.warning(
-                            "Series %s of component %s could not be"
-                            " imported" % (col, pypsa_comp_name)
-                        )
-
-    logger.info("Imported eTraGo results of id = %s ", result_id)
-    return network
-
-
-def recover_resultsettings(session, json_file, orm_meta, result_id):
-    """Recover scenario_setting from database"""
-
-    # check result_id
-    result_id_in = (
-        session.query(orm_meta.result_id).filter(orm_meta.result_id == result_id).all()
-    )
-
-    # get meta data as json_file
-    meta = session.query(
-        orm_meta.result_id,
-        orm_meta.scn_name,
-        orm_meta.calc_date,
-        orm_meta.user_name,
-        orm_meta.method,
-        orm_meta.start_snapshot,
-        orm_meta.end_snapshot,
-        orm_meta.solver,
-        orm_meta.settings,
-    ).filter(orm_meta.result_id == result_id)
-
-    meta_df = pd.read_sql(meta.statement, meta.session.bind, index_col="result_id")
-
-    # update json_file with main data by result_id
-    json_file["eTraGo"]["scn_name"] = meta_df.scn_name[result_id]
-    json_file["eTraGo"]["method"] = meta_df.method[result_id]
-    json_file["eTraGo"]["start_snapshot"] = meta_df.start_snapshot[result_id]
-    json_file["eTraGo"]["end_snapshot"] = meta_df.end_snapshot[result_id]
-    json_file["eTraGo"]["solver"] = meta_df.solver[result_id]
-
-    # update json_file with specific data by result_id
-    meta_set = dict(meta_df.settings[result_id])
-
-    for key in json_file["eTraGo"].keys():
-        try:
-            json_file["eTraGo"][key] = meta_set[key]
-        except KeyError:
-            pass
-
-    return json_file
 
 
 if __name__ == "__main__":
