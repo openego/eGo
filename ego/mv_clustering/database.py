@@ -15,19 +15,66 @@ logger = logging.getLogger(__name__)
 
 
 def get_engine(config=None):
-    config = config["database"]
+    """
+    Build the database engine from the scenario ``database`` settings.
 
-    if config["database_name"] == "oedb":
-        import oedialect
-        engine = create_engine("postgresql+oedialect://oep.iks.cs.ovgu.de")
-    else:
+    The data source is chosen via the ``source`` key of the ``database``
+    section of the scenario JSON:
+
+    * ``source: "local"`` — local egon-data database reached through an SSH
+      tunnel. The tunnel configuration is read from ``config_path`` if given,
+      otherwise from the default location
+      (``EGON_DATA_CONFIG`` env var or ``~/.ssh/egon-data.configuration.yaml``).
+    * ``source: "oep"`` (or no source given) — remote Open Energy Platform
+      (previous default behaviour).
+
+    A legacy explicit direct-local database (a concrete ``database_name`` plus
+    ``host``) is still honoured for backward compatibility.
+    """
+    db_config = config["database"]
+    source = str(db_config.get("source") or "").lower()
+    database_name = db_config.get("database_name")
+
+    # Placeholder markers that do NOT denote a concrete local database.
+    placeholders = ("oedb", "<database_name>", "", None)
+
+    # Legacy explicit direct local database: a concrete database name plus host
+    # is given (e.g. a tunnel ego opened itself via sshtunnel()).
+    if (
+        source not in ("local", "oep")
+        and database_name not in placeholders
+        and db_config.get("host")
+    ):
         engine = create_engine(
-            f"postgresql+psycopg2://{config['user']}:"
-            f"{config['password']}@{config['host']}:"
-            f"{int(config['port'])}/{config['database_name']}",
+            f"postgresql+psycopg2://{db_config['user']}:"
+            f"{db_config['password']}@{db_config['host']}:"
+            f"{int(db_config['port'])}/{database_name}",
             echo=False,
         )
-    logger.info(f"Created engine: {engine}.")
+        logger.info(f"Created engine for local database: {engine}.")
+        return engine
+
+    if source == "local":
+        # Local egon-data database via SSH tunnel. Reuse eDisGo's proven SSH
+        # tunnel + credentials handling so all tools share one configuration.
+        # config_path=None makes eDisGo fall back to the default location.
+        from edisgo.io.db import engine as egon_engine
+
+        config_path = db_config.get("config_path")
+        engine = egon_engine(path=config_path, ssh=True)
+        logger.info(
+            f"Created engine for local egon-data database via SSH tunnel "
+            f"(config {config_path or 'default (~/.ssh/...)'}): {engine}."
+        )
+        return engine
+
+    # source "oep" or nothing configured: connect to the Open Energy Platform.
+    # Keep ego's own OEP URL so register_tables_in_saio() keeps distinguishing
+    # the OEP schema from the local egon-data schema correctly.
+    import oedialect  # noqa: F401
+
+    engine = create_engine("postgresql+oedialect://oep.iks.cs.ovgu.de")
+    logger.info(f"Created OEP engine: {engine}.")
     return engine
 
 

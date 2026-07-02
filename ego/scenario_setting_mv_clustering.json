@@ -82,6 +82,9 @@
   },
 
   "database": {
+    "_comment": "source: 'local' -> egon-data via SSH-Tunnel (config_path oder Default ~/.ssh/egon-data.configuration.yaml); 'oep' bzw. weglassen -> Open Energy Platform.",
+    "source": "local",
+    "config_path": null,
     "database_name": "oedb",
     "host": "",
     "port": "",
