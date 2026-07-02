@@ -107,19 +107,16 @@ class ETraGoMinimalData:
 
             setattr(self, component + "_t", new_component_timeseries_dict)
 
-
         def exclude_wind_and_solar_hv(self, json_file):
             engine = database.get_engine(json_file)
             orm = database.register_tables_in_saio(engine)
 
             grid_ids_df = db_io.get_grid_ids(engine=engine, orm=orm)
             solar_capacity_df = db_io.get_solar_capacity(
-                json_file["eTraGo"]["scn_name"],
-                grid_ids_df.index, orm, engine=engine
+                json_file["eTraGo"]["scn_name"], grid_ids_df.index, orm, engine=engine
             )
             wind_capacity_df = db_io.get_wind_capacity(
-                json_file["eTraGo"]["scn_name"],
-                grid_ids_df.index, orm, engine=engine
+                json_file["eTraGo"]["scn_name"], grid_ids_df.index, orm, engine=engine
             )
             solar_capacity_df.index = solar_capacity_df.index.astype(str)
             wind_capacity_df.index = wind_capacity_df.index.astype(str)
@@ -127,52 +124,53 @@ class ETraGoMinimalData:
             # Select wind generators that are at least partly attached to MVLV
             mvlv_wind_generators = self.generators[
                 (self.generators.carrier.str.contains("wind_onshore"))
-                &(self.generators.bus.isin(wind_capacity_df.index))
-                ]
+                & (self.generators.bus.isin(wind_capacity_df.index))
+            ]
             mvlv_share_wind = wind_capacity_df.loc[
-                mvlv_wind_generators.bus, "wind_capacity_mw"].mul(
-                    1/self.generators.loc[
-                        mvlv_wind_generators.index, "p_nom"
-                        ].values)
+                mvlv_wind_generators.bus, "wind_capacity_mw"
+            ].mul(1 / self.generators.loc[mvlv_wind_generators.index, "p_nom"].values)
 
             # Reduce p_nom to capacity in MVLV grid
             self.generators.loc[
                 mvlv_wind_generators.index, "p_nom"
-                ] *= mvlv_share_wind.values
+            ] *= mvlv_share_wind.values
 
             # Reduce timeseries
             self.generators_t["p"].loc[
                 :, mvlv_wind_generators.index
-                ] *= mvlv_share_wind.values
+            ] *= mvlv_share_wind.values
             self.generators_t["q"].loc[
                 :, mvlv_wind_generators.index
-                ] *= mvlv_share_wind.values
+            ] *= mvlv_share_wind.values
 
             # Select solar generators that are at least partly attached to MVLV
             solar_carriers = ["solar", "solar_rooftop"]
-            solar_generators = self.generators[
-                (self.generators.carrier.isin(solar_carriers))
-                ].groupby("bus").p_nom.sum()
+            solar_generators = (
+                self.generators[(self.generators.carrier.isin(solar_carriers))]
+                .groupby("bus")
+                .p_nom.sum()
+            )
 
             mvlv_solar_generators = self.generators[
                 (self.generators.carrier.isin(solar_carriers))
-                &(self.generators.bus.isin(solar_capacity_df.index))
-                ]
-            mvlv_share_solar = solar_capacity_df.mul(
-                1/solar_generators, axis=0).dropna().squeeze()
+                & (self.generators.bus.isin(solar_capacity_df.index))
+            ]
+            mvlv_share_solar = (
+                solar_capacity_df.mul(1 / solar_generators, axis=0).dropna().squeeze()
+            )
 
             # Reduce p_nom to capacity in MVLV grid
             self.generators.loc[
                 mvlv_solar_generators.index, "p_nom"
-                ] *= mvlv_share_solar.loc[mvlv_solar_generators.bus].values
+            ] *= mvlv_share_solar.loc[mvlv_solar_generators.bus].values
 
             # Reduce timeseries
             self.generators_t["p"].loc[
                 :, mvlv_solar_generators.index
-                ] *= mvlv_share_solar.loc[mvlv_solar_generators.bus].values
+            ] *= mvlv_share_solar.loc[mvlv_solar_generators.bus].values
             self.generators_t["q"].loc[
                 :, mvlv_solar_generators.index
-                ] *= mvlv_share_solar.loc[mvlv_solar_generators.bus].values
+            ] *= mvlv_share_solar.loc[mvlv_solar_generators.bus].values
 
         t_start = time.perf_counter()
 
@@ -184,8 +182,9 @@ class ETraGoMinimalData:
 
         logger.info(f"Data selection time {time.perf_counter() - t_start}")
 
-        # Exclude wind and solar generators attached to the HV side
-        exclude_wind_and_solar_hv(self, json_file)
+        if not "distribution_grid" in etrago_network.buses.carrier.unique():
+            # Exclude wind and solar generators attached to the HV side
+            exclude_wind_and_solar_hv(self, json_file)
 
 
 def get_etrago_results_per_bus(bus_id, etrago_obj, pf_post_lopf, max_cos_phi_ren):
@@ -516,8 +515,7 @@ def get_etrago_results_per_bus(bus_id, etrago_obj, pf_post_lopf, max_cos_phi_ren
                 # If set limit maximum reactive power
                 if max_cos_phi_ren:
                     logger.info(
-                        "Applying Q limit (max cos(phi)={})".format(
-                            max_cos_phi_ren)
+                        "Applying Q limit (max cos(phi)={})".format(max_cos_phi_ren)
                     )
                     phi = math.acos(max_cos_phi_ren)
                     for timestep in timeseries_index:
@@ -548,10 +546,16 @@ def get_etrago_results_per_bus(bus_id, etrago_obj, pf_post_lopf, max_cos_phi_ren
 
     def storages():
         # Filter batteries
-        storages_df = etrago_obj.storage_units.loc[
-            (etrago_obj.storage_units["carrier"] == "battery")
-            & (etrago_obj.storage_units["bus"] == str(bus_id))
-        ]
+        if etrago_obj.loads.bus.str.contains("distribution_grid").any():
+            storages_df = etrago_obj.storage_units.loc[
+                (etrago_obj.storage_units["carrier"] == "home_battery")
+                & (etrago_obj.storage_units["bus"] == dg_bus)
+            ]
+        else:
+            storages_df = etrago_obj.storage_units.loc[
+                (etrago_obj.storage_units["carrier"] == "battery")
+                & (etrago_obj.storage_units["bus"] == str(bus_id))
+            ]
         if not storages_df.empty:
             # p_nom - p_nom_opt can always be used, if extendable is True or False
             storages_df_p_nom = storages_df["p_nom_opt"].sum()
@@ -602,11 +606,19 @@ def get_etrago_results_per_bus(bus_id, etrago_obj, pf_post_lopf, max_cos_phi_ren
     def central_heat():
 
         central_heat_carriers = ["central_heat_pump", "central_resistive_heater"]
-        central_heat_df = links_df.loc[
-            (links_df["carrier"].isin(central_heat_carriers))
-            & (links_df["bus0"] == str(bus_id))
-            & (links_df["p_nom"] <= 20)
-        ]
+
+        if etrago_obj.loads.bus.str.contains("distribution_grid").any():
+            central_heat_df = links_df.loc[
+                (links_df["carrier"].isin(central_heat_carriers))
+                & (links_df["bus0"] == dg_bus)
+                & (links_df["p_nom"] <= 20)
+            ]
+        else:
+            central_heat_df = links_df.loc[
+                (links_df["carrier"].isin(central_heat_carriers))
+                & (links_df["bus0"] == str(bus_id))
+                & (links_df["p_nom"] <= 20)
+            ]
         if not central_heat_df.empty:
             # Timeseries
             central_heat_df_p = etrago_obj.links_t["p0"][central_heat_df.index].sum(
@@ -722,10 +734,16 @@ def get_etrago_results_per_bus(bus_id, etrago_obj, pf_post_lopf, max_cos_phi_ren
         # not needed in eDisGo in low flex scenario, but obtained anyway
         # ToDo (low priority) add resistive heaters (they only exist in eGon100RE)
         rural_heat_carriers = ["rural_heat_pump"]
-        rural_heat_df = links_df.loc[
-            links_df["carrier"].isin(rural_heat_carriers)
-            & (links_df["bus0"] == str(bus_id))
-        ]
+        if etrago_obj.loads.bus.str.contains("distribution_grid").any():
+            rural_heat_df = links_df.loc[
+                links_df["carrier"].isin(rural_heat_carriers)
+                & (links_df["bus0"] == dg_bus)
+            ]
+        else:
+            rural_heat_df = links_df.loc[
+                links_df["carrier"].isin(rural_heat_carriers)
+                & (links_df["bus0"] == str(bus_id))
+            ]
         if not rural_heat_df.empty:
             # Timeseries
             rural_heat_df_p = etrago_obj.links_t["p0"][rural_heat_df.index].sum(axis=1)
@@ -778,9 +796,15 @@ def get_etrago_results_per_bus(bus_id, etrago_obj, pf_post_lopf, max_cos_phi_ren
         # not needed in eDisGo in low flex scenario (bev_charger_df will be empty in
         # that case)
         # BEV charger
-        bev_charger_df = links_df.loc[
-            (links_df["carrier"] == "BEV_charger") & (links_df["bus0"] == str(bus_id))
-        ]
+        if etrago_obj.loads.bus.str.contains("distribution_grid").any():
+            bev_charger_df = links_df.loc[
+                (links_df["carrier"] == "BEV_charger") & (links_df["bus0"] == dg_bus)
+            ]
+        else:
+            bev_charger_df = links_df.loc[
+                (links_df["carrier"] == "BEV_charger")
+                & (links_df["bus0"] == str(bus_id))
+            ]
         if not bev_charger_df.empty:
             bev_charger_df_p = etrago_obj.links_t["p0"][bev_charger_df.index].sum(
                 axis=1
@@ -808,13 +832,52 @@ def get_etrago_results_per_bus(bus_id, etrago_obj, pf_post_lopf, max_cos_phi_ren
     results["timeindex"] = timeseries_index
 
     # Filter dataframes by bus_id
-    # Generators
-    generators_df = etrago_obj.generators[etrago_obj.generators["bus"] == str(bus_id)]
-    # Links
-    links_df = etrago_obj.links[
-        (etrago_obj.links["bus0"] == str(bus_id))
-        | (etrago_obj.links["bus1"] == str(bus_id))
-    ]
+
+    if etrago_obj.loads.bus.str.contains("distribution_grid").any():
+        logger.info("Using data of distribution grid buses within eTraGo")
+
+        dg_bus = str(bus_id) + "_distribution_grid"
+
+        # Generators
+        generators_df = etrago_obj.generators[etrago_obj.generators["bus"] == dg_bus]
+
+        # Links
+        links_df = etrago_obj.links[
+            (
+                (
+                    (etrago_obj.links["bus0"] == dg_bus)
+                    | (etrago_obj.links["bus1"] == dg_bus)
+                )
+                & (etrago_obj.links.carrier != "distribution_grid")
+            )
+        ]
+
+        # dsm still at hv bus
+        links_df = pd.concat(
+            [
+                links_df,
+                etrago_obj.links[
+                    (
+                        (
+                            (etrago_obj.links["bus0"] == str(bus_id))
+                            | (etrago_obj.links["bus1"] == str(bus_id))
+                        )
+                        & (etrago_obj.links.carrier == "dsm")
+                    )
+                ],
+            ]
+        )
+
+    else:
+        # Generators
+        generators_df = etrago_obj.generators[
+            etrago_obj.generators["bus"] == str(bus_id)
+        ]
+        # Links
+        links_df = etrago_obj.links[
+            (etrago_obj.links["bus0"] == str(bus_id))
+            | (etrago_obj.links["bus1"] == str(bus_id))
+        ]
 
     # Fill results
     dispatchable_gens()
