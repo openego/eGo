@@ -35,6 +35,8 @@
   "eDisGo": {
     "overlying_grid": true,
     "overlying_grid_source": "/home/path_to/overlying_grid",
+    "overlying_grid": false,
+    "overlying_grid_source": "/storage/JoDa/edisgo_playground/overlying_grid_data",
     "preset": "uc4_example",
     "grid_path": "/home/path_to/grids",
     "legacy_ding0_grids": false,
@@ -49,6 +51,7 @@
     "max_cos_phi_renewable": 0.9,
 
     "results": "/home/path_to/results",
+    "results": "/storage/JoDa/ego/results",
     "solver": "gurobi",
     "gridversion": null, 
 
