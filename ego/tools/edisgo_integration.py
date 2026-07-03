@@ -673,6 +673,21 @@ class EDisGoNetworks:
             cfg["overlying_grid"] = {"enabled": False}
         return cfg
 
+    def _get_edisgo_engine(self):
+        """
+        Build (once) and return the database engine handed to edisgo.
+
+        Uses the eGo scenario ``database`` section (``source``/``config_path``)
+        via :func:`ego.mv_clustering.database.get_engine`, so all edisgo tasks
+        share this single connection and the eGo database config takes
+        precedence over the edisgo preset. Cached across grids.
+        """
+        if getattr(self, "_edisgo_db_engine", None) is None:
+            from ego.mv_clustering.database import get_engine
+
+            self._edisgo_db_engine = get_engine(self._json_file)
+        return self._edisgo_db_engine
+
     def _run_one_grid_via_runner(self, mv_grid_id):
         """
         Delegate the per-grid eDisGo workflow to edisgo.run.run_edisgo.
@@ -707,8 +722,16 @@ class EDisGoNetworks:
             mv_grid_id, self._preset,
         )
 
+        # Build the database engine once from the eGo scenario config
+        # (database.source) and hand it to edisgo, so all edisgo tasks use this
+        # single connection and the eGo database config overrides the preset.
+        engine = self._get_edisgo_engine()
 
-        edisgo_grid = edisgo_runner(cfg,overlying_grid_data=overlying_grid_data)
+        edisgo_grid = edisgo_runner(
+            cfg,
+            overlying_grid_data=overlying_grid_data,
+            engine=engine,
+        )
         self._status_update(mv_grid_id, "end")
         return edisgo_grid
 
