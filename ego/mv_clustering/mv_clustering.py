@@ -42,13 +42,12 @@ if "READTHEDOCS" not in os.environ:
     from ego.mv_clustering.database import (
         get_engine,
         register_tables_in_saio,
-        sshtunnel,
     )
 
 logger = logging.getLogger(__name__)
 
 
-def get_cluster_attributes(attributes_path, scenario, config=None):
+def get_cluster_attributes(attributes_path, scenario):
     """
     Determines attributes to cluster MV grids by.
 
@@ -56,7 +55,9 @@ def get_cluster_attributes(attributes_path, scenario, config=None):
     maximum load of EVs (in case of uncoordinated charging). All attributes are given
     in MW as well as in MW per km^2.
 
-    Data is written to csv file and returned.
+    Data is written to csv file and returned. The database source is
+    auto-detected via eDisGo (egon-data configuration file if present,
+    otherwise OEP).
 
     Parameters
     ----------
@@ -65,8 +66,6 @@ def get_cluster_attributes(attributes_path, scenario, config=None):
     scenario : str
         Scenario to determine attributes for. Possible options are "status_quo",
         "eGon2035", and "eGon100RE".
-    config : dict
-        Config dict.
 
     Returns
     -------
@@ -104,48 +103,48 @@ def get_cluster_attributes(attributes_path, scenario, config=None):
             and district heating) from status quo to given scenario in MW per km^2
 
     """
-    # get attributes from database
-    with sshtunnel(config=config):
-        engine = get_engine(config=config)
-        orm = register_tables_in_saio(engine)
+    # get attributes from database (source auto-detected via eDisGo,
+    # SSH tunnel handled by the egon-data configuration file if needed)
+    engine = get_engine()
+    orm = register_tables_in_saio(engine)
 
-        grid_ids_df = db_io.get_grid_ids(engine=engine, orm=orm)
-        solar_capacity_df = db_io.get_solar_capacity(
-            scenario, grid_ids_df.index, orm, engine=engine
+    grid_ids_df = db_io.get_grid_ids(engine=engine, orm=orm)
+    solar_capacity_df = db_io.get_solar_capacity(
+        scenario, grid_ids_df.index, orm, engine=engine
+    )
+    if scenario == "status_quo":
+        solar_capacity_sq_df = solar_capacity_df
+    else:
+        solar_capacity_sq_df = db_io.get_solar_capacity(
+            "status_quo", grid_ids_df.index, orm, engine=engine
         )
-        if scenario == "status_quo":
-            solar_capacity_sq_df = solar_capacity_df
-        else:
-            solar_capacity_sq_df = db_io.get_solar_capacity(
-                "status_quo", grid_ids_df.index, orm, engine=engine
-            )
-        wind_capacity_df = db_io.get_wind_capacity(
-            scenario, grid_ids_df.index, orm, engine=engine
+    wind_capacity_df = db_io.get_wind_capacity(
+        scenario, grid_ids_df.index, orm, engine=engine
+    )
+    if scenario == "status_quo":
+        wind_capacity_sq_df = wind_capacity_df
+    else:
+        wind_capacity_sq_df = db_io.get_wind_capacity(
+            "status_quo", grid_ids_df.index, orm, engine=engine
         )
-        if scenario == "status_quo":
-            wind_capacity_sq_df = wind_capacity_df
-        else:
-            wind_capacity_sq_df = db_io.get_wind_capacity(
-                "status_quo", grid_ids_df.index, orm, engine=engine
-            )
-        emob_capacity_df = db_io.get_electromobility_maximum_load(
-            scenario, grid_ids_df.index, orm, engine=engine
+    emob_capacity_df = db_io.get_electromobility_maximum_load(
+        scenario, grid_ids_df.index, orm, engine=engine
+    )
+    if scenario == "status_quo":
+        emob_capacity_sq_df = emob_capacity_df
+    else:
+        emob_capacity_sq_df = db_io.get_electromobility_maximum_load(
+            "status_quo", grid_ids_df.index, orm, engine=engine
         )
-        if scenario == "status_quo":
-            emob_capacity_sq_df = emob_capacity_df
-        else:
-            emob_capacity_sq_df = db_io.get_electromobility_maximum_load(
-                "status_quo", grid_ids_df.index, orm, engine=engine
-            )
-        pth_capacity_df = db_io.get_pth_capacity(
-            scenario, grid_ids_df.index, orm, engine=engine
+    pth_capacity_df = db_io.get_pth_capacity(
+        scenario, grid_ids_df.index, orm, engine=engine
+    )
+    if scenario == "status_quo":
+        pth_capacity_sq_df = pth_capacity_df
+    else:
+        pth_capacity_sq_df = db_io.get_pth_capacity(
+            "status_quo", grid_ids_df.index, orm, engine=engine
         )
-        if scenario == "status_quo":
-            pth_capacity_sq_df = pth_capacity_df
-        else:
-            pth_capacity_sq_df = db_io.get_pth_capacity(
-                "status_quo", grid_ids_df.index, orm, engine=engine
-            )
     emob_rename_col = "electromobility_max_load_expansion_mw"
     df = pd.concat(
         [
@@ -360,7 +359,7 @@ def cluster_workflow(config=None):
         os.makedirs(config["eDisGo"]["results"])
     scenario = config["eTraGo"]["scn_name"]
     cluster_attributes_df = get_cluster_attributes(
-        attributes_path=attributes_path, scenario=scenario, config=config
+        attributes_path=attributes_path, scenario=scenario
     )
 
     # select attributes to cluster by

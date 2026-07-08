@@ -1,71 +1,30 @@
 import logging
-import subprocess
 import sys
-import time
 
 from contextlib import contextmanager
 from functools import wraps
 
 import saio
 
-from sqlalchemy import create_engine
+from edisgo.io.db import engine as edisgo_engine
 from sqlalchemy.orm import sessionmaker
 
 logger = logging.getLogger(__name__)
 
 
-def get_engine(config=None):
-    config = config["database"]
+def get_engine():
+    """
+    Return a database engine via eDisGo's source resolution.
 
-    if config["database_name"] == "oedb":
-        import oedialect
-        engine = create_engine("postgresql+oedialect://oep.iks.cs.ovgu.de")
-    else:
-        engine = create_engine(
-            f"postgresql+psycopg2://{config['user']}:"
-            f"{config['password']}@{config['host']}:"
-            f"{int(config['port'])}/{config['database_name']}",
-            echo=False,
-        )
+    Auto-detects the source: the egon-data database described by the
+    configuration file (``~/.ssh/egon-data.configuration.yaml`` or
+    ``EGON_DATA_CONFIG``, SSH tunnel included if configured there) if
+    such a file exists, otherwise the OEP. Same mechanism as the
+    eDisGo runs themselves.
+    """
+    engine = edisgo_engine()
     logger.info(f"Created engine: {engine}.")
     return engine
-
-
-@contextmanager
-def sshtunnel(config=None):
-    ssh_config = config["ssh"]
-    if ssh_config["enabled"]:
-        try:
-            logger.info("Open ssh tunnel.")
-            proc = subprocess.Popen(
-                [
-                    "ssh",
-                    "-N",
-                    "-L",
-                    f"{ssh_config['local_port']}"
-                    f":{ssh_config['local_address']}"
-                    f":{ssh_config['port']}",
-                    f"{ssh_config['user']}@{ssh_config['ip']}",
-                ],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-            )
-            time.sleep(2)
-            yield proc
-        finally:
-            logger.info("Close ssh tunnel.")
-            proc.kill()
-            outs, errs = proc.communicate()
-            logger.info(
-                f"SSH process output STDOUT:{outs.decode('utf-8')}, "
-                f"STDERR:{errs.decode('utf-8')}"
-            )
-    else:
-        try:
-            logger.info("Don't use an ssh tunnel.")
-            yield None
-        finally:
-            logger.info("Close contextmanager.")
 
 
 @contextmanager
@@ -96,7 +55,7 @@ def session_decorator(f):
 
 def register_tables_in_saio(engine):
 
-    if "oep.iks.cs.ovgu.de" in str(engine.url):
+    if "oedialect" in str(engine.url):
         db_tables = {
             "egon_mv_grid_district": "edut_00_080",
             "generators_pv_status_quo": "edut_00_156",

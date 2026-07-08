@@ -1,42 +1,33 @@
 {
   "_comment": "eDisGo laeuft pro Netz ueber edisgo.run.run_edisgo mit dem Preset aus eDisGo.preset (worst_case | flex_opf | overlying_grid_opf oder Pfad zu eigenem YAML). Datenbank: Auto-Detect — existiert ~/.ssh/egon-data.configuration.yaml (bzw. EGON_DATA_CONFIG), wird die darin beschriebene egon-data-DB genutzt (inkl. SSH-Tunnel, falls dort konfiguriert), sonst die OEP.",
   "eGo": {
-    "eTraGo": true,
+    "eTraGo": false,
     "eDisGo": true,
-    "csv_import_eTraGo": "/path/to/predefined/etrago/results",
+    "csv_import_eTraGo": false,
     "csv_import_eDisGo": false,
     "random_seed": 42
   },
   "eTraGo": {
     "scn_name": "eGon2035",
     "db": "egon-data",
-    "extendable": [],
-    "pf_post_lopf": {
-      "active": true
-    },
-    "start_snapshot": 1,
-    "end_snapshot": 8760
+    "extendable": []
   },
   "eDisGo": {
-    "overlying_grid": true,
-    "overlying_grid_source": "etrago",
-    "preset": "overlying_grid_opf",
-    "grid_path": "/path/to/edisgo/grids",
+    "preset": "flex_opf",
+    "grid_path": "/path/to/ding0_grids",
     "legacy_ding0_grids": false,
-    "choice_mode": "cluster",
-    "cluster_attributes": [
-      "pv_capacity_expansion_mw_per_km2",
-      "wind_capacity_expansion_mw_per_km2",
-      "electromobility_max_load_expansion_mw_per_km2",
-      "pth_capacity_expansion_mw_per_km2"
+    "choice_mode": "manual",
+    "cluster_attributes": [],
+    "only_cluster": false,
+    "manual_grids": [
+      32377
     ],
-    "manual_grids": [],
-    "n_clusters": 5,
+    "n_clusters": 1,
     "parallelization": false,
     "max_calc_time": 1.0,
     "max_workers": 1,
     "max_cos_phi_renewable": 0.9,
-    "results": "results_ego_edisgo",
+    "results": "/path/to/results",
     "solver": "gurobi",
     "gridversion": null
   }

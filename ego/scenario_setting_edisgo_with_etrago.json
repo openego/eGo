@@ -1,23 +1,5 @@
 {
-  "_comment": "UC3: Grid laden, Basis-Reinforce, dann HP/EV/Batteries laden, echte egon_data-Zeitreihen, finales Reinforce (kein OPF, kein eTraGo).",
-  "_workflow": [
-    "Workflow (alles in einem Aufruf):",
-    "  1. 1_setup_grid: Grid laden + Generatoren importieren (kein HP/EV/Batteries)",
-    "  2. base_reinforce: Worst-Case-TS intern + Basis-Reinforce + Reset equipment_changes",
-    "  3. import_heat_pumps_from_db: WP aus egon_data importieren",
-    "  4. import_home_batteries_from_db: Hausspeicher aus egon_data importieren",
-    "  5. import_dsm_from_db: DSM aus egon_data importieren",
-    "  6. import_electromobility_from_db: EV aus egon_data importieren (dumb charging)",
-    "  7. oedb_ts: Echte Zeitreihen aus egon_data (Wind/Solar aus egon_era5_renewable_feedin + Stromnachfrage)",
-    "  8. 5_grid_reinforcement: Szenario-Reinforce — Kosten = Mehraufwand unter realen Zeitreihen (ohne Optimierung)",
-    "",
-    "Kein eTraGo noetig, kein OPF.",
-    "Unterschied zu UC1: UC3 nutzt reale Zeitreihen (oedb_ts) statt synthetischer Worst-Case-Szenarien.",
-    "add selection of flexibility and emob use cases",
-    "add selection of opf version and method",
-    "add selection of charging strategy and heat pump control mode"
-  ],
-
+  "_comment": "eDisGo laeuft pro Netz ueber edisgo.run.run_edisgo mit dem Preset aus eDisGo.preset (worst_case | flex_opf | overlying_grid_opf oder Pfad zu eigenem YAML). Datenbank: Auto-Detect — existiert ~/.ssh/egon-data.configuration.yaml (bzw. EGON_DATA_CONFIG), wird die darin beschriebene egon-data-DB genutzt (inkl. SSH-Tunnel, falls dort konfiguriert), sonst die OEP.",
   "eGo": {
     "eTraGo": true,
     "eDisGo": true,
@@ -25,19 +7,17 @@
     "csv_import_eDisGo": false,
     "random_seed": 42
   },
-
   "eTraGo": {
-    "method": { 
-        "n_iter": 1,
-        "formulation": "pyomo",
-        "market_optimization":
-            {
-                "active": false
-             },
-        "distribution_grids":false
+    "method": {
+      "n_iter": 1,
+      "formulation": "pyomo",
+      "market_optimization": {
+        "active": false
+      },
+      "distribution_grids": false
     },
     "pf_post_lopf": {
-        "active": true
+      "active": true
     },
     "start_snapshot": 1,
     "end_snapshot": 25,
@@ -45,73 +25,30 @@
     "spatial_disaggregation": "uniform",
     "skip_snapshots": false,
     "temporal_disaggregation": {
-    	"active": false,
-    	"no_slices": 8
+      "active": false,
+      "no_slices": 8
     },
     "load_shedding": true
-},
-
+  },
   "eDisGo": {
     "overlying_grid": true,
     "overlying_grid_source": "etrago",
-    "preset": "uc4_example",
+    "preset": "overlying_grid_opf",
     "grid_path": "/home/path_to/grids",
     "legacy_ding0_grids": false,
     "choice_mode": "manual",
     "cluster_attributes": [],
     "only_cluster": false,
-    "manual_grids": [32377],
+    "manual_grids": [
+      32377
+    ],
     "n_clusters": 1,
     "parallelization": false,
     "max_calc_time": 1.0,
     "max_workers": 1,
     "max_cos_phi_renewable": 0.9,
-
     "results": "/home/path_to/results",
     "solver": "gurobi",
-    "gridversion": null,
-
-    "tasks": [
-      "1_setup_grid",
-      "base_reinforce",
-      "import_generators_from_db",
-      "import_home_batteries_from_db",
-      "import_heat_pumps_from_db",
-      "import_dsm_from_db",
-      "import_electromobility_from_db",
-      "apply_heat_pump_strategy",
-      "oedb_ts",
-      "reactive_power",
-      "check_integrity",
-      "optimize",
-      "5_grid_reinforcement",
-      "save"
-    ],
-
-    "_comment_flags": " ",
-    "import_generators": true,
-    "import_heat_pumps": true,
-    "import_home_batteries": true,
-    "import_dsm": true,
-    "import_electromobility": true
-  },
-
-  "database": {
-    "database_name": "egon-data",
-    "host": "localhost",
-    "port": "59510",
-    "user": "egon",
-    "password": "data"
-  },
-
-  "ssh": {
-    "enabled": false,
-    "user": "",
-    "ip": "",
-    "port": "",
-    "local_address": "127.0.0.1",
-    "local_port": "59510"
-  },
-
-  "external_config": null
+    "gridversion": null
+  }
 }
