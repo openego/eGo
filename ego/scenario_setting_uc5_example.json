@@ -91,6 +91,13 @@
     "import_electromobility": true
   },
 
+  "database": {
+    "database_name": "oedb",
+    "host": "",
+    "port": "",
+    "user": "",
+    "password": ""
+  },
 
   "ssh": {
     "enabled": false,
