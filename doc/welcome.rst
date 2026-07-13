@@ -1,39 +1,53 @@
+=========
+About eGo
+=========
+
+What is eGo?
 ============
-The eGo tool
-============
+
+eGo (electricity grid optimization) is an open-source Python package for
+the cross-grid-level analysis of flexibility deployment and
+grid expansion in sector-coupled energy systems. It combines **eTraGo**
+and **eDisGo** in a top-down workflow.
+
+eTraGo optimizes generation and flexibility dispatch as well as grid and
+storage expansion at the extra-high- and high-voltage levels. Relevant results and operational requirements are transferred to eDisGo,
+which analyses the underlying medium- and low-voltage grids and determines
+their grid reinforcement needs. eGo links both tools, coordinates the cross-grid-level
+workflow, and provides functionality for the joint evaluation of results.
 
 
-The python package eGo is a toolbox and also an application which combines
-**eTraGo** - a tool for optimizing flexibility options for transmission grids
-based on PyPSA and **eDisGo** - a toolbox in itself capable of analyzing distribution
-grids for grid issues and evaluating measures responding these.
+Research context
+================
 
-.. figure:: images/eGo_integration.png
-   :width: 1055px
-   :height: 423px
-   :scale: 90%
+eGo was initially developed in the research project
+`open_eGo <https://openegoproject.wordpress.com/>`_ and was further
+developed and applied in the research project
+`eGon <https://ego-n.org/>`_.
 
+The eGon project extended the modelling framework by a sector-coupled
+data model that includes electricity, heat, gas, and mobility as well as
+various flexibility options.
 
-The open_eGo project
-====================
-This software project is part of the research project
-`open_eGo <https://openegoproject.wordpress.com>`_.
+The cross-grid-level methodology and its application to a German
+2035 scenario are described in
+`Büttner et al. (2025) <https://doi.org/10.1088/2753-3751/ae2686>`_.
 
+The Open Energy Platform
+========================
 
-The OpenEnergy Platform
-=======================
-Within this project we developed the OpenEnergy Platform which the eGo toolbox
-relies upon to get and store in- and output data. Because of this dependency
-in order to use eGo a registration on the OpenEnergy Platform is required. For more
-information see
-`openenergy-platform <https://openenergy-platform.org/>`_ and login.
+The `Open Energy Platform (OEP) <https://openenergy-platform.org/>`_
+provides open data and metadata for transparent and reproducible energy
+system modelling. Parts of the data used by eGo and related tools in the openego toolchain
+are made available through the OEP.
 
-The OpenEnergy platform mainly addresses students, researchers and scientists in
-the field of energy modelling and analytics, but also welcomes all other interested parties.
-The platform provides great tools to make your energy system
-modelling process transparent. Data of the open_eGo project are stored on
-this platform.
-`Learn more about the database access <https://oep-data-interface.readthedocs.io>`_.
+Depending on the selected eGo workflow, access to data hosted on the OEP
+or to a local database may be required. Further information on data
+access and configuration is provided in the installation and user guide.
+
+Further information about the platform and its data interfaces is
+available in the
+`Open Energy Platform website <https://openenergy-platform.org/>`_.
 
 
 Model overview
