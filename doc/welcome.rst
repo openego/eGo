@@ -38,75 +38,78 @@ The Open Energy Platform
 
 The `Open Energy Platform (OEP) <https://openenergy-platform.org/>`_
 provides open data and metadata for transparent and reproducible energy
-system modelling. Parts of the data used by eGo and related tools in the openego toolchain
-are made available through the OEP.
+system modelling. Parts of the data used by eGo and related tools in the
+openego toolchain are made available through the OEP.
 
-Depending on the selected eGo workflow, access to data hosted on the OEP
-or to a local database may be required. Further information on data
-access and configuration is provided in the installation and user guide.
+eGo uses the ``ego.io`` package to access data from the Open Energy
+Database through the OEP REST API. A registered OEP account is required
+for workflows that access the database through this interface.
 
-Further information about the platform and its data interfaces is
-available in the
-`Open Energy Platform website <https://openenergy-platform.org/>`_.
+Depending on the selected workflow, eGo may alternatively use imported
+results or locally available data. 
+Further information on data access and configuration is provided in the
+installation and getting-started sections.
 
 
 Model overview
 ==============
 
-.. figure:: images/open_ego_models_overview.png
-   :width: 1123px
-   :height: 794px
-   :scale: 70%
-   :alt: Overview of Models and processes which are used by eGo
+.. figure:: images/ego_workflow_2025.png
+   :width: 100%
+   :alt: Overview of the cross-grid-level eGo workflow linking eTraGo and eDisGo
    :align: center
+
+      Overview of the cross-grid-level eGo workflow linking eTraGo andeDisGo. Reproduced from Büttner et al. (2025), Figure 1; originally published in Cußmann et al. (2024) under CC BY-SA.
 
 
 eTraGo
 ------
 
-The python package eTraGo provides an optimization of flexibility options for
-transmission grids based on PyPSA. In particular transmission grids of different voltage levels
-, that is 380, 220 and 110 kV in Germany, can be handled.
-Conventionally the 110kV grid is part of the distribution grid.
-The integration of the transmission and ‘upper’ distribution grid
-is part of eTraGo.
+`eTraGo <https://etrago.readthedocs.io/>`_ is an open-source Python
+package based on PyPSA. It is used to optimize generation and flexibility
+dispatch as well as grid and storage expansion at the extra-high- and
+high-voltage levels.
 
-The focus of optimization are flexibility options with a special focus on
-energy storages and grid expansion measures.
-`Learn more here <http://etrago.readthedocs.io>`_.
+Within the eGo workflow, the results of the eTraGo optimization provide
+the basis for the subsequent analysis of the underlying medium- and
+low-voltage grids.
+
+
+eGo interface
+-------------
+
+eGo links eTraGo and eDisGo in a top-down workflow. It provides the
+interface between both tools, prepares and transfers relevant results,
+and provides an MV-grid clustering method for selecting representative
+distribution grids.
+
+This enables the results and operational requirements from the
+upper-grid-level optimization to be considered in the subsequent
+distribution-grid analysis.
 
 
 eDisGo
 ------
-The python package eDisGo provides a toolbox for analysis and optimization
-of distribution grids. It is closely related to the python project Ding0 as this
-project is currently the single data source for eDisGo providing synthetic
-grid data for whole Germany. `Learn more here <http://edisgo.readthedocs.io>`_.
+
+`eDisGo <https://edisgo.readthedocs.io/>`_ is used for the analysis of
+medium- and low-voltage grids. Based on the inputs prepared by eGo,
+eDisGo analyses representative distribution grids and determines their
+grid reinforcement needs.
 
 
-Dataprocessing
---------------
+Related tools and data access
+-----------------------------
 
-For the open_eGo project several python packages are developed which are feeded
-by the input data of the data processing. The dataprocessing is written in
-SQL and Python. `Learn more here <https://data-processing.readthedocs.io/>`_.
+The eGo workflow is embedded in the wider openego toolchain. Important
+related components include:
 
-ego.io
-------
-
-The ``ego.io`` is a `SQLAlchemy <https://www.sqlalchemy.org/>`_ interface to
-the OpenEnergy database (oedb). The module provides ORM objects mirroring oedb
-tables and additionally contains helper functions for I/O operations.
-`Learn more here <https://github.com/openego/ego.io>`_.
-
-
-Dingo
------
-
-The DIstribution Network GeneratOr (Ding0) is a tool to generate synthetic
-medium and low voltage power distribution grids based on open
-(or at least accessible) data.
-`Learn more here <https://dingo.readthedocs.io/>`_.
+* `eGon-data <https://github.com/openego/eGon-data>`_ for creating the
+  sector-coupled data model,
+* `ding0 <https://dingo.readthedocs.io/>`_ for generating synthetic
+  medium- and low-voltage grid topologies, and
+* `ego.io <https://github.com/openego/ego.io>`_ as the SQLAlchemy-based
+  interface used by eGo to access tables of the Open Energy Database
+  through the Open Energy Platform.
 
 Supported by
 ============
