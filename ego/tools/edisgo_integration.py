@@ -683,6 +683,16 @@ class EDisGoNetworks:
         ts_selection = ts_per_grid.get(str(mv_grid_id), ts_default)
         if ts_selection is not None:
             cfg["timeseries_selection"] = ts_selection
+
+        # Spatial complexity reduction (uc6): same default + per-grid-override
+        # pattern as timeseries_selection above. Injected as the top-level
+        # ``spatial_reduction`` block the eDisGo spatial_reduce/spatial_restore
+        # tasks read from ``ctx.raw_config``.
+        spatial_default = edisgo_cfg.get("spatial_reduction")
+        spatial_per_grid = edisgo_cfg.get("spatial_reduction_per_grid", {}) or {}
+        spatial_reduction = spatial_per_grid.get(str(mv_grid_id), spatial_default)
+        if spatial_reduction is not None:
+            cfg["spatial_reduction"] = spatial_reduction
         return cfg
 
     def _run_one_grid_via_runner(self, mv_grid_id):
