@@ -35,7 +35,7 @@
     "choice_mode": "manual",
     "cluster_attributes": [],
     "only_cluster": false,
-    "manual_grids": [32377],
+    "manual_grids": [32377, 32355],
     "n_clusters": 1,
     "parallelization": false,
     "max_calc_time": 1.0,

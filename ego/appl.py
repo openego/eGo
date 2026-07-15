@@ -49,7 +49,7 @@ if __name__ == "__main__":
     logger.info("Start calculation")
 
     # Initialize eGo object
-    ego = eGo(jsonpath="scenario_setting_mv_clustering.json")
+    ego = eGo(jsonpath="scenario_setting_uc6_example.json")
 
     # Run eGo
     ego.run()
