@@ -31,6 +31,7 @@ import os
 
 if not "READTHEDOCS" in os.environ:
     from tools.io import eGo
+    from tools.io import EDisGoNetworks
     from tools.utilities import define_logging
 
     logger = define_logging(name="ego")
@@ -49,10 +50,13 @@ if __name__ == "__main__":
     logger.info("Start calculation")
 
     # Initialize eGo object
-    ego = eGo(jsonpath="scenario_setting_uc6_example.json")
-
+    ego = eGo(jsonpath="scenario_settings_prepare_grids.json")
     # Run eGo
     ego.run()
+
+    #ego = eGo(jsonpath="scenario_settings_optimize_prepared_grids.json")
+    # Run eGo
+    #ego.run()
 
 #    logger.info('Print results')
 #    ego.etrago_line_loading()
