@@ -4,6 +4,7 @@
     "eDisGo": false,
     "csv_import_eTraGo": false,
     "csv_import_eDisGo": false,
+    "result_export_path": "/home/path/to/results",
     "random_seed": 42
   },
   "eTraGo": {
@@ -141,7 +142,6 @@
     "max_calc_time": 0.5,
     "max_workers":2,
     "max_cos_phi_renewable": 0.9,
-    "results": "results/another_result",
     "solver": "gurobi",
     "tasks": ["1_setup_grid", "2_specs_overlying_grid", "3_temporal_complexity_reduction", "4_optimisation", "5_grid_reinforcement"],
     "gridversion": "v0.4.5"
