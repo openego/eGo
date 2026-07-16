@@ -50,32 +50,7 @@
     "max_cos_phi_renewable": 0.9,
 
     "solver": "gurobi",
-    "gridversion": null, 
-
-    "tasks": [
-      "1_setup_grid",
-      "base_reinforce",
-      "import_generators_from_db",
-      "import_home_batteries_from_db",
-      "import_heat_pumps_from_db",
-      "import_dsm_from_db",
-      "import_electromobility_from_db",
-      "apply_heat_pump_strategy",
-      "oedb_ts",
-      "import_overlying_grid",
-      "reactive_power",
-      "check_integrity",
-      "optimize",
-      "5_grid_reinforcement",
-      "save"
-    ],
-
-    "_comment_flags": " ",
-    "import_generators": true,
-    "import_heat_pumps": true,
-    "import_home_batteries": true,
-    "import_dsm": true,
-    "import_electromobility": true
+    "gridversion": null
   },
 
   "database": {
