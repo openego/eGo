@@ -671,6 +671,28 @@ class EDisGoNetworks:
                 cfg["overlying_grid"] = {"enabled": False}
         else:
             cfg["overlying_grid"] = {"enabled": False}
+
+        # Timestep selection (uc5): a default block applied to every grid, with
+        # optional per-grid overrides keyed by MV grid id. Injected as the
+        # top-level ``timeseries_selection`` block the eDisGo select_timesteps
+        # task reads from ``ctx.raw_config`` — mirroring the overlying_grid
+        # injection above.
+        edisgo_cfg = self._json_file.get("eDisGo", {})
+        ts_default = edisgo_cfg.get("timeseries_selection")
+        ts_per_grid = edisgo_cfg.get("timeseries_selection_per_grid", {}) or {}
+        ts_selection = ts_per_grid.get(str(mv_grid_id), ts_default)
+        if ts_selection is not None:
+            cfg["timeseries_selection"] = ts_selection
+
+        # Spatial complexity reduction (uc6): same default + per-grid-override
+        # pattern as timeseries_selection above. Injected as the top-level
+        # ``spatial_reduction`` block the eDisGo spatial_reduce/spatial_restore
+        # tasks read from ``ctx.raw_config``.
+        spatial_default = edisgo_cfg.get("spatial_reduction")
+        spatial_per_grid = edisgo_cfg.get("spatial_reduction_per_grid", {}) or {}
+        spatial_reduction = spatial_per_grid.get(str(mv_grid_id), spatial_default)
+        if spatial_reduction is not None:
+            cfg["spatial_reduction"] = spatial_reduction
         return cfg
 
     def _run_one_grid_via_runner(self, mv_grid_id):

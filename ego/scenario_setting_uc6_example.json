@@ -1,0 +1,113 @@
+{
+  "_comment": "UC6: eDisGo with spatial complexity reduction bracketing the OPF step (uc6_spatial_reduction preset). Runs setup -> imports -> oedb_ts -> build_flexibility_bands -> overlying grid -> select_timesteps -> reactive_power -> spatial_reduce -> OPF -> spatial_restore -> reinforce -> save, per grid. No eTraGo, no OPF-less path. Supports multiple grids with a default spatial_reduction and optional per-grid overrides.",
+  "_workflow": [
+    "Runs the bundled eDisGo preset 'uc6_spatial_reduction' once per grid in eDisGo.manual_grids.",
+    "Spatial reduction is configured via eDisGo.spatial_reduction (the DEFAULT applied to every grid).",
+    "eDisGo.spatial_reduction_per_grid optionally overrides the selection for individual grids",
+    "  (keyed by MV grid id as a string). A grid without an entry uses the default.",
+    "spatial_reduce/spatial_restore bracket optimize: the OPF runs on a spatially-reduced grid,",
+    "  then the optimized dispatch is mapped back onto the full topology for reinforce.",
+    "aggregation_mode: false merges no components (by-name restore) - use this for now;",
+    "  aggregation_mode: true has a known gap with charging points, see",
+    "  docs_notes/issue_aggregation_mode_flexibility_bands_not_aggregated.md in the eDisGo repo."
+  ],
+
+  "eGo": {
+    "eTraGo": false,
+    "eDisGo": true,
+    "csv_import_eTraGo": false,
+    "csv_import_eDisGo": false,
+    "random_seed": 42
+  },
+
+  "eTraGo": {
+    "scn_name": "eGon2035",
+    "db": "egon-data",
+    "extendable": []
+  },
+
+  "eDisGo": {
+    "preset": "uc6_spatial_reduction",
+    "grid_path": "/home/gurobi/.ding0/2024-07-25T17:38:34_new_planning_new_edisgo/ding0_grids/",
+    "overlying_grid": true,
+    "overlying_grid_source": "/storage/JoDa/edisgo_playground/overlying_grid_data",
+    "legacy_ding0_grids": false,
+    "choice_mode": "manual",
+    "cluster_attributes": [],
+    "only_cluster": false,
+    "manual_grids": [32377, 32355],
+    "n_clusters": 1,
+    "parallelization": false,
+    "max_calc_time": 1.0,
+    "max_workers": 1,
+    "max_cos_phi_renewable": 0.9,
+
+    "results": "/storage/MS/ego/eGo/results/ego_uc6",
+    "solver": "gurobi",
+    "gridversion": null,
+
+    "_comment_timeseries_selection": "DEFAULT timestep selection applied to every grid unless overridden per grid below. Manual mode with a short window keeps the OPF fast for this example.",
+    "timeseries_selection": {
+      "mode": "manual",
+      "start": "2035-01-15 00:00",
+      "periods": 24,
+      "freq": "h"
+    },
+
+    "_comment_spatial_reduction": "DEFAULT spatial complexity reduction applied to every grid unless overridden per grid below. aggregation_mode: false merges no components (by-name restore); true also merges loads/generators at the same bus (disaggregated restore) - see docs_notes/issue_aggregation_mode_flexibility_bands_not_aggregated.md for a known gap with aggregation_mode=true and charging points.",
+    "spatial_reduction": {
+      "enabled": true,
+      "mode": "kmeansdijkstra",
+      "cluster_area": "feeder",
+      "reduction_factor": 0.3,
+      "reduction_factor_not_focused": false,
+      "aggregation_mode": false
+    },
+
+    "_comment_spatial_reduction_per_grid": "OPTIONAL per-grid overrides of the default above, keyed by MV grid id (string). A grid not listed here uses eDisGo.spatial_reduction. Example: disable spatial reduction for a specific grid while others use the default.",
+    "spatial_reduction_per_grid": {},
+
+    "tasks": [
+      "1_setup_grid",
+      "base_reinforce",
+      "import_generators_from_db",
+      "import_home_batteries_from_db",
+      "import_heat_pumps_from_db",
+      "import_dsm_from_db",
+      "import_electromobility_from_db",
+      "apply_heat_pump_strategy",
+      "oedb_ts",
+      "reactive_power",
+      "check_integrity",
+      "optimize",
+      "5_grid_reinforcement",
+      "save"
+    ],
+
+    "_comment_flags": " ",
+    "import_generators": true,
+    "import_heat_pumps": true,
+    "import_home_batteries": true,
+    "import_dsm": true,
+    "import_electromobility": true
+  },
+
+  "database": {
+    "database_name": "oedb",
+    "host": "",
+    "port": "",
+    "user": "",
+    "password": ""
+  },
+
+  "ssh": {
+    "enabled": false,
+    "user": "",
+    "ip": "",
+    "port": "",
+    "local_address": "127.0.0.1",
+    "local_port": "59510"
+  },
+
+  "external_config": null
+}
