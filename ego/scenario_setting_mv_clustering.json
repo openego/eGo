@@ -23,6 +23,7 @@
     "eDisGo": true,
     "csv_import_eTraGo": "/path/to/predefined/etrago/results",
     "csv_import_eDisGo": false,
+    "result_export_path": "/home/path/to/results",
     "random_seed": 42
   },
 
@@ -50,11 +51,8 @@
     "max_workers": 1,
     "max_cos_phi_renewable": 0.9,
 
-    "results": "results_ego_edisgo",
     "solver": "gurobi",
     "gridversion": null,
-
-   
 
     "tasks": [
       "1_setup_grid",

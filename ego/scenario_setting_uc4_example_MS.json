@@ -46,11 +46,8 @@
     "max_workers": 1,
     "max_cos_phi_renewable": 0.9,
 
-    "results": "/path/to/results",
     "solver": "gurobi",
-    "gridversion": null,
-
-   
+    "gridversion": null, 
 
     "tasks": [
       "1_setup_grid",

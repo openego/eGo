@@ -200,7 +200,7 @@ def get_scenario_setting(jsonpath=None):
     json_object = json.dumps(json_file, indent=4)
 
     # Writing to sample.json
-    results_dir = os.path.join(json_file["eDisGo"]["results"])
+    results_dir = os.path.join(json_file["eGo"]["result_export_path"])
     if not os.path.exists(results_dir):
         os.makedirs(results_dir)
     with open(os.path.join(results_dir, "config.json"), "w") as outfile:

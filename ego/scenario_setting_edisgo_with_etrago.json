@@ -23,6 +23,7 @@
     "eDisGo": true,
     "csv_import_eTraGo": false,
     "csv_import_eDisGo": false,
+    "result_export_path": "/home/path/to/results",
     "random_seed": 42
   },
 
@@ -67,7 +68,6 @@
     "max_workers": 1,
     "max_cos_phi_renewable": 0.9,
 
-    "results": "/home/path_to/results",
     "solver": "gurobi",
     "gridversion": null,
 

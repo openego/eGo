@@ -138,6 +138,7 @@ class eGo:
         cfg = self._json_file
 
         if cfg["eGo"].get("csv_import_eTraGo"):
+            
             logger.info("Import eTraGo network from csv files")
             return Etrago(csv_folder_name=cfg["eGo"]["csv_import_eTraGo"])
 
@@ -159,6 +160,9 @@ class eGo:
                 return result
 
             etrago_args = deep_merge(default_args, cfg["eTraGo"])
+            # unify path to the path given in the superordinate eGo section
+            etrago_args['csv_export'] = cfg["eGo"]["result_export_path"]+"/etrago_results"
+            
             logger.info("Create eTraGo network calculated by eGo")
             return run_etrago(args=etrago_args, json_path=None)
 
@@ -179,14 +183,14 @@ class eGo:
             etrago_network = (
                 self.etrago.disaggregated_network if self.etrago is not None else None
             )
-            self._edisgo = EDisGoNetworks(
+            return EDisGoNetworks(
                 json_file=self._json_file,
                 mvlv_grid_choice=self.mvlv_grid_choice,
                 etrago_network=etrago_network,
             )
         else:
-            self._edisgo = None
             logger.info("No eDisGo network")
+            return None
 
     def _calculate_investment_cost(self, storage_mv_integration=True):
         """Get total investment costs of all voltage level for storages
@@ -542,7 +546,7 @@ class eGo:
         choice_df = choice_df.sort_values("no_of_points_per_cluster", ascending=False)
 
         self.mvlv_grid_choice = choice_df
-
+    
     # write_results_to_db():
     logging.info("Initialisation of eGo Results")
 
