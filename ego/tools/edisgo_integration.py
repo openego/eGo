@@ -313,7 +313,7 @@ class EDisGoNetworks:
         * 'end_time' - end time of calculation
 
         """
-        self._status_dir = os.path.join(self._json_file["eDisGo"]["results"], "status")
+        self._status_dir = os.path.join(self._json_file["eGo"]["result_export_path"], "status")
         if not os.path.exists(self._status_dir):
             os.makedirs(self._status_dir)
 
@@ -494,7 +494,7 @@ class EDisGoNetworks:
         self._cluster_attributes = self._edisgo_args["cluster_attributes"]
         self._max_workers = self._edisgo_args["max_workers"]
         self._max_cos_phi_renewable = self._edisgo_args["max_cos_phi_renewable"]
-        self._results = self._edisgo_args["results"]
+        self._results = self._json_file["eGo"]["result_export_path"]
         self._max_calc_time = self._edisgo_args["max_calc_time"]
         # Optional: name of an edisgo.run preset. When set, run_edisgo()
         # delegates the per-grid workflow to edisgo.run.run_edisgo().
@@ -625,7 +625,7 @@ class EDisGoNetworks:
                     logger.exception("MV grid {} failed: \n".format(mv_grid_id))
                 count += 1
 
-        self._csv_import = self._json_file["eDisGo"]["results"]
+        self._csv_import = self._json_file["eGo"]["result_export_path"]
         self._save_edisgo_results()
         self._load_edisgo_results()
         self._run_finished = True

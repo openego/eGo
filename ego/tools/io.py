@@ -123,7 +123,7 @@ class eGo:
 
     def _connect_to_db(self):
         try:
-            conn = db.connection(section=self.json_file["eTraGo"]["db"])
+            conn = db.connection(section=self._json_file["eTraGo"]["db"])
             Session = sessionmaker(bind=conn)
             self.session = Session()
             logger.info("Connected to Database")
@@ -138,6 +138,7 @@ class eGo:
         cfg = self._json_file
 
         if cfg["eGo"].get("csv_import_eTraGo"):
+            
             logger.info("Import eTraGo network from csv files")
             return Etrago(csv_folder_name=cfg["eGo"]["csv_import_eTraGo"])
 
@@ -159,6 +160,9 @@ class eGo:
                 return result
 
             etrago_args = deep_merge(default_args, cfg["eTraGo"])
+            # unify path to the path given in the superordinate eGo section
+            etrago_args['csv_export'] = cfg["eGo"]["result_export_path"]+"/etrago_results"
+            
             logger.info("Create eTraGo network calculated by eGo")
             return run_etrago(args=etrago_args, json_path=None)
 
@@ -179,14 +183,14 @@ class eGo:
             etrago_network = (
                 self.etrago.disaggregated_network if self.etrago is not None else None
             )
-            self._edisgo = EDisGoNetworks(
+            return EDisGoNetworks(
                 json_file=self._json_file,
                 mvlv_grid_choice=self.mvlv_grid_choice,
                 etrago_network=etrago_network,
             )
         else:
-            self._edisgo = None
             logger.info("No eDisGo network")
+            return None
 
     def _calculate_investment_cost(self, storage_mv_integration=True):
         """Get total investment costs of all voltage level for storages
@@ -197,7 +201,7 @@ class eGo:
             columns=["component", "voltage_level", "capital_cost"]
         )
         _grid_ehv = None
-        extendable = self.json_file["eTraGo"].get("extendable", {})
+        extendable = self._json_file["eTraGo"].get("extendable", {})
         extendable_list = (
             extendable
             if isinstance(extendable, list)
@@ -221,7 +225,7 @@ class eGo:
             )
 
         _grid_mv_lv = None
-        if self.json_file["eGo"]["eDisGo"] is True:
+        if self._json_file["eGo"]["eDisGo"] is True:
 
             _grid_mv_lv = self.edisgo.grid_investment_costs
             if _grid_mv_lv is not None:
@@ -236,11 +240,11 @@ class eGo:
         self._total_investment_costs = self._total_inv_cost
         if (
             not self._total_inv_cost.empty
-            and self.json_file["eTraGo"].get("end_snapshot") is not None
+            and self._json_file["eTraGo"].get("end_snapshot") is not None
         ):
             self._total_investment_costs["overnight_costs"] = (
                 etrago_convert_overnight_cost(
-                    self._total_investment_costs["capital_cost"], self.json_file
+                    self._total_investment_costs["capital_cost"], self._json_file
                 )
             )
         else:
@@ -542,7 +546,37 @@ class eGo:
         choice_df = choice_df.sort_values("no_of_points_per_cluster", ascending=False)
 
         self.mvlv_grid_choice = choice_df
+        
+    @classmethod
+    def import_results(cls, path):
 
+        scenario_path = os.path.join(path, "config.json")
+        ego = cls(jsonpath=scenario_path)
+        cfg = ego._json_file
+        cfg["eGo"]["result_export_path"] = path
+
+        etrago_path = os.path.join(path, "etrago_results")
+        if os.path.isdir(etrago_path):
+            cfg["eGo"]["csv_import_eTraGo"] = etrago_path
+            ego.etrago = ego._setup_etrago()
+            logger.info("Imported eTraGo results from %s", etrago_path)
+        else:
+            ego.etrago = None
+            logger.info("No eTraGo results found in %s", etrago_path)
+
+        if os.path.isfile(os.path.join(path, "grid_choice.csv")):
+            cfg["eGo"]["eDisGo"] = True            
+            cfg["eGo"]["csv_import_eDisGo"] = path
+            ego.mvlv_grid_choice = None
+            ego.edisgo = ego._setup_edisgo()
+            ego.mvlv_grid_choice = ego.edisgo.grid_choice
+            logger.info("Imported eDisGo results from %s", path)
+        else:
+            ego.edisgo = None
+            logger.info("No eDisGo results fround in %s", path)
+
+        return ego
+    
     # write_results_to_db():
     logging.info("Initialisation of eGo Results")
 
