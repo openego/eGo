@@ -123,7 +123,7 @@ class eGo:
 
     def _connect_to_db(self):
         try:
-            conn = db.connection(section=self.json_file["eTraGo"]["db"])
+            conn = db.connection(section=self._json_file["eTraGo"]["db"])
             Session = sessionmaker(bind=conn)
             self.session = Session()
             logger.info("Connected to Database")
@@ -201,7 +201,7 @@ class eGo:
             columns=["component", "voltage_level", "capital_cost"]
         )
         _grid_ehv = None
-        extendable = self.json_file["eTraGo"].get("extendable", {})
+        extendable = self._json_file["eTraGo"].get("extendable", {})
         extendable_list = (
             extendable
             if isinstance(extendable, list)
@@ -225,7 +225,7 @@ class eGo:
             )
 
         _grid_mv_lv = None
-        if self.json_file["eGo"]["eDisGo"] is True:
+        if self._json_file["eGo"]["eDisGo"] is True:
 
             _grid_mv_lv = self.edisgo.grid_investment_costs
             if _grid_mv_lv is not None:
@@ -240,11 +240,11 @@ class eGo:
         self._total_investment_costs = self._total_inv_cost
         if (
             not self._total_inv_cost.empty
-            and self.json_file["eTraGo"].get("end_snapshot") is not None
+            and self._json_file["eTraGo"].get("end_snapshot") is not None
         ):
             self._total_investment_costs["overnight_costs"] = (
                 etrago_convert_overnight_cost(
-                    self._total_investment_costs["capital_cost"], self.json_file
+                    self._total_investment_costs["capital_cost"], self._json_file
                 )
             )
         else:
