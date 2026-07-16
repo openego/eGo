@@ -546,6 +546,36 @@ class eGo:
         choice_df = choice_df.sort_values("no_of_points_per_cluster", ascending=False)
 
         self.mvlv_grid_choice = choice_df
+        
+    @classmethod
+    def import_results(cls, path):
+
+        scenario_path = os.path.join(path, "config.json")
+        ego = cls(jsonpath=scenario_path)
+        cfg = ego._json_file
+        cfg["eGo"]["result_export_path"] = path
+
+        etrago_path = os.path.join(path, "etrago_results")
+        if os.path.isdir(etrago_path):
+            cfg["eGo"]["csv_import_eTraGo"] = etrago_path
+            ego.etrago = ego._setup_etrago()
+            logger.info("Imported eTraGo results from %s", etrago_path)
+        else:
+            ego.etrago = None
+            logger.info("No eTraGo results found in %s", etrago_path)
+
+        if os.path.isfile(os.path.join(path, "grid_choice.csv")):
+            cfg["eGo"]["eDisGo"] = True            
+            cfg["eGo"]["csv_import_eDisGo"] = path
+            ego.mvlv_grid_choice = None
+            ego.edisgo = ego._setup_edisgo()
+            ego.mvlv_grid_choice = ego.edisgo.grid_choice
+            logger.info("Imported eDisGo results from %s", path)
+        else:
+            ego.edisgo = None
+            logger.info("No eDisGo results fround in %s", path)
+
+        return ego
     
     # write_results_to_db():
     logging.info("Initialisation of eGo Results")
