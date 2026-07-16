@@ -23,6 +23,7 @@
     "eDisGo": true,
     "csv_import_eTraGo": false,
     "csv_import_eDisGo": false,
+    "result_export_path": "/home/path/to/results",
     "random_seed": 42
   },
 
