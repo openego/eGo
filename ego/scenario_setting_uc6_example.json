@@ -17,6 +17,7 @@
     "eDisGo": true,
     "csv_import_eTraGo": false,
     "csv_import_eDisGo": false,
+    "result_export_path": "/home/path/to/results",
     "random_seed": 42
   },
 
@@ -42,7 +43,6 @@
     "max_workers": 1,
     "max_cos_phi_renewable": 0.9,
 
-    "results": "/storage/MS/ego/eGo/results/ego_uc6",
     "solver": "gurobi",
     "gridversion": null,
 
@@ -65,31 +65,7 @@
     },
 
     "_comment_spatial_reduction_per_grid": "OPTIONAL per-grid overrides of the default above, keyed by MV grid id (string). A grid not listed here uses eDisGo.spatial_reduction. Example: disable spatial reduction for a specific grid while others use the default.",
-    "spatial_reduction_per_grid": {},
-
-    "tasks": [
-      "1_setup_grid",
-      "base_reinforce",
-      "import_generators_from_db",
-      "import_home_batteries_from_db",
-      "import_heat_pumps_from_db",
-      "import_dsm_from_db",
-      "import_electromobility_from_db",
-      "apply_heat_pump_strategy",
-      "oedb_ts",
-      "reactive_power",
-      "check_integrity",
-      "optimize",
-      "5_grid_reinforcement",
-      "save"
-    ],
-
-    "_comment_flags": " ",
-    "import_generators": true,
-    "import_heat_pumps": true,
-    "import_home_batteries": true,
-    "import_dsm": true,
-    "import_electromobility": true
+    "spatial_reduction_per_grid": {}
   },
 
   "database": {
