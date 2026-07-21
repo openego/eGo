@@ -66,7 +66,6 @@ extensions = [
     "sphinxcontrib.httpdomain",  # for restfull API
     "sphinxcontrib.autohttp.flask",
     "sphinx.ext.extlinks",  # enables external links with a key
-    "sphinxjsondomain",
 ]
 
 
