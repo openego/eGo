@@ -12,7 +12,7 @@ build:
     python: "3.10"
   jobs:
     post_install:
-      - pip install setuptools
+      - pip install "setuptools<82"
 
 # Build documentation in the docs/ directory with Sphinx
 sphinx:
