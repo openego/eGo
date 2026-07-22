@@ -328,7 +328,7 @@ def mv_grid_clustering(cluster_attributes_df, working_grids=None, config=None):
     return cluster_df.sort_values("n_grids_per_cluster", ascending=False)
 
 
-def cluster_workflow(config=None):
+def cluster_workflow(config=None, focus_grids=None):
     """
     Get cluster attributes per grid if needed and conduct MV grid clustering.
 
@@ -354,10 +354,10 @@ def cluster_workflow(config=None):
     # determine cluster attributes
     logger.info("Determine cluster attributes.")
     attributes_path = os.path.join(
-        config["eDisGo"]["results"], "mv_grid_cluster_attributes.csv"
+        config["eGo"]["result_export_path"], "mv_grid_cluster_attributes.csv"
     )
-    if not os.path.exists(config["eDisGo"]["results"]):
-        os.makedirs(config["eDisGo"]["results"])
+    if not os.path.exists(config["eGo"]["result_export_path"]):
+        os.makedirs(config["eGo"]["result_export_path"])
     scenario = config["eTraGo"]["scn_name"]
     cluster_attributes_df = get_cluster_attributes(
         attributes_path=attributes_path, scenario=scenario, config=config
@@ -367,23 +367,27 @@ def cluster_workflow(config=None):
     cluster_attributes_df = cluster_attributes_df[
         config["eDisGo"]["cluster_attributes"]
     ]
+    
     working_grids_path = os.path.join(
         config["eDisGo"]["grid_path"], "working_grids.csv"
     )
-    if os.path.isfile(working_grids_path):
-        working_grids = pd.read_csv(working_grids_path, index_col=0)
-    else:
+    if not os.path.isfile(working_grids_path): 
         logger.warning(
             "working_grids.csv is missing. Assuming that all grids are working."
-        )
+            )
         working_grids = None
+    
+    if focus_grids is not None:
+        working_grids = focus_grids 
+    else: 
+        working_grids = pd.read_csv(working_grids_path, index_col=0)
 
     # conduct MV grid clustering
     cluster_df = mv_grid_clustering(
         cluster_attributes_df, working_grids=working_grids, config=config
     )
     cluster_results_path = os.path.join(
-        config["eDisGo"]["results"], "mv_grid_cluster_results_new.csv"
+        config["eGo"]["result_export_path"], "mv_grid_cluster_results_new.csv"
     )
     cluster_df.to_csv(cluster_results_path)
     return cluster_df

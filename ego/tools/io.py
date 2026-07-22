@@ -97,12 +97,13 @@ class eGo:
         None.
 
         """
+        
+        # Run eTraGo for optimizing the eHV/HV grid
+        self.etrago = self._setup_etrago()
+        
         # Perform MV grid clustering
         self._mvlv_grid_choice_mode = self._json_file["eDisGo"]["choice_mode"]
         self.set_mvlv_grid_choice()
-
-        # Run eTraGo for optimizing the eHV/HV grid
-        self.etrago = self._setup_etrago()
 
         # Run eDisGo for optimizing MV/LV grids
         self.edisgo = self._setup_edisgo()
@@ -473,7 +474,7 @@ class eGo:
         """Get iplot of results as html"""
         return igeoplot(self)
 
-    def _cluster_mv_grids(self):
+    def _cluster_mv_grids(self, focus_grids=None):
         """
         Clusters the MV grids based on the attributes, for a given number
         of MV grids
@@ -484,7 +485,7 @@ class eGo:
             Dataframe containing the clustered MV grids and their weightings
 
         """
-        cluster_df = cluster_workflow(config=self._json_file)
+        cluster_df = cluster_workflow(config=self._json_file, focus_grids=focus_grids)
         # Filter for clusters with representatives.
         cluster_df = cluster_df[cluster_df["representative"].astype(bool)]
         return cluster_df
@@ -502,6 +503,84 @@ class eGo:
                 "represented_grids",
             ]
         )
+        
+        if self._mvlv_grid_choice_mode == "focus_region":
+            
+            focus_region = self._json_file["eTraGo"]["network_clustering"]["method"].get("focus_region")
+            if not focus_region:
+                raise ValueError("No focus region has been defined; switch to default mv clustering.")
+                self._mvlv_grid_choice_mode = "cluster"
+                
+            if self._json_file["eGo"]["csv_import_eTraGo"]:
+                inside_focus = pd.read_csv(self._json_file["eGo"]["csv_import_eTraGo"]+'/clustering/buses_within_focus.csv').Bus
+            else:
+                inside_focus = pd.read_csv(self.etrago.args["csv_export"]+'/clustering/buses_within_focus.csv').Bus
+
+            working_grids_path = os.path.join(
+                self._json_file["eDisGo"]["grid_path"], "working_grids.csv"
+            )
+            if os.path.isfile(working_grids_path):
+                available_grids = pd.read_csv(working_grids_path, index_col=0)
+                available_grids = available_grids[available_grids.working==True]
+            else:
+                path = self._json_file["eDisGo"]["grid_path"]
+                available_grids = [name for name in os.listdir(path) if os.path.isdir(os.path.join(path, name))]
+                available_grids = pd.DataFrame(
+                    {"grid_id": [int(name) for name in available_grids], "working": True}
+                ).set_index("grid_id")
+                
+            focus_grids = available_grids.loc[available_grids["grid_id"].isin(inside_focus), "grid_id"].tolist()
+            
+            choice_df["the_selected_network_id"] = focus_grids
+            choice_df["no_of_points_per_cluster"] = 1
+            choice_df["represented_grids"] = [
+                [mv_grid_id] for mv_grid_id in choice_df["the_selected_network_id"]
+            ]
+            
+            logger.info("Calculating all MV grids within focus region: {}".format(focus_grids))
+        
+        elif self._mvlv_grid_choice_mode == "cluster_focus_region":
+            
+            focus_region = self._json_file["eTraGo"]["network_clustering"]["method"].get("focus_region")
+            if not focus_region:
+                raise ValueError("No focus region has been defined; switch to default mv clustering.")
+                self._mvlv_grid_choice_mode = "cluster"
+            
+            if self._json_file["eGo"]["csv_import_eTraGo"]:
+                inside_focus = pd.read_csv(self._json_file["eGo"]["csv_import_eTraGo"]+'/clustering/buses_within_focus.csv').Bus
+            else:
+                inside_focus = pd.read_csv(self.etrago.args["csv_export"]+'/clustering/buses_within_focus.csv').Bus
+            
+            working_grids_path = os.path.join(
+                self._json_file["eDisGo"]["grid_path"], "working_grids.csv"
+            )
+            if os.path.isfile(working_grids_path):
+                available_grids = pd.read_csv(working_grids_path, index_col=0)
+                available_grids = available_grids[available_grids.working==True]
+            else:
+                path = self._json_file["eDisGo"]["grid_path"]
+                available_grids = [name for name in os.listdir(path) if os.path.isdir(os.path.join(path, name))]
+                available_grids = pd.DataFrame(
+                    {"grid_id": [int(name) for name in available_grids], "working": True}
+                ).set_index("grid_id")
+                
+            focus_grids = available_grids[available_grids.index.isin(inside_focus)]
+            
+            cluster_df = self._cluster_mv_grids(focus_grids=focus_grids)
+
+            n_clusters = self._json_file["eDisGo"]["n_clusters"]
+            n_clusters_found = cluster_df.shape[0]
+            if n_clusters == n_clusters_found:
+                logger.info(f"Clustering to {n_clusters} MV grids")
+            else:
+                logger.warning(
+                    f"For {n_clusters} only for {n_clusters_found} clusters "
+                    f"found working grids."
+                )
+
+            choice_df["the_selected_network_id"] = cluster_df["representative"]
+            choice_df["no_of_points_per_cluster"] = cluster_df["n_grids_per_cluster"]
+            choice_df["represented_grids"] = cluster_df["represented_grids"]
 
         if self._mvlv_grid_choice_mode == "cluster":
             cluster_df = self._cluster_mv_grids()
@@ -542,6 +621,8 @@ class eGo:
 
             no_grids = len(mv_grids)
             logger.info("Calculating all available {} MV grids".format(no_grids))
+            
+
 
         choice_df = choice_df.sort_values("no_of_points_per_cluster", ascending=False)
 
