@@ -1,0 +1,101 @@
+{
+  "_comment": "UC3: Grid laden, Basis-Reinforce, dann HP/EV/Batteries laden, echte egon_data-Zeitreihen, finales Reinforce (kein OPF, kein eTraGo).",
+  "_workflow": [
+    "Workflow (alles in einem Aufruf):",
+    "  1. 1_setup_grid: Grid laden + Generatoren importieren (kein HP/EV/Batteries)",
+    "  2. base_reinforce: Worst-Case-TS intern + Basis-Reinforce + Reset equipment_changes",
+    "  3. import_heat_pumps_from_db: WP aus egon_data importieren",
+    "  4. import_home_batteries_from_db: Hausspeicher aus egon_data importieren",
+    "  5. import_dsm_from_db: DSM aus egon_data importieren",
+    "  6. import_electromobility_from_db: EV aus egon_data importieren (dumb charging)",
+    "  7. oedb_ts: Echte Zeitreihen aus egon_data (Wind/Solar aus egon_era5_renewable_feedin + Stromnachfrage)",
+    "  8. 5_grid_reinforcement: Szenario-Reinforce — Kosten = Mehraufwand unter realen Zeitreihen (ohne Optimierung)",
+    "",
+    "Kein eTraGo noetig, kein OPF.",
+    "Unterschied zu UC1: UC3 nutzt reale Zeitreihen (oedb_ts) statt synthetischer Worst-Case-Szenarien.",
+    "add selection of flexibility and emob use cases",
+    "add selection of opf version and method",
+    "add selection of charging strategy and heat pump control mode"
+  ],
+
+  "eGo": {
+    "eTraGo": true,
+    "eDisGo": true,
+    "csv_import_eTraGo": false,
+    "csv_import_eDisGo": false,
+    "result_export_path": "/home/dozeumesk/eGo/06-26/eGo/ego/results-zooming",
+    "random_seed": 42
+  },
+
+  "eTraGo": {
+    "method": { 
+        "n_iter": 1,
+        "formulation": "pyomo",
+        "market_optimization":
+            {
+                "active": false
+             },
+        "distribution_grids":false
+    },
+    "pf_post_lopf": {
+        "active": true
+    },
+    "start_snapshot": 1,
+    "end_snapshot": 25,
+    "scn_name": "eGon2035",
+    "network_clustering":  {
+        "method": {
+            "focus_region": ["Region Hannover"]
+            },
+        "electricity_grid": {
+            "active": true,
+            "cluster_within_focus": false,
+            "n_clusters": 30
+            }
+    },
+    "spatial_disaggregation": "uniform",
+    "skip_snapshots": false,
+    "temporal_disaggregation": {
+    	"active": false,
+    	"no_slices": 8
+    },
+    "load_shedding": true
+},
+
+  "eDisGo": {
+    "overlying_grid": true,
+    "overlying_grid_source": "etrago",
+    "preset": "uc4_example",
+    "grid_path": "/home/dozeumesk/eGo/06-26/data/grids",
+    "legacy_ding0_grids": false,
+    "choice_mode": "cluster_focus_region",
+    "cluster_attributes": ["pv_capacity_expansion_mw_per_km2", "wind_capacity_expansion_mw_per_km2", "electromobility_max_load_expansion_mw_per_km2", "pth_capacity_expansion_mw_per_km2"],
+    "n_clusters": 5,
+    "parallelization": false,
+    "max_calc_time": 1.0,
+    "max_workers": 1,
+    "max_cos_phi_renewable": 0.9,
+
+    "solver": "gurobi",
+    "gridversion": null
+    },
+
+  "database": {
+    "database_name": "oedb",
+    "host": "",
+    "port": "",
+    "user": "",
+    "password": ""
+  },
+
+  "ssh": {
+    "enabled": false,
+    "user": "",
+    "ip": "",
+    "port": "",
+    "local_address": "127.0.0.1",
+    "local_port": "59510"
+  },
+
+  "external_config": null
+}
