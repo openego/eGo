@@ -14,7 +14,7 @@ Model overview
    :alt: Overview of the models and their interaction within eGo.
    :align: center
    
-   Overview of the cross-grid-level eGo workflow linking eTraGo and eDisGo. Reproduced from Büttner et al. (2025), Figure 1; originally published in Cußmann et al. (2024) under CC BY-SA.
+   Overview of the cross-grid-level eGo workflow linking eTraGo and eDisGo. Reproduced from [Buettner2025]_, Figure 1; originally published in [Cussmann2024]_ under CC BY-SA.
 
 eTraGo's theoretical Background
 ===============================
@@ -127,37 +127,27 @@ References
 ==========
 
 
-.. [NEP2015a] Übertragungsnetzbetreiber Deutschland. (2015).
-    *Netzentwicklungsplan Strom 2025 - Kostenschaetzungen*, Version 2015,
-    1. Entwurf, 2015. (`<https://www.netzentwicklungsplan.de/sites/default/files
-    /paragraphs-files/kostenschaetzungen_nep_2025_1_entwurf.pdf>`_)
-
-.. [Dena] dena Verteilnetzstudie. (2012).
-    *Ausbau- und Innovationsbedarf der Stromverteilnetze in Deutschland bis 2030.*
-    , Version 2015. (`<https://shop.dena.de/sortiment/detail/produkt/
-    dena-verteilnetzstudie-ausbau-und-innovationsbedarf-der-stromverteilnetze-in-deutschland-bis-2030/>`_)
-
-.. [PyPSA] PyPSA’s documentation (2018).
-    *Documentation of components.* , Version v0.11.0. (`<https://pypsa.org/doc/components.html>`_)
 
 .. [StromNEV_A1] Stromnetzentgeltverordnung - StromNEV Anlage 1 (2018).
     *Verordnung über die Entgelte für den Zugang zu Elektrizitätsversorgungsnetzen*
     *(Stromnetzentgeltverordnung - StromNEV) Anlage 1 (zu § 6 Abs. 5 Satz 1)*
     *Betriebsgewöhnliche Nutzungsdauern*.
     (`<https://www.gesetze-im-internet.de/stromnev/anlage_1.html>`_)
+    
 
 .. [Overnight cost] Wikipedia (2018).
     *Definition of overnight cost*.
     (`<https://en.wikipedia.org/wiki/Overnight_cost>`_)
-
-.. [eDisGo] eDisGo - grid expantion costs (2018).
-    *Cost assumption on mv and lv grid components*.
-    (`<https://github.com/openego/eDisGo/blob/dev/edisgo/config/
-    config_grid_expansion_default.cfg#L85-L107>`_)
-
-.. [CONSENTEC] CONSENTEC et.al (2006).
-    *Untersuchung der Voraussetzungen und möglicher Anwendung analytischer*
-    *Kostenmodelle in der deutschen Energiewirtschaft *.
-    (`<https://www.bundesnetzagentur.de/SharedDocs/Downloads/DE/Sachgebiete/
-    Energie/Unternehmen_Institutionen/Netzentgelte/Anreizregulierung/
-    GA_AnalytischeKostenmodelle.pdf?__blob=publicationFile&v=1>`_)
+.. [Buettner2025]
+   Büttner, C., Esterl, K., Schachler, B., and Cußmann, I. (2025).
+   Challenges of top-down flexibility deployment for grid expansion
+   across all voltage levels. Environmental Research: Energy, 2,
+   045017. (`<https://doi.org/10.1088/2753-3751/ae2686>`_)
+.. [Cussmann2024]
+   Cußmann, I., Schachler, B., Büttner, C., Tetens, H.-P., Esterl, K.,
+   Amme, J., Helfenbein, K., Held, M., Nadal, A., Günther, S., and
+   Epia Realpe, C. A. (2024). Projektabschlussbericht: Ein offenes
+   netzebenen- und sektorenübergreifendes Planungsinstrument zur
+   Bestimmung des optimalen Einsatzes und Ausbaus von
+   Flexibilitätsoptionen in Deutschland. Technical Report.
+   (`<https://ego-n.org/papers/Endbericht_egon_v2.pdf>`_)
