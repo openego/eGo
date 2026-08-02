@@ -54,7 +54,7 @@ installation and getting-started sections.
 eGo as part of the eGo-Toolchain
 ==============
 
-.. figure:: images/doc/images/regon-toolchain_english.png
+.. figure:: images/regon-toolchain_english.png
    :width: 100%
    :alt: Overview of the cross-grid-level eGo workflow linking eTraGo and eDisGo
    :align: center
