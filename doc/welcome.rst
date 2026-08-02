@@ -51,15 +51,15 @@ Further information on data access and configuration is provided in the
 installation and getting-started sections.
 
 
-Model overview
+eGo as part of the eGo-Toolchain
 ==============
 
-.. figure:: images/ego_workflow_2025.png
+.. figure:: images/doc/images/regon-toolchain_english.png
    :width: 100%
    :alt: Overview of the cross-grid-level eGo workflow linking eTraGo and eDisGo
    :align: center
 
-      Overview of the cross-grid-level eGo workflow linking eTraGo andeDisGo. Reproduced from Büttner et al. (2025), Figure 1; originally published in Cußmann et al. (2024) under CC BY-SA.
+      The tools illustrated in the figure above have been developed for cross-grid optimisation of sector-coupled energy systems in Germany as part of the eGo research project. The following sections provide an overview of the individual components and their interactions.
 
 
 eTraGo
