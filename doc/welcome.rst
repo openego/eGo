@@ -59,7 +59,7 @@ eGo as part of the eGo-Toolchain
    :alt: Overview of the cross-grid-level eGo workflow linking eTraGo and eDisGo
    :align: center
 
-      The tools illustrated in the figure above have been developed for cross-grid optimisation of sector-coupled energy systems in Germany as part of the eGo research project. The following sections provide an overview of the individual components and their interactions.
+   The tools illustrated in the figure above have been developed for cross-grid optimisation of sector-coupled energy systems in Germany as part of the eGo research project. The following sections provide an overview of the individual components and their interactions.
 
 eTraGo
 ------
