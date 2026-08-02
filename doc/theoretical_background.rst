@@ -14,7 +14,7 @@ Modell overview
    :alt: Overview of the models and their interaction within eGo.
    :align: 
    
-    Overview of the cross-grid-level eGo workflow linking eTraGo andeDisGo. Reproduced from Büttner et al. (2025), Figure 1; originally published in Cußmann et al. (2024) under CC BY-SA.
+   Overview of the cross-grid-level eGo workflow linking eTraGo andeDisGo. Reproduced from Büttner et al. (2025), Figure 1; originally published in Cußmann et al. (2024) under CC BY-SA.
 
 eTraGo's theoretical Background
 ===============================
