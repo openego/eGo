@@ -10,7 +10,7 @@ Modell overview
 
 
 .. figure:: images/ego_workflow_2025.png
-   :scale: 70%
+   :width: 70%
    :alt: Overview of the models and their interaction within eGo.
    :align: center
    
