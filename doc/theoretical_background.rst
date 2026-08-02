@@ -5,17 +5,15 @@ Theoretical background
 .. contents::
 
 
-Models overview
+Modell overview
 ===============
 
 
-.. figure:: images/open_ego_models_overview.png
-   :width: 1123px
-   :height: 794px
+.. figure:: images/ego_workflow_2025.png
    :scale: 70%
-   :alt: Overview of Models and processes which are used by eGo
+   :alt: Overview of the models and their interaction within eGo.
    :align: center
-
+    Overview of the cross-grid-level eGo workflow linking eTraGo andeDisGo. Reproduced from Büttner et al. (2025), Figure 1; originally published in Cußmann et al. (2024) under CC BY-SA.
 
 eTraGo's theoretical Background
 ===============================
@@ -119,26 +117,6 @@ The investment costs of the grid and storage expansion are taken from the studie
 given costs are transformed in respect to PyPSA *[€/MVA]* format [PyPSA]_
 components for the optimisation.
 
-
-**Overview of grid cost assumtions:**
-
-The table displays the transformer and line costs which are used for the
-calculation with *eTraGo*.
-
-.. csv-table:: Overview of grid cost assumtions
-   :file: files/investment_costs_of_grid_ measures.csv
-   :delim: ,
-   :header-rows: 1
-
-The *eTraGo* calculation of the annuity costs per simulation period is defined
-in :func:`~etrago.tools.utilities.set_line_costs` and
-:func:`~etrago.tools.utilities.set_trafo_costs`.
-
-**Overview of storage cost assumtions:**
-
-.. figure:: images/etrago-storage_parameters.png
-   :scale: 80%
-   :alt: Overview of eTraGo storage parameters and costs
 
 Investment costs mv/lv
 ----------------------
