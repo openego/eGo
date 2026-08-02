@@ -5,7 +5,7 @@ Theoretical background
 .. contents::
 
 
-Modell overview
+Model overview
 ===============
 
 
@@ -14,7 +14,7 @@ Modell overview
    :alt: Overview of the models and their interaction within eGo.
    :align: center
    
-   Overview of the cross-grid-level eGo workflow linking eTraGo andeDisGo. Reproduced from Büttner et al. (2025), Figure 1; originally published in Cußmann et al. (2024) under CC BY-SA.
+   Overview of the cross-grid-level eGo workflow linking eTraGo and eDisGo. Reproduced from Büttner et al. (2025), Figure 1; originally published in Cußmann et al. (2024) under CC BY-SA.
 
 eTraGo's theoretical Background
 ===============================
@@ -25,7 +25,7 @@ Learn more about eTraGo's theoretical background of methods and assumptions
 eDisGo's theoretical Background
 ===============================
 
-Learn more about eTraGo's theoretical background of methods and assumptions
+Learn more about eDisGo's theoretical background of methods and assumptions
 `here <https://edisgo.readthedocs.io/en/latest/start_page.html>`_.
 
 
@@ -110,7 +110,7 @@ The annuity costs ( :math:`C_{annuity}` )  is calculated as:
 
 
 
-Investment modelling
+Investment cost modelling
 -----------------------
 
 Within the eGo workflow, investment costs are considered through the
