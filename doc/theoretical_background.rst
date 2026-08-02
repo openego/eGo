@@ -110,25 +110,17 @@ The annuity costs ( :math:`C_{annuity}` )  is calculated as:
 
 
 
-Investment costs ehv/hv
+Investment modelling
 -----------------------
 
-The investment costs of the grid and storage expansion are taken from the studies
-[NEP2015a]_ for the extra and high voltage components and the [Dena]_. The
-given costs are transformed in respect to PyPSA *[€/MVA]* format [PyPSA]_
-components for the optimisation.
-
-
-Investment costs mv/lv
-----------------------
-
-The tool *eDisGO* is calculating all grid expansion measures as capital or
-*overnight* costs. In order to get the annuity costs of eDisGo's optimisation
-results the function :func:`~ego.tools.economics.edisgo_convert_capital_costs`
-is used. The cost assumption of [eDisGo]_ are taken from the [Dena]_
-and [CONSENTEC]_ study. Based on the component the costs including earthwork
-costs can depend on population density according to [Dena]_.
-
+Within the eGo workflow, investment costs are considered through the
+underlying optimisation models. Investment decisions for transmission
+grid expansion, storage technologies and flexibility options are
+optimised at the eHV/HV level using `eTraGo <https://etrago.readthedocs.io/>`_ . The resulting expansion
+requirements are subsequently transferred to `eDisGo <https://edisgo.readthedocs.io/>`_ , where the required
+expansion of the underlying MV/LV grids is determined. A detailed
+description of the optimisation methodology is provided by `Büttner et
+al. (2025) <https://doi.org/10.1088/2753-3751/ae2686>`_.
 
 
 References
