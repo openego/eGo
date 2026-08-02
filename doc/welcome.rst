@@ -61,7 +61,6 @@ eGo as part of the eGo-Toolchain
 
       The tools illustrated in the figure above have been developed for cross-grid optimisation of sector-coupled energy systems in Germany as part of the eGo research project. The following sections provide an overview of the individual components and their interactions.
 
-
 eTraGo
 ------
 
