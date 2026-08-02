@@ -41,10 +41,6 @@ provides open data and metadata for transparent and reproducible energy
 system modelling. Parts of the data used by eGo and related tools in the
 openego toolchain are made available through the OEP.
 
-eGo uses the ``ego.io`` package to access data from the Open Energy
-Database through the OEP REST API. A registered OEP account is required
-for workflows that access the database through this interface.
-
 Depending on the selected workflow, eGo may alternatively use imported
 results or locally available data. 
 Further information on data access and configuration is provided in the
@@ -106,9 +102,6 @@ related components include:
   sector-coupled data model,
 * `ding0 <https://dingo.readthedocs.io/>`_ for generating synthetic
   medium- and low-voltage grid topologies, and
-* `ego.io <https://github.com/openego/ego.io>`_ as the SQLAlchemy-based
-  interface used by eGo to access tables of the Open Energy Database
-  through the Open Energy Platform.
 
 Supported by
 ============
