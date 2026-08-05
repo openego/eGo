@@ -141,7 +141,7 @@ class eGo:
         if cfg["eGo"].get("csv_import_eTraGo"):
             
             logger.info("Import eTraGo network from csv files")
-            return Etrago(csv_folder_name=cfg["eGo"]["csv_import_eTraGo"])
+            return Etrago(results_folder_name=cfg["eGo"]["csv_import_eTraGo"])
 
         if cfg["eGo"]["eTraGo"] is True:
 
@@ -162,7 +162,7 @@ class eGo:
 
             etrago_args = deep_merge(default_args, cfg["eTraGo"])
             # unify path to the path given in the superordinate eGo section
-            etrago_args['csv_export'] = cfg["eGo"]["result_export_path"]+"/etrago_results"
+            etrago_args['export_results_path'] = cfg["eGo"]["result_export_path"]+"/etrago_results"
             
             logger.info("Create eTraGo network calculated by eGo")
             return run_etrago(args=etrago_args, json_path=None)
@@ -512,9 +512,9 @@ class eGo:
                 self._mvlv_grid_choice_mode = "cluster"
                 
             if self._json_file["eGo"]["csv_import_eTraGo"]:
-                inside_focus = pd.read_csv(self._json_file["eGo"]["csv_import_eTraGo"]+'/clustering/buses_within_focus.csv').Bus
+                inside_focus = pd.read_csv(self._json_file["eGo"]["csv_import_eTraGo"]+'/buses_within_focus.csv').Bus
             else:
-                inside_focus = pd.read_csv(self.etrago.args["csv_export"]+'/clustering/buses_within_focus.csv').Bus
+                inside_focus = pd.read_csv(self.etrago.args["export_results_path"]+'/buses_within_focus.csv').Bus
 
             working_grids_path = os.path.join(
                 self._json_file["eDisGo"]["grid_path"], "working_grids.csv"
@@ -547,9 +547,9 @@ class eGo:
                 self._mvlv_grid_choice_mode = "cluster"
             
             if self._json_file["eGo"]["csv_import_eTraGo"]:
-                inside_focus = pd.read_csv(self._json_file["eGo"]["csv_import_eTraGo"]+'/clustering/buses_within_focus.csv').Bus
+                inside_focus = pd.read_csv(self._json_file["eGo"]["csv_import_eTraGo"]+'/buses_within_focus.csv').Bus
             else:
-                inside_focus = pd.read_csv(self.etrago.args["csv_export"]+'/clustering/buses_within_focus.csv').Bus
+                inside_focus = pd.read_csv(self.etrago.args["export_results_path"]+'/buses_within_focus.csv').Bus
             
             working_grids_path = os.path.join(
                 self._json_file["eDisGo"]["grid_path"], "working_grids.csv"
