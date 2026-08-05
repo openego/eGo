@@ -49,7 +49,7 @@ if __name__ == "__main__":
     logger.info("Start calculation")
 
     # Initialize eGo object
-    ego = eGo(jsonpath="scenario_settings_focus_region.json")
+    ego = eGo(jsonpath="scenario_setting_focus_region.json")
 
     # Run eGo
     ego.run()
