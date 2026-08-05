@@ -140,7 +140,7 @@ class eGo:
         if cfg["eGo"].get("csv_import_eTraGo"):
             
             logger.info("Import eTraGo network from csv files")
-            return Etrago(csv_folder_name=cfg["eGo"]["csv_import_eTraGo"])
+            return Etrago(results_folder_name=cfg["eGo"]["csv_import_eTraGo"])
 
         if cfg["eGo"]["eTraGo"] is True:
 
@@ -161,7 +161,7 @@ class eGo:
 
             etrago_args = deep_merge(default_args, cfg["eTraGo"])
             # unify path to the path given in the superordinate eGo section
-            etrago_args['csv_export'] = cfg["eGo"]["result_export_path"]+"/etrago_results"
+            etrago_args['export_results_path'] = cfg["eGo"]["result_export_path"]+"/etrago_results"
             
             logger.info("Create eTraGo network calculated by eGo")
             return run_etrago(args=etrago_args, json_path=None)
