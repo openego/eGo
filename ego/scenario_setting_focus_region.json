@@ -23,7 +23,7 @@
     "eDisGo": true,
     "csv_import_eTraGo": false,
     "csv_import_eDisGo": false,
-    "result_export_path": "/home/dozeumesk/eGo/06-26/eGo/ego/results-zooming",
+    "result_export_path": "/home/path/to/results",
     "random_seed": 42
   },
 
@@ -66,7 +66,7 @@
     "overlying_grid": true,
     "overlying_grid_source": "etrago",
     "preset": "uc4_example",
-    "grid_path": "/home/dozeumesk/eGo/06-26/data/grids",
+    "grid_path": "/home/path_to/grids",
     "legacy_ding0_grids": false,
     "choice_mode": "cluster_focus_region",
     "cluster_attributes": ["pv_capacity_expansion_mw_per_km2", "wind_capacity_expansion_mw_per_km2", "electromobility_max_load_expansion_mw_per_km2", "pth_capacity_expansion_mw_per_km2"],
@@ -81,11 +81,11 @@
     },
 
   "database": {
-    "database_name": "oedb",
-    "host": "",
-    "port": "",
-    "user": "",
-    "password": ""
+    "database_name": "egon-data",
+    "host": "localhost",
+    "port": "59510",
+    "user": "egon",
+    "password": "data"
   },
 
   "ssh": {
