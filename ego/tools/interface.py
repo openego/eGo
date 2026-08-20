@@ -892,34 +892,30 @@ def get_etrago_results_per_bus(bus_id, etrago_obj, pf_post_lopf, max_cos_phi_ren
     return results
 
 
-def rename_generator_carriers_edisgo(edisgo_grid):
-    """
-    Helper function to rename carriers so that they match carrier names in eTraGo.
-
-    """
-    generators_df = edisgo_grid.topology.generators_df
-    if "p_nom_th" in generators_df.columns:
-        gens_rename = generators_df[
-            (generators_df["type"].isin(["gas", "gas extended", "oil", "others"]))
-            & (~generators_df["p_nom_th"].isna())
-        ]
-        generators_df.loc[gens_rename.index, "type"] = "gas_CHP"
-        gens_rename = generators_df[
-            (generators_df["type"].isin(["biomass"]))
-            & (~generators_df["p_nom_th"].isna())
-        ]
-        generators_df.loc[gens_rename.index, "type"] = "biomass_CHP"
-    gens_rename = generators_df[generators_df["type"].isin(["water"])]
-    generators_df.loc[gens_rename.index, "type"] = "run_of_river"
-    gens_rename = generators_df[generators_df["type"].isin(["conventional"])]
-    generators_df.loc[gens_rename.index, "type"] = "others"
-
-
 def map_etrago_heat_bus_to_district_heating_id(specs, scenario, engine):
     """
     Helper function to rename heat bus ID from eTraGo to district heating ID used
     in eDisGo for specifications from overlying grid on district heating feed-in,
     as well as district heating storage SoC and capacity.
+
+    .. warning::
+
+        POTENTIALLY OUTDATED — currently uncalled.
+
+        Its only caller was the legacy in-eGo ``run_edisgo`` implementation,
+        removed when the per-grid workflow moved to ``edisgo.run.run_edisgo``.
+        No equivalent was found in eDisGo: the ``import_overlying_grid_data``
+        task does not map heat bus IDs to district heating IDs, and its
+        downstream consumer ``aggregate_district_heating_components`` matches
+        on district heating IDs
+        (``if str(int(district)) in feedin_district_heating.columns``) and has
+        no caller in eDisGo outside its tests.
+
+        District heating feed-in from the overlying grid therefore appears not
+        to reach the runner path. Whether that was deliberate or an oversight
+        in the migration is unresolved — see eGo issue #199. Kept rather than
+        deleted so the working implementation is available if this is wired
+        up again.
 
     """
     # map district heating ID to heat bus ID from eTraGo
