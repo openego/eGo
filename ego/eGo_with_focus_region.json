@@ -5,22 +5,22 @@
     "eDisGo": true,
     "csv_import_eTraGo": false,
     "csv_import_eDisGo": false,
-    "result_export_path": "/home/path/to/results",
+    "result_export_path": "/path/to/results",
     "random_seed": 42
   },
 
   "eTraGo": {
     "db": "oep",
     "scn_name": "eGon2035",
-    "start_snapshot":1,
-    "end_snapshot":168,
+    "start_snapshot": 1,
+    "end_snapshot": 168,
     "method": { 
         "n_iter": 4,
         "formulation": "pyomo",
         "market_optimization":
             {
                 "active": false
-             },
+             }
     },
     "network_clustering":  {
         "method": {
@@ -30,22 +30,29 @@
             "active": true,
             "cluster_within_focus": false,
             "n_clusters": 30
-        },
+        }
     },
+    "spatial_disaggregation": "uniform",
     "skip_snapshots": 5,
-    "load_shedding": true
-    "solver": "gurobi",
+    "temporal_disaggregation": {
+    	"active": true,
+    	"no_slices": 8
+    },
+    "load_shedding": true,
+    "solver": "gurobi"
 },
 
   "eDisGo": {
     "overlying_grid": true,
     "overlying_grid_source": "etrago",
     "preset": "uc4_example",
-    "grid_path": "/home/path_to/grids",
+    "grid_path": "/path/to/grids",
     "legacy_ding0_grids": false,
     "choice_mode": "cluster_focus_region",
+    "manual_grids": [],
     "cluster_attributes": ["pv_capacity_expansion_mw_per_km2", "wind_capacity_expansion_mw_per_km2", "electromobility_max_load_expansion_mw_per_km2", "pth_capacity_expansion_mw_per_km2"],
     "n_clusters": 5,
+    "only_cluster": false,
     "parallelization": false,
     "max_calc_time": 1.0,
     "max_workers": 1,

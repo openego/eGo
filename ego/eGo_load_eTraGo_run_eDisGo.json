@@ -5,25 +5,27 @@
     "eDisGo": true,
     "csv_import_eTraGo": "/path/to/predefined/etrago/results",
     "csv_import_eDisGo": false,
-    "result_export_path": "/home/path/to/results",
+    "result_export_path": "/path/to/results",
     "random_seed": 42
   },
 
   "eTraGo": {
     "scn_name": "eGon2035",
-    "start_snapshot":1,
-    "end_snapshot":8760
+    "start_snapshot": 1,
+    "end_snapshot": 8760
   },
 
   "eDisGo": {
     "overlying_grid": true,
     "overlying_grid_source": "etrago",
     "preset": "uc4_example",
-    "grid_path": "/path/to/edisgo/grids",
+    "grid_path": "/path/to/grids",
     "legacy_ding0_grids": false,
     "choice_mode": "cluster",
+    "manual_grids": [],
     "cluster_attributes": ["pv_capacity_expansion_mw_per_km2", "wind_capacity_expansion_mw_per_km2", "electromobility_max_load_expansion_mw_per_km2", "pth_capacity_expansion_mw_per_km2"],
     "n_clusters": 5,
+    "only_cluster": false,
     "parallelization": false,
     "max_calc_time": 1.0,
     "max_workers": 1,
