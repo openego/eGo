@@ -29,18 +29,27 @@ Learn more about eDisGo's theoretical background of methods and assumptions
 `here <https://edisgo.readthedocs.io/en/latest/start_page.html>`_.
 
 
-eDisGo Cluster Method
-=====================
+Selection of MV/LV grids
+========================
 
-In order to achieve acceptable computation times, the problem's complexity can be reduced by applying a k-means cluster-algorithm to MV grids. The algorithm identifies a specified number of representative MV grids and assigns a weighting to each grid. As described `here <https://openego.readthedocs.io/en/dev/api/modules.html#edisgo>`_, the available clustering attributes are:
+To reduce computational complexity, eGo applies a k-means clustering
+algorithm to the MV grids. The algorithm selects a specified number of
+representative MV grids and assigns a weighting to each representative
+grid.
 
-* cumulative installed **wind capacity**,
-* cumulative installed **solar capacity**,
-* distance between transition point and **farthest node** of the MV grid
-* installed **battery capacity** (as a result of eTraGo's investment optimization)
+The available clustering attributes are determined by
+:func:`~ego.mv_clustering.mv_clustering.get_cluster_attributes` and
+include:
 
-Subsequent to the MV grid simulations with the reduced number of representative grids, the cluster weighting is used to extrapolate the costs back to the original number of MV grids.
+* **PV capacity**,
+* **onshore wind capacity**,
+* **power-to-heat (PtH) capacity**, and
+* **maximum load from electric vehicles** in the case of uncoordinated
+  charging.
 
+The attributes are available both as absolute values in MW and as
+area-specific values in MW/km². The function also provides expansion
+values relative to the status quo.
 
 Economic calculation
 ====================
@@ -48,7 +57,7 @@ Economic calculation
 The tool *eGo* unites the extra high (ehv) and high voltage (hv) models with the
 medium (mv) and low voltage (lv) models to ascertain the costs per selected
 measure and scenario. This results in a cross-grid-level economic result of
-the electrical grid and storage optimisation.
+the electrical grid and storage optimization.
 
 
 Overnight costs
@@ -110,16 +119,16 @@ The annuity costs ( :math:`C_{annuity}` )  is calculated as:
 
 
 
-Investment cost modelling
+Investment cost modeling
 -----------------------
 
 Within the eGo workflow, investment costs are considered through the
-underlying optimisation models. Investment decisions for transmission
+underlying optimization models. Investment decisions for transmission
 grid expansion, storage technologies and flexibility options are
-optimised at the eHV/HV level using `eTraGo <https://etrago.readthedocs.io/>`_ . The resulting expansion
+optimized at the eHV/HV level using `eTraGo <https://etrago.readthedocs.io/>`_ . The resulting expansion
 requirements are subsequently transferred to `eDisGo <https://edisgo.readthedocs.io/>`_ , where the required
 expansion of the underlying MV/LV grids is determined. A detailed
-description of the optimisation methodology is provided by `Büttner et
+description of the optimization methodology is provided by `Büttner et
 al. (2025) <https://doi.org/10.1088/2753-3751/ae2686>`_.
 
 
