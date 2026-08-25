@@ -12,7 +12,7 @@ and **eDisGo** in a top-down workflow.
 
 eTraGo optimizes generation and flexibility dispatch as well as grid and
 storage expansion at the extra-high- and high-voltage levels. Relevant results and operational requirements are transferred to eDisGo,
-which analyses the underlying medium- and low-voltage grids and determines
+which analyzes the underlying medium- and low-voltage grids and determines
 their grid reinforcement needs. eGo links both tools, coordinates the cross-grid-level
 workflow, and provides functionality for the joint evaluation of results.
 
@@ -44,7 +44,7 @@ The Open Energy Platform
 
 The `Open Energy Platform (OEP) <https://openenergy-platform.org/>`_
 provides open data and metadata for transparent and reproducible energy
-system modelling. Parts of the data used by eGo and related tools in the
+system modeling. Parts of the data used by eGo and related tools in the
 openego toolchain are made available through the OEP.
 
 Depending on the selected workflow, eGo may alternatively use imported
@@ -53,16 +53,17 @@ Further information on data access and configuration is provided in the
 installation and getting-started sections.
 
 
-eGo as part of the eGo-Toolchain
-==============
+eGo as part of the eGo toolchain
+================================
 
 .. figure:: images/regon-toolchain_english.png
    :width: 100%
    :alt: Overview of the cross-grid-level eGo workflow linking eTraGo and eDisGo
    :align: center
 
-   The tools illustrated in the figure above have been developed for cross-grid optimisation of sector-coupled energy systems in Germany as part of the eGo research project. The following sections provide an overview of the individual components and their interactions.
-
+   The figure shows the openego toolchain used for the cross-grid optimization
+   of sector-coupled energy systems in Germany. The following sections provide
+   an overview of the individual components and their interactions.
 
 Related tools and data access
 -----------------------------
@@ -71,7 +72,7 @@ The eGo workflow is embedded in the wider openego toolchain. Important
 related components include:
 
 * `eGon-data <https://github.com/openego/eGon-data>`_ for creating the
-  sector-coupled data model,
+  sector-coupled data model.
 * `ding0 <https://dingo.readthedocs.io/>`_ for generating synthetic
   medium- and low-voltage grid topologies.
 
@@ -107,7 +108,7 @@ eDisGo
 
 `eDisGo <https://edisgo.readthedocs.io/>`_ is used for the analysis of
 medium- and low-voltage grids. Based on the inputs prepared by eGo,
-eDisGo analyses representative distribution grids and determines their
+eDisGo analyzes representative distribution grids and determines their
 grid reinforcement needs.
 
 
