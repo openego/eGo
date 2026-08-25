@@ -3,7 +3,8 @@
 -----
 
 
-.. image:: https://openegoproject.files.wordpress.com/2017/02/open_ego_logo_breit.png?w=400
+.. image:: doc/images/open_ego_logo.png
+   :alt: eGo logo
 
 
 *A cross-grid-level electricity grid and storage optimization tool*
