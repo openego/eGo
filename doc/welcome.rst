@@ -25,9 +25,15 @@ eGo was initially developed in the research project
 developed and applied in the research project
 `eGon <https://ego-n.org/>`_.
 
-The eGon project extended the modelling framework by a sector-coupled
+The eGon project extended the modeling framework by a sector-coupled
 data model that includes electricity, heat, gas, and mobility as well as
 various flexibility options.
+
+The current research project
+`reGon <https://www.uni-flensburg.de/en/department-for-sustainable-energy-transition/research/current-projects>`_
+builds on the models and tools developed in the previous projects. It
+focuses on transferring them into practical applications by applying
+them to specific use cases together with different stakeholders.
 
 The cross-grid-level methodology and its application to a German
 2035 scenario are described in
@@ -56,6 +62,19 @@ eGo as part of the eGo-Toolchain
    :align: center
 
    The tools illustrated in the figure above have been developed for cross-grid optimisation of sector-coupled energy systems in Germany as part of the eGo research project. The following sections provide an overview of the individual components and their interactions.
+
+
+Related tools and data access
+-----------------------------
+
+The eGo workflow is embedded in the wider openego toolchain. Important
+related components include:
+
+* `eGon-data <https://github.com/openego/eGon-data>`_ for creating the
+  sector-coupled data model,
+* `ding0 <https://dingo.readthedocs.io/>`_ for generating synthetic
+  medium- and low-voltage grid topologies.
+
 
 eTraGo
 ------
@@ -92,17 +111,6 @@ eDisGo analyses representative distribution grids and determines their
 grid reinforcement needs.
 
 
-Related tools and data access
------------------------------
-
-The eGo workflow is embedded in the wider openego toolchain. Important
-related components include:
-
-* `eGon-data <https://github.com/openego/eGon-data>`_ for creating the
-  sector-coupled data model,
-* `ding0 <https://dingo.readthedocs.io/>`_ for generating synthetic
-  medium- and low-voltage grid topologies, and
-
 Supported by
 ============
 
@@ -125,7 +133,7 @@ License
    :scale: 100%
    :align: right
 
-© Copyright 2015-2018
+© Copyright 2025-2026
 
 Flensburg University of Applied Sciences,
 Europa-Universität Flensburg,
@@ -148,40 +156,3 @@ If not, see `www.gnu.org/licenses <https://www.gnu.org/licenses/>`_.
 
 
 
-Partner
-=======
-
-
-.. image:: https://i0.wp.com/reiner-lemoine-institut.de/wp-content/uploads/2017/03/Logo_ZNES_farbig_NEU.png
-   :scale: 90%
-   :width: 300px
-   :height: 110px
-   :alt: ZNES Flensburg
-   :target: http://www.znes-flensburg.de/project/150?language=en
-   :align: right
-
-.. image:: https://i0.wp.com/reiner-lemoine-institut.de/wp-content/uploads/2015/08/RLI_Logo.png
-   :scale: 90%
-   :width: 180px
-   :height: 131px
-   :alt: RLI
-   :target: http://reiner-lemoine-institut.de/en/open_ego-open-electricity-grid-optimization/
-   :align: left
-
-
-.. image:: https://openegoproject.files.wordpress.com/2017/02/dlr_logo_vernetzte_energiesysteme_gb_grau.jpg?w=301&#038;h=141
-   :scale: 90%
-   :width: 300px
-   :height: 141px
-   :alt: DLR
-   :target: http://www.dlr.de/ve/en/desktopdefault.aspx/tabid-12472/21440_read-49440/
-   :align: right
-
-
-.. image:: https://i1.wp.com/reiner-lemoine-institut.de/wp-content/uploads/2016/07/Logo_Uni_Magdeburg.png
-   :scale: 90%
-   :width: 300px
-   :height: 103px
-   :alt: Uni Magdeburg
-   :target: http://iks.cs.ovgu.de/IKS.html
-   :align: left
