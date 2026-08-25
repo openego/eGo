@@ -29,17 +29,6 @@ Installation
 The last eGo release is quite old, and might not work anymore.
 Please use the developer installation, which is described below.
 
-.. code-block::
-
-   $ pip3 install eGo --process-dependency-links
-
-
-In case of installation errors of pypsa-fork use:
-
-..  code-block::
-
-   $ pip3 install -e git+https://github.com/openego/PyPSA@master#egg=0.11.0fork
-
 
 ----------------------------
 Installing Developer Version
