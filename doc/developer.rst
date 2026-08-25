@@ -39,9 +39,12 @@ use the right database version. You find this files under
 eDisGo and eTraGo
 -----------------
 
-Please read the Developer notes of
-`eDisGo <https://edisgo.readthedocs.io/en/dev/dev_notes.html>`_ and
-`eTraGo <https://etrago.readthedocs.io/en/latest/developer_notes.html>`_.
+For developer installation instructions, please refer to the
+`eDisGo documentation
+<https://edisgo.readthedocs.io/en/dev/installation.html#developer-installation>`_
+and the
+`eTraGo documentation
+<https://etrago.readthedocs.io/en/latest/installation.html#installation-for-developers>`_.
 
 
 Error handling
