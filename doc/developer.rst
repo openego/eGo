@@ -3,47 +3,19 @@ Developer notes
 ===============
 
 
-Installation
-============
+1. Installation and getting eGo
+-------------------------------
 
-.. note::
-      Installation is only tested on (Ubuntu 16.04 ) linux OS.
-
-Please read the Installation Guideline :ref:`ego.doc.installation`.
+Please follow the :doc:`installation instructions <installation>` for the
+recommended developer setup.
 
 
-1. Use virtual environment
---------------------------
-
-Create a virtual environment and activate it:
-
-.. code-block:: bash
-
-   $ virtualenv --clear -p python3.5  ego_dev``
-   $ cd ego_dev/
-   $ source bin/activate
-
-
-2. Get eGo
-----------
-
-Clone eGo from github.com by running the following command in your terminal:
-
-.. code-block:: bash
-
-   $ git clone https://github.com/openego/eGo
-
-
-With your activated environment `cd` to the cloned directory and run
-``pip3 install -e eGo --process-dependency-links`` .
-This will install all needed packages into your environment.
-
-3. Get your Database login data
+2. Get your Database login data
 -------------------------------
 
 `Learn more here <https://openego.readthedocs.io/en/dev/installation.html#setup-database-connection>`_.
 
-4. Create Dingo grids
+3. Create Dingo grids
 ----------------------
 
 Install ding0 from github.com and run the ``example_parallel_multiple_grid_districts.py``
@@ -75,21 +47,20 @@ Please read the Developer notes of
 Error handling
 --------------
 
-1. Installation Error use pip-18.1 for your installation.
-   ``pip install --upgrade pip==18.1``
+1. Matplotlib errors may occur on servers and some other systems. Change the
+   setting in ``matplotlibrc`` from ``backend : TkAgg`` to ``backend : PDF``.
+   The file can be found, for example, in a virtual environment under
+   ``~/env/lib/python3.10/site-packages/matplotlib/mpl-data/matplotlibrc``.
 
-2. Installation Error of eTraGo, eDisGo, Pypsa fork or ding0.
-   If you have problems with one of those packages please clone it from
-   *github.com* and install it from the master or dev branch. For example
-   ``pip3 install -e git+https://github.com/openego//PyPSA.git@master#egg=pypsafork``
+   `Learn more here
+   <https://matplotlib.org/users/customizing.html#a-sample-matplotlibrc-file>`_.
 
-3. Matplotlib error on server and few other systems. Please change your settings
-   in ``matplotlibrc`` from ``backend : TkAgg`` to ``backend : PDF``. You can
-   find the file for example in a virtual environment under
-   ``~/env/lib/python3.5/site-packages/matplotlib/mpl-data$ vim matplotlibrc``.
-   `Learn more here. <https://matplotlib.org/users/customizing.html#a-sample-matplotlibrc-file>`_.
+2. A GeoPandas error may be caused by a missing Rtree
+   ``libspatialindex_c`` library. Install ``libspatialindex_c`` using:
 
-4. Geopandas error caused by Rtree ``Could not find libspatialindex_c library``
-   Please reinstall Rtree with ``sudo pip3 install Rtree`` or install
-   ``libspatialindex_c`` via ``sudo apt install python3-rtree``. On Windows or
-   macOS you maybe install ``libspatialindex_c`` straight from source.
+   .. code-block:: bash
+
+      $ sudo apt install python3-rtree
+
+   On Windows or macOS, it may be necessary to install
+   ``libspatialindex_c`` from source.
