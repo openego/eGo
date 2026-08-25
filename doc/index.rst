@@ -12,7 +12,7 @@ Welcome to eGo's documentation!
 eGo is an open-source Python tool for the cross-grid-level analysis
 and optimization of flexibility deployment and grid expansion in
 sector-coupled energy systems. It connects eTraGo and eDisGo in a
-top-down workflow to analyse interactions between flexibility dispatch,
+top-down workflow to analyze interactions between flexibility dispatch,
 generation and storage operation, and grid expansion requirements across
 all voltage levels.
 
