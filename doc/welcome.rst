@@ -130,7 +130,7 @@ Affairs and Energy (BMWI).
 License
 =======
 
-.. image:: images/open_ego_icon_web.png
+.. image:: images/open_ego_logo.png
    :scale: 100%
    :align: right
 
