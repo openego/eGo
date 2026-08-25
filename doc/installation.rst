@@ -96,7 +96,7 @@ prompt as administrator and run:
   $ conda install pip
   $ conda config --add channels conda-forge
   $ conda install shapely
-  $ pip3 install eGo --process-dependency-links
+  $ pip3 install eGo 
 
 The full documentation can be found
 `on this page <https://docs.anaconda.com/anaconda/install/>`_. We use Anaconda
