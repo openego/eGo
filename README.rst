@@ -26,23 +26,9 @@ can be found on
 Installation
 ------------
 
-The last eGo release is quite old, and might not work anymore.
-Please use the developer installation, which is described below.
-
-
-----------------------------
-Installing Developer Version
-----------------------------
-
-Create a virtualenvironment and activate it:
-
-.. code-block::
-
-   $ virtualenv venv --clear -p python3.10
-   $ source venv/bin/activate
-   $ cd path/to/eGo
-   $ python -m pip install -e .[full]
-   $ pre-commit install  # install pre-commit hooks
+Please follow the
+`installation instructions <doc/installation.rst>`_
+for the recommended developer setup.
 
 
 -------
