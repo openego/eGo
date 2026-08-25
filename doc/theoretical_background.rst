@@ -37,9 +37,10 @@ algorithm to the MV grids. The algorithm selects a specified number of
 representative MV grids and assigns a weighting to each representative
 grid.
 
-The available clustering attributes are determined by
-:func:`~ego.mv_clustering.mv_clustering.get_cluster_attributes` and
-include:
+The available clustering attributes are determined by the
+`get_cluster_attributes function
+<https://github.com/openego/eGo/blob/4a1a09a1119cd0c269491c53d2d3c670b4729891/ego/mv_clustering/mv_clustering.py#L51-L69>`_
+and include:
 
 * **PV capacity**,
 * **onshore wind capacity**,
@@ -120,7 +121,7 @@ The annuity costs ( :math:`C_{annuity}` )  is calculated as:
 
 
 Investment cost modeling
------------------------
+------------------------
 
 Within the eGo workflow, investment costs are considered through the
 underlying optimization models. Investment decisions for transmission
