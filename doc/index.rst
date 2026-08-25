@@ -4,7 +4,7 @@ Welcome to eGo's documentation!
 
 
 .. image:: images/open_ego_logo.png
-   :scale: 40%
+   :width: 300px
    :align: center
    :alt: eGo logo
 
