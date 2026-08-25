@@ -19,7 +19,7 @@
 # File description
 """
 This is the application file for the tool eGo. The application eGo calculates
-the distribution and transmission grids of eTraGo and eDisGo.
+the transmission and distribution grids of eTraGo and eDisGo.
 
 .. note:: Note, the data source of eGo relies on
           the Open Energy Database. - The registration for the public
@@ -41,7 +41,8 @@ __copyright__ = (
     "Centre for Sustainable Energy Systems"
 )
 __license__ = "GNU Affero General Public License Version 3 (AGPL-3.0)"
-__author__ = "wolf_bunke, maltesc"
+__author__ = ("wolf_bunke, maltesc, ClaraBuettner, KathiEsterl, "
+              "MoritzSchloesser, joda9")
 
 
 if __name__ == "__main__":
@@ -49,13 +50,7 @@ if __name__ == "__main__":
     logger.info("Start calculation")
 
     # Initialize eGo object
-    ego = eGo(jsonpath="scenario_setting_focus_region.json")
+    ego = eGo(jsonpath="eGo_minimal_example.json")
 
     # Run eGo
     ego.run()
-
-#    logger.info('Print results')
-#    ego.etrago_line_loading()
-#    print(ego.etrago.generator)
-#    print(ego.etrago.storage_costs)
-#    print(ego.etrago.operating_costs)

@@ -1,0 +1,75 @@
+{
+
+  "eGo": {
+    "eTraGo": true,
+    "eDisGo": true,
+    "csv_import_eTraGo": false,
+    "csv_import_eDisGo": false,
+    "result_export_path": "/home/path/to/results",
+    "random_seed": 42
+  },
+
+  "eTraGo": {
+    "db": "oep",
+    "scn_name": "eGon2035",
+    "start_snapshot":1,
+    "end_snapshot":168,
+    "method": { 
+        "n_iter": 4,
+        "formulation": "pyomo",
+        "market_optimization":
+            {
+                "active": false
+             },
+    },
+    "network_clustering":  {
+        "method": {
+            "focus_region": ["Region Hannover"]
+            },
+        "electricity_grid": {
+            "active": true,
+            "cluster_within_focus": false,
+            "n_clusters": 30
+        },
+    },
+    "skip_snapshots": 5,
+    "load_shedding": true
+    "solver": "gurobi",
+},
+
+  "eDisGo": {
+    "overlying_grid": true,
+    "overlying_grid_source": "etrago",
+    "preset": "uc4_example",
+    "grid_path": "/home/path_to/grids",
+    "legacy_ding0_grids": false,
+    "choice_mode": "cluster_focus_region",
+    "cluster_attributes": ["pv_capacity_expansion_mw_per_km2", "wind_capacity_expansion_mw_per_km2", "electromobility_max_load_expansion_mw_per_km2", "pth_capacity_expansion_mw_per_km2"],
+    "n_clusters": 5,
+    "parallelization": false,
+    "max_calc_time": 1.0,
+    "max_workers": 1,
+    "max_cos_phi_renewable": 0.9,
+    "solver": "gurobi",
+    "gridversion": null
+    },
+
+  "database": {
+    "database_name": "oedb",
+    "host": "",
+    "port": "",
+    "user": "",
+    "password": ""
+  },
+
+  "ssh": {
+    "enabled": false,
+    "user": "",
+    "ip": "",
+    "port": "",
+    "local_address": "127.0.0.1",
+    "local_port": "59510"
+  },
+
+  "external_config": null
+}
