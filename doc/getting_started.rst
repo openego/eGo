@@ -56,7 +56,7 @@ Inside the appl.py
     # Run your scenario
     ego = eGo(jsonpath='scenario_setting.json')
 
-    # Analyse your results on extra high voltage level (etrago)
+    # Analyze your results on extra high voltage level (etrago)
     ego.etrago_line_loading()
 
 
