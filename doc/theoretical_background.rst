@@ -128,8 +128,7 @@ grid expansion, storage technologies and flexibility options are
 optimized at the eHV/HV level using `eTraGo <https://etrago.readthedocs.io/>`_ . The resulting expansion
 requirements are subsequently transferred to `eDisGo <https://edisgo.readthedocs.io/>`_ , where the required
 expansion of the underlying MV/LV grids is determined. A detailed
-description of the optimization methodology is provided by `Büttner et
-al. (2025) <https://doi.org/10.1088/2753-3751/ae2686>`_.
+description of the optimization methodology is provided by [Buettner2025]_.
 
 
 References
