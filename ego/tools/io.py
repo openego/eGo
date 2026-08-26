@@ -25,6 +25,8 @@ import logging
 import os
 
 import pandas as pd
+import geopandas as gpd
+import saio
 
 if "READTHEDOCS" not in os.environ:
     import re
@@ -52,6 +54,8 @@ if "READTHEDOCS" not in os.environ:
     from ego.tools.utilities import get_scenario_setting
 
     from ego.mv_clustering import cluster_workflow
+    
+    from ego.mv_clustering.database import get_engine, sshtunnel
 
 logger = logging.getLogger("ego")
 
@@ -86,7 +90,9 @@ class eGo:
         self.scn_name = self._json_file["eTraGo"]["scn_name"]
 
         # Database connection from json_file
-        # self._connect_to_db()
+        self._connect_to_db()
+        
+        
 
     def run(self):
         """
@@ -124,8 +130,9 @@ class eGo:
 
     def _connect_to_db(self):
         try:
-            conn = db.connection(section=self._json_file["eTraGo"]["db"])
-            Session = sessionmaker(bind=conn)
+            with sshtunnel(config=self._json_file):
+                self.engine = get_engine(config=self._json_file)
+            Session = sessionmaker(bind=self.engine)
             self.session = Session()
             logger.info("Connected to Database")
         except:  # noqa: E722
