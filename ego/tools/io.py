@@ -103,14 +103,41 @@ class eGo:
         None.
 
         """
-        
-        # Run eTraGo for optimizing the eHV/HV grid
-        self.etrago = self._setup_etrago()
+        # Set focus region 
+        if self._json_file["eTraGo"]["network_clustering"]["method"].get("focus_region"):
+            focus_region = self._json_file["eTraGo"]["network_clustering"]["method"].get("focus_region")
+            # Set focus region
+            if isinstance(focus_region, list):
+                if "oep.iks.cs.ovgu.de" in str(self.engine.url):
+                    saio.register_schema("tables", self.engine)
+                    from saio.tables import edut_00_012 as vg250_krs
+                else:
+                    saio.register_schema("boundaries", self.engine)
+                    from saio.boundaries import vg250_krs
+                query = self.session.query(vg250_krs)
+                krs = saio.as_pandas(query, geometry="geometry")
+                missing = set(focus_region) - set(krs["gen"])
+                if missing:
+                    raise ValueError(
+                        f"The following focus_region entries are not valid: {missing}"
+                    )
+                focus_gdf = krs[krs["gen"].isin(focus_region)]
+            else:
+                focus_gdf = gpd.read_file(focus_region)
+            self.focus_region = focus_gdf
+            print("Imported focus region")
+        else:
+            self.focus_region = None
+            print("No focus region selected")
         
         # Perform MV grid clustering
         self._mvlv_grid_choice_mode = self._json_file["eDisGo"]["choice_mode"]
         self.set_mvlv_grid_choice()
 
+        # Run eTraGo for optimizing the eHV/HV grid
+        self.etrago = self._setup_etrago()        
+        self._json_file["eTraGo"] = self.etrago.args
+        
         # Run eDisGo for optimizing MV/LV grids
         self.edisgo = self._setup_edisgo()
 
