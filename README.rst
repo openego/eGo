@@ -3,7 +3,8 @@
 -----
 
 
-.. image:: https://openegoproject.files.wordpress.com/2017/02/open_ego_logo_breit.png?w=400
+.. image:: doc/images/open_ego_logo.png
+   :alt: eGo logo
 
 
 *A cross-grid-level electricity grid and storage optimization tool*
@@ -26,34 +27,9 @@ can be found on
 Installation
 ------------
 
-The last eGo release is quite old, and might not work anymore.
-Please use the developer installation, which is described below.
-
-.. code-block::
-
-   $ pip3 install eGo --process-dependency-links
-
-
-In case of installation errors of pypsa-fork use:
-
-..  code-block::
-
-   $ pip3 install -e git+https://github.com/openego/PyPSA@master#egg=0.11.0fork
-
-
-----------------------------
-Installing Developer Version
-----------------------------
-
-Create a virtualenvironment and activate it:
-
-.. code-block::
-
-   $ virtualenv venv --clear -p python3.10
-   $ source venv/bin/activate
-   $ cd path/to/eGo
-   $ python -m pip install -e .[full]
-   $ pre-commit install  # install pre-commit hooks
+Please follow the
+`installation instructions <doc/installation.rst>`_
+for the recommended developer setup.
 
 
 -------

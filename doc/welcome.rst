@@ -1,98 +1,116 @@
+=========
+About eGo
+=========
+
+What is eGo?
 ============
-The eGo tool
-============
+
+eGo (electricity grid optimization) is an open-source Python package for
+the cross-grid-level analysis of flexibility deployment and
+grid expansion in sector-coupled energy systems. It combines **eTraGo**
+and **eDisGo** in a top-down workflow.
+
+eTraGo optimizes generation and flexibility dispatch as well as grid and
+storage expansion at the extra-high- and high-voltage levels. Relevant results and operational requirements are transferred to eDisGo,
+which analyzes the underlying medium- and low-voltage grids and determines
+their grid reinforcement needs. eGo links both tools, coordinates the cross-grid-level
+workflow, and provides functionality for the joint evaluation of results.
 
 
-The python package eGo is a toolbox and also an application which combines
-**eTraGo** - a tool for optimizing flexibility options for transmission grids
-based on PyPSA and **eDisGo** - a toolbox in itself capable of analyzing distribution
-grids for grid issues and evaluating measures responding these.
+Research context
+================
 
-.. figure:: images/eGo_integration.png
-   :width: 1055px
-   :height: 423px
-   :scale: 90%
+eGo was initially developed in the research project
+`open_eGo <https://openegoproject.wordpress.com/>`_ and was further
+developed and applied in the research project
+`eGon <https://ego-n.org/>`_.
+
+The eGon project extended the modeling framework by a sector-coupled
+data model that includes electricity, heat, gas, and mobility as well as
+various flexibility options.
+
+The current research project
+`reGon <https://www.uni-flensburg.de/en/department-for-sustainable-energy-transition/research/current-projects>`_
+builds on the models and tools developed in the previous projects. It
+focuses on transferring them into practical applications by applying
+them to specific use cases together with different stakeholders.
+
+The cross-grid-level methodology and its application to a German
+2035 scenario are described in
+`Büttner et al. (2025) <https://doi.org/10.1088/2753-3751/ae2686>`_.
+
+The Open Energy Platform
+========================
+
+The `Open Energy Platform (OEP) <https://openenergy-platform.org/>`_
+provides open data and metadata for transparent and reproducible energy
+system modeling. Parts of the data used by eGo and related tools in the
+openego toolchain are made available through the OEP.
+
+Depending on the selected workflow, eGo may alternatively use imported
+results or locally available data. 
+Further information on data access and configuration is provided in the
+installation and getting-started sections.
 
 
-The open_eGo project
-====================
-This software project is part of the research project
-`open_eGo <https://openegoproject.wordpress.com>`_.
+eGo as part of the eGo toolchain
+================================
 
-
-The OpenEnergy Platform
-=======================
-Within this project we developed the OpenEnergy Platform which the eGo toolbox
-relies upon to get and store in- and output data. Because of this dependency
-in order to use eGo a registration on the OpenEnergy Platform is required. For more
-information see
-`openenergy-platform <https://openenergy-platform.org/>`_ and login.
-
-The OpenEnergy platform mainly addresses students, researchers and scientists in
-the field of energy modelling and analytics, but also welcomes all other interested parties.
-The platform provides great tools to make your energy system
-modelling process transparent. Data of the open_eGo project are stored on
-this platform.
-`Learn more about the database access <https://oep-data-interface.readthedocs.io>`_.
-
-
-Model overview
-==============
-
-.. figure:: images/open_ego_models_overview.png
-   :width: 1123px
-   :height: 794px
-   :scale: 70%
-   :alt: Overview of Models and processes which are used by eGo
+.. figure:: images/regon-toolchain_english.png
+   :width: 100%
+   :alt: Overview of the cross-grid-level eGo workflow linking eTraGo and eDisGo
    :align: center
+
+   The figure shows the openego toolchain used for the cross-grid optimization
+   of sector-coupled energy systems in Germany. The following sections provide
+   an overview of the individual components and their interactions.
+
+Related tools and data access
+-----------------------------
+
+The eGo workflow is embedded in the wider openego toolchain. Important
+related components include:
+
+* `eGon-data <https://github.com/openego/eGon-data>`_ for creating the
+  sector-coupled data model.
+* `ding0 <https://dingo.readthedocs.io/>`_ for generating synthetic
+  medium- and low-voltage grid topologies.
 
 
 eTraGo
 ------
 
-The python package eTraGo provides an optimization of flexibility options for
-transmission grids based on PyPSA. In particular transmission grids of different voltage levels
-, that is 380, 220 and 110 kV in Germany, can be handled.
-Conventionally the 110kV grid is part of the distribution grid.
-The integration of the transmission and ‘upper’ distribution grid
-is part of eTraGo.
+`eTraGo <https://etrago.readthedocs.io/>`_ is an open-source Python
+package based on PyPSA. It is used to optimize generation and flexibility
+dispatch as well as grid and storage expansion at the extra-high- and
+high-voltage levels.
 
-The focus of optimization are flexibility options with a special focus on
-energy storages and grid expansion measures.
-`Learn more here <http://etrago.readthedocs.io>`_.
+Within the eGo workflow, the results of the eTraGo optimization provide
+the basis for the subsequent analysis of the underlying medium- and
+low-voltage grids.
+
+
+eGo interface
+-------------
+
+eGo links eTraGo and eDisGo in a top-down workflow. It provides the
+interface between both tools, prepares and transfers relevant results,
+and provides an MV-grid clustering method for selecting representative
+distribution grids.
+
+This enables the results and operational requirements from the
+upper-grid-level optimization to be considered in the subsequent
+distribution-grid analysis.
 
 
 eDisGo
 ------
-The python package eDisGo provides a toolbox for analysis and optimization
-of distribution grids. It is closely related to the python project Ding0 as this
-project is currently the single data source for eDisGo providing synthetic
-grid data for whole Germany. `Learn more here <http://edisgo.readthedocs.io>`_.
 
+`eDisGo <https://edisgo.readthedocs.io/>`_ is used for the analysis of
+medium- and low-voltage grids. Based on the inputs prepared by eGo,
+eDisGo analyzes representative distribution grids and determines their
+grid reinforcement needs.
 
-Dataprocessing
---------------
-
-For the open_eGo project several python packages are developed which are feeded
-by the input data of the data processing. The dataprocessing is written in
-SQL and Python. `Learn more here <https://data-processing.readthedocs.io/>`_.
-
-ego.io
-------
-
-The ``ego.io`` is a `SQLAlchemy <https://www.sqlalchemy.org/>`_ interface to
-the OpenEnergy database (oedb). The module provides ORM objects mirroring oedb
-tables and additionally contains helper functions for I/O operations.
-`Learn more here <https://github.com/openego/ego.io>`_.
-
-
-Dingo
------
-
-The DIstribution Network GeneratOr (Ding0) is a tool to generate synthetic
-medium and low voltage power distribution grids based on open
-(or at least accessible) data.
-`Learn more here <https://dingo.readthedocs.io/>`_.
 
 Supported by
 ============
@@ -102,7 +120,7 @@ Affairs and Energy (BMWI).
 
 
 .. image:: https://i0.wp.com/reiner-lemoine-institut.de/wp-content/uploads/2016/07/BMWi_Logo_Englisch_KLEIN.jpg
-   :scale: 90%
+   :width: 300px
    :alt: Supported by BMWi
    :target: http://www.bmwi.de/Navigation/EN/Home/home.html
 
@@ -112,11 +130,11 @@ Affairs and Energy (BMWI).
 License
 =======
 
-.. image:: images/open_ego_icon_web.png
+.. image:: images/open_ego_logo.png
    :scale: 100%
    :align: right
 
-© Copyright 2015-2018
+© Copyright 2015-2026
 
 Flensburg University of Applied Sciences,
 Europa-Universität Flensburg,
@@ -139,40 +157,3 @@ If not, see `www.gnu.org/licenses <https://www.gnu.org/licenses/>`_.
 
 
 
-Partner
-=======
-
-
-.. image:: https://i0.wp.com/reiner-lemoine-institut.de/wp-content/uploads/2017/03/Logo_ZNES_farbig_NEU.png
-   :scale: 90%
-   :width: 300px
-   :height: 110px
-   :alt: ZNES Flensburg
-   :target: http://www.znes-flensburg.de/project/150?language=en
-   :align: right
-
-.. image:: https://i0.wp.com/reiner-lemoine-institut.de/wp-content/uploads/2015/08/RLI_Logo.png
-   :scale: 90%
-   :width: 180px
-   :height: 131px
-   :alt: RLI
-   :target: http://reiner-lemoine-institut.de/en/open_ego-open-electricity-grid-optimization/
-   :align: left
-
-
-.. image:: https://openegoproject.files.wordpress.com/2017/02/dlr_logo_vernetzte_energiesysteme_gb_grau.jpg?w=301&#038;h=141
-   :scale: 90%
-   :width: 300px
-   :height: 141px
-   :alt: DLR
-   :target: http://www.dlr.de/ve/en/desktopdefault.aspx/tabid-12472/21440_read-49440/
-   :align: right
-
-
-.. image:: https://i1.wp.com/reiner-lemoine-institut.de/wp-content/uploads/2016/07/Logo_Uni_Magdeburg.png
-   :scale: 90%
-   :width: 300px
-   :height: 103px
-   :alt: Uni Magdeburg
-   :target: http://iks.cs.ovgu.de/IKS.html
-   :align: left
