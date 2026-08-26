@@ -30,7 +30,7 @@ __author__ = "wolf_bunke, maltesc, mltja"
 
 import logging
 import os
-
+import geopandas as gpd
 if "READTHEDOCS" not in os.environ:
     import numpy as np
     import pandas as pd
@@ -328,7 +328,7 @@ def mv_grid_clustering(cluster_attributes_df, working_grids=None, config=None):
     return cluster_df.sort_values("n_grids_per_cluster", ascending=False)
 
 
-def cluster_workflow(config=None, focus_grids=None):
+def cluster_workflow(config=None, focus_region=None):
     """
     Get cluster attributes per grid if needed and conduct MV grid clustering.
 
@@ -376,11 +376,30 @@ def cluster_workflow(config=None, focus_grids=None):
             "working_grids.csv is missing. Assuming that all grids are working."
             )
         working_grids = None
-    
-    if focus_grids is not None:
-        working_grids = focus_grids 
     else: 
         working_grids = pd.read_csv(working_grids_path, index_col=0)
+
+    if focus_region is not None:
+        engine = get_engine(config=config)
+        orm = register_tables_in_saio(engine)        
+        # import mv grid districts
+        mv_grids = db_io.get_mv_grids(engine=engine, orm=orm)
+        
+        # Select mv grids in focus region
+        mv_grids_in_focus_region = gpd.sjoin(
+            focus_region.to_crs(3035), mv_grids.to_crs(3035))
+        
+        # Adjust working grids based on grids in Focus region
+        if working_grids is not None: 
+            working_grids = working_grids[
+                working_grids.index.isin(mv_grids_in_focus_region.bus_id)]
+        else:
+            working_grids = pd.DataFrame(
+                index = mv_grids_in_focus_region.bus_id,
+                data={"working":True})
+
+        cluster_attributes_df = cluster_attributes_df[
+            cluster_attributes_df.index.isin(mv_grids_in_focus_region.bus_id)]
 
     # conduct MV grid clustering
     cluster_df = mv_grid_clustering(
