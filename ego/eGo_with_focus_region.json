@@ -23,7 +23,7 @@
              }
     },
     "pf_post_lopf": {
-        "active": true,
+        "active": true
     },
     "network_clustering":  {
         "method": {
