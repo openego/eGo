@@ -22,6 +22,9 @@
                 "active": false
              }
     },
+    "pf_post_lopf": {
+        "active": true,
+    },
     "network_clustering":  {
         "method": {
             "focus_region": ["Region Hannover"]
