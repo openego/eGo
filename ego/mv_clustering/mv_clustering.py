@@ -401,7 +401,7 @@ def cluster_workflow(config=None, focus_region=None):
                 data={"working":True})
     
     if working_grids is not None:
-        mv_grid_ids = working_grids[working_grids["working"]].index.tolist()
+        mv_grid_ids = working_grids.index.tolist()
     else:
         mv_grid_ids = None
           
