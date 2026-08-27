@@ -103,10 +103,12 @@ def register_tables_in_saio(engine):
             "generators_pv_rooftop": "edut_00_157",
             "generators_wind_status_quo": "edut_00_158",
             "generators": "edut_00_153",
+            "etrago_bus": "edut_00_056",
             "etrago_load": "edut_00_067",
             "etrago_load_timeseries": "edut_00_068",
             "heat_pump_capacity_individual": "edut_00_150",
             "pth_capacity_district_heating": "edut_00_065",
+            "district_heating_areas": "edut_00_168",
         }
         orm = {}
 
@@ -121,10 +123,12 @@ def register_tables_in_saio(engine):
                 "supply.egon_power_plants_pv_roof_building",
             "generators_wind_status_quo": "supply.egon_power_plants_wind",
             "generators": "supply.egon_power_plants",
+            "etrago_bus": "grid.egon_etrago_bus",
             "etrago_load": "grid.egon_etrago_load",
             "etrago_load_timeseries": "grid.egon_etrago_load_timeseries",
             "heat_pump_capacity_individual": "supply.egon_individual_heating",
             "pth_capacity_district_heating": "grid.egon_etrago_link",
+            "district_heating_areas": "demand.egon_district_heating_areas",
         }
         orm = {}
 
