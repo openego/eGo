@@ -22,6 +22,7 @@ of eGo in order to build the eGo application container.
 """
 
 import logging
+import json
 import os
 
 import pandas as pd
@@ -53,7 +54,7 @@ if "READTHEDOCS" not in os.environ:
     )
     from ego.tools.utilities import get_scenario_setting
 
-    from ego.mv_clustering import cluster_workflow
+    from ego.mv_clustering.mv_clustering import (cluster_workflow, identify_focus_grids)
     
     from ego.mv_clustering.database import get_engine, sshtunnel
 
@@ -91,8 +92,6 @@ class eGo:
 
         # Database connection from json_file
         self._connect_to_db()
-        
-        
 
     def run(self):
         """
@@ -103,32 +102,8 @@ class eGo:
         None.
 
         """
-        # Set focus region 
-        if self._json_file["eTraGo"]["network_clustering"]["method"].get("focus_region"):
-            focus_region = self._json_file["eTraGo"]["network_clustering"]["method"].get("focus_region")
-            # Set focus region
-            if isinstance(focus_region, list):
-                if "oep.iks.cs.ovgu.de" in str(self.engine.url):
-                    saio.register_schema("tables", self.engine)
-                    from saio.tables import edut_00_012 as vg250_krs
-                else:
-                    saio.register_schema("boundaries", self.engine)
-                    from saio.boundaries import vg250_krs
-                query = self.session.query(vg250_krs)
-                krs = saio.as_pandas(query, geometry="geometry")
-                missing = set(focus_region) - set(krs["gen"])
-                if missing:
-                    raise ValueError(
-                        f"The following focus_region entries are not valid: {missing}"
-                    )
-                focus_gdf = krs[krs["gen"].isin(focus_region)]
-            else:
-                focus_gdf = gpd.read_file(focus_region)
-            self.focus_region = focus_gdf
-            print("Imported focus region")
-        else:
-            self.focus_region = None
-            print("No focus region selected")
+        # Set focus region:             
+        self.focus_region = self._setup_focus_region()
         
         # Perform MV grid clustering
         self._mvlv_grid_choice_mode = self._json_file["eDisGo"]["choice_mode"]
@@ -164,6 +139,46 @@ class eGo:
             logger.info("Connected to Database")
         except:  # noqa: E722
             logger.error("Failed connection to Database", exc_info=True)
+
+    def _setup_focus_region(self):
+        """
+        Setup focus region in ego object as gpd dataframe
+        """
+        if self._json_file["eGo"]["csv_import_eTraGo"]:
+            with open(self._json_file["eGo"]["csv_import_eTraGo"]+"args.json", "r", encoding="utf-8") as f:
+                etrago_args = json.load(f)
+            network_clustering = etrago_args.get("network_clustering", {})
+            focus_region = network_clustering.get("method", {}).get("focus_region")
+            if focus_region is not None:
+                logger.info(f"Within the imported eTraGo data, a focus region is defined: {focus_region}")
+            
+        elif self._json_file["eTraGo"]["network_clustering"]["method"].get("focus_region"):             
+            focus_region = self._json_file["eTraGo"]["network_clustering"]["method"].get("focus_region")
+            
+        if focus_region is not None:
+            
+            if isinstance(focus_region, list):
+                if "oep.iks.cs.ovgu.de" in str(self.engine.url):
+                    saio.register_schema("tables", self.engine)
+                    from saio.tables import edut_00_012 as vg250_krs
+                else:
+                    saio.register_schema("boundaries", self.engine)
+                    from saio.boundaries import vg250_krs
+                query = self.session.query(vg250_krs)
+                krs = saio.as_pandas(query, geometry="geometry")
+                missing = set(focus_region) - set(krs["gen"])
+                if missing:
+                    raise ValueError(
+                        f"The following focus_region entries are not valid: {missing}"
+                    )
+                focus_gdf = krs[krs["gen"].isin(focus_region)]
+            else:
+                focus_gdf = gpd.read_file(focus_region)
+            logger.info("Imported focus region.")
+            return focus_gdf
+        else:
+            self.focus_region = None
+            logger.info("No focus region selected.")
 
     def _setup_etrago(self):
         """
@@ -537,41 +552,6 @@ class eGo:
                 "represented_grids",
             ]
         )
-        
-        if self._mvlv_grid_choice_mode == "focus_region":
-            
-            focus_region = self._json_file["eTraGo"]["network_clustering"]["method"].get("focus_region")
-            if not focus_region:
-                raise ValueError("No focus region has been defined; switch to default mv clustering.")
-                self._mvlv_grid_choice_mode = "cluster"
-                
-            if self._json_file["eGo"]["csv_import_eTraGo"]:
-                inside_focus = pd.read_csv(self._json_file["eGo"]["csv_import_eTraGo"]+'/buses_within_focus.csv').Bus
-            else:
-                inside_focus = pd.read_csv(self.etrago.args["export_results_path"]+'/buses_within_focus.csv').Bus
-
-            working_grids_path = os.path.join(
-                self._json_file["eDisGo"]["grid_path"], "working_grids.csv"
-            )
-            if os.path.isfile(working_grids_path):
-                available_grids = pd.read_csv(working_grids_path, index_col=0)
-                available_grids = available_grids[available_grids.working==True]
-            else:
-                path = self._json_file["eDisGo"]["grid_path"]
-                available_grids = [name for name in os.listdir(path) if os.path.isdir(os.path.join(path, name))]
-                available_grids = pd.DataFrame(
-                    {"grid_id": [int(name) for name in available_grids], "working": True}
-                ).set_index("grid_id")
-                
-            focus_grids = available_grids.loc[available_grids["grid_id"].isin(inside_focus), "grid_id"].tolist()
-            
-            choice_df["the_selected_network_id"] = focus_grids
-            choice_df["no_of_points_per_cluster"] = 1
-            choice_df["represented_grids"] = [
-                [mv_grid_id] for mv_grid_id in choice_df["the_selected_network_id"]
-            ]
-            
-            logger.info("Calculating all MV grids within focus region: {}".format(focus_grids))
 
         if self._mvlv_grid_choice_mode in ["cluster", "cluster_focus_region"]:
             cluster_df = self._cluster_mv_grids()
@@ -589,6 +569,11 @@ class eGo:
             choice_df["the_selected_network_id"] = cluster_df["representative"]
             choice_df["no_of_points_per_cluster"] = cluster_df["n_grids_per_cluster"]
             choice_df["represented_grids"] = cluster_df["represented_grids"]
+            
+            if self.focus_region is not None:
+                logger.info("Calculating {} representative MV grids within focus region".format(n_clusters))
+            else:
+                logger.info("Calculating {} representative MV grids".format(n_clusters))
 
         elif self._mvlv_grid_choice_mode == "manual":
             man_grids = self._json_file["eDisGo"]["manual_grids"]
@@ -601,19 +586,40 @@ class eGo:
 
             logger.info("Calculating manually chosen MV grids {}".format(man_grids))
 
-        elif self._mvlv_grid_choice_mode == "all":
-            mv_grids = self._check_available_mv_grids()
+        elif self._mvlv_grid_choice_mode in ["all", "focus_region"]:
+            
+            working_grids_path = os.path.join(
+                self._json_file["eDisGo"]["grid_path"], "working_grids.csv"
+            )
+            if not os.path.isfile(working_grids_path): 
+                logger.warning(
+                    "working_grids.csv is missing. Assuming that all grids are working."
+                    )
+                working_grids = None
+            else: 
+                working_grids = pd.read_csv(working_grids_path, index_col=0)
+                
+            if self.focus_region is not None:
+                mv_grids_in_focus_region = identify_focus_grids(config=self._json_file, focus_region=self.focus_region) 
+            
+            if working_grids is not None: 
+                working_grids = working_grids[
+                    working_grids.index.isin(mv_grids_in_focus_region.bus_id)]
+            else:
+                working_grids = pd.DataFrame(
+                    index = mv_grids_in_focus_region.bus_id,
+                    data={"working":True})
 
-            choice_df["the_selected_network_id"] = mv_grids
+            choice_df["the_selected_network_id"] = working_grids[working_grids["working"]].index.tolist()
             choice_df["no_of_points_per_cluster"] = 1
             choice_df["represented_grids"] = [
                 [mv_grid_id] for mv_grid_id in choice_df["the_selected_network_id"]
             ]
 
-            no_grids = len(mv_grids)
-            logger.info("Calculating all available {} MV grids".format(no_grids))
-            
-
+            if self.focus_region is not None:
+                logger.info("Calculating all available {} MV grids within focus region".format(len(working_grids)))
+            else:
+                logger.info("Calculating all available {} MV grids".format(len(working_grids)))
 
         choice_df = choice_df.sort_values("no_of_points_per_cluster", ascending=False)
 
