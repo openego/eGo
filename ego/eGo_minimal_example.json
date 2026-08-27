@@ -45,12 +45,12 @@
     },
     "load_shedding": true,
     "solver": "gurobi"
-},
+  },
 
   "eDisGo": {
     "overlying_grid": true,
     "overlying_grid_source": "etrago",
-    "preset": "uc4_example",
+    "preset": "spatial_reduction_opf",
     "grid_path": "/path/to/grids",
     "legacy_ding0_grids": false,
     "choice_mode": "manual",
@@ -63,7 +63,26 @@
     "max_workers": 1,
     "max_cos_phi_renewable": 0.9,
     "solver": "gurobi",
-    "gridversion": null
+    "gridversion": null,
+    "timeseries_selection": {
+        "mode": "auto",
+        "method": "residual_load",
+        "time_steps_per_time_interval": 168,
+        "time_step_day_start": 4,
+        "percentage": 1.0,
+        "save_steps": true,
+        "use_troubleshooting_mode": true,
+        "overloading_factor": 0.95,
+        "voltage_deviation_factor": 0.95
+   },
+    "spatial_reduction": {
+        "enabled": true,
+        "mode": "kmeansdijkstra",
+        "cluster_area": "feeder",
+        "reduction_factor": 0.3,
+        "reduction_factor_not_focused": false,
+        "aggregation_mode": false
+   }
   },
 
   "database": {
