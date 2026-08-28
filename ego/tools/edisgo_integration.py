@@ -51,7 +51,11 @@ if "READTHEDOCS" not in os.environ:
 
     #from ego.mv_clustering import cluster_workflow, database
     from ego.tools.economics import edisgo_grid_investment
-    from ego.tools.interface import ETraGoMinimalData, get_etrago_results_per_bus
+    from ego.tools.interface import (
+        ETraGoMinimalData,
+        get_etrago_results_per_bus,
+        map_etrago_heat_bus_to_district_heating_id,
+    )
 
     from ego.mv_clustering.database import get_engine
 
