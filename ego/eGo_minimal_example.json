@@ -50,7 +50,7 @@
   "eDisGo": {
     "overlying_grid": true,
     "overlying_grid_source": "etrago",
-    "preset": "spatial_reduction_opf",
+    "preset": "uc6_spatial_reduction",
     "grid_path": "/path/to/grids",
     "legacy_ding0_grids": false,
     "choice_mode": "manual",
