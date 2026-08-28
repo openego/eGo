@@ -896,6 +896,8 @@ def rename_generator_carriers_edisgo(edisgo_grid):
     """
     Helper function to rename carriers so that they match carrier names in eTraGo.
 
+    TODO: This function is currently not used. We need to check if that is
+    fineor not and either remove the function or add it to the workflow.
     """
     generators_df = edisgo_grid.topology.generators_df
     if "p_nom_th" in generators_df.columns:
