@@ -1,0 +1,74 @@
+{
+
+  "eGo": {
+    "eTraGo": true,
+    "eDisGo": true,
+    "csv_import_eTraGo": "/path/to/predefined/etrago/results",
+    "csv_import_eDisGo": false,
+    "result_export_path": "/path/to/results",
+    "random_seed": 42
+  },
+
+  "eTraGo": {
+    "scn_name": "eGon2035",
+    "start_snapshot": 1,
+    "end_snapshot": 8760
+  },
+
+  "eDisGo": {
+    "overlying_grid": true,
+    "overlying_grid_source": "etrago",
+    "preset": "uc6_spatial_reduction",
+    "grid_path": "/path/to/grids",
+    "legacy_ding0_grids": false,
+    "choice_mode": "cluster",
+    "manual_grids": [],
+    "cluster_attributes": ["pv_capacity_expansion_mw_per_km2", "wind_capacity_expansion_mw_per_km2", "electromobility_max_load_expansion_mw_per_km2", "pth_capacity_expansion_mw_per_km2"],
+    "n_clusters": 5,
+    "only_cluster": false,
+    "parallelization": false,
+    "max_calc_time": 1.0,
+    "max_workers": 1,
+    "max_cos_phi_renewable": 0.9,
+    "solver": "gurobi",
+    "gridversion": null,
+    "timeseries_selection": {
+        "mode": "auto",
+        "method": "residual_load",
+        "time_steps_per_time_interval": 168,
+        "time_step_day_start": 4,
+        "percentage": 1.0,
+        "save_steps": true,
+        "use_troubleshooting_mode": true,
+        "overloading_factor": 0.95,
+        "voltage_deviation_factor": 0.95
+   },
+    "spatial_reduction": {
+        "enabled": true,
+        "mode": "kmeansdijkstra",
+        "cluster_area": "feeder",
+        "reduction_factor": 0.3,
+        "reduction_factor_not_focused": false,
+        "aggregation_mode": false
+   }
+  },
+
+  "database": {
+    "database_name": "oedb",
+    "host": "",
+    "port": "",
+    "user": "",
+    "password": ""
+  },
+
+  "ssh": {
+    "enabled": false,
+    "user": "",
+    "ip": "",
+    "port": "",
+    "local_address": "127.0.0.1",
+    "local_port": "59510"
+  },
+
+  "external_config": null
+}

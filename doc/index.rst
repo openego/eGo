@@ -3,38 +3,60 @@ Welcome to eGo's documentation!
 ===============================
 
 
-
 .. image:: images/open_ego_logo.png
-   :scale: 40%
+   :width: 300px
+   :align: center
+   :alt: eGo logo
 
 
+eGo is an open-source Python tool for the cross-grid-level analysis
+and optimization of flexibility deployment and grid expansion in
+sector-coupled energy systems. It connects eTraGo and eDisGo in a
+top-down workflow to analyze interactions between flexibility dispatch,
+generation and storage operation, and grid expansion requirements across
+all voltage levels.
 
 
-.. note:: Note, the data source of eGo relies on
-          the Open Energy Database. The registration for the public
-          accessible API can be found on
-          `openenergy-platform.org/login <http://openenergy-platform.org/login/>`_.
+Getting started
+===============
+
+.. toctree::
+   :maxdepth: 2
+
+   installation
+   getting_started
 
 
-Overview
-========
+About and methodology
+=====================
 
 .. toctree::
    :maxdepth: 2
 
    welcome
-   installation
-   getting_started
    theoretical_background
+
+
+Development and reference
+=========================
+
+.. toctree::
+   :maxdepth: 2
+
    developer
    whatsnew
    api
 
 
-Take also a look into the documentation of
-`eTraGo <http://eTraGo.readthedocs.io/>`_ and
-`eDisGo <http://edisgo.readthedocs.io/>`_ which are part of eGo.
+Related documentation
+=====================
 
+eGo builds on the functionalities of eTraGo and eDisGo. Detailed
+information on the individual tools is available in their respective
+documentation:
+
+* `eTraGo documentation <https://etrago.readthedocs.io/>`_
+* `eDisGo documentation <https://edisgo.readthedocs.io/>`_
 
 
 Indices and tables
@@ -43,7 +65,6 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-
 
 
 .. raw:: html

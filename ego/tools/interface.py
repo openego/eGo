@@ -616,7 +616,7 @@ def get_etrago_results_per_bus(bus_id, etrago_obj, pf_post_lopf, max_cos_phi_ren
         else:
             central_heat_df = links_df.loc[
                 (links_df["carrier"].isin(central_heat_carriers))
-                & (links_df["bus0"] == str(bus_id))
+                & (links_df["bus0"] == bus_id)
                 & (links_df["p_nom"] <= 20)
             ]
         if not central_heat_df.empty:
@@ -902,10 +902,12 @@ def map_etrago_heat_bus_to_district_heating_id(specs, scenario, engine):
     # map district heating ID to heat bus ID from eTraGo
     orm = database.register_tables_in_saio(engine)
     heat_buses = [int(_) for _ in specs["feedin_district_heating"].columns]
+
     with database.session_scope(engine) as session:
         # get srid of etrago_bus table
         query = session.query(func.ST_SRID(orm["etrago_bus"].geom)).limit(1)
-        srid_etrago_bus = query.all()[0]
+        srid_etrago_bus = query.scalar()
+
         # get district heating ID corresponding to heat bus ID by geo join
         query = (
             session.query(

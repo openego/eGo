@@ -16,8 +16,9 @@ Steps to run eGo
 
 3. Install and use a virtual environment for your installation (optional).
 
-4. Install the eGo tool ``pip3 install eGo --process-dependency-links``.
-
+4. Install the eGo developer version as described in the
+   :doc:`installation instructions <installation>`.
+   
 5. Create mid and low voltage distribution grids with ding0.
    Learn more about Ding0 on `<https://dingo.readthedocs.io/en/dev/index.html>`_.
 
@@ -56,7 +57,7 @@ Inside the appl.py
     # Run your scenario
     ego = eGo(jsonpath='scenario_setting.json')
 
-    # Analyse your results on extra high voltage level (etrago)
+    # Analyze your results on extra high voltage level (etrago)
     ego.etrago_line_loading()
 
 

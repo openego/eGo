@@ -54,6 +54,7 @@ sys.path.insert(0, os.path.abspath("../.."))
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
+    "sphinxcontrib.jquery",
     "sphinx.ext.autodoc",
     "sphinx.ext.intersphinx",
     "sphinx.ext.todo",
@@ -66,7 +67,6 @@ extensions = [
     "sphinxcontrib.httpdomain",  # for restfull API
     "sphinxcontrib.autohttp.flask",
     "sphinx.ext.extlinks",  # enables external links with a key
-    "sphinxjsondomain",
 ]
 
 
@@ -157,7 +157,7 @@ master_doc = "index"
 
 # General information about the project.
 project = "eGo"
-copyright = "2015-2018, open_eGo-Team"
+copyright = "2015-2026, open_eGo-Team"
 author = "open_eGo-Team"
 
 

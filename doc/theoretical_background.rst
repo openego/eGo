@@ -5,17 +5,16 @@ Theoretical background
 .. contents::
 
 
-Models overview
+Model overview
 ===============
 
 
-.. figure:: images/open_ego_models_overview.png
-   :width: 1123px
-   :height: 794px
-   :scale: 70%
-   :alt: Overview of Models and processes which are used by eGo
+.. figure:: images/ego_workflow_2025.png
+   :width: 100%
+   :alt: Overview of the models and their interaction within eGo.
    :align: center
-
+   
+   Overview of the cross-grid-level eGo workflow linking eTraGo and eDisGo. Reproduced from [Buettner2025]_, Figure 1; originally published in [Cussmann2024]_ under CC BY-SA.
 
 eTraGo's theoretical Background
 ===============================
@@ -26,22 +25,32 @@ Learn more about eTraGo's theoretical background of methods and assumptions
 eDisGo's theoretical Background
 ===============================
 
-Learn more about eTraGo's theoretical background of methods and assumptions
+Learn more about eDisGo's theoretical background of methods and assumptions
 `here <https://edisgo.readthedocs.io/en/latest/start_page.html>`_.
 
 
-eDisGo Cluster Method
-=====================
+Selection of MV/LV grids
+========================
 
-In order to achieve acceptable computation times, the problem's complexity can be reduced by applying a k-means cluster-algorithm to MV grids. The algorithm identifies a specified number of representative MV grids and assigns a weighting to each grid. As described `here <https://openego.readthedocs.io/en/dev/api/modules.html#edisgo>`_, the available clustering attributes are:
+To reduce computational complexity, eGo applies a k-means clustering
+algorithm to the MV grids. The algorithm selects a specified number of
+representative MV grids and assigns a weighting to each representative
+grid.
 
-* cumulative installed **wind capacity**,
-* cumulative installed **solar capacity**,
-* distance between transition point and **farthest node** of the MV grid
-* installed **battery capacity** (as a result of eTraGo's investment optimization)
+The available clustering attributes are determined by the
+`get_cluster_attributes function
+<https://github.com/openego/eGo/blob/4a1a09a1119cd0c269491c53d2d3c670b4729891/ego/mv_clustering/mv_clustering.py#L51-L69>`_
+and include:
 
-Subsequent to the MV grid simulations with the reduced number of representative grids, the cluster weighting is used to extrapolate the costs back to the original number of MV grids.
+* **PV capacity**,
+* **onshore wind capacity**,
+* **power-to-heat (PtH) capacity**, and
+* **maximum load from electric vehicles** in the case of uncoordinated
+  charging.
 
+The attributes are available both as absolute values in MW and as
+area-specific values in MW/km². The function also provides expansion
+values relative to the status quo.
 
 Economic calculation
 ====================
@@ -49,7 +58,7 @@ Economic calculation
 The tool *eGo* unites the extra high (ehv) and high voltage (hv) models with the
 medium (mv) and low voltage (lv) models to ascertain the costs per selected
 measure and scenario. This results in a cross-grid-level economic result of
-the electrical grid and storage optimisation.
+the electrical grid and storage optimization.
 
 
 Overnight costs
@@ -111,82 +120,43 @@ The annuity costs ( :math:`C_{annuity}` )  is calculated as:
 
 
 
-Investment costs ehv/hv
------------------------
+Investment cost modeling
+------------------------
 
-The investment costs of the grid and storage expansion are taken from the studies
-[NEP2015a]_ for the extra and high voltage components and the [Dena]_. The
-given costs are transformed in respect to PyPSA *[€/MVA]* format [PyPSA]_
-components for the optimisation.
-
-
-**Overview of grid cost assumtions:**
-
-The table displays the transformer and line costs which are used for the
-calculation with *eTraGo*.
-
-.. csv-table:: Overview of grid cost assumtions
-   :file: files/investment_costs_of_grid_ measures.csv
-   :delim: ,
-   :header-rows: 1
-
-The *eTraGo* calculation of the annuity costs per simulation period is defined
-in :func:`~etrago.tools.utilities.set_line_costs` and
-:func:`~etrago.tools.utilities.set_trafo_costs`.
-
-**Overview of storage cost assumtions:**
-
-.. figure:: images/etrago-storage_parameters.png
-   :scale: 80%
-   :alt: Overview of eTraGo storage parameters and costs
-
-Investment costs mv/lv
-----------------------
-
-The tool *eDisGO* is calculating all grid expansion measures as capital or
-*overnight* costs. In order to get the annuity costs of eDisGo's optimisation
-results the function :func:`~ego.tools.economics.edisgo_convert_capital_costs`
-is used. The cost assumption of [eDisGo]_ are taken from the [Dena]_
-and [CONSENTEC]_ study. Based on the component the costs including earthwork
-costs can depend on population density according to [Dena]_.
-
+Within the eGo workflow, investment costs are considered through the
+underlying optimization models. Investment decisions for transmission
+grid expansion, storage technologies and flexibility options are
+optimized at the eHV/HV level using `eTraGo <https://etrago.readthedocs.io/>`_ . The resulting expansion
+requirements are subsequently transferred to `eDisGo <https://edisgo.readthedocs.io/>`_ , where the required
+expansion of the underlying MV/LV grids is determined. A detailed
+description of the optimization methodology is provided by [Buettner2025]_.
 
 
 References
 ==========
 
 
-.. [NEP2015a] Übertragungsnetzbetreiber Deutschland. (2015).
-    *Netzentwicklungsplan Strom 2025 - Kostenschaetzungen*, Version 2015,
-    1. Entwurf, 2015. (`<https://www.netzentwicklungsplan.de/sites/default/files
-    /paragraphs-files/kostenschaetzungen_nep_2025_1_entwurf.pdf>`_)
-
-.. [Dena] dena Verteilnetzstudie. (2012).
-    *Ausbau- und Innovationsbedarf der Stromverteilnetze in Deutschland bis 2030.*
-    , Version 2015. (`<https://shop.dena.de/sortiment/detail/produkt/
-    dena-verteilnetzstudie-ausbau-und-innovationsbedarf-der-stromverteilnetze-in-deutschland-bis-2030/>`_)
-
-.. [PyPSA] PyPSA’s documentation (2018).
-    *Documentation of components.* , Version v0.11.0. (`<https://pypsa.org/doc/components.html>`_)
 
 .. [StromNEV_A1] Stromnetzentgeltverordnung - StromNEV Anlage 1 (2018).
     *Verordnung über die Entgelte für den Zugang zu Elektrizitätsversorgungsnetzen*
     *(Stromnetzentgeltverordnung - StromNEV) Anlage 1 (zu § 6 Abs. 5 Satz 1)*
     *Betriebsgewöhnliche Nutzungsdauern*.
     (`<https://www.gesetze-im-internet.de/stromnev/anlage_1.html>`_)
+    
 
 .. [Overnight cost] Wikipedia (2018).
     *Definition of overnight cost*.
     (`<https://en.wikipedia.org/wiki/Overnight_cost>`_)
-
-.. [eDisGo] eDisGo - grid expantion costs (2018).
-    *Cost assumption on mv and lv grid components*.
-    (`<https://github.com/openego/eDisGo/blob/dev/edisgo/config/
-    config_grid_expansion_default.cfg#L85-L107>`_)
-
-.. [CONSENTEC] CONSENTEC et.al (2006).
-    *Untersuchung der Voraussetzungen und möglicher Anwendung analytischer*
-    *Kostenmodelle in der deutschen Energiewirtschaft *.
-    (`<https://www.bundesnetzagentur.de/SharedDocs/Downloads/DE/Sachgebiete/
-    Energie/Unternehmen_Institutionen/Netzentgelte/Anreizregulierung/
-    GA_AnalytischeKostenmodelle.pdf?__blob=publicationFile&v=1>`_)
+.. [Buettner2025]
+   Büttner, C., Esterl, K., Schachler, B., and Cußmann, I. (2025).
+   Challenges of top-down flexibility deployment for grid expansion
+   across all voltage levels. Environmental Research: Energy, 2,
+   045017. (`<https://doi.org/10.1088/2753-3751/ae2686>`_)
+.. [Cussmann2024]
+   Cußmann, I., Schachler, B., Büttner, C., Tetens, H.-P., Esterl, K.,
+   Amme, J., Helfenbein, K., Held, M., Nadal, A., Günther, S., and
+   Epia Realpe, C. A. (2024). Projektabschlussbericht: Ein offenes
+   netzebenen- und sektorenübergreifendes Planungsinstrument zur
+   Bestimmung des optimalen Einsatzes und Ausbaus von
+   Flexibilitätsoptionen in Deutschland. Technical Report.
+   (`<https://ego-n.org/papers/Endbericht_egon_v2.pdf>`_)
