@@ -898,25 +898,6 @@ def map_etrago_heat_bus_to_district_heating_id(specs, scenario, engine):
     in eDisGo for specifications from overlying grid on district heating feed-in,
     as well as district heating storage SoC and capacity.
 
-    .. warning::
-
-        POTENTIALLY OUTDATED — currently uncalled.
-
-        Its only caller was the legacy in-eGo ``run_edisgo`` implementation,
-        removed when the per-grid workflow moved to ``edisgo.run.run_edisgo``.
-        No equivalent was found in eDisGo: the ``import_overlying_grid_data``
-        task does not map heat bus IDs to district heating IDs, and its
-        downstream consumer ``aggregate_district_heating_components`` matches
-        on district heating IDs
-        (``if str(int(district)) in feedin_district_heating.columns``) and has
-        no caller in eDisGo outside its tests.
-
-        District heating feed-in from the overlying grid therefore appears not
-        to reach the runner path. Whether that was deliberate or an oversight
-        in the migration is unresolved — see eGo issue #199. Kept rather than
-        deleted so the working implementation is available if this is wired
-        up again.
-
     """
     # map district heating ID to heat bus ID from eTraGo
     orm = database.register_tables_in_saio(engine)
