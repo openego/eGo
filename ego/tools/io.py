@@ -144,6 +144,8 @@ class eGo:
         """
         Setup focus region in ego object as gpd dataframe
         """
+        focus_region = None
+        
         if self._json_file["eGo"]["csv_import_eTraGo"]:
             with open(self._json_file["eGo"]["csv_import_eTraGo"]+"args.json", "r", encoding="utf-8") as f:
                 etrago_args = json.load(f)
@@ -152,7 +154,7 @@ class eGo:
             if focus_region is not None:
                 logger.info(f"Within the imported eTraGo data, a focus region is defined: {focus_region}")
             
-        elif self._json_file["eTraGo"]["network_clustering"]["method"].get("focus_region"):             
+        elif self._json_file["eTraGo"].get("network_clustering", {}).get("method", {}).get("focus_region"):            
             focus_region = self._json_file["eTraGo"]["network_clustering"]["method"].get("focus_region")
             
         if focus_region is not None:
