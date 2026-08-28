@@ -70,6 +70,8 @@ if "READTHEDOCS" not in os.environ:
         rename_generator_carriers_edisgo,
     )
 
+    from ego.mv_clustering.database import get_engine
+
 
 # Logging
 logger = logging.getLogger(__name__)
@@ -716,6 +718,13 @@ class EDisGoNetworks:
                     self._pf_post_lopf["active"],
                     self._max_cos_phi_renewable,
                 )
+
+                # Map etrago.bus_id to area_id of district heating supply
+                map_etrago_heat_bus_to_district_heating_id(
+                    overlying_grid_data,
+                    scenario = self._json_file["eTraGo"]["scn_name"],
+                    engine = get_engine(self._json_file)
+                    )
 
                 os.makedirs(self._results+"/overlying_grid", exist_ok=True)
                 self._export_overlying_grid_data(
