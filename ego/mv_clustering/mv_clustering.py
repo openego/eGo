@@ -30,7 +30,7 @@ __author__ = "wolf_bunke, maltesc, mltja"
 
 import logging
 import os
-
+import geopandas as gpd
 if "READTHEDOCS" not in os.environ:
     import numpy as np
     import pandas as pd
@@ -48,7 +48,22 @@ if "READTHEDOCS" not in os.environ:
 logger = logging.getLogger(__name__)
 
 
-def get_cluster_attributes(attributes_path, scenario, config=None):
+def identify_focus_grids(config, focus_region):
+    """
+    Identify mv grids within focus region.
+    """
+    
+    engine = get_engine(config=config)
+    orm = register_tables_in_saio(engine)        
+    mv_grids = db_io.get_mv_grids(engine=engine, orm=orm)
+    
+    mv_grids_in_focus_region = gpd.sjoin(
+        focus_region.to_crs(3035), mv_grids.to_crs(3035))
+    
+    return mv_grids_in_focus_region
+    
+
+def get_cluster_attributes(attributes_path, scenario, config=None, mv_grid_ids=None):
     """
     Determines attributes to cluster MV grids by.
 
@@ -67,6 +82,9 @@ def get_cluster_attributes(attributes_path, scenario, config=None):
         "eGon2035", and "eGon100RE".
     config : dict
         Config dict.
+    mv_grid_ids : list(int) or None
+        List of MV grid IDs to determine attributes for. If None, attributes
+        are determined for all MV grids. Default: None.
 
     Returns
     -------
@@ -110,6 +128,13 @@ def get_cluster_attributes(attributes_path, scenario, config=None):
         orm = register_tables_in_saio(engine)
 
         grid_ids_df = db_io.get_grid_ids(engine=engine, orm=orm)
+        
+        # restrict to given MV grid IDs, if provided
+        if mv_grid_ids is not None:
+            grid_ids_df = grid_ids_df.loc[
+                grid_ids_df.index.intersection(mv_grid_ids)
+            ]
+        
         solar_capacity_df = db_io.get_solar_capacity(
             scenario, grid_ids_df.index, orm, engine=engine
         )
@@ -328,7 +353,7 @@ def mv_grid_clustering(cluster_attributes_df, working_grids=None, config=None):
     return cluster_df.sort_values("n_grids_per_cluster", ascending=False)
 
 
-def cluster_workflow(config=None):
+def cluster_workflow(config=None, focus_region=None):
     """
     Get cluster attributes per grid if needed and conduct MV grid clustering.
 
@@ -351,39 +376,59 @@ def cluster_workflow(config=None):
         not a working grid.
 
     """
+    # identify relevant mv grids considered within clustering
+    working_grids_path = os.path.join(
+        config["eDisGo"]["grid_path"], "working_grids.csv"
+    )
+    if not os.path.isfile(working_grids_path): 
+        logger.warning(
+            "working_grids.csv is missing. Assuming that all grids are working."
+            )
+        working_grids = None
+    else: 
+        working_grids = pd.read_csv(working_grids_path, index_col=0)
+        
+    # adjust working grids based on grids in focus region
+    if focus_region is not None:
+        mv_grids_in_focus_region = identify_focus_grids(config, focus_region) 
+        
+        if working_grids is not None: 
+            working_grids = working_grids[
+                working_grids.index.isin(mv_grids_in_focus_region.bus_id)]
+        else:
+            working_grids = pd.DataFrame(
+                index = mv_grids_in_focus_region.bus_id,
+                data={"working":True})
+    
+    if working_grids is not None:
+        mv_grid_ids = working_grids.index.tolist()
+    else:
+        mv_grid_ids = None
+          
     # determine cluster attributes
     logger.info("Determine cluster attributes.")
     attributes_path = os.path.join(
-        config["eDisGo"]["results"], "mv_grid_cluster_attributes.csv"
+        config["eGo"]["result_export_path"], "mv_grid_cluster_attributes.csv"
     )
-    if not os.path.exists(config["eDisGo"]["results"]):
-        os.makedirs(config["eDisGo"]["results"])
+    if not os.path.exists(config["eGo"]["result_export_path"]):
+        os.makedirs(config["eGo"]["result_export_path"])
     scenario = config["eTraGo"]["scn_name"]
+    
     cluster_attributes_df = get_cluster_attributes(
-        attributes_path=attributes_path, scenario=scenario, config=config
+        attributes_path=attributes_path, scenario=scenario, config=config, mv_grid_ids=mv_grid_ids
     )
-
+    
     # select attributes to cluster by
     cluster_attributes_df = cluster_attributes_df[
         config["eDisGo"]["cluster_attributes"]
     ]
-    working_grids_path = os.path.join(
-        config["eDisGo"]["grid_path"], "working_grids.csv"
-    )
-    if os.path.isfile(working_grids_path):
-        working_grids = pd.read_csv(working_grids_path, index_col=0)
-    else:
-        logger.warning(
-            "working_grids.csv is missing. Assuming that all grids are working."
-        )
-        working_grids = None
 
     # conduct MV grid clustering
     cluster_df = mv_grid_clustering(
         cluster_attributes_df, working_grids=working_grids, config=config
     )
     cluster_results_path = os.path.join(
-        config["eDisGo"]["results"], "mv_grid_cluster_results_new.csv"
+        config["eGo"]["result_export_path"], "mv_grid_cluster_results_new.csv"
     )
     cluster_df.to_csv(cluster_results_path)
     return cluster_df

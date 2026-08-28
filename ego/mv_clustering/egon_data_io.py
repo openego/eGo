@@ -6,6 +6,8 @@ from sqlalchemy import func
 
 from ego.mv_clustering.database import session_decorator
 
+import saio
+
 logger = logging.getLogger(__name__)
 
 
@@ -58,6 +60,30 @@ def get_grid_ids(orm=None, session=None):
         orm["egon_mv_grid_district"].area.label("area_m2"),
     )
     return pd.read_sql_query(query.statement, session.bind, index_col="bus_id")
+
+
+@session_decorator
+def get_mv_grids(orm=None, session=None):
+    """
+    Gets all MV grid IDs and the area of each grid in m^2.
+
+    Parameters
+    -----------
+    orm : dict
+        Dictionary with tables to retrieve data from.
+
+    Returns
+    -------
+    pandas.DataFrame
+        Dataframe with grid ID in index and corresponding area in m^2 in column
+        "area_m2".
+
+    """
+    mv_grids = saio.as_pandas(
+        query=session.query(orm["egon_mv_grid_district"]),
+                            index_col="bus_id",
+    )
+    return mv_grids
 
 
 @session_decorator
