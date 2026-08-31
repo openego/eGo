@@ -20,7 +20,7 @@ def read(fname):
 
 req = [
     "etrago @ git+https://github.com/openego/eTraGo.git@dev#egg=etrago",
-    "edisgo @ git+https://github.com/openego/eDisGo.git@dev#egg=edisgo",
+    "edisgo @ git+https://github.com/openego/eDisGo.git@edisgo_run_edisgo#egg=edisgo",
 ]
 
 dev_req = [
