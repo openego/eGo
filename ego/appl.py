@@ -50,7 +50,7 @@ if __name__ == "__main__":
     logger.info("Start calculation")
 
     # Initialize eGo object
-    ego = eGo(jsonpath="eGo_minimal_example.json")
+    ego = eGo(jsonpath="eGo_load_eTraGo_run_eDisGo.json")
 
     # Run eGo
     ego.run()

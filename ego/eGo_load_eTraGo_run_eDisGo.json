@@ -18,7 +18,7 @@
   "eDisGo": {
     "overlying_grid": true,
     "overlying_grid_source": "etrago",
-    "preset": "uc6_spatial_reduction",
+    "preset": "spatial_reduction_opf.yaml",
     "grid_path": "/path/to/grids",
     "legacy_ding0_grids": false,
     "choice_mode": "cluster",
