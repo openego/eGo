@@ -110,8 +110,9 @@ class eGo:
         self.set_mvlv_grid_choice()
 
         # Run eTraGo for optimizing the eHV/HV grid
-        self.etrago = self._setup_etrago()        
-        self._json_file["eTraGo"] = self.etrago.args
+        self.etrago = self._setup_etrago()
+        if self.etrago is not None:      
+            self._json_file["eTraGo"] = self.etrago.args
         
         # Run eDisGo for optimizing MV/LV grids
         self.edisgo = self._setup_edisgo()
