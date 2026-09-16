@@ -788,7 +788,7 @@ class EDisGoNetworks:
             mv_grid_id = int(row["the_selected_network_id"])
 
             zip_path = os.path.join(
-                self._csv_import, str(mv_grid_id), "main.zip"
+                self._csv_import, f"{mv_grid_id}.zip"
             )
             try:
                 edisgo_grid = import_edisgo_from_files(
