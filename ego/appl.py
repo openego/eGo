@@ -50,7 +50,40 @@ if __name__ == "__main__":
     logger.info("Start calculation")
 
     # Initialize eGo object
-    ego = eGo(jsonpath="eGo_load_eTraGo_run_eDisGo.json")
+    #ego_prepare = eGo(jsonpath="scenario_settings_prepare_grids.json")
 
     # Run eGo
-    ego.run()
+    #ego_prepare.run()
+    
+    #del ego_prepare
+    
+    # ego_select_ts_1 = eGo(jsonpath="scenario_settings_select_ts_nodg.json")
+    
+    # ego_select_ts_1.run()
+    
+    # del ego_select_ts_1
+    
+    # ego_select_ts_2 = eGo(jsonpath="scenario_settings_select_ts_withdg.json")
+    
+    # ego_select_ts_2.run()
+    
+    # del ego_select_ts_2
+    
+    # ego_select_ts_3 = eGo(jsonpath="scenario_settings_select_ts_withdg_uni.json")
+    
+    # ego_select_ts_3.run()
+    
+    # del ego_select_ts_3
+    
+    ego_opt_1 = eGo(jsonpath="scenario_settings_optimize_prepared_grids_nodg.json")
+    
+    ego_opt_1.run()
+    
+    # ego_opt_2 = eGo(jsonpath="scenario_settings_optimize_prepared_grids_withdg.json")
+    
+    # ego_opt_2.run()
+    
+    # ego_opt_3 = eGo(jsonpath="scenario_settings_optimize_prepared_grids_withdg_uni.json")
+    
+    # ego_opt_3.run()
+    #ego.edisgo.network[32377]
