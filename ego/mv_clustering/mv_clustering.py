@@ -122,55 +122,53 @@ def get_cluster_attributes(attributes_path, scenario, config=None, mv_grid_ids=N
             and district heating) from status quo to given scenario in MW per km^2
 
     """
-    # get attributes from database
-    with sshtunnel(config=config):
-        engine = get_engine(config=config)
-        orm = register_tables_in_saio(engine)
+    engine = get_engine()
+    orm = register_tables_in_saio(engine)
 
-        grid_ids_df = db_io.get_grid_ids(engine=engine, orm=orm)
-        
-        # restrict to given MV grid IDs, if provided
-        if mv_grid_ids is not None:
-            grid_ids_df = grid_ids_df.loc[
-                grid_ids_df.index.intersection(mv_grid_ids)
-            ]
-        
-        solar_capacity_df = db_io.get_solar_capacity(
-            scenario, grid_ids_df.index, orm, engine=engine
+    grid_ids_df = db_io.get_grid_ids(engine=engine, orm=orm)
+
+    # restrict to given MV grid IDs, if provided
+    if mv_grid_ids is not None:
+        grid_ids_df = grid_ids_df.loc[
+            grid_ids_df.index.intersection(mv_grid_ids)
+        ]
+
+    solar_capacity_df = db_io.get_solar_capacity(
+        scenario, grid_ids_df.index, orm, engine=engine
+    )
+    if scenario == "status_quo":
+        solar_capacity_sq_df = solar_capacity_df
+    else:
+        solar_capacity_sq_df = db_io.get_solar_capacity(
+            "status_quo", grid_ids_df.index, orm, engine=engine
         )
-        if scenario == "status_quo":
-            solar_capacity_sq_df = solar_capacity_df
-        else:
-            solar_capacity_sq_df = db_io.get_solar_capacity(
-                "status_quo", grid_ids_df.index, orm, engine=engine
-            )
-        wind_capacity_df = db_io.get_wind_capacity(
-            scenario, grid_ids_df.index, orm, engine=engine
+    wind_capacity_df = db_io.get_wind_capacity(
+        scenario, grid_ids_df.index, orm, engine=engine
+    )
+    if scenario == "status_quo":
+        wind_capacity_sq_df = wind_capacity_df
+    else:
+        wind_capacity_sq_df = db_io.get_wind_capacity(
+            "status_quo", grid_ids_df.index, orm, engine=engine
         )
-        if scenario == "status_quo":
-            wind_capacity_sq_df = wind_capacity_df
-        else:
-            wind_capacity_sq_df = db_io.get_wind_capacity(
-                "status_quo", grid_ids_df.index, orm, engine=engine
-            )
-        emob_capacity_df = db_io.get_electromobility_maximum_load(
-            scenario, grid_ids_df.index, orm, engine=engine
+    emob_capacity_df = db_io.get_electromobility_maximum_load(
+        scenario, grid_ids_df.index, orm, engine=engine
+    )
+    if scenario == "status_quo":
+        emob_capacity_sq_df = emob_capacity_df
+    else:
+        emob_capacity_sq_df = db_io.get_electromobility_maximum_load(
+            "status_quo", grid_ids_df.index, orm, engine=engine
         )
-        if scenario == "status_quo":
-            emob_capacity_sq_df = emob_capacity_df
-        else:
-            emob_capacity_sq_df = db_io.get_electromobility_maximum_load(
-                "status_quo", grid_ids_df.index, orm, engine=engine
-            )
-        pth_capacity_df = db_io.get_pth_capacity(
-            scenario, grid_ids_df.index, orm, engine=engine
+    pth_capacity_df = db_io.get_pth_capacity(
+        scenario, grid_ids_df.index, orm, engine=engine
+    )
+    if scenario == "status_quo":
+        pth_capacity_sq_df = pth_capacity_df
+    else:
+        pth_capacity_sq_df = db_io.get_pth_capacity(
+            "status_quo", grid_ids_df.index, orm, engine=engine
         )
-        if scenario == "status_quo":
-            pth_capacity_sq_df = pth_capacity_df
-        else:
-            pth_capacity_sq_df = db_io.get_pth_capacity(
-                "status_quo", grid_ids_df.index, orm, engine=engine
-            )
     emob_rename_col = "electromobility_max_load_expansion_mw"
     df = pd.concat(
         [
