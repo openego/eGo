@@ -53,22 +53,5 @@
    }
   },
 
-  "database": {
-    "database_name": "oedb",
-    "host": "",
-    "port": "",
-    "user": "",
-    "password": ""
-  },
-
-  "ssh": {
-    "enabled": false,
-    "user": "",
-    "ip": "",
-    "port": "",
-    "local_address": "127.0.0.1",
-    "local_port": "59510"
-  },
-
   "external_config": null
 }
