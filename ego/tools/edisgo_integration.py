@@ -794,7 +794,7 @@ class EDisGoNetworks:
                 edisgo_grid = import_edisgo_from_files(
                     edisgo_path=zip_path,
                     import_topology=True,
-                    import_timeseries=False,
+                    import_timeseries=True,
                     import_results=True,
                     import_electromobility=False,
                     from_zip_archive=True,
