@@ -58,6 +58,17 @@ Dependency resolution may take some time. Messages stating that pip is
 looking at multiple package versions do not necessarily indicate an
 installation error.
 
+Additional requirements for optimization
+=======================================
+
+Optimization workflows require a suitable solver. Gurobi is a commercial optimization solver used in
+eTraGo and eDisGo and requires a valid license. The eDisGo multi-period
+optimal power flow additionally requires Julia, a programming language
+used to implement this optimization.
+
+For workflow-specific requirements and installation instructions, see
+the `eTraGo documentation <https://etrago.readthedocs.io/en/latest/>`_
+and the `eDisGo installation documentation <https://edisgo.readthedocs.io/en/dev/installation.html>`_.
 
 Verifying the installation
 ==========================
