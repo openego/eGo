@@ -66,9 +66,10 @@ eTraGo and eDisGo and requires a valid license. The eDisGo multi-period
 optimal power flow additionally requires Julia, a programming language
 used to implement this optimization.
 
-For workflow-specific requirements and installation instructions, see
-the `eTraGo documentation <https://etrago.readthedocs.io/en/latest/>`_
-and the `eDisGo installation documentation <https://edisgo.readthedocs.io/en/dev/installation.html>`_.
+For details on solver configuration in eTraGo, see
+`Solver Options <https://etrago.readthedocs.io/en/latest/theoretical_background.html#solver-options>`_.
+For Julia and solver installation requirements in eDisGo, see the
+`eDisGo installation documentation <https://edisgo.readthedocs.io/en/dev/installation.html#additional-requirements-for-the-optimal-power-flow>`_.
 
 Verifying the installation
 ==========================
