@@ -157,7 +157,7 @@ master_doc = "index"
 
 # General information about the project.
 project = "eGo"
-copyright = "2025-2026, open_eGo-Team"
+copyright = "2015-2026, open_eGo-Team"
 author = "open_eGo-Team"
 
 

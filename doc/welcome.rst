@@ -134,7 +134,7 @@ License
    :scale: 100%
    :align: right
 
-© Copyright 2025-2026
+© Copyright 2015-2026
 
 Flensburg University of Applied Sciences,
 Europa-Universität Flensburg,
