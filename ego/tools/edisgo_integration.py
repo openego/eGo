@@ -29,6 +29,7 @@ __copyright__ = (
 __license__ = "GNU Affero General Public License Version 3 (AGPL-3.0)"
 __author__ = "wolf_bunke, maltesc, mltja"
 
+import copy
 import json
 import logging
 import os
@@ -47,6 +48,7 @@ import pandas as pd
 
 if "READTHEDOCS" not in os.environ:
     from edisgo.edisgo import import_edisgo_from_files
+    from edisgo.run.config import deep_merge
     from edisgo.tools.plots import mv_grid_topology
 
     #from ego.mv_clustering import cluster_workflow, database
@@ -637,16 +639,23 @@ class EDisGoNetworks:
                 "directory": os.path.join(self._results, str(mv_grid_id)),
             },
         }
-        db_block = self._json_file.get("database")
-        ssh_block = self._json_file.get("ssh")
-        if db_block is not None or ssh_block is not None:
-            cfg["database"] = {}
-            if db_block is not None:
-                cfg["database"].update(db_block)
-            if ssh_block is not None:
-                cfg["database"]["ssh"] = ssh_block
-        source = self._json_file.get("eDisGo", {}).get("overlying_grid_source")
-        overlying_grid = self._json_file.get("eDisGo", {}).get("overlying_grid")
+        edisgo_cfg = self._json_file.get("eDisGo", {})
+        # eDisGo's database: a source ("oep", "egon-data", "" to auto-detect)
+        # or a dict with ``source`` and ``config_path``; null keeps the
+        # preset's. The top-level ``database`` and ``ssh`` sections only
+        # configure eGo's own database connection.
+        database = edisgo_cfg.get("database")
+        if isinstance(database, str):
+            database = {"source": database}
+        if database is not None and not isinstance(database, dict):
+            raise ValueError(
+                f"eDisGo setting 'database' must be a string, a mapping or null, "
+                f"got {database!r}."
+            )
+        if database:
+            cfg["database"] = copy.deepcopy(database)
+        source = edisgo_cfg.get("overlying_grid_source")
+        overlying_grid = edisgo_cfg.get("overlying_grid")
         if overlying_grid:
             if source == "etrago":
                 cfg["overlying_grid"] = {"enabled": True, "source": "etrago"}
@@ -661,27 +670,29 @@ class EDisGoNetworks:
         else:
             cfg["overlying_grid"] = {"enabled": False}
 
-        # Timestep selection (uc5): a default block applied to every grid, with
-        # optional per-grid overrides keyed by MV grid id. Injected as the
-        # top-level ``timeseries_selection`` block the eDisGo select_timesteps
-        # task reads from ``ctx.raw_config`` — mirroring the overlying_grid
-        # injection above.
-        edisgo_cfg = self._json_file.get("eDisGo", {})
-        ts_default = edisgo_cfg.get("timeseries_selection")
-        ts_per_grid = edisgo_cfg.get("timeseries_selection_per_grid", {}) or {}
-        ts_selection = ts_per_grid.get(str(mv_grid_id), ts_default)
-        if ts_selection is not None:
-            cfg["timeseries_selection"] = ts_selection
-
-        # Spatial complexity reduction (uc6): same default + per-grid-override
-        # pattern as timeseries_selection above. Injected as the top-level
-        # ``spatial_reduction`` block the eDisGo spatial_reduce/spatial_restore
-        # tasks read from ``ctx.raw_config``.
-        spatial_default = edisgo_cfg.get("spatial_reduction")
-        spatial_per_grid = edisgo_cfg.get("spatial_reduction_per_grid", {}) or {}
-        spatial_reduction = spatial_per_grid.get(str(mv_grid_id), spatial_default)
-        if spatial_reduction is not None:
-            cfg["spatial_reduction"] = spatial_reduction
+        # Merged into the preset's blocks of the same name (the eDisGo runner
+        # resolves ``extends`` with ``edisgo.run.config.deep_merge``). The
+        # default applies to every grid; this grid's entry in
+        # ``<name>_per_grid`` is merged on top. Null keeps the preset's block.
+        if "timeseries_selection" in edisgo_cfg or (
+            "timeseries_selection_per_grid" in edisgo_cfg
+        ):
+            raise ValueError(
+                "eDisGo setting 'timeseries_selection' was renamed to "
+                "'timestep_selection' with a new format, see the example "
+                "scenario JSON files."
+            )
+        for name in ("timestep_selection", "spatial_reduction"):
+            default = edisgo_cfg.get(name)
+            per_grid = (edisgo_cfg.get(f"{name}_per_grid") or {}).get(str(mv_grid_id))
+            for block in (default, per_grid):
+                if block is not None and not isinstance(block, dict):
+                    raise ValueError(
+                        f"eDisGo setting '{name}' must be a mapping or null, got "
+                        f"{block!r}."
+                    )
+            if default is not None or per_grid is not None:
+                cfg[name] = deep_merge(default, per_grid)
         return cfg
 
     def _run_one_grid_via_runner(self, mv_grid_id):
