@@ -710,7 +710,7 @@ class EDisGoNetworks:
                 map_etrago_heat_bus_to_district_heating_id(
                     overlying_grid_data,
                     scenario = self._json_file["eTraGo"]["scn_name"],
-                    engine = get_engine(self._json_file)
+                    engine = get_engine()
                     )
 
                 os.makedirs(self._results+"/overlying_grid", exist_ok=True)
