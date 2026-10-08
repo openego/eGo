@@ -54,3 +54,6 @@ if __name__ == "__main__":
 
     # Run eGo
     ego.run()
+
+    # Check interface between transmission and distribution grids
+    ego.validate_interface()

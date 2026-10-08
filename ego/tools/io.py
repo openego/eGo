@@ -52,7 +52,11 @@ if "READTHEDOCS" not in os.environ:
         plot_storage_use,
         power_price_plot,
     )
-    from ego.tools.utilities import get_scenario_setting
+
+    from ego.tools.utilities import (
+        get_scenario_setting,
+        validate_etrago_edisgo_interface
+    )
 
     from ego.mv_clustering.mv_clustering import (cluster_workflow, identify_focus_grids)
     
@@ -657,6 +661,8 @@ class eGo:
             logger.info("No eDisGo results fround in %s", path)
 
         return ego
+
+    validate_interface = validate_etrago_edisgo_interface
     
     # write_results_to_db():
     logging.info("Initialisation of eGo Results")
