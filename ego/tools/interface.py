@@ -108,7 +108,7 @@ class ETraGoMinimalData:
             setattr(self, component + "_t", new_component_timeseries_dict)
 
         def exclude_wind_and_solar_hv(self, json_file):
-            engine = database.get_engine(json_file)
+            engine = database.get_engine()
             orm = database.register_tables_in_saio(engine)
 
             grid_ids_df = db_io.get_grid_ids(engine=engine, orm=orm)

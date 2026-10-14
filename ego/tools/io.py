@@ -133,8 +133,7 @@ class eGo:
 
     def _connect_to_db(self):
         try:
-            with sshtunnel(config=self._json_file):
-                self.engine = get_engine(config=self._json_file)
+            self.engine = get_engine()
             Session = sessionmaker(bind=self.engine)
             self.session = Session()
             logger.info("Connected to Database")

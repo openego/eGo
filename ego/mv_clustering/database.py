@@ -8,27 +8,17 @@ from functools import wraps
 
 import saio
 
-from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 logger = logging.getLogger(__name__)
 
 
-def get_engine(config=None):
-    config = config["database"]
+def get_engine():
 
-    if config["database_name"] == "oedb":
-        import oedialect
-        engine = create_engine("postgresql+oedialect://oep.iks.cs.ovgu.de")
-    else:
-        engine = create_engine(
-            f"postgresql+psycopg2://{config['user']}:"
-            f"{config['password']}@{config['host']}:"
-            f"{int(config['port'])}/{config['database_name']}",
-            echo=False,
-        )
-    logger.info(f"Created engine: {engine}.")
-    return engine
+    from edisgo.io.db import engine
+
+    logger.info("Created engine.")
+    return engine()
 
 
 @contextmanager
