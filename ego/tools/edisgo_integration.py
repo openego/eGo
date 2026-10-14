@@ -616,7 +616,7 @@ class EDisGoNetworks:
 
         self._csv_import = self._json_file["eGo"]["result_export_path"]
         self._save_edisgo_results()
-        self._load_edisgo_results()
+
         self._run_finished = True
 
     def _build_run_edisgo_config(self, mv_grid_id):
