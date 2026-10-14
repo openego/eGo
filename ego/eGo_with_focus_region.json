@@ -62,17 +62,20 @@
     "max_cos_phi_renewable": 0.9,
     "solver": "gurobi",
     "gridversion": null,
-    "timeseries_selection": {
-        "mode": "auto",
-        "method": "residual_load",
-        "time_steps_per_time_interval": 168,
-        "time_step_day_start": 4,
-        "percentage": 1.0,
-        "save_steps": true,
-        "use_troubleshooting_mode": true,
-        "overloading_factor": 0.95,
-        "voltage_deviation_factor": 0.95
-   },
+    "database": null,
+    "timestep_selection": {
+        "task": "select_critical_timesteps",
+        "select_critical_timesteps": {
+            "method": "residual_load",
+            "time_steps_per_time_interval": 168,
+            "time_step_day_start": 4,
+            "percentage": 1.0,
+            "save_steps": true,
+            "use_troubleshooting_mode": true,
+            "overloading_factor": 0.95,
+            "voltage_deviation_factor": 0.95
+        }
+    },
     "spatial_reduction": {
         "enabled": true,
         "mode": "kmeansdijkstra",
