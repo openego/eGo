@@ -23,7 +23,9 @@ import csv
 import json
 import logging
 import os
+import pandas as pd
 import sys
+import warnings
 
 from time import localtime, strftime
 
@@ -263,3 +265,196 @@ def open_oedb_session(ego):
     session = Session()
 
     return session
+
+
+def check_row_consistency(
+    df: pd.DataFrame,
+    rtol: float = 1e-2,
+    atol: float = 1e-4,
+    columns: list[str] | None = None,
+    reference: str | None = None,
+) -> pd.DataFrame:
+    """
+    Return values within a row that differ by more than the given tolerance.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Data to check, one row per snapshot.
+    rtol : float
+        Relative tolerance (relative to the reference value).
+    atol : float
+        Absolute tolerance, avoids false alarms for values near zero.
+    columns : list of str, optional
+        Columns to compare. Defaults to all columns.
+    reference : str, optional
+        Column used as the reference. If None, the row median is used.
+
+    Returns
+    -------
+    pd.DataFrame
+        Mismatching rows with their absolute deviation from the reference
+        (empty if everything matches).
+    """
+    data = df[columns] if columns is not None else df
+
+    ref = data[reference] if reference is not None else data.median(axis=1)
+
+    # Deviation of every column from the reference
+    dev = data.sub(ref, axis=0).abs()
+    tol = atol + rtol * ref.abs()
+
+    # NaN-safe: a NaN in the data counts as a mismatch
+    mismatch = dev.gt(tol, axis=0) | data.isna()
+    bad_rows = mismatch.any(axis=1)
+
+    return dev[bad_rows]
+
+def check_edisgo_results_per_grid(ego, mv_id, atol = 2e-5, plot=False):
+    """
+    Checks if etrago results, overlying grid data and edisgo results match for
+    one mv grid.
+
+    Parameters
+    ----------
+    ego : eGo object
+        eGo object including etrago and edisgo results
+    mv_id : int
+        ID of mv grid.
+    atol : float, optional
+        Allowed maximum absolute deviation. The default is 2e-5.
+    plot : boolean, optional
+        State if results are plotted. The default is False.
+
+    Returns
+    -------
+    None.
+
+    """
+
+    edisgo = ego.edisgo.network[mv_id]
+
+    rows_with_diff = {}
+
+    # Check central and decentral heat pumps
+    hp_cols = edisgo.topology.loads_df.index[
+        edisgo.topology.loads_df.type == "heat_pump"]
+
+    hp_og = (edisgo.overlying_grid.heat_pump_decentral_active_power +
+             edisgo.overlying_grid.heat_pump_central_active_power)
+
+    hp_edisgo = (edisgo.timeseries.loads_active_power[hp_cols].sum(axis=1)
+                 + edisgo.opf_results.hv_requirement_slacks_t.hp)
+
+
+    hp_etrago = ego.etrago.disaggregated_network.links[
+        ego.etrago.disaggregated_network.links.carrier.str.contains("heat")]
+
+    hp_etrago = hp_etrago[hp_etrago.bus0.str.contains('32377')]
+
+    hp_etrago_ts = ego.etrago.disaggregated_network.links_t.p0.loc[
+        :, hp_etrago.index.values].sum(axis=1)
+
+    hp_etrago_ts.index += pd.DateOffset(days=6*366+18*365)
+
+    df_hp = pd.DataFrame(data = {
+        "overlying_grid": hp_og.loc[hp_edisgo.index],
+        "edisgo": hp_edisgo,
+        "etrago": hp_etrago_ts.loc[hp_edisgo.index]
+        })
+
+    rows_with_diff["heat_pump"] = check_row_consistency(
+        df_hp, reference="edisgo", atol = atol)
+
+    # Check charging points
+    cp_cols = edisgo.topology.loads_df.index[
+        edisgo.topology.loads_df.type == "charging_point"]
+
+    cp_og = edisgo.overlying_grid.electromobility_active_power
+
+    cp_etrago = ego.etrago.disaggregated_network.links[
+        ego.etrago.disaggregated_network.links.carrier.str.contains("charger")]
+
+    cp_etrago = cp_etrago[cp_etrago.bus0.str.contains('32377')]
+
+    cp_etrago_ts = ego.etrago.disaggregated_network.links_t.p0.loc[
+        :, cp_etrago.index.values].sum(axis=1)
+
+    cp_etrago_ts.index += pd.DateOffset(days=6*366+18*365)
+
+    df_cp = pd.DataFrame(data = {
+        "overlying_grid": cp_og[edisgo.timeseries.loads_active_power.index],
+        "edisgo": (edisgo.timeseries.loads_active_power[cp_cols].sum(axis=1)
+                   + edisgo.opf_results.hv_requirement_slacks_t.cp),
+        "etrago": cp_etrago_ts[hp_edisgo.index]
+        })
+
+    rows_with_diff["charging_points"] = check_row_consistency(
+        df_cp, reference="edisgo", atol = atol)
+
+    # Check storage dispatch
+    sto_og = edisgo.overlying_grid.storage_units_active_power
+
+    df_sto = pd.DataFrame(data = {
+        "overlying_grid": sto_og[
+            edisgo.timeseries.storage_units_active_power.index],
+        "edisgo": (
+            edisgo.timeseries.storage_units_active_power.sum(axis=1)
+            + edisgo.opf_results.hv_requirement_slacks_t.storage)
+        })
+
+    rows_with_diff["storage_disptach"] = check_row_consistency(
+        df_sto, reference="edisgo", atol = atol)
+
+    # Check renewable generation
+    gens = edisgo.topology.generators_df
+    gen_cols = gens.index[gens.type.isin(["solar", "wind"])]
+
+    p_nom_per_carrier = gens.loc[gen_cols].groupby("type").p_nom.sum()
+
+    gen_og = (
+        edisgo.overlying_grid.renewables_potential * p_nom_per_carrier.sum()
+        ).squeeze() - edisgo.overlying_grid.renewables_curtailment
+
+    df_gen = pd.DataFrame(data = {
+        "overlying_grid": gen_og[
+            edisgo.timeseries.storage_units_active_power.index],
+        "edisgo": (
+            edisgo.timeseries.generators_active_power[gen_cols].sum(axis=1)
+            - edisgo.opf_results.hv_requirement_slacks_t.curt)
+        })
+
+    rows_with_diff["renewable_dispatch"] = check_row_consistency(
+        df_gen, reference="edisgo", atol = atol)
+
+    for key in rows_with_diff.keys():
+        if not rows_with_diff[key].empty:
+            warnings.warn(
+            f"The {key} results of eTraGo and eDisGo for mv grid {str(mv_id)} "
+            f"exceed tolerance {atol} in {len(rows_with_diff[key])} time steps. ",
+            stacklevel=2,
+        )
+
+    if plot:
+        df_hp.plot(title=f"Heat Pumps {mv_id}")
+        df_cp.plot(title=f"Charging points {mv_id}")
+        df_sto.plot(title=f"Storage units usage {mv_id}")
+        df_gen.plot(title=f"VRES dispatch {mv_id}")
+
+def validate_etrago_edisgo_interface(ego):
+    """
+    Validates if etrago results, overlying_grid data and edisgo results match.
+
+    Parameters
+    ----------
+    ego : eGo object
+        eGo object including etrago and edisgo results
+
+    Returns
+    -------
+    None.
+
+    """
+
+    for mv_id in ego.edisgo.network.keys():
+        check_edisgo_results_per_grid(ego, mv_id, plot=False)
