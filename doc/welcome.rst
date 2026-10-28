@@ -23,7 +23,7 @@ Research context
 eGo was initially developed in the research project
 `open_eGo <https://openegoproject.wordpress.com/>`_ and was further
 developed and applied in the research project
-`eGon <https://ego-n.org/>`_.
+`eGon <https://rego-n.org/>`_.
 
 The eGon project extended the modeling framework by a sector-coupled
 data model that includes electricity, heat, gas, and mobility as well as
@@ -42,7 +42,7 @@ The cross-grid-level methodology and its application to a German
 The Open Energy Platform
 ========================
 
-The `Open Energy Platform (OEP) <https://openenergy-platform.org/>`_
+The `Open Energy Platform (OEP) <https://openenergyplatform.org/>`_
 provides open data and metadata for transparent and reproducible energy
 system modeling. Parts of the data used by eGo and related tools in the
 openego toolchain are made available through the OEP.
@@ -73,14 +73,14 @@ related components include:
 
 * `eGon-data <https://github.com/openego/eGon-data>`_ for creating the
   sector-coupled data model.
-* `ding0 <https://dingo.readthedocs.io/>`_ for generating synthetic
+* `ding0 <https://dingo.readthedocs.io/en/dev/>`_ for generating synthetic
   medium- and low-voltage grid topologies.
 
 
 eTraGo
 ------
 
-`eTraGo <https://etrago.readthedocs.io/>`_ is an open-source Python
+`eTraGo <https://etrago.readthedocs.io/en/latest/>`_ is an open-source Python
 package based on PyPSA. It is used to optimize generation and flexibility
 dispatch as well as grid and storage expansion at the extra-high- and
 high-voltage levels.
@@ -106,7 +106,7 @@ distribution-grid analysis.
 eDisGo
 ------
 
-`eDisGo <https://edisgo.readthedocs.io/>`_ is used for the analysis of
+`eDisGo <https://edisgo.readthedocs.io/en/dev/>`_ is used for the analysis of
 medium- and low-voltage grids. Based on the inputs prepared by eGo,
 eDisGo analyzes representative distribution grids and determines their
 grid reinforcement needs.
@@ -122,7 +122,7 @@ Affairs and Energy (BMWI).
 .. image:: https://i0.wp.com/reiner-lemoine-institut.de/wp-content/uploads/2016/07/BMWi_Logo_Englisch_KLEIN.jpg
    :width: 300px
    :alt: Supported by BMWi
-   :target: http://www.bmwi.de/Navigation/EN/Home/home.html
+   :target: https://www.bundeswirtschaftsministerium.de/Navigation/EN/Home/home.html
 
 
 

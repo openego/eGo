@@ -1,0 +1,68 @@
+# Installs eGo from scratch the way a user would and runs the test suite.
+# Purpose: make sure the dependencies of eGo, eTraGo and eDisGo resolve and
+# work together, so that the installation for a release succeeds.
+name: "Installation"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+on:
+  push:
+  workflow_dispatch:
+  # eTraGo and eDisGo are installed from their dev branches, so the
+  # installation can break without any change in eGo. A daily run catches that.
+  schedule:
+    - cron: "0 5 * * *"
+
+jobs:
+  install:
+    name: "Install and test at py${{ matrix.python-version }}"
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        # No 3.12: eTraGo requires pandas<2.0, which has no wheels for 3.12
+        # and fails to build from source.
+        python-version: ["3.10", "3.11"]
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: setup.py
+
+      # Build the release files and install eGo from the wheel, so only what is
+      # packaged ends up in the environment, just like for a user installing a
+      # release.
+      - name: Build sdist and wheel
+        run: |
+          python -m pip install --upgrade pip build
+          python -m build
+
+      - name: Install eGo from the wheel
+        run: python -m pip install dist/*.whl pytest
+
+      - name: Check dependency consistency
+        run: python -m pip check
+
+      # The versions that worked, as a reference for pinning a release
+      - name: Save installed versions
+        run: python -m pip freeze > installed-py${{ matrix.python-version }}.txt
+
+      - name: Upload installed versions
+        uses: actions/upload-artifact@v4
+        with:
+          name: installed-py${{ matrix.python-version }}
+          path: installed-py${{ matrix.python-version }}.txt
+
+      # `pytest` instead of `python -m pytest`, which would put the repository
+      # on sys.path and test the source tree instead of the installed wheel.
+      - name: Run tests
+        run: pytest --disable-warnings --color=yes -v

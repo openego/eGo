@@ -45,11 +45,11 @@ def etrago_storages(network):
     ----------
     network : :class:`etrago.tools.io.NetworkScenario`
         eTraGo ``NetworkScenario`` based on PyPSA Network. See also
-        `pypsa.network <https://pypsa.org/doc/components.html#network>`_
+        `pypsa.network <https://docs.pypsa.org/latest/api/networks/network/>`_
 
     Returns
     -------
-    results : :pandas:`pandas.DataFrame<dataframe>`
+    results : :pandas:`pandas.DataFrame<DataFrame>`
         Summarize and returns a ``DataFrame`` of the storage optimaziation.
 
     Notes
@@ -132,7 +132,7 @@ def etrago_storages_investment(network, json_file, session):
     ----------
     network : :class:`etrago.tools.io.NetworkScenario`
         eTraGo ``NetworkScenario`` based on PyPSA Network. See also
-        `pypsa.network <https://pypsa.org/doc/components.html#network>`_
+        `pypsa.network <https://docs.pypsa.org/latest/api/networks/network/>`_
 
 
     Returns

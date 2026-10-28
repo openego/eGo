@@ -167,7 +167,7 @@ class EDisGoNetworks:
 
         Returns
         -------
-        :pandas:`pandas.DataFrame<dataframe>`
+        :pandas:`pandas.DataFrame<DataFrame>`
             Dataframe containing the chosen grids and their weightings
             'no_of_points_per_cluster', 'the_selected_network_id', 'represented_grids'
 
@@ -195,7 +195,7 @@ class EDisGoNetworks:
 
         Returns
         -------
-        None or :pandas:`pandas.DataFrame<dataframe>`
+        None or :pandas:`pandas.DataFrame<DataFrame>`
             Dataframe containing annuity costs per voltage level
 
         """

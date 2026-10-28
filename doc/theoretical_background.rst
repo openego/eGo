@@ -26,7 +26,7 @@ eDisGo's theoretical Background
 ===============================
 
 Learn more about eDisGo's theoretical background of methods and assumptions
-`here <https://edisgo.readthedocs.io/en/latest/start_page.html>`_.
+`here <https://edisgo.readthedocs.io/en/dev/>`_.
 
 
 Selection of MV/LV grids
@@ -126,8 +126,8 @@ Investment cost modeling
 Within the eGo workflow, investment costs are considered through the
 underlying optimization models. Investment decisions for transmission
 grid expansion, storage technologies and flexibility options are
-optimized at the eHV/HV level using `eTraGo <https://etrago.readthedocs.io/>`_ . The resulting expansion
-requirements are subsequently transferred to `eDisGo <https://edisgo.readthedocs.io/>`_ , where the required
+optimized at the eHV/HV level using `eTraGo <https://etrago.readthedocs.io/en/latest/>`_ . The resulting expansion
+requirements are subsequently transferred to `eDisGo <https://edisgo.readthedocs.io/en/dev/>`_ , where the required
 expansion of the underlying MV/LV grids is determined. A detailed
 description of the optimization methodology is provided by [Buettner2025]_.
 
@@ -159,4 +159,4 @@ References
    netzebenen- und sektorenübergreifendes Planungsinstrument zur
    Bestimmung des optimalen Einsatzes und Ausbaus von
    Flexibilitätsoptionen in Deutschland. Technical Report.
-   (`<https://ego-n.org/papers/Endbericht_egon_v2.pdf>`_)
+   (`<https://zenodo.org/records/10677901>`_)

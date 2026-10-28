@@ -59,7 +59,7 @@ looking at multiple package versions do not necessarily indicate an
 installation error.
 
 Additional requirements for optimization
-=======================================
+========================================
 
 Optimization workflows require a suitable solver. Gurobi is a commercial optimization solver used in
 eTraGo and eDisGo and requires a valid license. The eDisGo multi-period
@@ -74,11 +74,12 @@ For Julia and solver installation requirements in eDisGo, see the
 Verifying the installation
 ==========================
 
-The installation can be verified by importing eGo:
+The installation can be verified by importing the eGo class, which also
+imports eTraGo and eDisGo:
 
 .. code-block:: bash
 
-   $ python -c "import ego; print('eGo import successful')"
+   $ python -c "from ego.tools.io import eGo; print('eGo import successful')"
 
 A successful installation produces the following output:
 
@@ -111,10 +112,10 @@ prompt as administrator and run:
   $ pip3 install eGo 
 
 The full documentation can be found
-`on this page <https://docs.anaconda.com/anaconda/install/>`_. We use Anaconda
+`on this page <https://www.anaconda.com/docs/getting-started/installation>`_. We use Anaconda
 with an own environment in order to reduce problems with packages and different
 versions on our system. Learn more about
-`Anacona <https://conda.io/docs/user-guide/tasks/manage-environments.html>`_
+`Anaconda <https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html>`_
 environments.
 
 
