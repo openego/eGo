@@ -172,7 +172,7 @@ def etrago_operating_costs(network):
 
     Returns
     -------
-    operating_costs :  :pandas:`pandas.Dataframe<dataframe>`
+    operating_costs :  :pandas:`pandas.Dataframe<DataFrame>`
         DataFrame with aggregate operational costs per component and voltage
         level in [EUR] per calculated time steps.
 
@@ -322,7 +322,7 @@ def etrago_grid_investment(network, json_file, session):
 
     Returns
     -------
-    grid_investment_costs : :pandas:`pandas.Dataframe<dataframe>`
+    grid_investment_costs : :pandas:`pandas.Dataframe<DataFrame>`
         Dataframe with ``voltage_level``, ``number_of_expansion`` and
         ``capital_cost`` per calculated time steps
 
@@ -482,7 +482,7 @@ def edisgo_grid_investment(edisgo, json_file):
         Contains multiple eDisGo networks
     Returns
     -------
-    None or :pandas:`pandas.DataFrame<dataframe>`
+    None or :pandas:`pandas.DataFrame<DataFrame>`
         Dataframe containing annuity costs per voltage level
     """
 
