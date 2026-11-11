@@ -2,10 +2,13 @@ import logging
 
 import pytest
 
+from edisgo.network.overlying_grid import OverlyingGrid
 from edisgo.run.config import load_config
 from edisgo.run.validator import validate
+from pypsa import Network as PyPSANetwork
 
 from ego.tools.edisgo_integration import EDisGoNetworks
+from ego.tools.interface import get_etrago_results_per_bus
 
 logger = logging.getLogger(__name__)
 
@@ -160,3 +163,32 @@ def test_grid_configs_share_no_objects():
     second = networks._build_run_edisgo_config(32355)
     assert second["timestep_selection"] == CRITICAL
     assert CRITICAL["select_critical_timesteps"]["method"] == "power_flow"
+
+
+# Keys returned by get_etrago_results_per_bus that eDisGo does not read.
+NOT_USED_BY_EDISGO = {
+    "timeindex",
+    "renewables_p_nom",
+    "renewables_dispatch_reactive_power",
+    "storage_units_p_nom",
+    "storage_units_max_hours",
+    "storage_units_reactive_power",
+    "heat_pump_central_reactive_power",
+    "heat_pump_central_p_nom",
+    "thermal_storage_central_capacity",
+    "thermal_storage_central_efficiency",
+    "heat_pump_decentral_reactive_power",
+    "heat_pump_decentral_p_nom",
+    "thermal_storage_decentral_capacity",
+    "thermal_storage_decentral_efficiency",
+    "electromobility_reactive_power",
+}
+
+
+def test_overlying_grid_keys_match_edisgo():
+    """eDisGo silently skips keys it does not know (openego/eGo#239), so every
+    key meant for eDisGo must be an OverlyingGrid attribute, and every
+    OverlyingGrid attribute must be provided."""
+    etrago_network = PyPSANetwork(pytest.etrago_test_network_1_path)
+    results = get_etrago_results_per_bus(0, etrago_network, True, False)
+    assert set(results) - NOT_USED_BY_EDISGO == set(OverlyingGrid()._attributes)
