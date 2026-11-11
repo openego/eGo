@@ -120,7 +120,7 @@ class TestSpecs:
             "dsm_active_power",
             "heat_pump_rural_active_power",
             "heat_pump_rural_reactive_power",
-            "thermal_storage_rural_soc",
+            "thermal_storage_units_decentral_soc",
             "heat_central_active_power",
             "heat_central_reactive_power",
             "thermal_storage_central_capacity",
@@ -133,7 +133,7 @@ class TestSpecs:
             "renewables_potential",
             "renewables_curtailment",
             "renewables_dispatch_reactive_power",
-            "thermal_storage_central_soc",
+            "thermal_storage_units_central_soc",
             "feedin_district_heating",
         ]  #
 

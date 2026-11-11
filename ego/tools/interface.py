@@ -311,8 +311,8 @@ def get_etrago_results_per_bus(bus_id, etrago_obj, pf_post_lopf, max_cos_phi_ren
             Type: float
             Unit: p.u.
 
-        * 'thermal_storage_decentral_soc'
-            SoC of central thermal storage units.
+        * 'thermal_storage_units_decentral_soc'
+            SoC of thermal storage units in individual heating.
             Type: pd.Series
             Unit: p.u.
 
@@ -341,7 +341,7 @@ def get_etrago_results_per_bus(bus_id, etrago_obj, pf_post_lopf, max_cos_phi_ren
             Type: float
             Unit: p.u.
 
-        * 'thermal_storage_central_soc'
+        * 'thermal_storage_units_central_soc'
             SoC of central thermal storage units.
             Type: pd.DataFrame
             Columns: eTraGo heat bus ID
@@ -727,7 +727,7 @@ def get_etrago_results_per_bus(bus_id, etrago_obj, pf_post_lopf, max_cos_phi_ren
         results["heat_pump_central_p_nom"] = p_nom
         results["thermal_storage_central_capacity"] = central_heat_store_capacity
         results["thermal_storage_central_efficiency"] = central_heat_store_efficiency
-        results["thermal_storage_central_soc"] = soc_ts
+        results["thermal_storage_units_central_soc"] = soc_ts
         results["feedin_district_heating"] = dh_feedin_df
 
     def rural_heat():
@@ -790,7 +790,7 @@ def get_etrago_results_per_bus(bus_id, etrago_obj, pf_post_lopf, max_cos_phi_ren
         results["heat_pump_decentral_p_nom"] = rural_heat_p_nom
         results["thermal_storage_decentral_capacity"] = rural_heat_store_capacity
         results["thermal_storage_decentral_efficiency"] = heat_store_efficiency
-        results["thermal_storage_decentral_soc"] = soc_ts
+        results["thermal_storage_units_decentral_soc"] = soc_ts
 
     def bev_charger():
         # not needed in eDisGo in low flex scenario (bev_charger_df will be empty in
@@ -965,7 +965,7 @@ def map_etrago_heat_bus_to_district_heating_id(specs, scenario, engine):
         columns=mapping_heat_bus_dh_id.district_heating_id,
         inplace=True,
     )
-    specs["thermal_storage_central_soc"].rename(
+    specs["thermal_storage_units_central_soc"].rename(
         columns=mapping_heat_bus_dh_id.district_heating_id,
         inplace=True,
     )
