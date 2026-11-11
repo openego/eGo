@@ -55,8 +55,8 @@ eGo builds on the functionalities of eTraGo and eDisGo. Detailed
 information on the individual tools is available in their respective
 documentation:
 
-* `eTraGo documentation <https://etrago.readthedocs.io/>`_
-* `eDisGo documentation <https://edisgo.readthedocs.io/>`_
+* `eTraGo documentation <https://etrago.readthedocs.io/en/latest/>`_
+* `eDisGo documentation <https://edisgo.readthedocs.io/en/dev/>`_
 
 
 Indices and tables

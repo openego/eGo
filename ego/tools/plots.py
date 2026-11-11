@@ -152,7 +152,7 @@ def plot_storage_expansion(
     Returns
     -------
     plot :obj:`matplotlib.pyplot.show`
-            https://matplotlib.org/api/pyplot_api.html#matplotlib.pyplot.show
+            https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.show.html
     """
 
     network = ego.etrago.network
@@ -283,7 +283,7 @@ def plot_line_expansion(ego, filename=None, dpi=300, column="overnight_costs"):
     Returns
     -------
     plot :obj:`matplotlib.pyplot.show`
-            https://matplotlib.org/api/pyplot_api.html#matplotlib.pyplot.show
+            https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.show.html
     """
 
     network = ego.etrago.network
@@ -363,7 +363,7 @@ def plot_grid_storage_investment(costs_df, filename, display, var=None):
 
     Parameters
     ----------
-    costs_df:  :pandas:`pandas.DataFrame<dataframe>`
+    costs_df:  :pandas:`pandas.DataFrame<DataFrame>`
         Dataframe containing total_investment_costs of ego
     filename: str
         Filename and or path of location to store graphic
@@ -376,7 +376,7 @@ def plot_grid_storage_investment(costs_df, filename, display, var=None):
     Returns
     -------
     plot :obj:`matplotlib.pyplot.show`
-            https://matplotlib.org/api/pyplot_api.html#matplotlib.pyplot.show
+            https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.show.html
 
 
     """
@@ -449,7 +449,7 @@ def power_price_plot(ego, filename, display):
     Returns
     -------
     plot :obj:`matplotlib.pyplot.show`
-            https://matplotlib.org/api/pyplot_api.html#matplotlib.pyplot.show
+            https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.show.html
     """
     plt.rcdefaults()
     #    colors = ego_colore()
@@ -501,7 +501,7 @@ def plot_storage_use(ego, filename, display):
     Returns
     -------
     plot :obj:`matplotlib.pyplot.show`
-            https://matplotlib.org/api/pyplot_api.html#matplotlib.pyplot.show
+            https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.show.html
     """
     colors = ego_colore()
 
@@ -676,12 +676,12 @@ def plot_edisgo_cluster(
         Title of Plot
     cmap: str
         Name of colormap from
-        https://matplotlib.org/gallery/color/colormap_reference.html
+        https://matplotlib.org/stable/gallery/color/colormap_reference.html
 
     Returns
     -------
     plot :obj:`matplotlib.pyplot.show`
-            https://matplotlib.org/api/pyplot_api.html#matplotlib.pyplot.show
+            https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.show.html
 
     """
     session = ego.session
@@ -834,7 +834,7 @@ def igeoplot(ego, tiles=None, geoloc=None, save_image=False):
         folium.raster_layers.TileLayer(tiles=tiles, attr=attr).add_to(mp)
 
     else:
-        attr = '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="https://openenergy-platform.org/">OpenEnergy-Platform</a>'
+        attr = '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="https://openenergyplatform.org/">OpenEnergy-Platform</a>'
 
         folium.raster_layers.TileLayer("OpenStreetMap", attr=attr).add_to(mp)
 

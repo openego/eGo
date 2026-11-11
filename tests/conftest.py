@@ -1,6 +1,11 @@
 import os
 
+import pandas as pd
 import pytest
+
+import ego.mv_clustering.egon_data_io as db_io
+
+from ego.mv_clustering import database
 
 
 def pytest_configure(config):
@@ -29,3 +34,26 @@ def pytest_collection_modifyitems(config, items):
     for item in items:
         if "slow" in item.keywords:
             item.add_marker(skip_slow)
+
+
+@pytest.fixture
+def no_mv_lv_renewable_capacities(monkeypatch):
+    """
+    Replace the database queries of :class:`ETraGoMinimalData` for the wind and
+    solar capacities in the medium and low voltage (MV/LV) grids by empty
+    results, so that the eTraGo generators are kept unchanged and no database
+    is needed.
+    """
+    monkeypatch.setattr(database, "get_engine", lambda: None)
+    monkeypatch.setattr(database, "register_tables_in_saio", lambda engine: None)
+    monkeypatch.setattr(db_io, "get_grid_ids", lambda **kwargs: pd.DataFrame())
+    monkeypatch.setattr(
+        db_io,
+        "get_solar_capacity",
+        lambda *args, **kwargs: pd.DataFrame({"solar_capacity_mw": []}, dtype=float),
+    )
+    monkeypatch.setattr(
+        db_io,
+        "get_wind_capacity",
+        lambda *args, **kwargs: pd.DataFrame({"wind_capacity_mw": []}, dtype=float),
+    )

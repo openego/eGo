@@ -176,7 +176,7 @@ the distribution and transmission grids of eTraGo and eDisGo.
 .. note:: Note, the data source of eGo relies on
           the Open Energy Database. - The registration for the public
           accessible API can be found on
-          `openenergy-platform.org/login <http://openenergy-platform.org/login/>`_.
+          `openenergyplatform.org/accounts/login <https://openenergyplatform.org/accounts/login/>`_.
 
 Run the ``appl.py`` file with:
 

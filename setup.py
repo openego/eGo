@@ -19,12 +19,14 @@ def read(fname):
 
 
 req = [
+    "egoio",
     "etrago @ git+https://github.com/openego/eTraGo.git@dev#egg=etrago",
     "edisgo @ git+https://github.com/openego/eDisGo.git@dev#egg=edisgo",
 ]
 
 dev_req = [
     "pre-commit",
+    "pytest",
     "black",
     "isort",
     "pyupgrade",

@@ -32,11 +32,8 @@ __author__ = "wolf_bunke"
 import os
 import sys
 
-from unittest.mock import MagicMock
-
 import sphinx_rtd_theme
 
-# from mock import Mock as MagicMock
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -90,9 +87,13 @@ napoleon_use_keyword = False
 
 # Dictionary of external links
 extlinks = {
-    "pandas": ("http://pandas.pydata.org/pandas-docs/stable/api.html#%s", "pandas."),
+    "pandas": (
+        "https://pandas.pydata.org/docs/reference/api/pandas.%s.html",
+        "pandas.%s",
+    ),
+    "pypsa": ("https://docs.pypsa.org/latest/api/networks/%s/", "pypsa.%s"),
     "sqlalchemy": (
-        "http://docs.sqlalchemy.org/en/latest/orm/session_basics.html%s",
+        "https://docs.sqlalchemy.org/en/13/%s",
         "SQLAlchemy session object",
     ),
     "shapely": ("http://toblerity.org/shapely/manual.html#%s", "Shapely object"),
@@ -214,35 +215,6 @@ pygments_style = "sphinx"
 
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = True
-
-
-# Fix import error of modules which depend on C modules (mock out the imports for
-# these modules)
-# see http://read-the-docs.readthedocs.io/en/latest/faq.html#i-get-import-
-# errors-on-libraries-that-depend-on-c-modules
-
-
-if "READTHEDOCS" in os.environ:
-
-    class Mock(MagicMock):
-        @classmethod
-        def __getattr__(cls, name):
-            return MagicMock()
-
-    MOCK_MODULES = ["ding0", "ding0.results", "shapely"]
-    sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
-
-    MOCK_MODULES = [
-        "libgeos",
-        "geos",
-        "libgeos_c",
-        "geos_c",
-        "libgeos_c.so.1",
-        "libgeos_c.so",
-        "shapely",
-        "geoalchemy2",
-        "geoalchemy2.shape ",
-    ]
 
 
 # -- Options for HTML output ----------------------------------------------
@@ -423,13 +395,53 @@ texinfo_documents = [
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
     "etrago": ("https://etrago.readthedocs.io/en/latest", None),
-    "edisgo": ("http://edisgo.readthedocs.io/en/dev", None),
+    "edisgo": ("https://edisgo.readthedocs.io/en/dev", None),
     "ding0": ("https://dingo.readthedocs.io/en/dev", None),
-    "pypsa": ("https://pypsa.org/doc/", None),
-    "sqlalchemy": ("https://docs.sqlalchemy.org/en/latest/", None),
+    "pypsa": ("https://docs.pypsa.org/latest/", None),
+    "sqlalchemy": ("https://docs.sqlalchemy.org/en/13/", None),
 }
 
 # Numbered figures
 numfig = True
 
 autodoc_member_order = "bysource"
+
+# The documentation is built without the dependencies of eGo (see
+# requirements.txt), so autodoc needs them mocked to import the modules.
+autodoc_mock_imports = [
+    "branca",
+    "edisgo",
+    "egoio",
+    "etrago",
+    "folium",
+    "geoalchemy2",
+    "geopandas",
+    "matplotlib",
+    "oedialect",
+    "pandas",
+    "pyproj",
+    "pypsa",
+    "saio",
+    "shapely",
+    "sklearn",
+]
+
+# -- Options for the link check -------------------------------------------
+
+# GitHub renders line anchors (#L51-L69) with JavaScript, so the link check
+# cannot find them.
+linkcheck_anchors_ignore_for_url = [r"https://github\.com/.*"]
+# DOIs always redirect to the publisher.
+linkcheck_allowed_redirects = {r"https://doi\.org/.*": r".*"}
+# Report timeouts with their own status instead of as broken links. Both fail
+# the check.
+linkcheck_report_timeouts_as_broken = False
+# Retry before reporting a link as broken, servers are sometimes slow.
+linkcheck_retries = 2
+# These sites do not answer or rate-limit requests from GitHub runners, so the
+# check would fail there.
+linkcheck_ignore = [
+    r"https://www\.bundeswirtschaftsministerium\.de/.*",
+    r"https://www\.gesetze-im-internet\.de/.*",
+    r"https://www\.gnu\.org/.*",
+]

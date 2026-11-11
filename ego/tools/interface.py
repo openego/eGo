@@ -156,7 +156,9 @@ class ETraGoMinimalData:
                 & (self.generators.bus.isin(solar_capacity_df.index))
             ]
             mvlv_share_solar = (
-                solar_capacity_df.mul(1 / solar_generators, axis=0).dropna().squeeze()
+                solar_capacity_df.mul(1 / solar_generators, axis=0)
+                .dropna()
+                .squeeze(axis=1)
             )
 
             # Reduce p_nom to capacity in MVLV grid
@@ -206,7 +208,7 @@ def get_etrago_results_per_bus(bus_id, etrago_obj, pf_post_lopf, max_cos_phi_ren
 
     Returns
     -------
-    dict(str: :pandas:`pandas.DataFrame<dataframe>`)
+    dict(str: :pandas:`pandas.DataFrame<DataFrame>`)
         Dataframes used as eDisGo inputs.
 
         * 'timeindex'

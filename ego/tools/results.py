@@ -50,7 +50,7 @@ def create_etrago_results(network, scn_name):  # rename function
     ----------
     network : :class:`~.etrago.tools.io.NetworkScenario`
         eTraGo ``NetworkScenario`` based on PyPSA Network. See also
-        `pypsa.network <https://pypsa.org/doc/components.html#network>`_
+        `pypsa.network <https://docs.pypsa.org/latest/api/networks/network/>`_
 
     scn_name : str
         Name of used scenario
@@ -58,7 +58,7 @@ def create_etrago_results(network, scn_name):  # rename function
 
     Returns
     -------
-    generator :  :pandas:`pandas.DataFrame<dataframe>`
+    generator :  :pandas:`pandas.DataFrame<DataFrame>`
         Result of generator as DataFrame in ``ego.etrago.generator``
 
     """

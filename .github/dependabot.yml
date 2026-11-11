@@ -1,0 +1,9 @@
+version: 2
+updates:
+  # Only the GitHub Actions. eGo does not pin its Python dependencies, and
+  # eTraGo and eDisGo are installed from their dev branches until their next
+  # release, so there is nothing for Dependabot to update there yet.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"

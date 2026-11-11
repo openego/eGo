@@ -33,7 +33,7 @@ Added features
 * Implemented logging function for the whole model
 * Using the Restfull-API for the OpenEnergy Database connection, buy using
   ego.io v0.4.2. A registration is needed and can be done on
-  `openenergy-platform.org/login <http://openenergy-platform.org/login/>`_
+  `openenergyplatform.org/accounts/login <https://openenergyplatform.org/accounts/login/>`_
 * Remove functionalities from ``ego_main.py`` to the eGo class
 * Fixed eTraGo scenario import of ``etrago_from_oedb()``
 
@@ -41,7 +41,7 @@ Added features
 Notes
 -----
 * As an external user you need to have an account on the
-  `openenergy-platform.org/login <http://openenergy-platform.org/login/>`_
+  `openenergyplatform.org/accounts/login <https://openenergyplatform.org/accounts/login/>`_
 * In future versions, all MV grids (*ding0* grids) will be queried from your
   database. However, in this version all MV grids have to be generated with
   the tool `ding0 <https://github.com/openego/ding0>`_ and stored in *eGo*'s

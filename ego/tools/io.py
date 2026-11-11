@@ -79,9 +79,9 @@ class eGo:
         eTraGo network object compiled by :meth:`etrago.appl.etrago`
     edisgo.network : :class:`ego.tools.edisgo_integration.EDisGoNetworks`
         Contains multiple eDisGo networks
-    edisgo : :pandas:`pandas.Dataframe<dataframe>`
+    edisgo : :pandas:`pandas.Dataframe<DataFrame>`
         aggregated results of eDisGo
-    etrago : :pandas:`pandas.Dataframe<dataframe>`
+    etrago : :pandas:`pandas.Dataframe<DataFrame>`
         aggregated results of eTraGo
 
 
@@ -151,7 +151,10 @@ class eGo:
         focus_region = None
         
         if self._json_file["eGo"]["csv_import_eTraGo"]:
-            with open(self._json_file["eGo"]["csv_import_eTraGo"]+"args.json", "r", encoding="utf-8") as f:
+            args_path = os.path.join(
+                self._json_file["eGo"]["csv_import_eTraGo"], "args.json"
+            )
+            with open(args_path, "r", encoding="utf-8") as f:
                 etrago_args = json.load(f)
             network_clustering = etrago_args.get("network_clustering", {})
             focus_region = network_clustering.get("method", {}).get("focus_region")
@@ -458,7 +461,7 @@ class eGo:
 
         Returns
         -------
-        :pandas:`pandas.DataFrame<dataframe>`
+        :pandas:`pandas.DataFrame<DataFrame>`
 
         """
 
@@ -471,7 +474,7 @@ class eGo:
 
         Returns
         -------
-        :pandas:`pandas.DataFrame<dataframe>`
+        :pandas:`pandas.DataFrame<DataFrame>`
 
         """
         self._total_operation_costs = self.etrago.operating_costs
@@ -536,7 +539,7 @@ class eGo:
 
         Returns
         -------
-        :pandas:`pandas.DataFrame<dataframe>`
+        :pandas:`pandas.DataFrame<DataFrame>`
             Dataframe containing the clustered MV grids and their weightings
 
         """
@@ -661,7 +664,9 @@ class eGo:
 
         return ego
 
-    validate_interface = validate_etrago_edisgo_interface
+    def validate_interface(self):
+        """See :func:`ego.tools.utilities.validate_etrago_edisgo_interface`."""
+        return validate_etrago_edisgo_interface(self)
     
     # write_results_to_db():
     logging.info("Initialisation of eGo Results")

@@ -1,0 +1,21 @@
+Release v0.4.0 (unreleased)
++++++++++++++++++++++++++++
+
+Added features
+--------------
+
+* Continuous integration on GitHub: a daily workflow builds eGo, installs it
+  from the wheel on Python 3.10 and 3.11 and runs the tests, and a weekly
+  workflow checks the links in the documentation.
+* Tests for the example scenario settings, including a run of eGo with
+  imported eTraGo results.
+
+Bug fixes
+---------
+
+* ``egoio`` is installed with eGo; before, ``ego.tools.io`` could not be
+  imported after a fresh installation.
+* The path given in ``csv_import_eTraGo`` no longer needs a trailing slash.
+* ``ETraGoMinimalData`` no longer fails if the database returns the solar
+  capacity in the MV/LV grids for a single bus only.
+* The API documentation lists the eGo modules again.

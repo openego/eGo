@@ -13,7 +13,7 @@ recommended developer setup.
 2. Get your Database login data
 -------------------------------
 
-`Learn more here <https://openego.readthedocs.io/en/dev/installation.html#setup-database-connection>`_.
+`Learn more here <https://edisgo.readthedocs.io/en/dev/userguide/data_sources.html>`_.
 
 3. Create Dingo grids
 ----------------------
@@ -47,6 +47,25 @@ and the
 <https://etrago.readthedocs.io/en/latest/installation.html#installation-for-developers>`_.
 
 
+Running the tests
+-----------------
+
+The tests need neither a solver nor the MV grids. Install eGo with the
+development dependencies and run the tests from the repository directory:
+
+.. code-block:: bash
+
+   $ python -m pip install -e .[dev]
+   $ pytest
+
+Tests marked as slow are skipped by default and run with ``pytest --runslow``.
+
+On GitHub, the workflow ``.github/workflows/installation.yml`` builds eGo,
+installs it from the wheel and runs the tests on every push and daily, since
+eTraGo and eDisGo are installed from their ``dev`` branches. The workflow
+``.github/workflows/docs-check.yml`` checks the links in this documentation.
+
+
 Error handling
 --------------
 
@@ -56,7 +75,7 @@ Error handling
    ``~/env/lib/python3.10/site-packages/matplotlib/mpl-data/matplotlibrc``.
 
    `Learn more here
-   <https://matplotlib.org/users/customizing.html#a-sample-matplotlibrc-file>`_.
+   <https://matplotlib.org/stable/users/explain/customizing.html#the-matplotlibrc-file>`_.
 
 2. A GeoPandas error may be caused by a missing Rtree
    ``libspatialindex_c`` library. Install ``libspatialindex_c`` using:
