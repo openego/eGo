@@ -545,12 +545,22 @@ def get_etrago_results_per_bus(bus_id, etrago_obj, pf_post_lopf, max_cos_phi_ren
         results["renewables_p_nom"] = agg_weather_dep_gens_df.p_nom.sum()
 
     def storages():
-        # Filter batteries
+        # Filter batteries:
+        # If simplified distribution grids are considered, take home_batteries
+        # attached to them
         if etrago_obj.loads.bus.str.contains("distribution_grid").any():
             storages_df = etrago_obj.storage_units.loc[
                 (etrago_obj.storage_units["carrier"] == "home_battery")
                 & (etrago_obj.storage_units["bus"] == dg_bus)
             ]
+        # If simplified distribution grids are not considered, but home_batteries
+        # are attached to the AC node, take those
+        elif "home_battery" in etrago_obj.storage_units["carrier"].unique():
+            storages_df = etrago_obj.storage_units.loc[
+                (etrago_obj.storage_units["carrier"] == "home_battery")
+                & (etrago_obj.storage_units["bus"] == str(bus_id))
+            ]
+        # If home_batteries are not explicitly considered, use batteries
         else:
             storages_df = etrago_obj.storage_units.loc[
                 (etrago_obj.storage_units["carrier"] == "battery")
