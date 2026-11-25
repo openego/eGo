@@ -747,10 +747,16 @@ class EDisGoNetworks:
         output_dir = path + f"{str(mv_grid_id)}/"
         os.makedirs(output_dir, exist_ok=True)
 
-        for key, series in overlying_grid_data.items():
-            if (key != "timeindex") & (type(series) in [pd.Series, pd.DataFrame]):
-                filepath = os.path.join(output_dir, f"{key}.csv")
-                series.to_csv(filepath, index=True, header=True)
+        for key, data in overlying_grid_data.items():
+            if key == "timeindex":
+                continue
+            filepath = os.path.join(output_dir, f"{key}.csv")
+            if type(data) in [pd.Series, pd.DataFrame]:
+                data.to_csv(filepath, index=True, header=True)
+            elif pd.api.types.is_number(data):
+                # single values such as storage_units_max_hours or the heat store
+                # capacities, one value per file
+                pd.Series({key: data}, name="value").to_csv(filepath, header=True)
 
 
     def run_edisgo(self, mv_grid_id):
