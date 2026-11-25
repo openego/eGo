@@ -552,10 +552,17 @@ def get_etrago_results_per_bus(bus_id, etrago_obj, pf_post_lopf, max_cos_phi_ren
                 & (etrago_obj.storage_units["bus"] == dg_bus)
             ]
         else:
+            # eTraGo keeps the home batteries in their own carrier "home_battery",
+            # older eTraGo results in carrier "battery"
             storages_df = etrago_obj.storage_units.loc[
-                (etrago_obj.storage_units["carrier"] == "battery")
+                (etrago_obj.storage_units["carrier"] == "home_battery")
                 & (etrago_obj.storage_units["bus"] == str(bus_id))
             ]
+            if storages_df.empty:
+                storages_df = etrago_obj.storage_units.loc[
+                    (etrago_obj.storage_units["carrier"] == "battery")
+                    & (etrago_obj.storage_units["bus"] == str(bus_id))
+                ]
         if not storages_df.empty:
             # p_nom - p_nom_opt can always be used, if extendable is True or False
             storages_df_p_nom = storages_df["p_nom_opt"].sum()
